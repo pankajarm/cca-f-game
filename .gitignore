@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Architect's Ascent — intermediate workflow artifacts (questions.js is the source of truth)
+.bank/
+# local preview config (machine-specific paths)
+.claude/launch.json

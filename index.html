@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architect's Ascent — CCA-F Trainer (2026)</title>
+<meta name="description" content="A study game for the Claude Certified Architect — Foundations exam. Climb the tower, defeat anti-pattern bosses, survive The Proctor.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ARCHITECT'S ASCENT — design system
+   Readable by decree: Inter for prose, Bricolage for display,
+   JetBrains Mono ONLY for code tokens.
+   ============================================================ */
+:root {
+  --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
+  --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-code: 'JetBrains Mono', ui-monospace, monospace;
+
+  --bg: #F3EEE3;
+  --bg-grad: radial-gradient(1200px 600px at 50% -10%, #FAF4E6 0%, #F3EEE3 55%, #EDE5D4 100%);
+  --card: #FFFDF7;
+  --card-2: #FAF6EC;
+  --ink: #2A2620;
+  --ink-soft: #4E463C;
+  --muted: #847A6C;
+  --line: #E3DAC8;
+  --line-strong: #CFC4AD;
+  --accent: #D97757;
+  --accent-deep: #B85C3C;
+  --accent-soft: #F6E3DA;
+  --gold: #C2912E;
+  --good: #4E8F5B;
+  --good-soft: #E2EFE2;
+  --bad: #C04F44;
+  --bad-soft: #F7E1DD;
+  --d1: #D97757; --d2: #8F7BBF; --d3: #4E8F83; --d4: #5B7FA6; --d5: #B0628F;
+  --shadow: 0 1px 2px rgba(74,60,40,.06), 0 10px 30px -12px rgba(74,60,40,.18);
+  --shadow-big: 0 2px 4px rgba(74,60,40,.08), 0 24px 60px -20px rgba(74,60,40,.28);
+  --radius: 16px;
+}
+[data-theme="dark"] {
+  --bg: #201D19;
+  --bg-grad: radial-gradient(1200px 600px at 50% -10%, #2B2620 0%, #201D19 55%, #1A1815 100%);
+  --card: #2B2722;
+  --card-2: #332E27;
+  --ink: #F0EADD;
+  --ink-soft: #D9D0C0;
+  --muted: #A89C88;
+  --line: #433D33;
+  --line-strong: #57503F;
+  --accent: #E08963;
+  --accent-deep: #F0A07A;
+  --accent-soft: #46342B;
+  --gold: #D9AC4B;
+  --good: #7CB888;
+  --good-soft: #2E3B2E;
+  --bad: #E07A6B;
+  --bad-soft: #45302C;
+  --shadow: 0 1px 2px rgba(0,0,0,.25), 0 10px 30px -12px rgba(0,0,0,.5);
+  --shadow-big: 0 2px 4px rgba(0,0,0,.3), 0 24px 60px -20px rgba(0,0,0,.6);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  min-height: 100vh;
+  transition: background-color .3s, color .3s;
+}
+code {
+  font-family: var(--font-code);
+  font-size: .85em;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  padding: .1em .35em;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+button { font-family: var(--font-body); cursor: pointer; }
+
+#app { max-width: 1020px; margin: 0 auto; padding: 0 20px 80px; }
+
+/* ---------- top bar ---------- */
+#topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 4px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 26px;
+}
+#topbar .logo {
+  font-family: var(--font-display);
+  font-weight: 800; font-size: 19px; letter-spacing: -.02em;
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+#topbar .logo span { color: var(--accent); }
+.xp-wrap { flex: 1; min-width: 120px; }
+.xp-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+.xp-row .title-chip { color: var(--accent-deep); }
+.xp-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.xp-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--gold)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.streak-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-weight: 700; font-size: 14px; color: var(--ink-soft);
+  background: var(--card); border: 1px solid var(--line);
+  padding: 6px 12px; border-radius: 99px; box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--card);
+  font-size: 17px; box-shadow: var(--shadow);
+  display: grid; place-items: center;
+  transition: transform .15s;
+}
+.icon-btn:hover { transform: translateY(-2px); }
+
+/* ---------- screens ---------- */
+.screen { display: none; animation: rise .35s cubic-bezier(.2,.8,.2,1); }
+.screen.active { display: block; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ---------- title screen ---------- */
+#screen-title { text-align: center; padding: 40px 0 20px; }
+.tower-hero { font-size: 110px; line-height: 1; margin-bottom: 10px; filter: drop-shadow(0 14px 24px rgba(74,60,40,.25)); animation: floaty 4s ease-in-out infinite; }
+@keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+#screen-title h1 {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(40px, 7vw, 64px); letter-spacing: -.03em; line-height: 1.05;
+}
+#screen-title h1 em { font-style: normal; color: var(--accent); }
+#screen-title .tagline { font-size: 18px; color: var(--muted); max-width: 560px; margin: 14px auto 6px; }
+.exam-facts {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 22px 0 30px;
+}
+.fact-pill {
+  background: var(--card); border: 1px solid var(--line); border-radius: 99px;
+  padding: 7px 16px; font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+  box-shadow: var(--shadow);
+}
+.fact-pill b { color: var(--accent-deep); }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  font-weight: 700; font-size: 16px;
+  padding: 14px 30px; border-radius: 14px;
+  border: 1px solid transparent;
+  background: var(--ink); color: var(--bg);
+  box-shadow: var(--shadow-big);
+  transition: transform .15s, box-shadow .15s, background .2s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; }
+[data-theme="dark"] .btn.primary { color: #241a14; }
+.btn.ghost { background: var(--card); color: var(--ink); border-color: var(--line-strong); box-shadow: var(--shadow); }
+.btn.small { font-size: 13.5px; padding: 9px 18px; border-radius: 11px; }
+.btn:disabled { opacity: .45; pointer-events: none; }
+
+/* ---------- home hub ---------- */
+.hub-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 26px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px 18px; box-shadow: var(--shadow);
+}
+.stat-card .k { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.stat-card .v { font-family: var(--font-display); font-weight: 800; font-size: 26px; letter-spacing: -.02em; }
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.mode-card {
+  position: relative; overflow: hidden;
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  padding: 22px; box-shadow: var(--shadow); cursor: pointer;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.mode-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-big); border-color: var(--line-strong); }
+.mode-card .emoji { font-size: 38px; line-height: 1; margin-bottom: 12px; display: block; }
+.mode-card h3 { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: -.02em; margin-bottom: 5px; }
+.mode-card p { font-size: 14.5px; color: var(--muted); }
+.mode-card .badge {
+  position: absolute; top: 16px; right: 16px;
+  font-size: 12px; font-weight: 700; color: var(--accent-deep);
+  background: var(--accent-soft); border-radius: 99px; padding: 4px 11px;
+}
+.mode-card.locked { opacity: .55; }
+.mode-card.hero { grid-column: 1 / -1; background: linear-gradient(135deg, var(--card) 55%, var(--accent-soft)); }
+
+/* ---------- section headers ---------- */
+.screen-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+.screen-head h2 { font-family: var(--font-display); font-weight: 800; font-size: 32px; letter-spacing: -.02em; }
+.screen-head .sub { color: var(--muted); font-size: 15px; }
+.back-link { font-weight: 600; font-size: 14px; color: var(--accent-deep); background: none; border: none; padding: 4px 0; }
+.back-link:hover { text-decoration: underline; }
+
+/* ---------- tower map ---------- */
+.floor-list { display: flex; flex-direction: column-reverse; gap: 10px; }
+.floor-card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px 18px; box-shadow: var(--shadow); cursor: pointer;
+  transition: transform .15s, border-color .15s;
+}
+.floor-card:hover { transform: translateX(6px); border-color: var(--accent); }
+.floor-card.locked { opacity: .5; cursor: not-allowed; }
+.floor-card.locked:hover { transform: none; border-color: var(--line); }
+.floor-card.cleared { border-left: 5px solid var(--good); }
+.floor-card.next-up { border-left: 5px solid var(--accent); background: linear-gradient(90deg, var(--accent-soft), var(--card) 40%); }
+.floor-card.final { border: 2px solid var(--gold); background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 14%, var(--card)), var(--card) 50%); }
+.floor-num {
+  font-family: var(--font-display); font-weight: 800; font-size: 13px;
+  width: 46px; height: 46px; border-radius: 13px; flex: none;
+  display: grid; place-items: center; text-align: center; line-height: 1.1;
+  color: #fff; box-shadow: var(--shadow);
+}
+.floor-meta { flex: 1; min-width: 0; }
+.floor-meta .name { font-weight: 700; font-size: 16.5px; font-family: var(--font-display); letter-spacing: -.01em; }
+.floor-meta .dom { font-size: 13px; color: var(--muted); }
+.floor-right { text-align: right; flex: none; }
+.floor-right .score { font-weight: 800; font-family: var(--font-display); font-size: 17px; }
+.floor-right .stars { font-size: 13px; letter-spacing: 2px; }
+.floor-right .status { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+
+/* ---------- battle ---------- */
+.battle-stage {
+  position: relative;
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+  box-shadow: var(--shadow-big); overflow: hidden;
+}
+.battle-top {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  padding: 16px 22px; border-bottom: 1px solid var(--line);
+  background: var(--card-2);
+}
+.combatant { min-width: 0; }
+.combatant .nm { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; }
+.combatant.you .nm { text-align: right; }
+.hp-track { width: clamp(110px, 22vw, 220px); height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 5px; }
+.hp-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--bad), #E0876B); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+.hearts { font-size: 19px; letter-spacing: 3px; text-align: right; margin-top: 2px; }
+.q-progress { font-size: 12.5px; font-weight: 700; color: var(--muted); text-align: center; }
+.combo-chip { font-weight: 800; font-family: var(--font-display); color: var(--gold); font-size: 14px; height: 18px; text-align: center; }
+
+.boss-zone { text-align: center; padding: 18px 20px 4px; position: relative; }
+.boss-sprite { font-size: 76px; line-height: 1; display: inline-block; animation: bossIdle 3.2s ease-in-out infinite; filter: drop-shadow(0 12px 18px rgba(74,60,40,.28)); }
+@keyframes bossIdle { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-9px) rotate(2deg); } }
+.boss-sprite.hit { animation: bossHit .45s; }
+@keyframes bossHit { 0% { transform: translateX(0); filter: drop-shadow(0 0 0 transparent) brightness(2); } 25% { transform: translateX(-14px) rotate(-8deg);} 50% { transform: translateX(11px) rotate(6deg);} 100% { transform: translateX(0);} }
+.boss-sprite.dead { animation: bossDead 1s forwards; }
+@keyframes bossDead { to { transform: translateY(40px) rotate(180deg); opacity: 0; } }
+.speech {
+  position: relative; display: inline-block; max-width: 480px;
+  background: var(--card-2); border: 1px solid var(--line-strong);
+  border-radius: 14px; padding: 8px 16px; margin-top: 8px;
+  font-size: 14px; font-style: italic; color: var(--ink-soft);
+}
+.speech::before { content: ''; position: absolute; top: -7px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 12px; height: 12px; background: var(--card-2); border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong); }
+.dmg-float {
+  position: absolute; font-family: var(--font-display); font-weight: 800; font-size: 30px;
+  color: var(--accent-deep); pointer-events: none; animation: dmgUp 1s forwards;
+  text-shadow: 0 2px 0 var(--card);
+}
+.dmg-float.crit { color: var(--gold); font-size: 40px; }
+@keyframes dmgUp { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-70px) scale(1.25); } }
+
+.q-zone { padding: 14px 22px 22px; }
+.q-text { font-size: 17px; line-height: 1.65; font-weight: 500; margin-bottom: 16px; }
+.answers { display: grid; gap: 10px; }
+.answer {
+  display: flex; gap: 12px; align-items: flex-start; text-align: left;
+  background: var(--card-2); border: 1.5px solid var(--line); border-radius: 13px;
+  padding: 13px 16px; font-size: 15.5px; line-height: 1.55; color: var(--ink);
+  transition: transform .12s, border-color .12s, background .15s;
+}
+.answer:hover:not(.disabled) { border-color: var(--accent); transform: translateX(4px); }
+.answer .key {
+  flex: none; width: 24px; height: 24px; border-radius: 8px; margin-top: 1px;
+  display: grid; place-items: center;
+  font-size: 12.5px; font-weight: 800; font-family: var(--font-display);
+  background: var(--line); color: var(--ink-soft);
+}
+.answer.correct { border-color: var(--good); background: var(--good-soft); }
+.answer.correct .key { background: var(--good); color: #fff; }
+.answer.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.answer.wrong .key { background: var(--bad); color: #fff; }
+.answer.dim { opacity: .38; }
+.answer.disabled { pointer-events: none; }
+
+.powerup-bar { display: flex; gap: 9px; justify-content: center; padding: 0 22px 18px; flex-wrap: wrap; }
+.powerup {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 700;
+  background: var(--card-2); border: 1px solid var(--line-strong); border-radius: 99px;
+  padding: 7px 14px; transition: transform .15s, border-color .15s;
+}
+.powerup:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--gold); }
+.powerup:disabled { opacity: .4; pointer-events: none; }
+.powerup .cnt { background: var(--gold); color: #fff; border-radius: 99px; font-size: 11.5px; padding: 1px 7px; }
+.hint-strip {
+  margin: 0 22px 14px; padding: 10px 16px; border-radius: 12px;
+  background: color-mix(in srgb, var(--gold) 12%, var(--card));
+  border: 1px dashed var(--gold);
+  font-size: 14px; color: var(--ink-soft); display: none;
+}
+.hint-strip.show { display: block; animation: rise .3s; }
+.shield-note { text-align: center; font-size: 12.5px; font-weight: 700; color: var(--d4); padding-bottom: 8px; display: none; }
+.shield-note.show { display: block; }
+
+/* ---------- explanation modal ---------- */
+#overlay {
+  position: fixed; inset: 0; z-index: 100; display: none;
+  background: color-mix(in srgb, var(--ink) 35%, transparent);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+#overlay.show { display: flex; }
+.modal {
+  width: min(640px, 100%); max-height: 82vh; overflow-y: auto;
+  background: var(--card); border-radius: 20px; border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-big); padding: 26px 28px;
+  animation: pop .3s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes pop { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal .verdict { font-family: var(--font-display); font-weight: 800; font-size: 24px; margin-bottom: 4px; }
+.modal .verdict.good { color: var(--good); }
+.modal .verdict.bad { color: var(--bad); }
+.modal .right-answer { font-size: 14.5px; font-weight: 600; color: var(--ink-soft); background: var(--good-soft); border-radius: 10px; padding: 10px 14px; margin: 12px 0; }
+.modal .expl { font-size: 15px; color: var(--ink-soft); }
+.modal .modal-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* ---------- results ---------- */
+.result-wrap { text-align: center; padding: 30px 0 10px; }
+.result-emoji { font-size: 90px; line-height: 1; animation: floaty 3s ease-in-out infinite; }
+.result-wrap h2 { font-family: var(--font-display); font-weight: 800; font-size: 42px; letter-spacing: -.03em; margin: 8px 0 4px; }
+.result-wrap h2.win { color: var(--good); }
+.result-wrap h2.lose { color: var(--bad); }
+.result-sub { color: var(--muted); font-size: 16px; margin-bottom: 22px; }
+.result-stats { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 26px; }
+
+/* ---------- exam ---------- */
+.exam-rules { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 26px 30px; max-width: 720px; margin: 0 auto; }
+.exam-rules ul { margin: 14px 0 20px 20px; }
+.exam-rules li { margin-bottom: 8px; color: var(--ink-soft); }
+.exam-shell { display: grid; grid-template-columns: 1fr 240px; gap: 18px; align-items: start; }
+@media (max-width: 800px) { .exam-shell { grid-template-columns: 1fr; } }
+.exam-main { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 24px; }
+.exam-side { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 14px; }
+.exam-timer {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  padding: 14px 18px; text-align: center;
+}
+.exam-timer .t { font-family: var(--font-display); font-weight: 800; font-size: 30px; font-variant-numeric: tabular-nums; }
+.exam-timer .t.low { color: var(--bad); animation: blinker 1s step-end infinite; }
+@keyframes blinker { 50% { opacity: .4; } }
+.exam-timer .lbl { font-size: 12px; color: var(--muted); font-weight: 600; }
+.nav-grid { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.nav-cell {
+  aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--line);
+  font-size: 11.5px; font-weight: 700; background: var(--card-2); color: var(--muted);
+  display: grid; place-items: center; padding: 0;
+}
+.nav-cell.answered { background: var(--good-soft); color: var(--good); border-color: var(--good); }
+.nav-cell.flagged { background: color-mix(in srgb, var(--gold) 18%, var(--card)); border-color: var(--gold); color: var(--gold); }
+.nav-cell.current { outline: 2px solid var(--accent); outline-offset: 1px; }
+.exam-qhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap; }
+.exam-qhead .qn { font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+.domain-tag { font-size: 12px; font-weight: 700; padding: 3px 11px; border-radius: 99px; color: #fff; }
+.flag-btn { background: none; border: 1.5px solid var(--line-strong); border-radius: 10px; padding: 6px 13px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.flag-btn.on { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.exam-foot { display: flex; justify-content: space-between; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
+
+/* score report */
+.score-dial-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
+.score-dial { width: 200px; height: 200px; position: relative; }
+.score-dial svg { transform: rotate(-90deg); }
+.score-dial .val { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+.score-dial .val .n { font-family: var(--font-display); font-weight: 800; font-size: 44px; line-height: 1; }
+.score-dial .val .d { font-size: 13px; color: var(--muted); font-weight: 600; }
+.pass-banner { font-family: var(--font-display); font-weight: 800; font-size: 26px; text-align: center; margin: 8px 0 22px; }
+.domain-bars { max-width: 560px; margin: 0 auto 26px; display: grid; gap: 12px; }
+.dbar .row { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
+.dbar .track { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.dbar .fill { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.exam-review-list { display: grid; gap: 12px; margin-top: 24px; text-align: left; }
+.rev-item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.rev-item .q { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+.rev-item .row { font-size: 14px; margin: 3px 0; }
+.rev-item .row.ok { color: var(--good); }
+.rev-item .row.no { color: var(--bad); }
+.rev-item .ex { font-size: 13.5px; color: var(--muted); margin-top: 8px; }
+
+/* ---------- lightning ---------- */
+.lightning-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.time-track { flex: 1; height: 14px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.time-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold), var(--accent)); transition: width .2s linear; }
+.lightning-score { font-family: var(--font-display); font-weight: 800; font-size: 26px; min-width: 60px; text-align: right; }
+
+/* ---------- bestiary ---------- */
+.beast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.beast-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+  padding: 20px; text-align: center; box-shadow: var(--shadow);
+  transition: transform .15s;
+}
+.beast-card:hover { transform: translateY(-3px); }
+.beast-card .face { font-size: 52px; line-height: 1.1; }
+.beast-card.locked .face { filter: grayscale(1) brightness(.45) contrast(.7); }
+.beast-card h4 { font-family: var(--font-display); font-weight: 700; font-size: 17px; margin: 8px 0 2px; }
+.beast-card .cry { font-size: 13px; font-style: italic; color: var(--muted); min-height: 38px; }
+.beast-card .weak { font-size: 12.5px; margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--good-soft); color: var(--good); font-weight: 600; }
+.beast-card.locked .weak { background: var(--card-2); color: var(--muted); }
+
+/* ---------- trophies ---------- */
+.trophy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.trophy {
+  display: flex; gap: 14px; align-items: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 16px; box-shadow: var(--shadow);
+}
+.trophy .ic { font-size: 30px; flex: none; }
+.trophy.locked { opacity: .45; }
+.trophy.locked .ic { filter: grayscale(1); }
+.trophy .nm { font-weight: 700; font-size: 15px; }
+.trophy .ds { font-size: 13px; color: var(--muted); }
+
+/* ---------- review deck ---------- */
+.deck-empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.deck-empty .big { font-size: 64px; }
+
+/* ---------- toasts ---------- */
+#toasts { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--ink); color: var(--bg);
+  border-radius: 14px; padding: 13px 18px; box-shadow: var(--shadow-big);
+  font-size: 14.5px; font-weight: 600; max-width: 340px;
+  animation: toastIn .4s cubic-bezier(.2,.8,.2,1);
+}
+.toast .ic { font-size: 24px; }
+.toast .sub { font-size: 12.5px; opacity: .75; font-weight: 500; }
+@keyframes toastIn { from { transform: translateX(120%); } to { transform: none; } }
+.toast.out { transition: all .4s; transform: translateX(120%); opacity: 0; }
+
+/* ---------- confetti ---------- */
+.confetti-bit { position: fixed; top: -20px; z-index: 300; pointer-events: none; animation: confFall linear forwards; }
+@keyframes confFall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
+
+/* misc */
+.center { text-align: center; }
+.mt { margin-top: 22px; }
+.kbd-tip { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 14px; }
+kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px; background: var(--card-2); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="logo" onclick="UI.go('home')">🏛️ Architect's <span>Ascent</span></div>
+    <div class="xp-wrap">
+      <div class="xp-row"><span class="title-chip" id="hud-title">Apprentice</span><span id="hud-xp">0 XP</span></div>
+      <div class="xp-bar"><div class="xp-fill" id="hud-xpfill" style="width:0%"></div></div>
+    </div>
+    <div class="streak-chip" title="Daily streak">🔥 <span id="hud-streak">0</span></div>
+    <button class="icon-btn" id="btn-sound" title="Toggle sound">🔊</button>
+    <button class="icon-btn" id="btn-theme" title="Toggle theme">🌙</button>
+  </header>
+
+  <main>
+    <!-- TITLE -->
+    <section class="screen active" id="screen-title">
+      <div class="tower-hero">🗼</div>
+      <h1>Architect's <em>Ascent</em></h1>
+      <p class="tagline">Climb the tower. Defeat the anti-pattern bosses. Out-architect <strong>The Proctor</strong>. Walk out a <strong>Claude Certified Architect</strong>.</p>
+      <div class="exam-facts">
+        <div class="fact-pill">📅 Exam launched <b>Mar 12, 2026</b></div>
+        <div class="fact-pill">❓ <b>60</b> questions</div>
+        <div class="fact-pill">⏱️ <b>120</b> minutes</div>
+        <div class="fact-pill">🎯 Pass at <b>720/1000</b></div>
+        <div class="fact-pill">🧠 Level <b>301</b></div>
+      </div>
+      <button class="btn primary" onclick="UI.go('home')">⚔️ Begin the Ascent</button>
+      <p class="kbd-tip">Answer with <kbd>1</kbd>–<kbd>4</kbd> · advance with <kbd>Enter</kbd> · your progress saves automatically</p>
+    </section>
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <div class="hub-stats" id="hub-stats"></div>
+      <div class="mode-grid">
+        <div class="mode-card hero" onclick="UI.go('tower')">
+          <span class="badge" id="tower-badge">0/10 floors</span>
+          <span class="emoji">🗼</span>
+          <h3>The Tower</h3>
+          <p>The campaign. Ten floors, ten bosses, five exam domains. Clear a floor with 7/10 or better to ascend. Combos earn power-ups; perfection earns legend status.</p>
+        </div>
+        <div class="mode-card" id="card-exam" onclick="UI.go('examintro')">
+          <span class="badge" id="exam-badge">final boss</span>
+          <span class="emoji">📋</span>
+          <h3>The Proctor</h3>
+          <p>Full exam simulator — 60 weighted questions, 120-minute clock, scaled score out of 1000. Exactly like the real thing, minus the webcam staring at you.</p>
+        </div>
+        <div class="mode-card" onclick="Lightning.start()">
+          <span class="emoji">⚡</span>
+          <h3>Lightning Round</h3>
+          <p>90 seconds. Unlimited questions. Combos multiply your score. For people who read the question before the options load.</p>
+        </div>
+        <div class="mode-card" onclick="Hunt.start()">
+          <span class="emoji">🔦</span>
+          <h3>Anti-Pattern Hunt</h3>
+          <p>Production war stories with one monster hiding inside. Name the anti-pattern, capture it for your bestiary.</p>
+        </div>
+        <div class="mode-card" onclick="Review.start()">
+          <span class="badge" id="deck-badge">0 cards</span>
+          <span class="emoji">🩹</span>
+          <h3>Mistake Clinic</h3>
+          <p>Every question you miss checks in here. Answer it right twice in a row to discharge it. The exam loves your weaknesses.</p>
+        </div>
+        <div class="mode-card" onclick="UI.go('bestiary')">
+          <span class="badge" id="beast-badge">0/12</span>
+          <span class="emoji">📖</span>
+          <h3>Bestiary</h3>
+          <p>The collected monsters of bad architecture. Know their cries. Know their weaknesses. They are all on the exam.</p>
+        </div>
+        <div class="mode-card" onclick="UI.go('trophies')">
+          <span class="badge" id="trophy-badge">0</span>
+          <span class="emoji">🏆</span>
+          <h3>Trophy Hall</h3>
+          <p>Achievements, titles, and bragging rights. Someone scored 893 on the real thing — beat them here first.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOWER -->
+    <section class="screen" id="screen-tower">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>The Tower</h2>
+        <span class="sub">clear 7/10 to ascend · ★ 10/10 for perfection</span>
+      </div>
+      <div class="floor-list" id="floor-list"></div>
+    </section>
+
+    <!-- BATTLE -->
+    <section class="screen" id="screen-battle">
+      <div class="battle-stage">
+        <div class="battle-top">
+          <div class="combatant">
+            <div class="nm" id="b-boss-name">???</div>
+            <div class="hp-track"><div class="hp-fill" id="b-boss-hp" style="width:100%"></div></div>
+          </div>
+          <div>
+            <div class="q-progress" id="b-progress">Q 1/10</div>
+            <div class="combo-chip" id="b-combo"></div>
+          </div>
+          <div class="combatant you">
+            <div class="nm" id="b-player-name">You</div>
+            <div class="hearts" id="b-hearts">❤️❤️❤️</div>
+          </div>
+        </div>
+        <div class="boss-zone">
+          <div class="boss-sprite" id="b-sprite">🌀</div>
+          <div><div class="speech" id="b-speech">…</div></div>
+        </div>
+        <div class="q-zone">
+          <div class="q-text" id="b-qtext"></div>
+          <div class="answers" id="b-answers"></div>
+        </div>
+        <div class="hint-strip" id="b-hint"></div>
+        <div class="shield-note" id="b-shield">🛡️ Checkpoint active — next miss is forgiven</div>
+        <div class="powerup-bar" id="b-powerups"></div>
+      </div>
+      <p class="kbd-tip">Keys <kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>Enter</kbd> continues</p>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="screen-result">
+      <div class="result-wrap">
+        <div class="result-emoji" id="r-emoji">🏆</div>
+        <h2 id="r-title" class="win">VICTORY</h2>
+        <p class="result-sub" id="r-sub"></p>
+        <div class="result-stats" id="r-stats"></div>
+        <div id="r-actions"></div>
+      </div>
+    </section>
+
+    <!-- EXAM INTRO -->
+    <section class="screen" id="screen-examintro">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>The Proctor awaits</h2>
+      </div>
+      <div class="exam-rules">
+        <p><strong>📋 The Proctor</strong> administers a faithful CCA-F simulation:</p>
+        <ul>
+          <li><strong>60 questions</strong>, weighted like the real blueprint — Agentic Architecture 27%, Tool Design &amp; MCP 18%, Claude Code 20%, Prompting &amp; Structured Output 20%, Context &amp; Reliability 15%.</li>
+          <li><strong>120-minute</strong> countdown. The exam auto-submits at zero.</li>
+          <li>Scaled score out of <strong>1000</strong>. You need <strong>720</strong>. No partial credit, no mercy.</li>
+          <li>Navigate freely, <strong>flag questions</strong> for review, change answers any time before submitting.</li>
+          <li>No hints, no power-ups, no boss banter. The Proctor does not banter.</li>
+        </ul>
+        <div class="center">
+          <button class="btn primary" onclick="Exam.start()">🕰️ Begin the 120 minutes</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXAM -->
+    <section class="screen" id="screen-exam">
+      <div class="exam-shell">
+        <div class="exam-main">
+          <div class="exam-qhead">
+            <span class="qn" id="e-qn">Question 1</span>
+            <span class="domain-tag" id="e-domain">D1</span>
+            <button class="flag-btn" id="e-flag" onclick="Exam.toggleFlag()">🚩 Flag</button>
+          </div>
+          <div class="q-text" id="e-qtext"></div>
+          <div class="answers" id="e-answers"></div>
+          <div class="exam-foot">
+            <button class="btn ghost small" id="e-prev" onclick="Exam.nav(-1)">← Previous</button>
+            <button class="btn ghost small" onclick="Exam.confirmSubmit()">Submit exam</button>
+            <button class="btn small" id="e-next" onclick="Exam.nav(1)">Next →</button>
+          </div>
+        </div>
+        <aside class="exam-side">
+          <div class="exam-timer">
+            <div class="t" id="e-timer">120:00</div>
+            <div class="lbl">remaining</div>
+          </div>
+          <div class="nav-grid" id="e-grid"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- EXAM RESULT -->
+    <section class="screen" id="screen-examresult">
+      <div class="result-wrap">
+        <div class="score-dial-wrap">
+          <div class="score-dial">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="86" fill="none" stroke="var(--line)" stroke-width="16"/>
+              <circle id="er-arc" cx="100" cy="100" r="86" fill="none" stroke="var(--good)" stroke-width="16" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="540"/>
+            </svg>
+            <div class="val"><div><div class="n" id="er-score">0</div><div class="d">scaled / 1000 · pass 720</div></div></div>
+          </div>
+        </div>
+        <div class="pass-banner" id="er-banner"></div>
+        <p class="result-sub" id="er-sub"></p>
+        <div class="domain-bars" id="er-bars"></div>
+        <div id="er-actions"></div>
+        <div class="exam-review-list" id="er-review"></div>
+      </div>
+    </section>
+
+    <!-- LIGHTNING -->
+    <section class="screen" id="screen-lightning">
+      <div class="screen-head"><h2>⚡ Lightning Round</h2><span class="sub" id="l-best"></span></div>
+      <div class="lightning-head">
+        <div class="time-track"><div class="time-fill" id="l-time" style="width:100%"></div></div>
+        <div class="lightning-score" id="l-score">0</div>
+      </div>
+      <div class="battle-stage">
+        <div class="q-zone">
+          <div class="combo-chip" id="l-combo" style="text-align:left"></div>
+          <div class="q-text" id="l-qtext"></div>
+          <div class="answers" id="l-answers"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HUNT -->
+    <section class="screen" id="screen-hunt">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>🔦 Anti-Pattern Hunt</h2>
+        <span class="sub" id="h-progress"></span>
+      </div>
+      <div class="battle-stage">
+        <div class="q-zone">
+          <div class="q-text" id="h-qtext"></div>
+          <div class="answers" id="h-answers"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BESTIARY -->
+    <section class="screen" id="screen-bestiary">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>📖 Bestiary</h2>
+        <span class="sub">capture monsters in the Anti-Pattern Hunt</span>
+      </div>
+      <div class="beast-grid" id="beast-grid"></div>
+    </section>
+
+    <!-- REVIEW -->
+    <section class="screen" id="screen-review">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>🩹 Mistake Clinic</h2>
+        <span class="sub" id="rv-progress"></span>
+      </div>
+      <div id="rv-body"></div>
+    </section>
+
+    <!-- TROPHIES -->
+    <section class="screen" id="screen-trophies">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>🏆 Trophy Hall</h2>
+        <span class="sub" id="t-sub"></span>
+      </div>
+      <div class="trophy-grid" id="trophy-grid"></div>
+      <div class="center mt">
+        <button class="btn ghost small" onclick="Game.hardReset()">🗑️ Reset all progress</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="overlay">
+  <div class="modal">
+    <div class="verdict" id="m-verdict">Correct!</div>
+    <div id="m-right" class="right-answer"></div>
+    <div class="expl" id="m-expl"></div>
+    <div class="modal-foot">
+      <button class="btn primary small" id="m-next">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="questions.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
