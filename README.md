@@ -104,13 +104,10 @@ python3 scripts/build_tests.py
   as your dungeon master
 - `STUDY_GUIDE.md` — a 12-week, 1-hour-a-day syllabus mapped to the tower
 
-## Why the redesign?
+## Design
 
-This project descends from
-[SGridworks/claude-certified-architect-training](https://github.com/SGridworks/claude-certified-architect-training),
-which rendered everything — questions included — in an 8px pixel monospace font.
-Charming; also an optometry bill. The new design uses **Inter** for prose,
-**Bricolage Grotesque** for display, and reserves monospace (JetBrains Mono) for
+Built for long study sessions, not eye strain. **Inter** for prose,
+**Bricolage Grotesque** for display, and monospace (JetBrains Mono) reserved for
 actual code tokens like `stop_reason` and `.mcp.json` — which the game detects
 and typesets automatically. Warm ivory-and-terracotta theme by day, a proper
 dark mode by night, answers via keyboard `1`–`4`.
