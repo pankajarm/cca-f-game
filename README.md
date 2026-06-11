@@ -3,6 +3,10 @@
 > Climb the tower. Defeat the anti-pattern bosses. Out-architect **The Proctor**.
 > Walk out a **Claude Certified Architect**.
 
+### ▶︎ [**Play it live → pankajarm.github.io/cca-f-game**](https://pankajarm.github.io/cca-f-game/)
+
+No install, no signup — runs entirely in your browser, progress saved locally.
+
 A study game for the **Claude Certified Architect — Foundations (CCA-F)** exam,
 rebuilt from the ground up and current as of **June 2026**. 192 scenario questions,
 every one generated against the real exam blueprint and adversarially fact-checked.
@@ -11,12 +15,15 @@ No build step. No dependencies. Open one file, start studying.
 
 ## Play it
 
+**Online:** [pankajarm.github.io/cca-f-game](https://pankajarm.github.io/cca-f-game/) — nothing to install.
+
+**Locally:**
+
 ```bash
 python3 scripts/serve.py        # → http://localhost:4173
 ```
 
-…or just open `index.html` in a browser, or host the repo on GitHub Pages
-(Settings → Pages → deploy from `main`, done — the game is the root `index.html`).
+…or just open `index.html` in a browser.
 
 Progress (XP, floors, bestiary, exam history, mistake deck) saves automatically
 to your browser's localStorage.
