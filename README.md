@@ -1,34 +1,117 @@
-# 🗼 Architect's Ascent — the CCA-F training game
+<div align="center">
 
-> Climb the tower. Defeat the anti-pattern bosses. Out-architect **The Proctor**.
-> Walk out a **Claude Certified Architect**.
+# 🗼 Architect's Ascent
 
-### ▶︎ [**Play it live → pankajarm.github.io/cca-f-game**](https://pankajarm.github.io/cca-f-game/)
+### Pass the **Claude Certified Architect** exam by playing a game.
 
-No install, no signup — runs entirely in your browser, progress saved locally.
+*Climb the tower. Defeat the anti-pattern bosses. Out-architect The Proctor.*
+
+[![Play it live](https://img.shields.io/badge/▶︎_PLAY_IT_LIVE-D97757?style=for-the-badge&logoColor=white)](https://pankajarm.github.io/cca-f-game/)
+&nbsp;
+![No install](https://img.shields.io/badge/no_install-runs_in_browser-4E8F83?style=for-the-badge)
+&nbsp;
+![Questions](https://img.shields.io/badge/192_questions-fact_checked-5B7FA6?style=for-the-badge)
+
+<br>
+
+[**▶︎ pankajarm.github.io/cca-f-game**](https://pankajarm.github.io/cca-f-game/) — no install, no signup, progress saved in your browser.
+
+<br>
+
+![Architect's Ascent title screen](docs/screenshots/hero.png)
+
+</div>
+
+---
 
 A study game for the **Claude Certified Architect — Foundations (CCA-F)** exam,
-rebuilt from the ground up and current as of **June 2026**. 192 scenario questions,
-every one generated against the real exam blueprint and adversarially fact-checked.
+built from the ground up and current as of **June 2026**. Instead of grinding a
+PDF of flashcards, you climb a ten-floor tower, fight a boss made of each way
+real agent systems break, and finish against **The Proctor** — a faithful
+60-question, 120-minute exam simulator. Every one of the **192 questions** was
+written to the real exam blueprint and then put through an adversarial fact-check.
 
-No build step. No dependencies. Open one file, start studying.
+It's one folder of static files. Nothing to build, nothing to install.
 
-## Play it
+<div align="center">
 
-**Online:** [pankajarm.github.io/cca-f-game](https://pankajarm.github.io/cca-f-game/) — nothing to install.
+|  |  |
+|:--:|:--:|
+| ![Home hub](docs/screenshots/hub.png) | ![The Tower](docs/screenshots/tower.png) |
+| **Pick your mode** — campaign, exam sim, lightning, hunt | **The Tower** — ten floors, ten bosses, five domains |
 
-**Locally:**
+</div>
 
-```bash
-python3 scripts/serve.py        # → http://localhost:4173
-```
+## ⚔️ Fight the anti-patterns, don't memorize them
 
-…or just open `index.html` in a browser.
+Each floor boss *is* a production failure mode — and it talks back. The Loop
+Terminator stopped reading your agent's output three turns ago. The Tool Hoarder
+gave one agent eighteen tools and wonders why it picks wrong. You beat them by
+choosing the answer that fixes the **root cause**, not the one that bolts a patch
+onto a broken design.
 
-Progress (XP, floors, bestiary, exam history, mistake deck) saves automatically
-to your browser's localStorage.
+<div align="center">
 
-## The exam this trains you for
+![Boss battle](docs/screenshots/battle.png)
+
+*10 questions, 3 hearts, combo streaks that land critical hits and drop power-ups:*
+*🗜️ `/compact` trims two wrong options · 💭 Extended Thinking reveals a hint · 🛡️ Checkpoint forgives a miss.*
+
+</div>
+
+## 📋 Then survive The Proctor
+
+The exam simulator is the real thing minus the webcam: **60 questions drawn to
+the exact domain weights**, a **120-minute** countdown, flag-for-review, a live
+question navigator, and a scaled score out of **1000** with the **720** pass line —
+followed by a per-domain breakdown so you know exactly which floor to re-climb.
+
+<div align="center">
+
+|  |  |
+|:--:|:--:|
+| ![Exam simulator](docs/screenshots/exam.png) | ![Score report](docs/screenshots/score.png) |
+| **Real exam conditions** — timer, flags, navigator | **Scaled score + domain breakdown** |
+
+</div>
+
+## 🎮 Six ways to study
+
+| Mode | What it is |
+|---|---|
+| 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Clear at 7/10 to ascend; ★ for a perfect 10. |
+| 📋 **The Proctor** | Faithful exam sim — 60 weighted questions, 120-min clock, /1000 scoring, full answer review. |
+| ⚡ **Lightning Round** | 90 seconds, unlimited questions, combos multiply your score. For people who read the question before the options load. |
+| 🔦 **Anti-Pattern Hunt** | Twelve production war stories, each hiding one monster. Name it to capture it. |
+| 🩹 **Mistake Clinic** | Every question you miss checks in here. Get it right twice in a row to discharge it — spaced repetition aimed at your weak spots. |
+| 🏆 **Trophy Hall** | 14 achievements, 7 titles from *Apprentice* to *Certified Architect*, daily streaks. |
+
+<div align="center">
+
+|  |  |
+|:--:|:--:|
+| ![Bestiary](docs/screenshots/bestiary.png) | ![Dark mode battle](docs/screenshots/battle-dark.png) |
+| **The Bestiary** — collect all 12 anti-pattern monsters | **Proper dark mode** for late-night cramming |
+
+</div>
+
+## 🧠 The question bank is the point
+
+`questions.js` holds **192 scenario questions** — 150 across the ten floors, 30
+cross-domain exam-pool questions, and 12 hunt vignettes. They were authored
+against a June-2026 brief of the real exam — `stop_reason` loop mechanics, hooks
+vs prompts, MCP config scopes, the `CLAUDE.md` hierarchy, skills frontmatter,
+`claude -p` CI patterns, batch API economics, schema design, context management,
+escalation policy — then **every question was audited by an adversarial reviewer
+agent** that argued for each distractor like a grumpy test-taker filing an appeal.
+Anything defensible got rewritten.
+
+> **The principle baked into every answer:** the correct option fixes the **root
+> cause**; the distractors are patches on a flawed design. (Better tool
+> descriptions before a routing classifier. A deterministic hook before a
+> sterner prompt. A nullable schema field before a "don't fabricate" warning.)
+
+## 📐 The exam this trains you for
 
 | Fact | Value |
 |---|---|
@@ -41,7 +124,8 @@ to your browser's localStorage.
 | Cost | $99 (free for early partner-org employees) |
 | Scenario pools | 6 total, 4 randomly selected per sitting |
 
-**Domain blueprint** (the game's exam simulator draws with exactly these weights):
+**Domain blueprint** — the simulator draws with exactly these weights, and the
+tower is laid out to match:
 
 | Domain | Weight | Tower floors |
 |---|---|---|
@@ -51,70 +135,40 @@ to your browser's localStorage.
 | D4 · Prompt Engineering & Structured Output | 20% | F7 Prompt Workshop · F8 Validation Gauntlet |
 | D5 · Context Management & Reliability | 15% | F9 Memory Halls · F10 Synthesis Chamber |
 
-## Game modes
+## ▶︎ Play it
 
-- **🗼 The Tower** — the campaign. Ten floors, ten anti-pattern bosses with
-  speech-bubble banter and grudges. 10 questions per battle, 3 hearts, clear at
-  7/10. Combo streaks land critical hits and earn power-ups:
-  **🗜️ /compact** (trims two wrong options), **💭 Extended Thinking** (reveals a
-  hint), **🛡️ Checkpoint** (forgives your next miss).
-- **📋 The Proctor** — a faithful exam simulator: 60 questions drawn to the real
-  domain weights, a 120-minute countdown, flag-for-review, a question navigator,
-  scaled scoring out of 1000 with the 720 pass bar, and a per-domain score report
-  with full answer review.
-- **⚡ Lightning Round** — 90 seconds, unlimited questions, combos multiply your
-  score.
-- **🔦 Anti-Pattern Hunt** — twelve production war stories, each hiding exactly
-  one monster of bad architecture. Name it to capture it for the **📖 Bestiary**
-  (every monster card lists its cry and its weakness — they are all on the exam).
-- **🩹 Mistake Clinic** — every question you miss, in any mode, checks in here.
-  Answer it correctly twice in a row to discharge it. Lightweight spaced
-  repetition aimed straight at your weak spots.
-- **🏆 Trophy Hall** — 14 achievements, 7 titles from *Apprentice* to *Certified
-  Architect*, daily streaks.
+**Online — nothing to install:** **[pankajarm.github.io/cca-f-game](https://pankajarm.github.io/cca-f-game/)**
 
-## The question bank
-
-`questions.js` holds **192 questions**: 150 across the ten floors, 30
-cross-domain exam-pool questions, and 12 hunt vignettes. They were authored
-against a June-2026 brief of the real exam (stop_reason loop mechanics, hooks
-vs prompts, MCP config scopes, CLAUDE.md hierarchy, skills frontmatter,
-`claude -p` CI patterns, batch API economics, schema design, context
-management, escalation policy…), then **every question was audited by an
-adversarial reviewer agent** that argued for each distractor like a grumpy
-test-taker filing an appeal — anything defensible got rewritten.
-
-Exam philosophy baked into every answer: **the correct option fixes the root
-cause; the distractors are patches on a flawed design.**
-
-`questions.js` is the single source of truth. The printable practice tests are
-generated from it:
+**Locally:**
 
 ```bash
-python3 scripts/build_tests.py
+python3 scripts/serve.py        # → http://localhost:4173
 ```
 
-## Printable study materials
+…or just open `index.html` in any browser. Progress (XP, floors, bestiary, exam
+history, mistake deck) saves automatically to your browser's localStorage.
 
-- `practice-tests/test-01…10-*.md` — 15 questions per floor, answers in
-  collapsible spoilers
+## 🖨️ Prefer paper?
+
+`questions.js` is the single source of truth; the printable study materials are
+generated from it with `python3 scripts/build_tests.py`:
+
+- `practice-tests/test-01…10-*.md` — 15 questions per floor, answers in collapsible spoilers
 - `practice-tests/full-exam-01.md` — a fixed 60-question paper exam with answer key
 - `practice-tests/anti-pattern-hunt.md` — the twelve war stories, printable
-- `GAME.md` — quest log, XP rules, and how to run boss battles with Claude Code
-  as your dungeon master
+- `GAME.md` — quest log, XP rules, and how to run boss battles with Claude Code as your dungeon master
 - `STUDY_GUIDE.md` — a 12-week, 1-hour-a-day syllabus mapped to the tower
 
-## Design
+## ✨ Design
 
-Built for long study sessions, not eye strain. **Inter** for prose,
-**Bricolage Grotesque** for display, and monospace (JetBrains Mono) reserved for
-actual code tokens like `stop_reason` and `.mcp.json` — which the game detects
-and typesets automatically. Warm ivory-and-terracotta theme by day, a proper
-dark mode by night, answers via keyboard `1`–`4`.
+Built for long study sessions, not eye strain. **Inter** for prose, **Bricolage
+Grotesque** for display, and monospace (JetBrains Mono) reserved for actual code
+tokens like `stop_reason` and `.mcp.json` — which the game detects and typesets
+automatically. Warm ivory-and-terracotta by day, a proper dark mode by night,
+answers by keyboard `1`–`4`, audio you can mute.
 
-## Disclaimers
+---
 
-Not affiliated with or endorsed by Anthropic. Question content is original,
+<sub>Not affiliated with or endorsed by Anthropic. Question content is original,
 written to the public shape of the exam — not dumps. If you can clear the tower
-and beat The Proctor at 720+, you're studying the right things; go book the
-real one.
+and beat The Proctor at 720+, you're studying the right things. Go book the real one. 🎓</sub>
