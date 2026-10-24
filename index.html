@@ -520,7 +520,10 @@ button { font-family: var(--font-body); cursor: pointer; }
 .bp-ideas h5 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
 .bp-ideas ul { margin-left: 16px; }
 .bp-docs { margin: 10px 0 0 46px; font-size: 13px; color: var(--muted); }
-.bp-docs a { color: var(--accent-deep); }
+.bp-docs a, .bp-prep a { color: var(--accent-deep); }
+.bp-delta { margin: 8px 0 0 46px; font-size: 13px; color: var(--ink-soft); background: color-mix(in srgb, var(--gold) 12%, var(--card)); border-radius: 10px; padding: 8px 12px; }
+.bp-prep { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.bp-prep ul { margin-left: 18px; font-size: 14px; color: var(--ink-soft); display: grid; gap: 6px; }
 .bp-scen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .bp-scen { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
 .bp-scen .nm { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
@@ -536,7 +539,7 @@ button { font-family: var(--font-body); cursor: pointer; }
   #topbar .logo { margin-right: auto; font-size: 16px; }
   .icon-btn { width: 34px; height: 34px; }
   .xp-wrap { order: 5; flex-basis: 100%; }
-  .bp-ideas, .bp-docs { grid-template-columns: 1fr; margin-left: 0; }
+  .bp-ideas, .bp-docs, .bp-delta { grid-template-columns: 1fr; margin-left: 0; }
   .bp-oos ul { columns: 1; }
   .bp-domain > summary { flex-wrap: wrap; }
 }
@@ -715,7 +718,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
           <div class="center"><button class="btn ghost" onclick="Exam.start('practice')">📝 Start practice exam</button></div>
         </div>
       </div>
-      <p class="muted small center mt">Real items include multiple-response questions ("select 2"); this bank is single-answer for now.</p>
+      <p class="muted small center mt">💡 People who sat it say time is the squeeze: read the question before the scenario, commit in about 90 seconds, flag and move on, never leave a blank.<br>Real items include multiple-response questions ("select 2"); this bank is single-answer for now.</p>
       <div class="exam-history" id="ei-history"></div>
     </section>
 
@@ -787,6 +790,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
       <div class="bp-tabs" id="bp-tabs">
         <button data-tab="domains" onclick="Blueprint.setTab('domains')">By domain &amp; task statement</button>
         <button data-tab="scenarios" onclick="Blueprint.setTab('scenarios')">By scenario</button>
+        <button data-tab="prep" onclick="Blueprint.setTab('prep')">Exam day &amp; prep</button>
       </div>
       <div id="bp-body"></div>
       <details class="bp-oos">

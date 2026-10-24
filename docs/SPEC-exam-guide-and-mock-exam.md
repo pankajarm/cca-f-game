@@ -103,5 +103,11 @@ No backend, build step or libraries; stays a static GitHub Pages site. No verbat
 5. `scripts/build_tests.py` still runs.
 6. Works in light/dark themes and at phone width.
 
-## 7. Follow-ups
-Multiple-response items (+ renderer), more scenario-framed questions so blocks can be scenario-pure, heatmap view, Blueprint achievement.
+## 7. Official resources (added after research, Oct 24 2026)
+- `GUIDE.docs`: 2–3 official documentation links per task statement (84 total), each fetched and checked.
+- `GUIDE.deltas`: short notes where current docs have moved on since the July guide (e.g. Task tool renamed to Agent; forced `tool_choice` rejected on the newest models). The exam follows the guide, so items keep the guide's terms.
+- `GUIDE.prep`: exam-day facts from official program pages, free official courses, and candidate-reported tips (themes only).
+- Not collected, by design: leaked or "brain dump" exam items. The guide's NDA and the exam policy forbid disclosing exam content, and using it risks result invalidation and credential revocation.
+
+## 8. Follow-ups
+Multiple-response items (+ renderer), more scenario-framed questions so blocks can be scenario-pure, heatmap view, Blueprint achievement. Re-check after Nov 17 2026, when Pearson publishes updated guides (CCAR-F is not on the Dec 7 update list).

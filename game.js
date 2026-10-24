@@ -1187,7 +1187,7 @@ const Blueprint = {
       `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small primary" onclick="Blueprint.drillTs('${f.t.id}')">Drill</button></div>`).join('');
 
     const body = document.getElementById('bp-body');
-    body.innerHTML = this.tab === 'domains' ? this.renderDomains() : this.renderScenarios();
+    body.innerHTML = this.tab === 'domains' ? this.renderDomains() : this.tab === 'scenarios' ? this.renderScenarios() : this.renderPrep();
     document.getElementById('bp-oos').innerHTML = GUIDE.outOfScope.map(x => `<li>${x}</li>`).join('');
   },
 
@@ -1215,7 +1215,8 @@ const Blueprint = {
 
   renderTs(t, color) {
     const st = this.stats(this.refsFor(q => q.ts === t.id));
-    const docs = (t.docs || []).map(x => `<a href="${x.url}" target="_blank" rel="noopener">${x.title}</a>`).join(' · ');
+    const docs = ((GUIDE.docs || {})[t.id] || []).map(x => `<a href="${x.url}" target="_blank" rel="noopener">${x.title}</a>`).join(' · ');
+    const delta = (GUIDE.deltas || {})[t.id];
     return `<div class="bp-ts">
       <div class="bp-tshead">
         <span class="bp-tsid">${t.id}</span>
@@ -1227,7 +1228,18 @@ const Blueprint = {
         <div><h5>Be able to</h5><ul>${t.skills.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
       </div>
       ${docs ? `<div class="bp-docs">📚 Official docs: ${docs}</div>` : ''}
+      ${delta ? `<div class="bp-delta">🔄 <strong>Docs have moved on since the guide:</strong> ${fmt(delta)}</div>` : ''}
     </div>`;
+  },
+
+  renderPrep() {
+    const p = GUIDE.prep, link = x => `<li><a href="${x.url}" target="_blank" rel="noopener">${x.title}</a></li>`;
+    return `<div class="bp-prep">
+      <div class="bp-scen"><div class="nm">📅 Exam day</div><ul>${p.facts.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      <div class="bp-scen"><div class="nm">⏱️ Tips from people who sat it</div><ul>${p.tips.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      <div class="bp-scen"><div class="nm">🎓 Free official courses</div><ul>${p.courses.map(link).join('')}</ul></div>
+      <div class="bp-scen"><div class="nm">🔗 Official pages</div><ul>${p.official.map(link).join('')}</ul></div>
+    </div><p class="muted small mt">Facts from Anthropic's Partner Academy and Pearson VUE pages, checked ${GUIDE.docsCheckedOn}. Tips are common themes from public candidate write-ups, which don't disclose exam content.</p>`;
   },
 
   renderScenarios() {

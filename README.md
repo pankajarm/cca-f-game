@@ -135,6 +135,8 @@ Anything defensible got rewritten.
 | Cost | $125 USD per attempt |
 | Scenarios | 6 in the bank, 4 drawn at random per sitting |
 | Validity | 12 months; free online renewal assessment |
+| Eligibility | Employees of Claude Partner Network organisations; the free courses on academy.claude.com are open to everyone |
+| Practice | The old official practice exam was retired in June 2026; the guide's sample questions are the only official items |
 
 **Domain blueprint** — the simulator draws with exactly these weights, and the
 tower is laid out to match:
