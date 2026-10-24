@@ -1,5 +1,5 @@
 /* ARCHITECT'S ASCENT — question bank
- * 192 scenario questions for the Claude Certified Architect — Foundations exam (2026).
+ * 213 scenario questions for the Claude Certified Architect — Foundations exam (2026).
  * Generated and adversarially verified June 2026. Single source of truth:
  * the markdown practice tests are built from this file by scripts/build_tests.py. */
 window.BANK = {
@@ -3911,6 +3911,431 @@ window.BANK = {
     "context"
    ],
    "id": "hunt-11"
+  }
+ ],
+ "guide-extra": [
+  {
+   "q": "A CI review job must check every pull request for the same three things: security issues, breaking API contract changes, and missing tests. Today one long prompt asks for all three at once and the security section is often thin. An engineer proposes replacing it with an autonomous agent that decides for itself what to investigate on each PR. What is the better design?",
+   "options": [
+    "Keep one prompt but tell the model to spend equal effort on each of the three areas",
+    "Use the autonomous agent, since it can adapt its investigation to each pull request",
+    "Break the review into a fixed prompt chain with one focused step per aspect, since the aspects are known and identical on every PR",
+    "Run the single prompt three times and keep only findings that appear in at least two runs"
+   ],
+   "correct": 2,
+   "explanation": "When the work is predictable and multi-aspect, a fixed prompt chain gives each aspect its own focused pass and consistent coverage. Dynamic, self-directed decomposition is for open-ended investigations where the next step depends on what was found; here the steps never change. Asking for equal effort does not fix dilution inside one prompt, and majority voting suppresses real findings that only appear intermittently.",
+   "hint": "Are the steps known in advance, or discovered along the way?",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "prompt-chaining"
+   ],
+   "id": "gx-00",
+   "ts": "1.6",
+   "scenario": 5
+  },
+  {
+   "q": "A developer-productivity agent is asked to 'add comprehensive tests to our legacy billing codebase' (300 modules, almost no existing tests, unclear dependencies). Which decomposition approach should it take?",
+   "options": [
+    "Map the codebase structure first, identify the highest-impact areas, then build a prioritised plan that is revised as dependencies are discovered",
+    "Generate tests module by module in alphabetical order until every module has at least one test",
+    "Ask for all of the tests in a single pass so the model sees the whole codebase at once",
+    "Write a detailed 40-step procedure up front and have the agent follow it without deviation"
+   ],
+   "correct": 0,
+   "explanation": "An open-ended task over an unfamiliar codebase needs adaptive decomposition: explore and map first, prioritise by impact, and let the plan change as dependencies surface. Alphabetical order ignores impact, a single pass dilutes attention across 300 modules, and a rigid upfront procedure cannot account for what has not been discovered yet.",
+   "hint": "You cannot plan well for code you have not explored yet.",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "adaptive-planning"
+   ],
+   "id": "gx-01",
+   "ts": "1.6",
+   "scenario": 4
+  },
+  {
+   "q": "An on-call assistant investigates latency incidents using a fixed six-step pipeline: check CPU, check memory, check database, check cache, check network, summarise. For last week's spike the real cause was a misconfigured feature flag in a downstream service, which no step looks at, and the summary blamed the cache. What change addresses the underlying problem?",
+   "options": [
+    "Add a seventh fixed step that checks feature flags",
+    "Switch to an adaptive investigation that generates its next subtasks from what each step finds",
+    "Increase max_tokens so the summary step can consider more possibilities",
+    "Run all six steps in parallel to finish faster and leave time for a manual check"
+   ],
+   "correct": 1,
+   "explanation": "Incident investigation is open-ended: the right next step depends on the evidence so far. A fixed pipeline, however long, only finds causes someone predicted; adding a seventh step fixes last week's incident and not the next unknown one. More tokens or parallelism do not change what gets investigated.",
+   "hint": "The pipeline can only find what its author predicted.",
+   "difficulty": "hard",
+   "tags": [
+    "decomposition",
+    "adaptive-planning"
+   ],
+   "id": "gx-02",
+   "ts": "1.6",
+   "scenario": 4
+  },
+  {
+   "q": "Which of these workflows most clearly calls for dynamic, adaptive task decomposition instead of a fixed prompt chain?",
+   "options": [
+    "A nightly summary of the same four lint checks across a repository",
+    "Translating each release note into three languages",
+    "Reformatting every incoming invoice into a fixed internal template",
+    "Finding the root cause of an intermittent memory leak that spans several services"
+   ],
+   "correct": 3,
+   "explanation": "A root-cause hunt across services is open-ended, so each finding changes what to examine next, which is what adaptive decomposition is for. The other three are predictable, repeated transformations where a fixed chain is simpler and more reliable.",
+   "hint": "Which one could not be planned step by step in advance?",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "prompt-chaining"
+   ],
+   "id": "gx-03",
+   "ts": "1.6",
+   "scenario": 0
+  },
+  {
+   "q": "On Monday an engineer spent an hour in a Claude Code session named payment-flake narrowing down a flaky payments test. Nothing in the repository changed overnight. On Tuesday she wants to continue exactly where she left off. What should she do?",
+   "options": [
+    "Start a new session and paste Monday's whole transcript into the first message",
+    "Run claude --resume payment-flake to continue the named session",
+    "Use fork_session so Tuesday's work does not disturb Monday's history",
+    "Add Monday's findings to the project CLAUDE.md so any new session picks them up"
+   ],
+   "correct": 1,
+   "explanation": "Named session resumption continues a specific prior conversation with its context intact, and because nothing changed, its earlier tool results are still valid. Pasting a transcript is a clumsy copy of the same thing, forking is for exploring divergent approaches from a shared baseline, and CLAUDE.md is for durable project standards, not one investigation's notes.",
+   "hint": "The prior context is still valid, so keep it.",
+   "difficulty": "core",
+   "tags": [
+    "sessions",
+    "resume"
+   ],
+   "id": "gx-04",
+   "ts": "1.7",
+   "scenario": 2
+  },
+  {
+   "q": "Two weeks ago an agent session analysed a service's module layout. Since then the team has refactored 60 files and renamed several packages. A developer wants to pick the analysis back up today. Which approach is most reliable?",
+   "options": [
+    "Resume the old session and trust its earlier analysis, since the overall architecture is similar",
+    "Resume the old session and immediately run /compact to shrink the outdated context",
+    "Fork the old session so the original analysis is preserved while the fork works on the new code",
+    "Start a fresh session seeded with a structured summary of the earlier findings, and let it re-read the code that changed"
+   ],
+   "correct": 3,
+   "explanation": "When many earlier tool results are stale, resuming makes the agent reason from file contents that no longer exist. A new session seeded with a concise summary keeps the useful conclusions without the stale details. Compacting or forking still carries the outdated tool results forward.",
+   "hint": "How much of the old context is still true?",
+   "difficulty": "hard",
+   "tags": [
+    "sessions",
+    "stale-context"
+   ],
+   "id": "gx-05",
+   "ts": "1.7",
+   "scenario": 4
+  },
+  {
+   "q": "In a multi-agent research system, the analysis subagent has two tools: analyze_content ('Analyzes content and returns insights') and analyze_document ('Analyzes a document and returns insights'). Web search results are frequently routed to analyze_document, which expects a PDF and returns poor output. What is the most effective fix?",
+   "options": [
+    "Rename analyze_content to extract_web_results and rewrite its description to say it handles web search results, with its inputs and when to use it instead of analyze_document",
+    "Add a system prompt line telling the agent to prefer analyze_content",
+    "Lower the temperature so tool selection becomes more deterministic",
+    "Remove analyze_content so every input goes through analyze_document"
+   ],
+   "correct": 0,
+   "explanation": "The two tools are near-identical in name and description, so the model has nothing to tell them apart. Renaming and rewriting the description removes the overlap at its source. A system-prompt nudge is a workaround that can misfire, temperature does not create missing information, and deleting a tool removes needed functionality.",
+   "hint": "If two tools read the same, the model will guess.",
+   "difficulty": "core",
+   "tags": [
+    "tool-descriptions",
+    "tool-naming"
+   ],
+   "id": "gx-06",
+   "ts": "2.1",
+   "scenario": 3
+  },
+  {
+   "q": "A support agent's tools have detailed, well-differentiated descriptions. Yet whenever a customer mentions the word 'order', even in 'I can't log in to place an order', the agent calls lookup_order first. The system prompt contains: 'Always check the customer's ORDER history before anything else.' What is the most likely cause and fix?",
+   "options": [
+    "The tool descriptions are still too short; add more examples to lookup_order",
+    "The agent has too many tools; remove lookup_order from the support agent",
+    "The keyword-heavy system prompt instruction is overriding the tool descriptions; rewrite it to describe when order history is actually relevant",
+    "Force tool_choice to get_customer on every turn so the agent cannot pick lookup_order"
+   ],
+   "correct": 2,
+   "explanation": "System prompt wording can create strong keyword associations that override good tool descriptions. The fix is to review and rewrite that instruction. The descriptions are already good, removing the tool breaks order queries, and forcing a tool every turn throws away model-driven selection.",
+   "hint": "The descriptions are fine. What else is the model reading?",
+   "difficulty": "hard",
+   "tags": [
+    "tool-descriptions",
+    "system-prompt"
+   ],
+   "id": "gx-07",
+   "ts": "2.1",
+   "scenario": 1
+  },
+  {
+   "q": "A developer-productivity agent needs to change one specific 'return null;' line inside a 900-line file. Edit keeps failing because the text 'return null;' appears 14 times in the file. What is the reliable fallback?",
+   "options": [
+    "Use Bash with sed to replace every occurrence of 'return null;' in the file",
+    "Retry Edit with the same old string until it succeeds",
+    "Grep the file to count the occurrences, then call Edit again with the same string",
+    "Read the full file, make the change in that content, and Write the whole file back"
+   ],
+   "correct": 3,
+   "explanation": "Edit needs a unique anchor. When the text is not unique, Read followed by Write gives a reliable full-file modification. sed changes all 14 occurrences, retrying the same Edit fails the same way, and counting matches does not make the anchor unique.",
+   "hint": "Edit needs a unique match. What else can change a file?",
+   "difficulty": "core",
+   "tags": [
+    "built-ins",
+    "edit"
+   ],
+   "id": "gx-08",
+   "ts": "2.5",
+   "scenario": 4
+  },
+  {
+   "q": "An agent must find every caller of formatCurrency. The function is defined in utils/money.ts but re-exported from a wrapper module, src/lib/index.ts, under the names fmtMoney and toCurrency, and most of the codebase imports those names. A Grep for formatCurrency found only 3 callers. What should the agent do next?",
+   "options": [
+    "Read every file in src/ to be sure no caller is missed",
+    "Read the wrapper module to list every exported name for the function, then Grep the codebase for each name",
+    "Glob for files named *currency* and treat them as the callers",
+    "Accept the 3 results, since Grep searches the entire codebase"
+   ],
+   "correct": 1,
+   "explanation": "To trace usage through a wrapper, first identify all the names it exports, then search for each name. Reading every file wastes context, a filename Glob finds files and not call sites, and the first Grep missed the aliased imports.",
+   "hint": "The callers don't use the original name.",
+   "difficulty": "hard",
+   "tags": [
+    "built-ins",
+    "grep",
+    "tracing"
+   ],
+   "id": "gx-09",
+   "ts": "2.5",
+   "scenario": 4
+  },
+  {
+   "q": "A platform repo has Terraform files in infra/, modules/, and services/*/deploy/. The team wants Terraform conventions applied whenever Claude Code edits any .tf file, and not loaded at all during application-code work. What is the best configuration?",
+   "options": [
+    "Add a Terraform section to the root CLAUDE.md",
+    "Put a CLAUDE.md with the conventions in each of the three directories",
+    "Create .claude/rules/terraform.md with paths: [\"**/*.tf\"] in its YAML frontmatter",
+    "Create a terraform skill that developers invoke when they work on infrastructure"
+   ],
+   "correct": 2,
+   "explanation": "A path-scoped rule with a glob loads only when matching files are edited, wherever they live. Root CLAUDE.md always loads, per-directory CLAUDE.md files miss new locations and duplicate content, and a skill relies on someone remembering to invoke it.",
+   "hint": "The files are spread out, but they share an extension.",
+   "difficulty": "core",
+   "tags": [
+    "rules",
+    "path-scoping"
+   ],
+   "id": "gx-10",
+   "ts": "3.3",
+   "scenario": 2
+  },
+  {
+   "q": "A team split its large CLAUDE.md into eight files in .claude/rules/ (testing.md, api.md, migrations.md and so on), expecting context use to drop. Token usage didn't change, and /memory shows all eight rule files loaded even in a docs-only session. What did they miss?",
+   "options": [
+    "Rules files only load conditionally when the root CLAUDE.md @imports them",
+    "None of the files have a paths field in YAML frontmatter, so each loads unconditionally",
+    "Claude Code loads at most one rules file per session, so they must merge them back",
+    "They need to run /compact once so the rules are re-evaluated"
+   ],
+   "correct": 1,
+   "explanation": "Rule files without paths frontmatter apply everywhere. Adding paths globs makes each load only when matching files are touched, which is where the token savings come from. @import does the opposite of conditional loading, there is no one-file limit, and /compact does not change which rules apply.",
+   "hint": "What tells a rules file when it applies?",
+   "difficulty": "hard",
+   "tags": [
+    "rules",
+    "path-scoping",
+    "context"
+   ],
+   "id": "gx-11",
+   "ts": "3.3",
+   "scenario": 2
+  },
+  {
+   "q": "A bug report includes a clear stack trace pointing to a missing date check in one function, parseInvoiceDate, in a single file. The fix is a three-line conditional. How should the developer run it in Claude Code?",
+   "options": [
+    "Direct execution: describe the fix and let Claude make the change",
+    "Plan mode, so the change is reviewed before any edit",
+    "Plan mode followed by an Explore subagent to map the codebase first",
+    "Fork the session so the fix can be compared against an alternative"
+   ],
+   "correct": 0,
+   "explanation": "A well-scoped, single-file fix with a clear cause is what direct execution is for. Plan mode pays off for multi-file, architectural or multi-approach work; here it only adds overhead, as do exploration or forking.",
+   "hint": "How many valid approaches are there?",
+   "difficulty": "core",
+   "tags": [
+    "plan-mode",
+    "direct-execution"
+   ],
+   "id": "gx-12",
+   "ts": "3.4",
+   "scenario": 2
+  },
+  {
+   "q": "A developer asks Claude Code to convert a flat CSV export into nested JSON grouped by account, then by month. After three rounds of rewording the prose description, each attempt nests the data differently. What is the most effective next step?",
+   "options": [
+    "Write an even longer, more precise prose description of the nesting",
+    "Ask Claude to explain its interpretation before each attempt",
+    "Switch to a larger model, since this is a reasoning failure",
+    "Provide two or three concrete input rows with the exact JSON output expected for each"
+   ],
+   "correct": 3,
+   "explanation": "When prose is read inconsistently, concrete input/output examples are the clearest way to communicate a transformation. More prose has already failed three times, explanations don't pin down the target format, and model size isn't the problem.",
+   "hint": "Show, don't tell.",
+   "difficulty": "core",
+   "tags": [
+    "iterative-refinement",
+    "examples"
+   ],
+   "id": "gx-13",
+   "ts": "3.5",
+   "scenario": 2
+  },
+  {
+   "q": "A developer needs a caching layer for a pricing service but has never built one and doesn't know the domain's failure modes. Before any code is written, what technique best surfaces design considerations they might miss?",
+   "options": [
+    "Ask Claude to implement the simplest cache first and see what breaks in production",
+    "The interview pattern: have Claude ask questions about invalidation, staleness tolerance and failure behaviour before it implements anything",
+    "Have Claude write the cache and then review its own code in the same session",
+    "Copy a caching implementation from another service and adapt it"
+   ],
+   "correct": 1,
+   "explanation": "The interview pattern has Claude ask the questions an expert would, such as invalidation strategy and failure modes, before implementation, which is exactly what an unfamiliar domain needs. Learning from production failures is expensive, same-session self-review is weak, and copying code skips the design questions.",
+   "hint": "Who should be asking the questions?",
+   "difficulty": "core",
+   "tags": [
+    "iterative-refinement",
+    "interview-pattern"
+   ],
+   "id": "gx-14",
+   "ts": "3.5",
+   "scenario": 2
+  },
+  {
+   "q": "After Claude implements a CSV importer, a developer finds three problems: (A) the parser drops quoted commas, (B) the serializer relies on the parser's broken field count, so fixing A will change B's output, and (C) a typo in a log message. How should the feedback be given?",
+   "options": [
+    "Fix one issue per message in the order A, B, C",
+    "Send all three in one message, since batching is always faster",
+    "Describe A and B together in one detailed message because their fixes interact, and handle C separately",
+    "Ask Claude to rewrite the importer from scratch to avoid partial fixes"
+   ],
+   "correct": 2,
+   "explanation": "Interacting problems belong in one message so the fixes are designed together; independent ones can be handled on their own. Fixing A alone would break B, bundling the unrelated typo adds noise, and a full rewrite discards working code.",
+   "hint": "Which of the fixes depend on each other?",
+   "difficulty": "hard",
+   "tags": [
+    "iterative-refinement",
+    "feedback"
+   ],
+   "id": "gx-15",
+   "ts": "3.5",
+   "scenario": 2
+  },
+  {
+   "q": "A CI step asks Claude to 'check that code comments are accurate'. It flags dozens of comments per PR for minor wording, and developers have started ignoring it. Which prompt change most improves precision?",
+   "options": [
+    "Add 'only report high-confidence findings'",
+    "Ask the model to rate each finding from 1 to 10 and post only those rated 8 or higher",
+    "Add 'be conservative and avoid nitpicks'",
+    "Flag a comment only when the behaviour it describes contradicts what the code actually does"
+   ],
+   "correct": 3,
+   "explanation": "Explicit categorical criteria define what counts as an issue. General instructions like 'be conservative' or 'high confidence only' don't reliably improve precision, and self-rated confidence is poorly calibrated.",
+   "hint": "Define what counts as wrong, rather than how careful to be.",
+   "difficulty": "core",
+   "tags": [
+    "explicit-criteria",
+    "false-positives"
+   ],
+   "id": "gx-16",
+   "ts": "4.1",
+   "scenario": 5
+  },
+  {
+   "q": "An automated reviewer labels the same unchecked null dereference 'critical' on one PR and 'minor' on another, and teams can't trust its severity labels for routing. What is the most effective fix?",
+   "options": [
+    "Run the review three times and use the most common severity",
+    "Add 'be consistent with severity ratings' to the prompt",
+    "Define explicit criteria for each severity level, each with a concrete code example",
+    "Drop severity labels entirely and post every finding at the same level"
+   ],
+   "correct": 2,
+   "explanation": "Consistent classification comes from explicit level definitions illustrated by concrete examples. Majority voting averages an undefined standard, 'be consistent' gives the model nothing to be consistent with, and removing severity loses the routing signal the team needs.",
+   "hint": "Consistent with what?",
+   "difficulty": "hard",
+   "tags": [
+    "explicit-criteria",
+    "severity"
+   ],
+   "id": "gx-17",
+   "ts": "4.1",
+   "scenario": 5
+  },
+  {
+   "q": "An extraction pipeline pulls sample_size from research papers. When the paper has a Methods section it works; when the sample size is mentioned inside the results text, the model returns null even though the number is there. What change best fixes this?",
+   "options": [
+    "Add few-shot examples showing correct extraction from both layouts: a dedicated Methods section and figures embedded in the results text",
+    "Make sample_size a required field so the model must always provide a value",
+    "Retry each null result with the same prompt up to three times",
+    "Add a paragraph explaining that sample sizes can appear anywhere"
+   ],
+   "correct": 0,
+   "explanation": "Few-shot examples that show varied document structures are the most effective way to reduce empty extractions caused by layout differences. A required field pushes the model to invent values when the data really is absent, unchanged retries repeat the failure, and prose explanations are weaker than demonstrations.",
+   "hint": "Show it what the other layout looks like.",
+   "difficulty": "core",
+   "tags": [
+    "few-shot",
+    "extraction"
+   ],
+   "id": "gx-18",
+   "ts": "4.2",
+   "scenario": 6
+  },
+  {
+   "q": "A support agent handles clear requests well, but ambiguous ones like 'where's my money?', which could be a refund status check or a billing dispute, are routed inconsistently between check_refund_status and open_billing_dispute. What is the most effective improvement?",
+   "options": [
+    "Add twenty clear-cut examples for each tool",
+    "Add a keyword router in front of the agent that picks the tool",
+    "Merge the two tools into one handle_money_question tool",
+    "Add two to four examples of ambiguous requests, each showing which tool was chosen and why the other was not"
+   ],
+   "correct": 3,
+   "explanation": "Few-shot examples work best when they target the ambiguous cases and show the reasoning for one choice over a plausible alternative, which lets the model generalise its judgement. Many clear-cut examples don't cover the hard cases, a keyword router bypasses the model's understanding, and merging tools just hides the decision.",
+   "hint": "Teach the hard cases, with the reasoning.",
+   "difficulty": "hard",
+   "tags": [
+    "few-shot",
+    "ambiguous-cases",
+    "tool-selection"
+   ],
+   "id": "gx-19",
+   "ts": "4.2",
+   "scenario": 1
+  },
+  {
+   "q": "A research coordinator's document-analysis subagent could not reach 2 of 9 sources (both paywalled) and returned findings from the other 7. The final report reads as complete, and a reviewer later finds that one whole subtopic relied only on the missing sources. What should change?",
+   "options": [
+    "Have the subagent return structured error context for the failed sources, and have synthesis annotate which topic areas have gaps because of them",
+    "Stop the whole report whenever any source fails",
+    "Have the subagent retry the paywalled sources until they succeed",
+    "Leave the missing sources out silently, since 7 of 9 is good coverage"
+   ],
+   "correct": 0,
+   "explanation": "Errors should travel upward as structured context, and the synthesis should mark which findings are well supported and which areas have gaps. Stopping everything over one failure, retrying a permission failure indefinitely, and silently dropping the failures are all anti-patterns.",
+   "hint": "The reader needs to know what's missing.",
+   "difficulty": "core",
+   "tags": [
+    "error-propagation",
+    "coverage-gaps"
+   ],
+   "id": "gx-20",
+   "ts": "5.3",
+   "scenario": 3
   }
  ]
 };
