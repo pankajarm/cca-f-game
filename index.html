@@ -459,6 +459,88 @@ button { font-family: var(--font-body); cursor: pointer; }
 @keyframes confFall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
 
 /* misc */
+/* ---------- exam variants, pacing, practice feedback ---------- */
+.exam-variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.exam-variants h3, .resume-box p { font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.resume-box { margin-bottom: 16px; border-color: var(--gold); }
+.resume-box p { font-size: 16px; font-family: var(--font-body); font-weight: 500; margin-bottom: 12px; }
+.exam-history { max-width: 560px; margin: 22px auto 0; }
+.exam-history h4, .domain-bars h4, .er-focus h4, .bp-focus h4 { font-family: var(--font-display); font-size: 16px; margin: 6px 0 8px; text-align: left; }
+.hist-row { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.exam-mode { font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.scen-chip { font-size: 12px; font-weight: 700; color: var(--accent-deep); background: var(--accent-soft); padding: 3px 10px; border-radius: 99px; margin-right: auto; }
+.scen-box { display: none; background: var(--card-2); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; padding: 12px 14px; font-size: 14.5px; color: var(--ink-soft); margin-bottom: 14px; }
+.qclock { font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.qclock.over { color: var(--bad); }
+#screen-exam:not(.practice) .qclock { display: none; }
+#screen-exam.practice .flag-btn { display: none; }
+.answer.picked { border-color: var(--accent); background: var(--accent-soft); }
+.practice-fb:empty { display: none; }
+.practice-fb { margin-top: 16px; background: var(--card-2); border-radius: 12px; padding: 14px 16px; }
+.practice-fb .verdict { font-family: var(--font-display); font-weight: 800; font-size: 18px; margin-bottom: 4px; }
+.practice-fb .verdict.good { color: var(--good); }
+.practice-fb .verdict.bad { color: var(--bad); }
+.practice-fb .expl { font-size: 14.5px; color: var(--ink-soft); }
+.practice-fb .right { text-align: right; margin-top: 10px; }
+.pace { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 6px; }
+.pace.behind { color: var(--bad); }
+.nav-cell.missed { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+.nav-cell.block-start { box-shadow: -3px 0 0 var(--accent); }
+.er-kind { font-weight: 700; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+.er-note { max-width: 620px; margin: -10px auto 22px; font-size: 13.5px; color: var(--muted); }
+.er-focus { max-width: 560px; margin: 0 auto 22px; text-align: left; }
+.er-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.focus-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; text-align: left; }
+.focus-row .btn { flex: none; }
+.rev-item .tsline { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+/* ---------- blueprint ---------- */
+.exam-facts.left { justify-content: flex-start; margin: 0 0 16px; }
+.bp-focus { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px 18px; margin-bottom: 16px; }
+.bp-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.bp-tabs button { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--line-strong); background: var(--card); color: var(--ink); cursor: pointer; }
+.bp-tabs button.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.bp-domain { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--dc); border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+.bp-domain > summary { display: flex; align-items: center; gap: 14px; padding: 14px 18px; cursor: pointer; list-style: none; }
+.bp-domain > summary::-webkit-details-marker { display: none; }
+.bp-dnum { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--dc); flex: none; width: 40px; }
+.bp-dmeta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.bp-dmeta .nm { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.bp-bar { position: relative; height: 7px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 5px; max-width: 420px; }
+.bp-bar .seen { position: absolute; inset: 0 auto 0 0; background: var(--line-strong); }
+.bp-bar .right { position: absolute; inset: 0 auto 0 0; }
+.bp-ts { border-top: 1px solid var(--line); padding: 14px 18px; }
+.bp-tshead { display: flex; gap: 12px; align-items: flex-start; }
+.bp-tsid { font-family: var(--font-display); font-weight: 800; color: var(--dc); flex: none; width: 34px; }
+.bp-tstitle { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; }
+.bp-tstitle .muted { font-weight: 500; font-size: 12.5px; }
+.bp-ideas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0 0 46px; font-size: 13.5px; color: var(--ink-soft); }
+.bp-ideas h5 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
+.bp-ideas ul { margin-left: 16px; }
+.bp-docs { margin: 10px 0 0 46px; font-size: 13px; color: var(--muted); }
+.bp-docs a { color: var(--accent-deep); }
+.bp-scen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.bp-scen { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+.bp-scen .nm { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.bp-scen p { font-size: 14px; color: var(--ink-soft); flex: 1; }
+.bp-scen .btn { align-self: flex-start; }
+.bp-oos { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 18px; }
+.bp-oos summary { cursor: pointer; font-weight: 600; }
+.bp-oos ul { columns: 2; margin: 10px 0 0 18px; font-size: 13.5px; color: var(--ink-soft); }
+.drill-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 10px; }
+@media (max-width: 640px) {
+  #app { padding: 0 16px 80px; }
+  #topbar { flex-wrap: wrap; gap: 10px; }
+  #topbar .logo { margin-right: auto; font-size: 16px; }
+  .icon-btn { width: 34px; height: 34px; }
+  .xp-wrap { order: 5; flex-basis: 100%; }
+  .bp-ideas, .bp-docs { grid-template-columns: 1fr; margin-left: 0; }
+  .bp-oos ul { columns: 1; }
+  .bp-domain > summary { flex-wrap: wrap; }
+}
+
 .center { text-align: center; }
 .mt { margin-top: 22px; }
 .kbd-tip { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 14px; }
@@ -505,11 +587,17 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
           <h3>The Tower</h3>
           <p>The campaign. Ten floors, ten bosses, five exam domains. Clear a floor with 7/10 or better to ascend. Combos earn power-ups; perfection earns legend status.</p>
         </div>
+        <div class="mode-card" id="card-blueprint" onclick="UI.go('blueprint')">
+          <span class="badge" id="bp-badge">exam guide</span>
+          <span class="emoji">📘</span>
+          <h3>The Blueprint</h3>
+          <p>Study by the official exam guide: 5 domains, 30 task statements, 6 scenarios. Key ideas, your coverage, and a 10-question drill for each.</p>
+        </div>
         <div class="mode-card" id="card-exam" onclick="UI.go('examintro')">
           <span class="badge" id="exam-badge">final boss</span>
           <span class="emoji">📋</span>
-          <h3>The Proctor</h3>
-          <p>Full exam simulator — 60 weighted questions, 120-minute clock, scaled score out of 1000. Exactly like the real thing, minus the webcam staring at you.</p>
+          <h3>The Proctor · Mock Exam</h3>
+          <p>The real format: 60 questions, 120 minutes, 4 of 6 scenarios, blueprint weights, results by domain. Or a practice run with feedback after every question.</p>
         </div>
         <div class="mode-card" onclick="Lightning.start()">
           <span class="emoji">⚡</span>
@@ -600,33 +688,53 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
       <div class="screen-head">
         <button class="back-link" onclick="UI.go('home')">← Hall</button>
         <h2>The Proctor awaits</h2>
+        <span class="sub">modelled on the CCAR-F exam guide v1.0</span>
       </div>
-      <div class="exam-rules">
-        <p><strong>📋 The Proctor</strong> administers a faithful CCA-F simulation:</p>
-        <ul>
-          <li><strong>60 questions</strong>, weighted like the real blueprint — Agentic Architecture 27%, Tool Design &amp; MCP 18%, Claude Code 20%, Prompting &amp; Structured Output 20%, Context &amp; Reliability 15%.</li>
-          <li><strong>120-minute</strong> countdown. The exam auto-submits at zero.</li>
-          <li>Scaled score out of <strong>1000</strong>. You need <strong>720</strong>. No partial credit, no mercy.</li>
-          <li>Navigate freely, <strong>flag questions</strong> for review, change answers any time before submitting.</li>
-          <li>No hints, no power-ups, no boss banter. The Proctor does not banter.</li>
-        </ul>
-        <div class="center">
-          <button class="btn primary" onclick="Exam.start()">🕰️ Begin the 120 minutes</button>
+      <div class="exam-rules resume-box" id="ei-resume" style="display:none"></div>
+      <div class="exam-variants">
+        <div class="exam-rules">
+          <h3>📋 Mock Exam</h3>
+          <ul>
+            <li><strong>60 questions</strong> in blueprint proportions: D1 16 · D2 11 · D3 12 · D4 12 · D5 9.</li>
+            <li><strong>4 of the 6 exam scenarios</strong> drawn at random; questions are grouped under them.</li>
+            <li><strong>120-minute</strong> clock (2 minutes a question), with a pace readout. Auto-submits at zero.</li>
+            <li>No feedback until you submit. Flag questions, jump around, change answers.</li>
+            <li>Close the tab and come back: it resumes, and <strong>the clock keeps running</strong>, like the real thing.</li>
+            <li>Estimated scaled score (pass line 720), plus results by domain and scenario.</li>
+          </ul>
+          <div class="center"><button class="btn primary" onclick="Exam.start('mock')">🕰️ Begin the 120 minutes</button></div>
+        </div>
+        <div class="exam-rules">
+          <h3>📝 Practice Exam</h3>
+          <ul>
+            <li>Same 60-question, 4-scenario build.</li>
+            <li>A <strong>2:00 timer per question</strong> that turns red when you go over (it never locks you out).</li>
+            <li>Answer and explanation <strong>right after each question</strong>.</li>
+            <li>Not saved if you leave, and doesn't count toward your best mock score.</li>
+          </ul>
+          <div class="center"><button class="btn ghost" onclick="Exam.start('practice')">📝 Start practice exam</button></div>
         </div>
       </div>
+      <p class="muted small center mt">Real items include multiple-response questions ("select 2"); this bank is single-answer for now.</p>
+      <div class="exam-history" id="ei-history"></div>
     </section>
 
     <!-- EXAM -->
     <section class="screen" id="screen-exam">
       <div class="exam-shell">
         <div class="exam-main">
+          <div class="exam-mode" id="e-mode"></div>
           <div class="exam-qhead">
             <span class="qn" id="e-qn">Question 1</span>
+            <span class="scen-chip" id="e-scen"></span>
             <span class="domain-tag" id="e-domain">D1</span>
+            <span class="qclock" id="e-qclock"></span>
             <button class="flag-btn" id="e-flag" onclick="Exam.toggleFlag()">🚩 Flag</button>
           </div>
+          <div class="scen-box" id="e-scenbox"></div>
           <div class="q-text" id="e-qtext"></div>
           <div class="answers" id="e-answers"></div>
+          <div class="practice-fb" id="e-feedback"></div>
           <div class="exam-foot">
             <button class="btn ghost small" id="e-prev" onclick="Exam.nav(-1)">← Previous</button>
             <button class="btn ghost small" onclick="Exam.confirmSubmit()">Submit exam</button>
@@ -636,7 +744,8 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
         <aside class="exam-side">
           <div class="exam-timer">
             <div class="t" id="e-timer">120:00</div>
-            <div class="lbl">remaining</div>
+            <div class="lbl" id="e-timer-lbl">remaining</div>
+            <div class="pace" id="e-pace"></div>
           </div>
           <div class="nav-grid" id="e-grid"></div>
         </aside>
@@ -646,21 +755,61 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
     <!-- EXAM RESULT -->
     <section class="screen" id="screen-examresult">
       <div class="result-wrap">
+        <div class="er-kind" id="er-kind"></div>
         <div class="score-dial-wrap">
           <div class="score-dial">
             <svg width="200" height="200" viewBox="0 0 200 200">
               <circle cx="100" cy="100" r="86" fill="none" stroke="var(--line)" stroke-width="16"/>
               <circle id="er-arc" cx="100" cy="100" r="86" fill="none" stroke="var(--good)" stroke-width="16" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="540"/>
             </svg>
-            <div class="val"><div><div class="n" id="er-score">0</div><div class="d">scaled / 1000 · pass 720</div></div></div>
+            <div class="val"><div><div class="n" id="er-score">0</div><div class="d">est. scaled · line 720</div></div></div>
           </div>
         </div>
         <div class="pass-banner" id="er-banner"></div>
         <p class="result-sub" id="er-sub"></p>
+        <p class="er-note" id="er-note"></p>
         <div class="domain-bars" id="er-bars"></div>
-        <div id="er-actions"></div>
+        <div class="er-focus" id="er-focus"></div>
+        <div class="er-actions" id="er-actions"></div>
         <div class="exam-review-list" id="er-review"></div>
       </div>
+    </section>
+
+    <!-- BLUEPRINT -->
+    <section class="screen" id="screen-blueprint">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>📘 The Blueprint</h2>
+        <span class="sub" id="bp-version"></span>
+      </div>
+      <div class="exam-facts left" id="bp-facts"></div>
+      <div class="bp-focus" id="bp-focus"></div>
+      <div class="bp-tabs" id="bp-tabs">
+        <button data-tab="domains" onclick="Blueprint.setTab('domains')">By domain &amp; task statement</button>
+        <button data-tab="scenarios" onclick="Blueprint.setTab('scenarios')">By scenario</button>
+      </div>
+      <div id="bp-body"></div>
+      <details class="bp-oos">
+        <summary>🚫 Out of scope: the guide says these won't be tested</summary>
+        <ul id="bp-oos"></ul>
+      </details>
+      <p class="muted small mt">Bars: light = share of questions you've seen, solid = share you got right on your last try. Key ideas are a paraphrase; the official exam guide is the authority.</p>
+    </section>
+
+    <!-- DRILL -->
+    <section class="screen" id="screen-drill">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('blueprint')">← Blueprint</button>
+        <h2 id="d-title">Drill</h2>
+      </div>
+      <div class="battle-stage">
+        <div class="q-zone">
+          <div class="drill-meta"><span id="d-ts"></span><span class="q-progress" id="d-progress"></span></div>
+          <div class="q-text" id="d-qtext"></div>
+          <div class="answers" id="d-answers"></div>
+        </div>
+      </div>
+      <p class="kbd-tip">Keys <kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>Enter</kbd> continues</p>
     </section>
 
     <!-- LIGHTNING -->
@@ -743,6 +892,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
 <div id="toasts"></div>
 
 <script src="questions.js"></script>
+<script src="guide.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
