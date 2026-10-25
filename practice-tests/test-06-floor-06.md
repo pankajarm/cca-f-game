@@ -46,16 +46,16 @@ D) Set CI=true so Claude Code detects the pipeline and disables interactive mode
 A fintech team's pipeline runs claude -p to triage failing integration tests, then a Python script scrapes the verdict out of Claude's prose with a regex. Every few weeks the wording shifts ("the likely culprit is..." vs "root cause:") and the parser silently mis-routes tickets to the wrong on-call team. What fixes the root cause?
 
 A) Tighten the regex to cover the new phrasings and add unit tests for the parser
-B) Run claude -p with --output-format json and read the verdict from the structured result envelope
+B) Run claude -p with --output-format json and a --json-schema that defines the verdict and owning team as enum fields, and route on that typed output
 C) Append "always begin your answer with the exact phrase ROOT CAUSE:" to the prompt
 D) Capture stderr and stdout separately so the prose and the verdict do not interleave
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Scraping free-form prose is the root flaw; --output-format json makes claude -p emit a machine-readable envelope the script can parse deterministically. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.
+**B)** Scraping free-form prose is the root flaw. With --json-schema, claude -p returns a payload that matches a schema the script owns, with the verdict and team as fixed enum values, so routing no longer depends on wording; --output-format json alone would only wrap the same prose in an envelope. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.
 
-*Hint if stuck: Choose deterministic machine-readable output over ever-smarter parsing of natural language.*
+*Hint if stuck: Choose output typed against a schema over ever-smarter parsing of natural language.*
 </details>
 
 ---
@@ -83,13 +83,13 @@ An e-commerce monorepo runs a long dependency-upgrade job through claude -p that
 
 A) Raise the runner's silence threshold to fifteen minutes for this one job
 B) Wrap the step in a shell loop that echoes a heartbeat line every sixty seconds
-C) Run the job with --output-format stream-json so events are emitted incrementally as they occur
+C) Run the job with --output-format stream-json --verbose so events are emitted incrementally as they occur
 D) Split the upgrade into several claude -p calls so each one finishes in under five minutes
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** stream-json emits each event as it happens, which keeps stdout active for the watchdog and gives the team a live trace of what Claude is actually doing. A heartbeat echo quiets the watchdog but reveals nothing about progress, raising the threshold just hides the observability gap, and splitting the job adds orchestration complexity while each call still runs as a silent blob.
+**C)** stream-json emits each event as it happens (print mode requires --verbose alongside it), which keeps stdout active for the watchdog and gives the team a live trace of what Claude is actually doing. A heartbeat echo quiets the watchdog but reveals nothing about progress, raising the threshold just hides the observability gap, and splitting the job adds orchestration complexity while each call still runs as a silent blob.
 
 *Hint if stuck: Think incremental events flowing out during the run, not one blob at the end.*
 </details>

@@ -1,5 +1,5 @@
 /* ARCHITECT'S ASCENT — question bank
- * 192 scenario questions for the Claude Certified Architect — Foundations exam (2026).
+ * 213 scenario questions for the Claude Certified Architect — Foundations exam (2026).
  * Generated and adversarially verified June 2026. Single source of truth:
  * the markdown practice tests are built from this file by scripts/build_tests.py. */
 window.BANK = {
@@ -19,7 +19,10 @@ window.BANK = {
    "tags": [
     "stop_reason",
     "loop-termination"
-   ]
+   ],
+   "id": "f01-00",
+   "ts": "1.1",
+   "scenario": 1
   },
   {
    "q": "A fintech document-extraction service runs an agentic loop against the Claude API. After executing a lookup_exchange_rate tool, the developer appends a user message containing the tool_result and calls the API again — and the request fails with a 400 error saying the tool_result references an unknown tool_use id. What is wrong?",
@@ -36,7 +39,10 @@ window.BANK = {
    "tags": [
     "history-management",
     "tool_result"
-   ]
+   ],
+   "id": "f01-01",
+   "ts": "1.1",
+   "scenario": 6
   },
   {
    "q": "A platform team's deployment agent decides whether to execute a tool with the check: if response.content[0].type == 'tool_use'. It worked in testing, but in production the agent frequently ends with half-finished commentary like 'Let me check the rollout status first' and never runs the tool. Why?",
@@ -53,7 +59,10 @@ window.BANK = {
    "tags": [
     "content-blocks",
     "stop_reason"
-   ]
+   ],
+   "id": "f01-02",
+   "ts": "1.1",
+   "scenario": 4
   },
   {
    "q": "A structured-extraction pipeline pulls clause data from 80-page legal contracts. The loop's logic is: if stop_reason is tool_use, run tools; otherwise treat the response as the final answer. QA reports that roughly 5% of outputs are valid-looking JSON that simply ends mid-field. What is the root cause?",
@@ -70,7 +79,10 @@ window.BANK = {
    "tags": [
     "max_tokens",
     "stop_reason"
-   ]
+   ],
+   "id": "f01-03",
+   "ts": "1.1",
+   "scenario": 6
   },
   {
    "q": "After a runaway agent burned $400 in API calls overnight, an e-commerce team's incident review proposes capping the order-management agent at 3 loop iterations as the primary termination mechanism. A week later, 30% of legitimate multi-step tasks (check inventory, apply discount, create shipment) fail half-finished. What should the architecture look like?",
@@ -87,7 +99,10 @@ window.BANK = {
    "tags": [
     "iteration-caps",
     "loop-termination"
-   ]
+   ],
+   "id": "f01-04",
+   "ts": "1.1",
+   "scenario": 1
   },
   {
    "q": "A market-research agent asks Claude to compare three competitors, and the response comes back with stop_reason tool_use containing three web_search tool_use blocks. The developer's loop executes only the first tool_use block, appends a single tool_result, and resends the history. The API rejects the request. Why?",
@@ -104,7 +119,10 @@ window.BANK = {
    "tags": [
     "parallel-tools",
     "tool_result"
-   ]
+   ],
+   "id": "f01-05",
+   "ts": "1.1",
+   "scenario": 3
   },
   {
    "q": "A bank's account-onboarding agent must always run a KYC sanctions screen before account creation and always write an audit record afterward — regulators fine for misses. Between those two steps the conversation varies wildly: document re-requests, name clarifications, address conflicts. The current pure model-driven loop skipped the sanctions screen twice last quarter despite a bolded system-prompt instruction. What design fixes this?",
@@ -121,7 +139,10 @@ window.BANK = {
    "tags": [
     "hybrid-loop",
     "orchestration"
-   ]
+   ],
+   "id": "f01-06",
+   "ts": "1.4",
+   "scenario": 1
   },
   {
    "q": "A logistics agent calls a track_shipment tool. The developer's code executes the tool, writes the carrier response to a dashboard, and immediately calls the API again with the message history unchanged. The model calls track_shipment again with identical arguments, and again, indefinitely. What explains the behavior?",
@@ -138,7 +159,10 @@ window.BANK = {
    "tags": [
     "history-management",
     "infinite-loops"
-   ]
+   ],
+   "id": "f01-07",
+   "ts": "1.1",
+   "scenario": 1
   },
   {
    "q": "A telecom support agent has 12 tools. Transcripts show it alternating endlessly: get_customer, then search_invoices, then get_customer again with the same id, then search_invoices again. Inspecting the loop code, each API call sends only the system prompt, the original user question, and the single most recent assistant and tool_result exchange. What is the root cause?",
@@ -155,7 +179,10 @@ window.BANK = {
    "tags": [
     "infinite-loops",
     "history-management"
-   ]
+   ],
+   "id": "f01-08",
+   "ts": "1.1",
+   "scenario": 1
   },
   {
    "q": "An SRE team built an incident-triage agent as a hard-coded decision tree: 60 branches mapping alert types to runbook steps. Every novel failure mode requires an engineering sprint to add branches, and last month the tree dead-ended on 40% of incidents. No individual triage step is mandatory or compliance-sensitive — engineers just need the right runbook surfaced. What should they move to?",
@@ -172,7 +199,10 @@ window.BANK = {
    "tags": [
     "model-driven-loops",
     "orchestration"
-   ]
+   ],
+   "id": "f01-09",
+   "ts": "1.1",
+   "scenario": 4
   },
   {
    "q": "A CI pipeline agent streams Claude's responses into a build log. The loop's rule is: if the response contains any text block, post it as the final summary and exit; otherwise execute tools. Builds frequently end with summaries like 'Now I will run the test suite to confirm' while the test tool never executes. What is the flaw?",
@@ -189,7 +219,10 @@ window.BANK = {
    "tags": [
     "content-blocks",
     "stop_reason"
-   ]
+   ],
+   "id": "f01-10",
+   "ts": "1.1",
+   "scenario": 5
   },
   {
    "q": "A travel-booking agent receives a response with four parallel tool_use blocks: two flight searches and two hotel searches. The calls run on an async worker pool and finish out of order. The developer sends each tool_result back as its own user message the moment it completes, and the API rejects the second request. What is the correct handling?",
@@ -206,7 +239,10 @@ window.BANK = {
    "tags": [
     "parallel-tools",
     "tool_result"
-   ]
+   ],
+   "id": "f01-11",
+   "ts": "1.1",
+   "scenario": 1
   },
   {
    "q": "A healthcare intake agent keeps hitting its 25-iteration safety cap. Traces show check_eligibility being called repeatedly with valid arguments; the executor wraps tool calls in a try/except that catches a flaky upstream timeout and appends a tool_result with empty content, after which the model calls the same tool again. The cap is the only thing stopping the loop. What is the right fix?",
@@ -223,7 +259,10 @@ window.BANK = {
    "tags": [
     "infinite-loops",
     "tool-errors"
-   ]
+   ],
+   "id": "f01-12",
+   "ts": "2.2",
+   "scenario": 1
   },
   {
    "q": "A developer-productivity Slack bot built on the Claude API answers questions like 'who owns the payments service?'. The loop calls Claude, sees stop_reason tool_use, executes the ownership-lookup tool, appends the assistant message and tool_result correctly — and then posts the raw tool_result JSON to Slack as the answer. Users complain the output is unreadable. What step is missing?",
@@ -240,7 +279,10 @@ window.BANK = {
    "tags": [
     "agentic-loop",
     "history-management"
-   ]
+   ],
+   "id": "f01-13",
+   "ts": "1.1",
+   "scenario": 4
   },
   {
    "q": "An internal code-generation agent for a monorepo executes a read_file tool and appends the result to history as a new assistant-role message containing the tool_result block. The next API call fails with a 400 validation error about tool_result placement. Where does the tool_result belong?",
@@ -257,7 +299,10 @@ window.BANK = {
    "tags": [
     "tool_result",
     "history-management"
-   ]
+   ],
+   "id": "f01-14",
+   "ts": "1.1",
+   "scenario": 4
   }
  ],
  "floor-02": [
@@ -276,7 +321,10 @@ window.BANK = {
    "tags": [
     "context-isolation",
     "context-packing"
-   ]
+   ],
+   "id": "f02-00",
+   "ts": "1.3",
+   "scenario": 1
   },
   {
    "q": "A multi-agent research system must profile 8 competitors, and each profile is independent of the others. Today the coordinator spawns one research subagent, waits for its report, then spawns the next, taking 25 minutes end to end. What change makes the subagents run concurrently?",
@@ -293,7 +341,10 @@ window.BANK = {
    "tags": [
     "parallel-tasks",
     "task-tool"
-   ]
+   ],
+   "id": "f02-01",
+   "ts": "1.3",
+   "scenario": 3
   },
   {
    "q": "A nightly CI job runs claude -p 'Audit every changed package for license violations' --allowedTools 'Read,Grep,Glob,Bash'. The prompt tells the coordinator to delegate each package to a subagent, but it never spawns any — it scans everything itself and exhausts its context window on large diffs. What is wrong?",
@@ -310,7 +361,10 @@ window.BANK = {
    "tags": [
     "allowedTools",
     "headless"
-   ]
+   ],
+   "id": "f02-02",
+   "ts": "1.3",
+   "scenario": 5
   },
   {
    "q": "An architect spent 30 minutes in a Claude Code session reading 40 files of a monorepo and building a verified mental model of its service boundaries. She now wants to explore three mutually exclusive migration strategies, each requiring long follow-up investigation that would contaminate the others' reasoning. What is the most efficient setup?",
@@ -327,7 +381,10 @@ window.BANK = {
    "tags": [
     "fork_session",
     "branching"
-   ]
+   ],
+   "id": "f02-03",
+   "ts": "1.7",
+   "scenario": 2
   },
   {
    "q": "A security-review coordinator audits a payments service by spawning three subagents: SQL injection in /api/orders, XSS in /web/templates, and hardcoded secrets in /config. Two weeks after release, an SSRF vulnerability is exploited in /api/webhooks — a directory no subagent was ever assigned. What was the architectural failure?",
@@ -344,7 +401,10 @@ window.BANK = {
    "tags": [
     "decomposition",
     "coverage-gaps"
-   ]
+   ],
+   "id": "f02-04",
+   "ts": "1.2",
+   "scenario": 3
   },
   {
    "q": "A market-intelligence coordinator spawns four research subagents scoped as 'pricing trends', 'market trends', 'industry trends', and 'competitor pricing'. The synthesized report repeats the same three statistics four times, and token spend is roughly quadruple a single-agent baseline. What should the architect change?",
@@ -361,7 +421,10 @@ window.BANK = {
    "tags": [
     "decomposition",
     "overlap"
-   ]
+   ],
+   "id": "f02-05",
+   "ts": "1.2",
+   "scenario": 3
   },
   {
    "q": "A platform team in a 300-developer monorepo wants a reusable schema-migration-checker subagent that any engineer's session can delegate to. It must be limited to Read, Grep, and Glob, and run on a cheaper model than the main session. How should it be defined?",
@@ -378,7 +441,10 @@ window.BANK = {
    "tags": [
     "custom-subagents",
     "claude-agents-dir"
-   ]
+   ],
+   "id": "f02-06",
+   "ts": "1.3",
+   "scenario": 4
   },
   {
    "q": "A research pipeline runs 12 scout subagents that each fetch one source and extract publication dates and key claims — mechanical work — plus one synthesizer that writes the final competitive analysis. Analysts trigger it on demand and wait for the memo, and each run costs about $40 with everything on Opus. How do you cut cost with the least quality risk?",
@@ -395,7 +461,10 @@ window.BANK = {
    "tags": [
     "model-selection",
     "haiku-scouts"
-   ]
+   ],
+   "id": "f02-07",
+   "ts": "1.3",
+   "scenario": 3
   },
   {
    "q": "A due-diligence system spawns one subagent per source type — SEC filings, news coverage, earnings-call transcripts — and each returns a free-prose summary. The coordinator's final memo asserts 'revenue grew 40%', but analysts cannot trace which source said it, and the filings and a news article actually disagreed. What design change fixes this?",
@@ -412,7 +481,10 @@ window.BANK = {
    "tags": [
     "structured-outputs",
     "attribution"
-   ]
+   ],
+   "id": "f02-08",
+   "ts": "5.6",
+   "scenario": 3
   },
   {
    "q": "In a healthcare intake pipeline, a symptoms-extractor subagent identifies the patient's record ID from uploaded forms, and an insurance-verifier subagent later needs that ID. An engineer proposes letting the two subagents exchange data directly through a shared messages.json file. What is the recommended pattern instead?",
@@ -429,7 +501,10 @@ window.BANK = {
    "tags": [
     "hub-and-spoke",
     "inter-agent-communication"
-   ]
+   ],
+   "id": "f02-09",
+   "ts": "1.2",
+   "scenario": 0
   },
   {
    "q": "A support platform fans every incoming ticket out to all six specialist subagents — billing, shipping, returns, technical, account, fraud — then aggregates. Telemetry shows 70% of tickets need exactly one specialist, median resolution latency is 90 seconds, and cost per ticket is six times the single-agent baseline. What is the right architectural fix?",
@@ -446,7 +521,10 @@ window.BANK = {
    "tags": [
     "dynamic-routing",
     "orchestration"
-   ]
+   ],
+   "id": "f02-10",
+   "ts": "1.2",
+   "scenario": 1
   },
   {
    "q": "A loan-processing coordinator establishes early in its run that an applicant's documents use DD/MM/YYYY dates and records this finding in its conversation. It then spawns an income-extractor subagent that reads 03/04/2025 as March 4 and mis-dates the pay stubs. What is the correct fix?",
@@ -463,7 +541,10 @@ window.BANK = {
    "tags": [
     "context-packing",
     "context-isolation"
-   ]
+   ],
+   "id": "f02-11",
+   "ts": "1.3",
+   "scenario": 6
   },
   {
    "q": "An e-commerce refund system is wired as a chain: an order-analyzer subagent spawns an inventory-checker, which spawns a refund-calculator, three levels deep. When refund amounts come out wrong, engineers cannot tell which level introduced the error, and the analyzer's context fills with nested transcripts. How should the system be restructured?",
@@ -480,7 +561,10 @@ window.BANK = {
    "tags": [
     "hub-and-spoke",
     "orchestration"
-   ]
+   ],
+   "id": "f02-12",
+   "ts": "1.2",
+   "scenario": 1
   },
   {
    "q": "A legal-tech coordinator must review a 200-page master services agreement using multiple subagents, and the team is debating four decomposition schemes. Which one gives the most reliable coverage?",
@@ -497,7 +581,10 @@ window.BANK = {
    "tags": [
     "decomposition",
     "partitioning"
-   ]
+   ],
+   "id": "f02-13",
+   "ts": "1.2",
+   "scenario": 3
   },
   {
    "q": "In a 10-scout market-research swarm, the scout covering Latin America hits a rate-limited API on its first call and immediately returns the single word 'failed'. The coordinator drops that segment, and the published report silently omits an entire region. How should scout failure handling be designed?",
@@ -514,7 +601,10 @@ window.BANK = {
    "tags": [
     "error-propagation",
     "reliability"
-   ]
+   ],
+   "id": "f02-14",
+   "ts": "5.3",
+   "scenario": 3
   }
  ],
  "floor-03": [
@@ -534,7 +624,10 @@ window.BANK = {
     "hooks",
     "refund-cap",
     "pretooluse"
-   ]
+   ],
+   "id": "f03-00",
+   "ts": "1.5",
+   "scenario": 1
   },
   {
    "q": "A platform team wrote a PreToolUse hook to stop Claude Code from editing files under infra/prod/. The script correctly detects the protected path, prints 'Edit blocked: protected production path' to stdout, and exits with code 0. In testing, the edits still go through and the agent never acknowledges any block. What is wrong?",
@@ -545,14 +638,17 @@ window.BANK = {
     "The hook fires too early to see the file path; the protection must move to a PostToolUse hook"
    ],
    "correct": 2,
-   "explanation": "For PreToolUse hooks, a zero exit code allows the tool call to proceed; exit code 2 is what blocks the call, and stderr (not stdout) is the channel fed back to the model explaining why. The first option is false because gating tool calls before they run is exactly what PreToolUse exists for. additionalContext injects information but does not block anything, and PreToolUse receives the full tool input including the file path, so it does not fire too early.",
+   "explanation": "For PreToolUse hooks, a zero exit code allows the tool call to proceed; exit code 2 is what blocks the call, and stderr (not stdout) is the channel fed back to the model explaining why. PreToolUse hooks can block calls, since gating tool calls before they run is exactly what they exist for, so no settings.json deny rule is needed. additionalContext injects information but does not block anything, and PreToolUse receives the full tool input including the file path, so it does not fire too early.",
    "hint": "Recall which exit code blocks a tool call and which output stream gets fed back to the model.",
    "difficulty": "core",
    "tags": [
     "hooks",
     "exit-code-2",
     "pretooluse"
-   ]
+   ],
+   "id": "f03-01",
+   "ts": "1.5",
+   "scenario": 2
   },
   {
    "q": "A customer support agent calls a get_customer CRM tool that returns 40 fields per record, including marketing flags and audit metadata. After 15 lookups in a long session, context is bloated and the agent starts missing the three fields it actually uses: plan tier, billing status, and open tickets. What is the best fix?",
@@ -570,7 +666,10 @@ window.BANK = {
     "hooks",
     "posttooluse",
     "context-trimming"
-   ]
+   ],
+   "id": "f03-02",
+   "ts": "1.5",
+   "scenario": 1
   },
   {
    "q": "A healthcare intake agent writes visit summaries to a shared log through a write_log tool. CLAUDE.md instructs it to redact Social Security numbers first, and audits show it complies about 98% of the time. The compliance team requires zero SSNs in the logs, full stop. Which approach satisfies the requirement?",
@@ -588,7 +687,10 @@ window.BANK = {
     "hooks",
     "deterministic-vs-probabilistic",
     "pii"
-   ]
+   ],
+   "id": "f03-03",
+   "ts": "1.5",
+   "scenario": 1
   },
   {
    "q": "In a monorepo CI assistant, a run_coverage tool returns raw percentages per package. Reviewers notice the agent keeps flagging packages/legacy-billing for missing the 80% bar even though that package is formally exempt until Q3. The exemption list lives in a YAML file that changes as exemptions are granted and expire, and the agent rarely reads it. How should the team ensure coverage results are interpreted correctly every time?",
@@ -606,7 +708,10 @@ window.BANK = {
     "hooks",
     "additionalContext",
     "posttooluse"
-   ]
+   ],
+   "id": "f03-04",
+   "ts": "1.5",
+   "scenario": 5
   },
   {
    "q": "A developer-productivity team distributes Claude Code skills from a central repo. A bootstrap script syncs new skill folders into .claude/skills when a session opens, but engineers report that skills added that morning never auto-invoke until they manually intervene, because the skill scan happens before the sync finishes. The team wants newly synced skills available automatically in every fresh session. What should they configure?",
@@ -624,7 +729,10 @@ window.BANK = {
     "hooks",
     "session-start",
     "skills"
-   ]
+   ],
+   "id": "f03-05",
+   "ts": "3.2",
+   "scenario": 4
   },
   {
    "q": "An e-commerce operations agent answers on-call engineers' questions in long-running sessions; engineers execute any deploys themselves. Answers must always reflect the current deploy-freeze status and on-call rotation, both of which change mid-session. Today the agent advised an engineer to deploy during a freeze that began an hour after the session started. Which hook placement fixes this?",
@@ -641,7 +749,10 @@ window.BANK = {
    "tags": [
     "hooks",
     "user-prompt-submit"
-   ]
+   ],
+   "id": "f03-06",
+   "ts": "1.5",
+   "scenario": 4
   },
   {
    "q": "A code-generation session in Claude Code keeps ending turns with edits in place but the test suite never run, despite a CLAUDE.md rule saying 'always run the tests before finishing.' The team wants a guarantee that no turn completes after file edits without a test run. What is the right mechanism?",
@@ -658,7 +769,10 @@ window.BANK = {
    "tags": [
     "hooks",
     "stop-hook"
-   ]
+   ],
+   "id": "f03-07",
+   "ts": "1.5",
+   "scenario": 2
   },
   {
    "q": "In a monorepo, the data team must prevent Claude Code from editing files under db/migrations/ that have already been applied to production. Applied migrations are listed in db/applied.json, which changes daily, and new unapplied migration files must remain fully editable. How should this be enforced?",
@@ -676,7 +790,10 @@ window.BANK = {
     "hooks",
     "protected-paths",
     "pretooluse"
-   ]
+   ],
+   "id": "f03-08",
+   "ts": "1.5",
+   "scenario": 2
   },
   {
    "q": "An engineer resumes a Claude Code session from Friday to continue a refactor. Over the weekend a teammate merged 14 commits to main that renamed AuthClient to IdentityClient and moved the src/auth/ directory. The resumed agent immediately proposes edits referencing the old class name and paths. What is the most reliable way to handle this resume staleness?",
@@ -694,7 +811,10 @@ window.BANK = {
     "session-resume",
     "hooks",
     "stale-context"
-   ]
+   ],
+   "id": "f03-09",
+   "ts": "1.7",
+   "scenario": 2
   },
   {
    "q": "A support resolution agent escalates hard cases to human specialists. Specialists complain that each escalation arrives as a raw 150-message transcript and they spend twenty minutes reconstructing what happened before they can act. What should each escalation carry instead?",
@@ -711,7 +831,10 @@ window.BANK = {
    "tags": [
     "escalation",
     "handoff"
-   ]
+   ],
+   "id": "f03-10",
+   "ts": "1.4",
+   "scenario": 1
   },
   {
    "q": "A fintech extraction pipeline's fetch_transactions tool returns dates in a mix of MM/DD/YYYY, ISO 8601, and Unix epoch depending on the upstream bank. The model must compare transaction dates against statement periods and gets it wrong on roughly 1 in 12 records, almost always the epoch-formatted ones. What is the root-cause fix?",
@@ -729,7 +852,10 @@ window.BANK = {
     "hooks",
     "posttooluse",
     "normalization"
-   ]
+   ],
+   "id": "f03-11",
+   "ts": "1.5",
+   "scenario": 6
   },
   {
    "q": "An insurance support agent receives one message: 'I was double-billed in May, my new address is 14 Elm Street, and your last rep was rude - I want that on record.' The agent resolves the billing issue thoroughly and closes the conversation; the address change and the complaint are silently dropped. How should the architect fix this failure pattern?",
@@ -746,7 +872,10 @@ window.BANK = {
    "tags": [
     "decomposition",
     "support"
-   ]
+   ],
+   "id": "f03-12",
+   "ts": "1.4",
+   "scenario": 1
   },
   {
    "q": "An e-commerce agent's apply_store_credit tool is gated by a PreToolUse hook that exits 2 for credits over $50. The block works, but logs show the agent then retries the identical $75 credit four times before giving up, and the customer gets no resolution. The hook's stderr message is just the word 'Blocked.' What should change?",
@@ -764,7 +893,10 @@ window.BANK = {
     "hooks",
     "error-messages",
     "exit-code-2"
-   ]
+   ],
+   "id": "f03-13",
+   "ts": "1.5",
+   "scenario": 1
   },
   {
    "q": "A developer-productivity team wants three automated behaviors in Claude Code: (1) load the current sprint's ticket list once when a session opens, (2) strip ANSI color codes out of every Bash result before the model reads it, and (3) prevent any edit to files under vendor/. Which hook events implement these behaviors?",
@@ -775,13 +907,16 @@ window.BANK = {
     "(1) SessionStart, (2) PostToolUse, (3) PreToolUse"
    ],
    "correct": 3,
-   "explanation": "SessionStart runs once when the session opens, which is the right place for one-time context like the sprint ticket list. PostToolUse fires after a tool runs and is where outputs get normalized, such as stripping ANSI codes from Bash results. PreToolUse gates calls before they execute, so it is where vendor/ edits get blocked with exit code 2. The second option reverses the last two events: PreToolUse cannot clean a result that does not exist yet, and PostToolUse fires only after the edit has already happened.",
+   "explanation": "SessionStart runs once when the session opens, which is the right place for one-time context like the sprint ticket list. PostToolUse fires after a tool runs and is where outputs get normalized, such as stripping ANSI codes from Bash results. PreToolUse gates calls before they execute, so it is where vendor/ edits get blocked with exit code 2. Pairing (2) with PreToolUse and (3) with PostToolUse reverses the last two events: PreToolUse cannot clean a result that does not exist yet, and PostToolUse fires only after the edit has already happened.",
    "hint": "Match each behavior to when it must run: session open, after a tool returns, or before a tool executes.",
    "difficulty": "core",
    "tags": [
     "hooks",
     "hook-events"
-   ]
+   ],
+   "id": "f03-14",
+   "ts": "1.5",
+   "scenario": 4
   }
  ],
  "floor-04": [
@@ -799,7 +934,10 @@ window.BANK = {
    "difficulty": "core",
    "tags": [
     "tool-descriptions"
-   ]
+   ],
+   "id": "f04-00",
+   "ts": "2.1",
+   "scenario": 1
   },
   {
    "q": "An e-commerce assistant has accumulated 18 tools spanning catalog search, inventory, refunds, shipping, and loyalty promotions. After the last batch of tools shipped, wrong-tool calls climbed from 3% to 19% of sessions. What should the architect do?",
@@ -816,7 +954,10 @@ window.BANK = {
    "tags": [
     "tool-count",
     "multi-agent"
-   ]
+   ],
+   "id": "f04-01",
+   "ts": "2.3",
+   "scenario": 1
   },
   {
    "q": "A refund-processing subagent in a support system shares a tool registry that includes adjust_loyalty_points and send_marketing_email. Despite a system prompt line saying \"NEVER use marketing tools,\" the subagent sends a promotional email in about 2% of sessions. What is the right fix?",
@@ -833,7 +974,10 @@ window.BANK = {
    "tags": [
     "tool-scoping",
     "cross-role-tools"
-   ]
+   ],
+   "id": "f04-02",
+   "ts": "2.3",
+   "scenario": 1
   },
   {
    "q": "A fintech extraction agent's query_transactions tool returns the string \"Operation failed\" whenever the data warehouse times out. The model retries the identical query four times, burns its remaining turns, and gives up without producing output. How should the tool be redesigned?",
@@ -849,7 +993,10 @@ window.BANK = {
    "difficulty": "core",
    "tags": [
     "structured-errors"
-   ]
+   ],
+   "id": "f04-03",
+   "ts": "2.2",
+   "scenario": 6
   },
   {
    "q": "A hardware support bot's lookup_warranty tool returns {\"error\": \"No records found\"} when a serial number has no active warranty. The agent treats this as a tool failure, apologizes, and escalates — and 30% of the human queue is now just out-of-warranty devices. What should change?",
@@ -866,7 +1013,10 @@ window.BANK = {
    "tags": [
     "empty-results",
     "structured-errors"
-   ]
+   ],
+   "id": "f04-04",
+   "ts": "2.2",
+   "scenario": 1
   },
   {
    "q": "An insurance claims extraction pipeline must begin every conversation by calling fetch_claim_document, and on multi-page claims the agent later needs fetch_supporting_exhibits before emitting the final extraction. The team set tool_choice to {\"type\": \"tool\", \"name\": \"fetch_claim_document\"} on every request, and now the agent fetches the same document repeatedly and never finishes. What is the fix?",
@@ -883,7 +1033,10 @@ window.BANK = {
    "tags": [
     "tool_choice",
     "force-then-relax"
-   ]
+   ],
+   "id": "f04-05",
+   "ts": "2.3",
+   "scenario": 6
   },
   {
    "q": "A healthcare intake triage step must always act through one of four tools — schedule_appointment, request_records, verify_insurance, or escalate_to_nurse — but in about 8% of turns the model replies with prose suggestions and calls nothing. Which change guarantees an action without over-constraining the choice?",
@@ -899,7 +1052,10 @@ window.BANK = {
    "difficulty": "hard",
    "tags": [
     "tool_choice"
-   ]
+   ],
+   "id": "f04-06",
+   "ts": "2.3",
+   "scenario": 1
   },
   {
    "q": "A 12-person platform team wants a shared Jira MCP server available to everyone who clones their monorepo, but the Jira API token must never appear in version control. How should they configure it?",
@@ -916,7 +1072,10 @@ window.BANK = {
    "tags": [
     "mcp-config",
     "secrets"
-   ]
+   ],
+   "id": "f04-07",
+   "ts": "2.4",
+   "scenario": 4
   },
   {
    "q": "A CI workflow prompt for claude -p instructs: \"Use Grep to collect every file matching *.integration.test.ts under services/, then run them.\" The step is slow and intermittently misses test files. A reviewer flags the instruction. What should it say instead?",
@@ -933,7 +1092,10 @@ window.BANK = {
    "tags": [
     "glob-vs-grep",
     "built-ins"
-   ]
+   ],
+   "id": "f04-08",
+   "ts": "2.5",
+   "scenario": 5
   },
   {
    "q": "A developer is prototyping a personal MCP server for their note-taking app and wants it available in every repository they open on their laptop, without teammates ever seeing it in any shared project. Where should it be configured?",
@@ -949,7 +1111,10 @@ window.BANK = {
    "difficulty": "core",
    "tags": [
     "mcp-config"
-   ]
+   ],
+   "id": "f04-09",
+   "ts": "2.4",
+   "scenario": 4
   },
   {
    "q": "A docs team ships an MCP server whose tool search_product_docs is described only as \"Searches data.\" When users ask product questions in Claude Code, the model keeps running Grep across a stale local docs/ folder instead of calling the MCP tool. What is the root-cause fix?",
@@ -966,7 +1131,10 @@ window.BANK = {
    "tags": [
     "mcp-descriptions",
     "tool-descriptions"
-   ]
+   ],
+   "id": "f04-10",
+   "ts": "2.4",
+   "scenario": 4
   },
   {
    "q": "A new engineer at a payments company asks Claude Code to map everywhere the deprecated applyLegacyFee function is still called across a 1,200-file repository before deleting it. Which workflow is the right one for the agent to follow?",
@@ -983,7 +1151,10 @@ window.BANK = {
    "tags": [
     "grep-then-read",
     "built-ins"
-   ]
+   ],
+   "id": "f04-11",
+   "ts": "2.5",
+   "scenario": 4
   },
   {
    "q": "In a multi-agent research system, a subagent's web_search tool hits a provider rate limit after retrieving 3 of 5 requested sources and currently returns {\"error\": \"request failed\"}, discarding everything. The coordinator restarts the entire research task from zero each time. How should the tool respond instead?",
@@ -1000,7 +1171,10 @@ window.BANK = {
    "tags": [
     "structured-errors",
     "multi-agent"
-   ]
+   ],
+   "id": "f04-12",
+   "ts": "2.2",
+   "scenario": 3
   },
   {
    "q": "A retail-banking assistant already carries 17 tools, and the product team wants to add 2 more for mortgage pre-qualification. Wrong-tool selection is already measurably rising. What should the architect recommend?",
@@ -1017,7 +1191,10 @@ window.BANK = {
    "tags": [
     "tool-count",
     "multi-agent"
-   ]
+   ],
+   "id": "f04-13",
+   "ts": "2.3",
+   "scenario": 1
   },
   {
    "q": "A nightly reporting agent gathers metrics through several tools, and its final request is supposed to produce a prose executive summary. In 12% of runs the model issues yet another tool call on that final request instead of writing the summary. What is the cleanest fix?",
@@ -1033,7 +1210,10 @@ window.BANK = {
    "difficulty": "hard",
    "tags": [
     "tool_choice"
-   ]
+   ],
+   "id": "f04-14",
+   "ts": "2.3",
+   "scenario": 0
   }
  ],
  "floor-05": [
@@ -1052,7 +1232,10 @@ window.BANK = {
    "tags": [
     "claude-md",
     "config-hierarchy"
-   ]
+   ],
+   "id": "f05-00",
+   "ts": "3.1",
+   "scenario": 2
   },
   {
    "q": "A SaaS monorepo has packages/api built on Fastify and packages/dashboard built on React. The root CLAUDE.md documents both sets of conventions, and engineers report Claude applying React component patterns while editing API route handlers. Which change best fixes the misapplied conventions?",
@@ -1069,7 +1252,10 @@ window.BANK = {
    "tags": [
     "claude-md",
     "monorepo"
-   ]
+   ],
+   "id": "f05-01",
+   "ts": "3.1",
+   "scenario": 2
   },
   {
    "q": "A customer-support team ships a skill that drafts refund-decision emails. Compliance requires that this skill never execute shell commands. The SKILL.md body states Never use Bash in bold, yet audit logs from last week show two sessions where the skill ran Bash anyway. What is the root-cause fix?",
@@ -1086,7 +1272,10 @@ window.BANK = {
    "tags": [
     "skills",
     "allowed-tools"
-   ]
+   ],
+   "id": "f05-02",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "A platform team maintains 60 lines of secure-coding standards used by 14 service packages in a monorepo. Each package's CLAUDE.md currently holds a pasted copy. After the standards changed last sprint, an audit found 9 of the 14 copies were stale. How should the team restructure this?",
@@ -1103,7 +1292,10 @@ window.BANK = {
    "tags": [
     "import",
     "monorepo"
-   ]
+   ],
+   "id": "f05-03",
+   "ts": "3.1",
+   "scenario": 2
   },
   {
    "q": "In a repository of GitHub Actions pipelines, Claude has stopped following the YAML formatting conventions that should come from a directory-level CLAUDE.md inside .github/workflows. Before changing any configuration, the engineer wants to confirm whether that file is actually being loaded. What is the right first step?",
@@ -1120,7 +1312,10 @@ window.BANK = {
    "tags": [
     "memory",
     "diagnostics"
-   ]
+   ],
+   "id": "f05-04",
+   "ts": "3.1",
+   "scenario": 2
   },
   {
    "q": "A document-processing team built .claude/skills/invoice-extractor/SKILL.md with a 200-line body of extraction rules for vendor invoices. Its frontmatter description reads: Internal helper for documents. Users paste invoices constantly, but the skill never auto-invokes. What should the team change?",
@@ -1137,7 +1332,10 @@ window.BANK = {
    "tags": [
     "skills",
     "auto-invocation"
-   ]
+   ],
+   "id": "f05-05",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "An engineer at an e-commerce company built a /release-checklist slash command in ~/.claude/commands that walks through the team's deployment checklist. During an incident, a teammate tried to run it and the command did not exist in her session. What is the right fix?",
@@ -1154,7 +1352,10 @@ window.BANK = {
    "tags": [
     "slash-commands",
     "config-scope"
-   ]
+   ],
+   "id": "f05-06",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "A logistics startup's project CLAUDE.md has grown to 520 lines: about 40 lines of universal coding standards, 180 lines of test-writing guidance, 150 lines of API-package specifics, and a 150-line deployment runbook used a few times a month. Engineers report mid-file rules being ignored, and every session carries the full token cost. What is the best restructuring?",
@@ -1172,7 +1373,10 @@ window.BANK = {
     "claude-md",
     "rules",
     "progressive-disclosure"
-   ]
+   ],
+   "id": "f05-07",
+   "ts": "3.1",
+   "scenario": 2
   },
   {
    "q": "Six hours into a session on a healthcare data-extraction project, an engineer creates a new skill at .claude/skills/redact-phi/SKILL.md. When she asks Claude to use it in the same session, Claude responds that no such skill exists. She does not want to lose the session's accumulated context. What should she do?",
@@ -1189,7 +1393,10 @@ window.BANK = {
    "tags": [
     "reload-skills",
     "skills"
-   ]
+   ],
+   "id": "f05-08",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "A research-tooling team has a license-audit skill that shells out to dependency scanners, producing about 40,000 tokens of raw output per run. After each audit, the main session starts forgetting requirements the user stated earlier. Only a short verdict from the audit actually matters. What is the right design change?",
@@ -1206,7 +1413,10 @@ window.BANK = {
    "tags": [
     "skills",
     "context-fork"
-   ]
+   ],
+   "id": "f05-09",
+   "ts": "3.2",
+   "scenario": 4
   },
   {
    "q": "An edtech React app keeps 80 lines of test-writing guidance (React Testing Library queries, a ban on snapshot tests) in its project CLAUDE.md, so every session loads it — including backend-only work. Test files are colocated with their components as *.test.tsx throughout src/. How should this guidance be scoped?",
@@ -1223,7 +1433,10 @@ window.BANK = {
    "tags": [
     "rules",
     "path-scoping"
-   ]
+   ],
+   "id": "f05-10",
+   "ts": "3.3",
+   "scenario": 2
   },
   {
    "q": "Despite a project CLAUDE.md rule saying never delete anything under fixtures/golden, a headless claude -p run in CI executed rm -rf on that directory last Tuesday, breaking 30 snapshot tests. The team needs a guarantee this cannot recur. What should they add?",
@@ -1240,7 +1453,10 @@ window.BANK = {
    "tags": [
     "settings",
     "permissions"
-   ]
+   ],
+   "id": "f05-11",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "An e-commerce ops team shares a backfill-orders skill that needs a date range and a target environment. Teammates keep invoking it with no arguments, forcing Claude to ask follow-up questions every time. The team wants the expected inputs visible right at invocation. What is the designed mechanism for this?",
@@ -1257,7 +1473,10 @@ window.BANK = {
    "tags": [
     "skills",
     "argument-hint"
-   ]
+   ],
+   "id": "f05-12",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "An architect auditing an insurance-claims platform finds 24 skills, each with a SKILL.md body around 400 lines. Assuming every session pays the full cost of all of them, she drafts a plan to consolidate down to five skills. Which statement should change her plan?",
@@ -1274,7 +1493,10 @@ window.BANK = {
    "tags": [
     "progressive-disclosure",
     "skills"
-   ]
+   ],
+   "id": "f05-13",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "A developer-productivity team is designing two helpers: one generates release notes and is run explicitly by an engineer before each release with a version tag; the other is a database-migration safety checklist that should engage automatically whenever Claude touches migration files. How should each be implemented?",
@@ -1291,7 +1513,10 @@ window.BANK = {
    "tags": [
     "slash-commands",
     "skills"
-   ]
+   ],
+   "id": "f05-14",
+   "ts": "3.2",
+   "scenario": 4
   }
  ],
  "floor-06": [
@@ -1310,7 +1535,10 @@ window.BANK = {
    "tags": [
     "plan-mode",
     "claude-code"
-   ]
+   ],
+   "id": "f06-00",
+   "ts": "3.4",
+   "scenario": 2
   },
   {
    "q": "A release engineer adds a GitHub Actions step that should have Claude Code turn the merged commits into release notes. She tries CLAUDE_HEADLESS=true claude \"summarize the commits\" and the job hangs waiting for an interactive terminal until the runner times out. Which invocation actually runs Claude Code non-interactively in CI?",
@@ -1327,24 +1555,30 @@ window.BANK = {
    "tags": [
     "headless",
     "ci-cd"
-   ]
+   ],
+   "id": "f06-01",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A fintech team's pipeline runs claude -p to triage failing integration tests, then a Python script scrapes the verdict out of Claude's prose with a regex. Every few weeks the wording shifts (\"the likely culprit is...\" vs \"root cause:\") and the parser silently mis-routes tickets to the wrong on-call team. What fixes the root cause?",
    "options": [
     "Tighten the regex to cover the new phrasings and add unit tests for the parser",
-    "Run claude -p with --output-format json and read the verdict from the structured result envelope",
+    "Run claude -p with --output-format json and a --json-schema that defines the verdict and owning team as enum fields, and route on that typed output",
     "Append \"always begin your answer with the exact phrase ROOT CAUSE:\" to the prompt",
     "Capture stderr and stdout separately so the prose and the verdict do not interleave"
    ],
    "correct": 1,
-   "explanation": "Scraping free-form prose is the root flaw; --output-format json makes claude -p emit a machine-readable envelope the script can parse deterministically. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.",
-   "hint": "Choose deterministic machine-readable output over ever-smarter parsing of natural language.",
+   "explanation": "Scraping free-form prose is the root flaw. With --json-schema, claude -p returns a payload that matches a schema the script owns, with the verdict and team as fixed enum values, so routing no longer depends on wording; --output-format json alone would only wrap the same prose in an envelope. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.",
+   "hint": "Choose output typed against a schema over ever-smarter parsing of natural language.",
    "difficulty": "core",
    "tags": [
     "output-format",
     "headless"
-   ]
+   ],
+   "id": "f06-02",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A nightly job runs claude -p with --output-format json to scan a repo for deprecated API usage and must hand a dashboard importer records shaped like {file, line, severity}. The JSON envelope always parses, but the result field inside is free-form text, and the importer rejects roughly one run in five. What gives the importer a typed guarantee?",
@@ -1361,24 +1595,30 @@ window.BANK = {
    "tags": [
     "json-schema",
     "output-format"
-   ]
+   ],
+   "id": "f06-03",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "An e-commerce monorepo runs a long dependency-upgrade job through claude -p that takes about nine minutes. The CI runner kills any step that is silent on stdout for five minutes, so the job dies mid-run with nothing logged. The team wants real visibility into what the job is doing, not just a way to keep the runner from killing it. What should they change?",
    "options": [
     "Raise the runner's silence threshold to fifteen minutes for this one job",
     "Wrap the step in a shell loop that echoes a heartbeat line every sixty seconds",
-    "Run the job with --output-format stream-json so events are emitted incrementally as they occur",
+    "Run the job with --output-format stream-json --verbose so events are emitted incrementally as they occur",
     "Split the upgrade into several claude -p calls so each one finishes in under five minutes"
    ],
    "correct": 2,
-   "explanation": "stream-json emits each event as it happens, which keeps stdout active for the watchdog and gives the team a live trace of what Claude is actually doing. A heartbeat echo quiets the watchdog but reveals nothing about progress, raising the threshold just hides the observability gap, and splitting the job adds orchestration complexity while each call still runs as a silent blob.",
+   "explanation": "stream-json emits each event as it happens (print mode requires --verbose alongside it), which keeps stdout active for the watchdog and gives the team a live trace of what Claude is actually doing. A heartbeat echo quiets the watchdog but reveals nothing about progress, raising the threshold just hides the observability gap, and splitting the job adds orchestration complexity while each call still runs as a silent blob.",
    "hint": "Think incremental events flowing out during the run, not one blob at the end.",
    "difficulty": "core",
    "tags": [
     "stream-json",
     "ci-cd"
-   ]
+   ],
+   "id": "f06-04",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A 14-person platform team wants every GitHub pull request reviewed by Claude before human review. Today, reviews only happen when a developer remembers to run a review prompt locally, and about a quarter of PRs merge without one. What is the standard way to automate this?",
@@ -1395,7 +1635,10 @@ window.BANK = {
    "tags": [
     "claude-code-action",
     "ci-cd"
-   ]
+   ],
+   "id": "f06-05",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A healthcare intake startup has one Claude Code session generate a FHIR message parser and then, in the same session, asks \"now review the code you just wrote for bugs.\" The review comes back clean, yet a null-handling defect ships to staging that week. What is the architectural flaw?",
@@ -1412,7 +1655,10 @@ window.BANK = {
    "tags": [
     "self-review",
     "reviewer-session"
-   ]
+   ],
+   "id": "f06-06",
+   "ts": "4.6",
+   "scenario": 2
   },
   {
    "q": "A claude-code-action review runs on every push to a PR. When a developer pushes a fix commit, the bot re-reviews and reposts the same nine findings as brand-new comments, and developers have started muting it entirely. The team wants re-reviews to surface only new issues or ones still unresolved. What is the best fix?",
@@ -1429,7 +1675,10 @@ window.BANK = {
    "tags": [
     "re-review",
     "claude-code-action"
-   ]
+   ],
+   "id": "f06-07",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A nightly CI audit invokes claude -p to assess code quality across a payments repository and is meant to be strictly read-only. One morning the team discovers the job rewrote two config files and committed them via Bash, even though the prompt says \"do not modify anything.\" What is the strongest fix?",
@@ -1446,7 +1695,10 @@ window.BANK = {
    "tags": [
     "allowedTools",
     "ci-cd"
-   ]
+   ],
+   "id": "f06-08",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A CI job asks Claude Code to generate unit tests for the files changed in each PR. Within a month the suite contains over 60 tests that duplicate existing coverage almost verbatim — same fixtures, same assertions — and CI time has doubled. What fixes the root cause?",
@@ -1463,7 +1715,10 @@ window.BANK = {
    "tags": [
     "test-generation",
     "context"
-   ]
+   ],
+   "id": "f06-09",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "A claude-code-action review handles the team's typical 300-line PRs well, but on a 4,800-line vendored-library upgrade it produced detailed comments on the first dozen files, skimmed the remaining forty with one-line notes, and closed with a normal wrap-up well under its output limit — missing a known injection bug in file 38. What should the team change?",
@@ -1480,7 +1735,10 @@ window.BANK = {
    "tags": [
     "multi-pass-review",
     "context"
-   ]
+   ],
+   "id": "f06-10",
+   "ts": "4.6",
+   "scenario": 5
   },
   {
    "q": "A platform team runs a nightly deprecation audit over 7,500 source files using parallel synchronous API calls at 2 a.m. The findings feed a weekly cleanup rotation, so nothing downstream ever blocks on the results, and the job now accounts for 30% of monthly model spend. Which change cuts cost without reducing coverage?",
@@ -1497,7 +1755,10 @@ window.BANK = {
    "tags": [
     "batch-api",
     "cost"
-   ]
+   ],
+   "id": "f06-11",
+   "ts": "4.5",
+   "scenario": 5
   },
   {
    "q": "To save money, a team moved its required pre-merge license-compliance check onto the Batch API. Most batches come back within 20 minutes, but some PRs sit blocked for six hours, and one Friday a batch took nearly a full day and froze all merges. What is the correct architecture?",
@@ -1514,7 +1775,10 @@ window.BANK = {
    "tags": [
     "batch-api",
     "ci-cd"
-   ]
+   ],
+   "id": "f06-12",
+   "ts": "4.5",
+   "scenario": 5
   },
   {
    "q": "A release-notes step running claude -p in CI produces a different structure almost every run — sometimes bullets grouped by team, sometimes a single paragraph, sometimes a table of raw commit hashes. The prompt already says \"be consistent, concise, and professional.\" What is the most effective next step?",
@@ -1531,7 +1795,10 @@ window.BANK = {
    "tags": [
     "few-shot",
     "iterative-refinement"
-   ]
+   ],
+   "id": "f06-13",
+   "ts": "3.5",
+   "scenario": 5
   },
   {
    "q": "After a botched refactor, a developer-productivity lead mandates plan mode for every Claude Code task. Two weeks later, developers complain that fixing a docstring typo or bumping a version string now requires reviewing and approving a plan, and several have stopped using the tool. What policy matches the actual intent of plan mode?",
@@ -1548,7 +1815,10 @@ window.BANK = {
    "tags": [
     "plan-mode",
     "workflow"
-   ]
+   ],
+   "id": "f06-14",
+   "ts": "3.4",
+   "scenario": 2
   }
  ],
  "floor-07": [
@@ -1568,7 +1838,10 @@ window.BANK = {
     "explicit-criteria",
     "code-review",
     "prompting"
-   ]
+   ],
+   "id": "f07-00",
+   "ts": "4.1",
+   "scenario": 5
   },
   {
    "q": "Your fintech extraction service uses a tool_use definition with a detailed JSON schema to pull line items and totals from vendor invoices. Every response parses cleanly against the schema, yet on 6 percent of invoices the extracted line-item amounts do not add up to the extracted invoice total. What does this indicate?",
@@ -1586,7 +1859,10 @@ window.BANK = {
     "json-schema",
     "semantic-validation",
     "tool_use"
-   ]
+   ],
+   "id": "f07-01",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A support-resolution agent ends each conversation by writing a handoff summary for human agents. The required format is four labeled sections, but in production the model sometimes merges sections, renames headers, or adds extras, even though the prompt describes the format in detail. What is the most reliable prompt-level fix?",
@@ -1603,7 +1879,10 @@ window.BANK = {
    "tags": [
     "few-shot",
     "format-consistency"
-   ]
+   ],
+   "id": "f07-02",
+   "ts": "4.2",
+   "scenario": 1
   },
   {
    "q": "An automated security reviewer posts findings on PRs across your platform team's repositories. Its 'potential race condition' category has run at roughly 80 percent false positives for three weeks, and engineers have started dismissing every finding unread, including valid secret-exposure alerts from other categories. What should you do first?",
@@ -1621,7 +1900,10 @@ window.BANK = {
     "false-positives",
     "reviewer-trust",
     "code-review"
-   ]
+   ],
+   "id": "f07-03",
+   "ts": "4.1",
+   "scenario": 5
   },
   {
    "q": "An e-commerce pipeline asks Claude to return product attributes as JSON in a plain text response. About 2 percent of responses begin with 'Here is the extracted JSON:' or wrap the object in a code fence, crashing the downstream parser. The prompt already says 'respond with only the JSON object, no other text.' What is the root-cause fix?",
@@ -1638,7 +1920,10 @@ window.BANK = {
    "tags": [
     "structured-outputs",
     "json-parsing"
-   ]
+   ],
+   "id": "f07-04",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A healthcare intake assistant classifies patient messages as urgent, routine, or administrative. Accuracy on clear-cut messages is 98 percent, but messages mixing signals, like a medication-refill request that also mentions new chest pain, get classified inconsistently across runs. The prompt already contains three clear examples of each category. What should you add?",
@@ -1655,7 +1940,10 @@ window.BANK = {
    "tags": [
     "few-shot",
     "ambiguous-cases"
-   ]
+   ],
+   "id": "f07-05",
+   "ts": "4.2",
+   "scenario": 0
   },
   {
    "q": "An insurance claims pipeline extracts fields from faxed forms using a tool_use schema where policy_number is a required string. When a fax is missing the policy number, about 1 in 30, the model fills in a realistic-looking but invented value, which downstream systems then attempt to look up and fail on. What is the root-cause fix?",
@@ -1673,7 +1961,10 @@ window.BANK = {
     "nullable-fields",
     "fabrication",
     "json-schema"
-   ]
+   ],
+   "id": "f07-06",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A logistics intake system classifies shipping documents with an enum field of six values: bill_of_lading, packing_list, customs_declaration, invoice, delivery_receipt, insurance_certificate. A carrier starts sending a new dangerous-goods declaration form, and the model silently labels every one as customs_declaration. How should the schema evolve?",
@@ -1690,7 +1981,10 @@ window.BANK = {
    "tags": [
     "enums",
     "schema-design"
-   ]
+   ],
+   "id": "f07-07",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A legal-discovery pipeline receives unlabeled documents that may be contracts, depositions, or court filings, with a dedicated extraction tool for each type. With tool_choice set to auto, the model sometimes replies in prose asking which document type it is looking at instead of extracting anything. What configuration fixes this?",
@@ -1707,7 +2001,10 @@ window.BANK = {
    "tags": [
     "tool_choice",
     "extraction"
-   ]
+   ],
+   "id": "f07-08",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A research-ingestion agent must always log a paper's title, authors, and venue via its extract_metadata tool before doing anything else, then decide among summarize_abstract, extract_citations, or finishing. In testing, the model occasionally skips metadata and goes straight to summarization. How do you enforce the ordering?",
@@ -1724,7 +2021,10 @@ window.BANK = {
    "tags": [
     "tool_choice",
     "workflow-ordering"
-   ]
+   ],
+   "id": "f07-09",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A developer-productivity assistant gets its persona, coding standards, and 'never push directly to main' rules injected at the top of every user message, with each request's diff and ticket details following below. In long sessions adherence to the rules degrades, and prompt caching saves almost nothing. How should the prompt be restructured?",
@@ -1742,7 +2042,10 @@ window.BANK = {
     "system-prompt",
     "prompt-structure",
     "prompt-caching"
-   ]
+   ],
+   "id": "f07-10",
+   "ts": "5.1",
+   "scenario": 4
   },
   {
    "q": "A real-estate listing extractor sends a 28,000-token system prompt with taxonomy, field rules, and few-shot examples plus a cache_control breakpoint, followed by one listing per request at 40 requests per minute. Billing shows constant cache writes but almost no cache reads. The system prompt begins with the line 'Current time: 2026-06-09T14:32:07Z.' What is the cause?",
@@ -1759,7 +2062,11 @@ window.BANK = {
    "tags": [
     "prompt-caching",
     "stable-prefix"
-   ]
+   ],
+   "id": "f07-11",
+   "ts": "4.2",
+   "scenario": 0,
+   "oos": true
   },
   {
    "q": "After migrating an expense-report extractor to strict structured outputs, an engineer opens a PR deleting the downstream validation layer that checks each report's category subtotals against its grand total, arguing that 'the output is schema-guaranteed now.' How should you respond?",
@@ -1776,7 +2083,10 @@ window.BANK = {
    "tags": [
     "structured-outputs",
     "semantic-validation"
-   ]
+   ],
+   "id": "f07-12",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A sentiment pipeline classifies 50,000 product reviews per day using a prompt with classification rules and few-shot examples ahead of a cache breakpoint, each review appended last. To 'keep the model fresh,' a teammate samples a new random set of eight examples from a 200-example pool on every request. Cache reads have dropped to zero and label formats have started drifting. What should change?",
@@ -1793,7 +2103,11 @@ window.BANK = {
    "tags": [
     "few-shot",
     "prompt-caching"
-   ]
+   ],
+   "id": "f07-13",
+   "ts": "4.2",
+   "scenario": 0,
+   "oos": true
   },
   {
    "q": "A medical-records pipeline forces its first call with tool_choice set to the extract_patient_header tool, which works, but the integration leaves that same tool_choice on every subsequent request. The model now re-extracts the header repeatedly and never calls extract_medications or produces its final summary. What is the fix?",
@@ -1810,7 +2124,10 @@ window.BANK = {
    "tags": [
     "tool_choice",
     "agentic-loop"
-   ]
+   ],
+   "id": "f07-14",
+   "ts": "4.3",
+   "scenario": 6
   }
  ],
  "floor-08": [
@@ -1829,7 +2146,10 @@ window.BANK = {
    "tags": [
     "retry-loops",
     "validation"
-   ]
+   ],
+   "id": "f08-00",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "A healthcare intake pipeline extracts discharge_date from referral packets, and the validator requires the field. About 12% of packets are outpatient referrals that contain no discharge date at all; for those, the retry-with-feedback loop burns all five attempts, and the model sometimes fabricates a plausible date on attempt four or five just to satisfy the validator. What is the root-cause fix?",
@@ -1847,7 +2167,10 @@ window.BANK = {
     "nullable-fields",
     "fabrication",
     "retry-loops"
-   ]
+   ],
+   "id": "f08-01",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "A logistics company extracts line items and a total from carrier freight invoices. On about 3% of invoices the printed total does not equal the sum of the line charges — carrier billing errors the audit team is paid to find. Today the validator rejects those extractions as model mistakes, and the retry loop pressures the model until the numbers agree. How should the design change?",
@@ -1864,7 +2187,10 @@ window.BANK = {
    "tags": [
     "conflict-detection",
     "schema-design"
-   ]
+   ],
+   "id": "f08-02",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "A CI pipeline runs claude -p to review pull requests. A 14-file PR fits comfortably in the context window at roughly 60k tokens, yet the review consistently produces detailed findings for the first four or five files and shallow or zero findings for the rest — even when humans later find real bugs in files 10 through 14. What is the most likely cause?",
@@ -1881,7 +2207,10 @@ window.BANK = {
    "tags": [
     "attention-dilution",
     "code-review"
-   ]
+   ],
+   "id": "f08-03",
+   "ts": "4.6",
+   "scenario": 5
   },
   {
    "q": "A structured-extraction team submits a Message Batches job covering 8,000 archived support tickets, each request tagged with a custom_id. Results show 7,760 successes, 180 failures for exceeding the maximum request size, and 60 failures from intermittent server errors. What is the most efficient recovery?",
@@ -1899,7 +2228,10 @@ window.BANK = {
     "batch-api",
     "custom_id",
     "retry-loops"
-   ]
+   ],
+   "id": "f08-04",
+   "ts": "4.5",
+   "scenario": 6
   },
   {
    "q": "A CI workflow has Claude Code generate a payment-reconciliation module, then prompts in the same session: 'Now critically review the code you just wrote for bugs.' The review almost always concludes the implementation looks correct, yet QA keeps finding logic errors in the merged code. Which change most improves bug detection?",
@@ -1916,7 +2248,10 @@ window.BANK = {
    "tags": [
     "independent-review",
     "ci-cd"
-   ]
+   ],
+   "id": "f08-05",
+   "ts": "4.6",
+   "scenario": 5
   },
   {
    "q": "An e-commerce team has finalized a new extraction prompt for product attributes and plans to submit all 10,000 legacy listings as a single Message Batch tonight. The prompt has only been eyeballed against two listings. A teammate objects to the plan. What should the team do before committing the full batch?",
@@ -1933,7 +2268,10 @@ window.BANK = {
    "tags": [
     "batch-api",
     "pilot-testing"
-   ]
+   ],
+   "id": "f08-06",
+   "ts": "4.5",
+   "scenario": 6
   },
   {
    "q": "A support-transcript pipeline flags messages that appear to contain payment card numbers, returning pii_flagged as true or false. Compliance reports a wave of false positives — 16-digit order IDs being flagged — but analysts cannot diagnose them because the output never indicates what triggered each flag. Which change best enables false-positive analysis?",
@@ -1951,7 +2289,10 @@ window.BANK = {
     "detected_pattern",
     "false-positives",
     "schema-design"
-   ]
+   ],
+   "id": "f08-07",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "A fintech compliance pipeline must file a regulator-facing report by 9:00 AM daily. It submits the day's transactions as a Message Batch at 6:00 PM the prior evening; results usually land by midnight, but twice this month they arrived after 9:00 AM and the filing was late. Which redesign aligns the pipeline with the Batch API's actual guarantees?",
@@ -1968,7 +2309,10 @@ window.BANK = {
    "tags": [
     "batch-api",
     "sla-planning"
-   ]
+   ],
+   "id": "f08-08",
+   "ts": "4.5",
+   "scenario": 6
   },
   {
    "q": "An insurance claims extraction service wraps its Claude calls in one retry loop. Logs reveal two failure modes handled identically with three immediate, unchanged resends: HTTP 529 overloaded errors, and schema-valid JSON that violates the rule that claim_amount must not exceed policy_limit. Neither mode improves across retries. What is the correct redesign?",
@@ -1985,7 +2329,10 @@ window.BANK = {
    "tags": [
     "retry-loops",
     "error-handling"
-   ]
+   ],
+   "id": "f08-09",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "After fighting attention dilution, a monorepo team redesigned its CI review so each file in a PR gets its own headless claude -p pass. Per-file bug detection improved sharply, but last week the pipeline approved a PR in which api-client.ts called an endpoint whose request shape had changed in routes.ts — each file was internally consistent on its own. What fixes the architecture?",
@@ -2002,7 +2349,10 @@ window.BANK = {
    "tags": [
     "multi-pass-review",
     "code-review"
-   ]
+   ],
+   "id": "f08-10",
+   "ts": "4.6",
+   "scenario": 5
   },
   {
    "q": "A legal contract extraction pipeline retries with validation feedback up to six times. Telemetry shows 82% of contracts pass within two attempts, but 13% fail all six — and inspection reveals those contracts genuinely contain no governing-law clause. The feedback 'governing_law is missing, re-extract' just drives the model to fabricate jurisdictions on later attempts. What should the team change?",
@@ -2020,7 +2370,10 @@ window.BANK = {
     "nullable-fields",
     "retry-loops",
     "fabrication"
-   ]
+   ],
+   "id": "f08-11",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "A media company summarizes each day's articles through the Batch API, submitting at 8:00 PM for a newsletter that ships at 8:00 AM. Results had arrived within three hours for months — until one night they had not arrived by 7:30 AM, the team panic-submitted a duplicate batch, and the newsletter shipped late and double-billed. What is the most robust redesign?",
@@ -2037,7 +2390,10 @@ window.BANK = {
    "tags": [
     "batch-api",
     "sla-planning"
-   ]
+   ],
+   "id": "f08-12",
+   "ts": "4.5",
+   "scenario": 0
   },
   {
    "q": "A corporate expense-report extractor has a single total_amount field. The team discovers the model sometimes returns the arithmetically correct sum of the receipt lines instead of the different total the employee actually wrote — silently masking the addition errors finance is required to flag. An engineer proposes adding 'always copy the written total verbatim; never recalculate' to the prompt. Which approach best serves the finance requirement?",
@@ -2055,7 +2411,10 @@ window.BANK = {
     "stated-vs-calculated",
     "conflict-detection",
     "schema-design"
-   ]
+   ],
+   "id": "f08-13",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "In a healthcare records batch, 600 of 12,000 requests failed with request-too-large errors because each embedded a full multi-year patient history. The on-call engineer correctly used custom_ids to isolate exactly those 600, resubmitted them unchanged in a new batch — and all 600 failed again with the identical error. What did the engineer miss?",
@@ -2073,7 +2432,10 @@ window.BANK = {
     "batch-api",
     "custom_id",
     "error-handling"
-   ]
+   ],
+   "id": "f08-14",
+   "ts": "4.5",
+   "scenario": 6
   }
  ],
  "floor-09": [
@@ -2093,7 +2455,10 @@ window.BANK = {
     "case-facts",
     "summarization",
     "context-management"
-   ]
+   ],
+   "id": "f09-00",
+   "ts": "5.1",
+   "scenario": 1
   },
   {
    "q": "A logistics operations agent calls a shipment-tracking tool that returns a 45-field JSON object per shipment, including carrier metadata, customs codes, and internal routing flags. The agent only ever uses status, ETA, and current location. Sessions tracking 30+ shipments hit context limits by mid-session. What should the architect do?",
@@ -2111,7 +2476,10 @@ window.BANK = {
     "context-management",
     "hooks",
     "tool-output-trimming"
-   ]
+   ],
+   "id": "f09-01",
+   "ts": "5.1",
+   "scenario": 1
   },
   {
    "q": "A healthcare intake assistant opens with a patient who reports three concerns: a billing question, a prescription refill, and a referral request. By turn 15 the assistant has resolved the billing question and closes the conversation, never addressing concerns #2 and #3. What design change fixes this reliably?",
@@ -2128,7 +2496,10 @@ window.BANK = {
    "tags": [
     "issue-tracking",
     "context-management"
-   ]
+   ],
+   "id": "f09-02",
+   "ts": "5.1",
+   "scenario": 1
   },
   {
    "q": "A multi-agent research system's coordinator builds a 60k-token synthesis prompt: subagent findings concatenated chronologically, with the critical scope constraint ('only include peer-reviewed sources after 2020') stated once around token 30k, where it landed in sequence. The final report repeatedly cites blog posts from 2017. What change most directly fixes this?",
@@ -2146,7 +2517,10 @@ window.BANK = {
     "lost-in-the-middle",
     "context-management",
     "multi-agent"
-   ]
+   ],
+   "id": "f09-03",
+   "ts": "5.1",
+   "scenario": 3
   },
   {
    "q": "A telecom support agent is mid-troubleshooting when the customer types 'Stop. I want to talk to a real person.' The agent responds 'I understand, but let's try resetting your router first' and continues for four more turns before the customer abandons the chat. How should escalation be designed?",
@@ -2162,7 +2536,10 @@ window.BANK = {
    "difficulty": "core",
    "tags": [
     "escalation"
-   ]
+   ],
+   "id": "f09-04",
+   "ts": "5.2",
+   "scenario": 1
   },
   {
    "q": "An e-commerce support agent looks up a customer's orders for the last 30 days. The order-search tool returns an empty array, the agent's wrapper raises a SearchFailedError, and the agent retries the call five times before telling the customer 'our system is down.' The customer simply placed no orders that month. What is the correct design?",
@@ -2179,7 +2556,10 @@ window.BANK = {
    "tags": [
     "zero-results",
     "tool-errors"
-   ]
+   ],
+   "id": "f09-05",
+   "ts": "2.2",
+   "scenario": 1
   },
   {
    "q": "A bank's support-agent team proposes escalating to humans whenever a sentiment classifier scores the customer below -0.6. In pilot, a furious customer demanding a routine card replacement is escalated within one turn, while a calm customer methodically describing unauthorized wire transfers totaling $18,400 is never escalated. What should the architects conclude?",
@@ -2196,7 +2576,10 @@ window.BANK = {
    "tags": [
     "escalation",
     "sentiment"
-   ]
+   ],
+   "id": "f09-06",
+   "ts": "5.2",
+   "scenario": 1
   },
   {
    "q": "An insurance claims agent looks up 'Maria Garcia' and the policy-holder tool returns two records with different policy numbers and addresses. The agent silently picks the record with the more recent activity date and quotes a claim status — for the wrong Maria Garcia. What should the agent do instead?",
@@ -2213,7 +2596,10 @@ window.BANK = {
    "tags": [
     "disambiguation",
     "customer-records"
-   ]
+   ],
+   "id": "f09-07",
+   "ts": "5.2",
+   "scenario": 1
   },
   {
    "q": "In a multi-agent research system, a subagent assigned to gather regulatory filings hits a paywall it cannot bypass and returns only the string 'Task failed.' The coordinator, with no usable information, re-dispatches the identical task three times, failing identically each time. What should the subagent have returned?",
@@ -2230,7 +2616,10 @@ window.BANK = {
    "tags": [
     "error-context",
     "multi-agent"
-   ]
+   ],
+   "id": "f09-08",
+   "ts": "5.3",
+   "scenario": 3
   },
   {
    "q": "A fintech document-extraction subagent processing 200 statements hits two failures: a 504 gateway timeout fetching one PDF, and an 'invalid credentials' error from the archival store for twelve older PDFs. It currently propagates both to the coordinator immediately, halting the entire batch. How should each failure be handled?",
@@ -2248,7 +2637,10 @@ window.BANK = {
     "retry",
     "error-handling",
     "multi-agent"
-   ]
+   ],
+   "id": "f09-09",
+   "ts": "5.3",
+   "scenario": 6
   },
   {
    "q": "A SaaS support platform's design review proposes that the agent append a self-assessed confidence score (0-100) to each turn, escalating when confidence drops below 60. Pilots show the agent reporting 85+ confidence while looping on an unresolvable licensing edge case, and 40 on questions it answers correctly. What is the right takeaway?",
@@ -2265,7 +2657,10 @@ window.BANK = {
    "tags": [
     "escalation",
     "confidence"
-   ]
+   ],
+   "id": "f09-10",
+   "ts": "5.2",
+   "scenario": 1
   },
   {
    "q": "A hospital intake agent maintains a structured case-facts block (allergies: penicillin; weight: 72 kg), exactly as the architecture guide recommends. The block was injected at turn 1, but by turn 30 it sits buried under 50k tokens of accumulated dialogue and tool results, and the agent suggests an amoxicillin prescription. The block's contents are intact and within the context window. What is the fix?",
@@ -2283,7 +2678,10 @@ window.BANK = {
     "lost-in-the-middle",
     "case-facts",
     "context-management"
-   ]
+   ],
+   "id": "f09-11",
+   "ts": "5.1",
+   "scenario": 1
   },
   {
    "q": "When a payments support agent escalates a suspected-fraud case, it forwards the entire 28k-token conversation transcript to the human fraud queue. Analysts report spending 8-10 minutes reconstructing each case before they can act, and sometimes miss that the agent already froze the card. What should the handoff contain?",
@@ -2300,7 +2698,10 @@ window.BANK = {
    "tags": [
     "escalation",
     "handoff"
-   ]
+   ],
+   "id": "f09-12",
+   "ts": "1.4",
+   "scenario": 1
   },
   {
    "q": "A Claude Code session navigating a 4,000-file monorepo degrades after an hour: every Grep over the vendored directory returns hundreds of matches, and the team currently runs /compact every 20 minutes, after which Claude re-asks questions it had already answered. The team debates compacting even more aggressively. What is the better approach?",
@@ -2318,7 +2719,10 @@ window.BANK = {
     "context-management",
     "compaction",
     "subagents"
-   ]
+   ],
+   "id": "f09-13",
+   "ts": "5.4",
+   "scenario": 4
   },
   {
    "q": "An e-commerce refund agent's policy document covers refunds up to $500 with documented approval rules. A customer requests $612 for a damaged appliance; the policy says nothing about amounts above $500. The agent spends nine turns re-reading the policy and asking the customer clarifying questions, making no progress. What should the agent's design dictate here?",
@@ -2335,7 +2739,10 @@ window.BANK = {
    "tags": [
     "escalation",
     "policy-gap"
-   ]
+   ],
+   "id": "f09-14",
+   "ts": "5.2",
+   "scenario": 1
   }
  ],
  "floor-10": [
@@ -2354,7 +2761,10 @@ window.BANK = {
    "tags": [
     "context-degradation",
     "long-sessions"
-   ]
+   ],
+   "id": "f10-00",
+   "ts": "5.4",
+   "scenario": 2
   },
   {
    "q": "An expense-report extraction system shows 97% field-level accuracy on its aggregate dashboard, but the finance team keeps escalating wrong totals from handwritten receipts, which make up 4% of volume. Engineering points out that 97% comfortably exceeds the 95% SLA. What is the flaw in that reasoning?",
@@ -2371,7 +2781,10 @@ window.BANK = {
    "tags": [
     "per-segment-validation",
     "evaluation"
-   ]
+   ],
+   "id": "f10-01",
+   "ts": "5.5",
+   "scenario": 6
   },
   {
    "q": "A media company is running an 8-hour Claude Code session migrating 200 analytics reports to a new SQL dialect. The context keeps filling with thousands of lines of grep output and test logs, and by hour four the agent's answers turn slow and generic. Which working pattern addresses the root cause?",
@@ -2389,7 +2802,10 @@ window.BANK = {
     "scratchpad",
     "compact",
     "subagents"
-   ]
+   ],
+   "id": "f10-02",
+   "ts": "5.4",
+   "scenario": 4
   },
   {
    "q": "A research swarm gathering electric-vehicle market data flags a \"source conflict\": one finding says global EV sales were 10.5M units, another says 17.3M. Investigation shows the first comes from a 2023 report and the second from a 2025 report — and the synthesizer had discarded both figures as unreliable. What fixes this?",
@@ -2406,7 +2822,10 @@ window.BANK = {
    "tags": [
     "temporal-metadata",
     "synthesis"
-   ]
+   ],
+   "id": "f10-03",
+   "ts": "5.6",
+   "scenario": 3
   },
   {
    "q": "A healthcare patient-intake system extracts 14 fields from 6,000 faxed forms daily; medication dosage and allergy fields are safety-critical. Reviewing every form by hand costs too much, and a 5% random spot-check let a dosage error through last month. How should human review be routed?",
@@ -2423,7 +2842,10 @@ window.BANK = {
    "tags": [
     "human-review",
     "field-validation"
-   ]
+   ],
+   "id": "f10-04",
+   "ts": "5.5",
+   "scenario": 6
   },
   {
    "q": "An overnight multi-agent research coordinator fans out 60 subagent tasks over roughly seven hours. A crash at hour five currently forces rerunning everything, wasting about $90 of API spend per incident. The team is debating recovery designs. Which is best?",
@@ -2441,7 +2863,10 @@ window.BANK = {
     "crash-recovery",
     "manifests",
     "multi-agent"
-   ]
+   ],
+   "id": "f10-05",
+   "ts": "5.4",
+   "scenario": 3
   },
   {
    "q": "An insurance claims extraction system has run in production for six months, and the team wants to detect quality drift as claim formats evolve. One engineer proposes dashboarding the model's self-reported confidence over time and alerting when the average drops. What is the better approach?",
@@ -2459,7 +2884,10 @@ window.BANK = {
     "stratified-sampling",
     "drift",
     "monitoring"
-   ]
+   ],
+   "id": "f10-06",
+   "ts": "5.5",
+   "scenario": 6
   },
   {
    "q": "You are designing a multi-agent competitive-intelligence system: Haiku scouts gather facts and a Sonnet synthesizer writes the final report. Compliance requires that every claim in the report be traceable to a specific source document. Which design satisfies this requirement?",
@@ -2476,7 +2904,10 @@ window.BANK = {
    "tags": [
     "provenance",
     "claim-source"
-   ]
+   ],
+   "id": "f10-07",
+   "ts": "5.6",
+   "scenario": 3
   },
   {
    "q": "An e-commerce catalog-enrichment agent processes 3,000 product listings in one long-running session. After a crash at item 1,900, the restarted agent began again at item 1 and double-wrote records into the catalog database. What fixes the recovery problem?",
@@ -2493,7 +2924,10 @@ window.BANK = {
    "tags": [
     "crash-recovery",
     "manifests"
-   ]
+   ],
+   "id": "f10-08",
+   "ts": "5.4",
+   "scenario": 6
   },
   {
    "q": "A market-research synthesizer holds three findings on subscriber churn for the same vendor: Source A (2024 annual report) says 12%, Source B (March 2026 analyst note) says 8%, and Source C (April 2026 industry survey) says 15%. The current pipeline averages them and reports \"11.7% churn\". How should synthesis present this instead?",
@@ -2510,7 +2944,10 @@ window.BANK = {
    "tags": [
     "temporal-metadata",
     "conflicting-claims"
-   ]
+   ],
+   "id": "f10-09",
+   "ts": "5.6",
+   "scenario": 3
   },
   {
    "q": "A support resolution agent for an electronics retailer handles long multi-issue conversations, with the platform progressively summarizing older turns to control context size. After several summarization passes, the agent quoted a customer an RMA number and a refund amount of $214.50 that were both slightly wrong — even though both appeared correctly back in turn 12. What is the best fix?",
@@ -2528,7 +2965,10 @@ window.BANK = {
     "progressive-summarization",
     "case-facts",
     "context-management"
-   ]
+   ],
+   "id": "f10-10",
+   "ts": "5.1",
+   "scenario": 1
   },
   {
    "q": "A multi-agent due-diligence system has its coordinator spawn eight research subagents, each returning two to three paragraphs of prose findings. The coordinator's merged brief keeps dropping specific figures and attributing facts to the wrong company. What is the root-cause fix?",
@@ -2546,7 +2986,10 @@ window.BANK = {
     "structured-output",
     "subagents",
     "multi-agent"
-   ]
+   ],
+   "id": "f10-11",
+   "ts": "5.1",
+   "scenario": 3
   },
   {
    "q": "A legal-contracts extraction service runs monthly QA by reviewing the 200 extractions where the model reported the lowest confidence; sampled accuracy has held steady near 91% for three quarters. A client audit then finds a 22% error rate on a new contract template introduced in March — which the model processes with high confidence. Why did QA miss it, and what fixes it?",
@@ -2563,7 +3006,10 @@ window.BANK = {
    "tags": [
     "stratified-sampling",
     "drift"
-   ]
+   ],
+   "id": "f10-12",
+   "ts": "5.5",
+   "scenario": 6
   },
   {
    "q": "In a research system, scouts already return structured findings with claim text, source id, and retrieval date. Yet the final report — written by a synthesizer prompted to produce \"a polished executive narrative, citing sources\" — regularly contains untraceable claims: about 30% of spot-checked statements match no source id in any scout's output. What is the root-cause fix?",
@@ -2581,7 +3027,10 @@ window.BANK = {
     "provenance",
     "structured-output",
     "synthesis"
-   ]
+   ],
+   "id": "f10-13",
+   "ts": "5.6",
+   "scenario": 3
   },
   {
    "q": "A healthcare-policy research agent finds two 2026 peer-reviewed studies reporting different readmission rates for the same procedure: 11% and 19%. The synthesis step currently outputs \"approximately 15%\", and a clinician reviewer has called the report untrustworthy. What should the synthesis do instead?",
@@ -2598,7 +3047,10 @@ window.BANK = {
    "tags": [
     "conflicting-claims",
     "attribution"
-   ]
+   ],
+   "id": "f10-14",
+   "ts": "5.6",
+   "scenario": 3
   }
  ],
  "exam-mix-1": [
@@ -2618,7 +3070,10 @@ window.BANK = {
     "d1",
     "stop_reason",
     "agent-loop"
-   ]
+   ],
+   "id": "mx1-00",
+   "ts": "1.1",
+   "scenario": 1
   },
   {
    "q": "A fintech team extracts fields from 80,000 vendor invoices. Their schema marks vendor_tax_id as a required string, and spot checks show the model invents plausible-looking tax IDs for the roughly 12% of invoices that have none. The team's plan is to add \"NEVER fabricate tax IDs\" to the prompt and submit all 80,000 documents to the Batch API tonight. As the reviewing architect, what do you change?",
@@ -2636,7 +3091,10 @@ window.BANK = {
     "d4",
     "schemas",
     "batch-api"
-   ]
+   ],
+   "id": "mx1-01",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A multi-agent research system answers \"How are EU battery manufacturers responding to the 2026 subsidy changes?\" The coordinator spawns 14 subagents, each scoped to a single manufacturer's press releases. The final report misses industry-wide patterns entirely, and when two subagents report contradictory capacity figures, nobody can tell which publication or date each figure came from. What is the best architectural fix?",
@@ -2654,7 +3112,10 @@ window.BANK = {
     "d1",
     "multi-agent",
     "provenance"
-   ]
+   ],
+   "id": "mx1-02",
+   "ts": "1.2",
+   "scenario": 3
   },
   {
    "q": "A support resolution agent built with the Claude Agent SDK has an issue_refund tool. The system prompt says refunds over $200 require human approval, yet last week it refunded $450 unprompted. Separately, transcripts show that when customers type \"let me talk to a person,\" the agent keeps troubleshooting for several more turns. Which combination fixes both failures at the root?",
@@ -2672,7 +3133,10 @@ window.BANK = {
     "d3",
     "hooks",
     "escalation"
-   ]
+   ],
+   "id": "mx1-03",
+   "ts": "1.5",
+   "scenario": 1
   },
   {
    "q": "An invoice extraction agent calls a lookup_vendor tool to match extracted names against the vendor master database. When a vendor is missing, the tool returns the bare string \"Operation failed\", and the agent retries the identical lookup five times before abandoning the whole document. New vendors appear daily, so a missing match is a routine outcome. What should change?",
@@ -2690,7 +3154,10 @@ window.BANK = {
     "d2",
     "tool-errors",
     "retries"
-   ]
+   ],
+   "id": "mx1-04",
+   "ts": "2.2",
+   "scenario": 6
   },
   {
    "q": "A six-engineer research swarm team uses an internal papers-search MCP server. Each engineer configured it by hand in ~/.claude.json, the nightly CI runner has no MCP config at all, and one teammate just pasted the literal API token into a draft .mcp.json to share it. What is the correct way to share this server across the team and CI?",
@@ -2708,7 +3175,10 @@ window.BANK = {
     "d2",
     "mcp-config",
     "secrets"
-   ]
+   ],
+   "id": "mx1-05",
+   "ts": "2.4",
+   "scenario": 3
   },
   {
    "q": "A support agent has three tools — get_order, fetch_order_info, and order_details — whose descriptions all read roughly \"Retrieves order information.\" The agent picks the wrong one about a third of the time: get_order takes an order ID, fetch_order_info takes a customer email, and order_details takes a tracking number. The team proposes building a small classifier that routes each request to the right tool. What should be done instead?",
@@ -2725,7 +3195,10 @@ window.BANK = {
    "tags": [
     "d2",
     "tool-descriptions"
-   ]
+   ],
+   "id": "mx1-06",
+   "ts": "2.1",
+   "scenario": 1
   },
   {
    "q": "A team built .claude/skills/claims-extract/SKILL.md to standardize healthcare intake form extraction, but Claude Code never auto-invokes it — the frontmatter description just says \"Extraction helper.\" An engineer rewrote the description mid-session, yet the running session still does not pick the skill up. What resolves both problems?",
@@ -2743,7 +3216,10 @@ window.BANK = {
     "d3",
     "skills",
     "progressive-disclosure"
-   ]
+   ],
+   "id": "mx1-07",
+   "ts": "3.2",
+   "scenario": 2
   },
   {
    "q": "In a multi-agent research session, the user spends ten turns with the coordinator narrowing scope: peer-reviewed sources only, 2024-2026 publications, exclude preprints. The coordinator then spawns four research subagents, and three of them come back citing 2019 preprints. Why did this happen, and what is the fix?",
@@ -2761,7 +3237,10 @@ window.BANK = {
     "d1",
     "multi-agent",
     "context-isolation"
-   ]
+   ],
+   "id": "mx1-08",
+   "ts": "1.3",
+   "scenario": 3
   },
   {
    "q": "A support agent handles 60-turn sessions and uses progressive summarization to control context growth. In a recent case the agent confirmed order #88412 and a $63.20 refund early in the conversation; after two summarization passes it told the customer the refund was \"around $60\" and asked for the order number again. What is the right fix?",
@@ -2779,7 +3258,10 @@ window.BANK = {
     "d5",
     "summarization",
     "context-management"
-   ]
+   ],
+   "id": "mx1-09",
+   "ts": "5.1",
+   "scenario": 1
   },
   {
    "q": "A document extraction pipeline processes lab reports, referral letters, and insurance cards for a healthcare intake system. The dashboard shows 95% aggregate field accuracy, and the team plans to track the model's self-reported confidence trend as the ongoing quality signal. A clinician then discovers that insurance cards — 9% of volume — extract member IDs correctly only 58% of the time. What should the team do?",
@@ -2797,7 +3279,10 @@ window.BANK = {
     "d5",
     "validation",
     "sampling"
-   ]
+   ],
+   "id": "mx1-10",
+   "ts": "5.5",
+   "scenario": 6
   },
   {
    "q": "A research swarm classifies each extracted claim into an enum field: market_trend, regulation, technology, or competitor_move. Reviewers keep finding genuinely novel claim types — supply chain disruptions, labor actions — silently shoehorned into competitor_move. What is the right schema fix?",
@@ -2815,7 +3300,10 @@ window.BANK = {
     "d4",
     "schemas",
     "enums"
-   ]
+   ],
+   "id": "mx1-11",
+   "ts": "4.3",
+   "scenario": 3
   },
   {
    "q": "A support agent emits structured ticket dispositions through a tool_use call with a JSON schema. Every response validates, yet in 4% of cases refund_total does not equal the sum of the line_items amounts, and resolution_code sometimes contradicts the narrative summary. The team concludes schema enforcement is broken and wants to switch providers. What is actually happening, and what is the fix?",
@@ -2833,7 +3321,10 @@ window.BANK = {
     "d4",
     "structured-output",
     "validation"
-   ]
+   ],
+   "id": "mx1-12",
+   "ts": "4.3",
+   "scenario": 1
   },
   {
    "q": "A data extraction monorepo keeps parser modules under packages/parsers/ with strict conventions — every parser needs a golden-file test, and regex date parsing is banned — alongside general team standards. Everything lives in one 1,800-line project CLAUDE.md that bloats every session's context, and engineers report Claude Code missing the parser rules anyway. How should this be restructured?",
@@ -2851,7 +3342,10 @@ window.BANK = {
     "d3",
     "claude-md",
     "rules"
-   ]
+   ],
+   "id": "mx1-13",
+   "ts": "3.3",
+   "scenario": 2
   },
   {
    "q": "A research coordinator running on Opus is prompted to fan out work, and its response contains one text block plus three Task tool_use blocks targeting different subagents. The team's harness executes only the first Task call, discards the other two, and sends back a single tool_result; the coordinator then re-issues the missing tasks one at a time, tripling wall-clock time. What is the correct fix?",
@@ -2869,7 +3363,10 @@ window.BANK = {
     "d1",
     "parallel-tools",
     "multi-agent"
-   ]
+   ],
+   "id": "mx1-14",
+   "ts": "1.3",
+   "scenario": 3
   }
  ],
  "exam-mix-2": [
@@ -2889,7 +3386,10 @@ window.BANK = {
     "d1",
     "multi-agent",
     "context-isolation"
-   ]
+   ],
+   "id": "mx2-00",
+   "ts": "1.3",
+   "scenario": 3
   },
   {
    "q": "A platform team's GitHub Actions job uses claude -p to generate a database migration script, then resumes the same session with a second claude -p --resume call asking: review the migration you just wrote for bugs. The review step almost always replies that the code is correct, yet defects keep reaching production. What should the team change?",
@@ -2907,7 +3407,10 @@ window.BANK = {
     "d1",
     "ci-cd",
     "multi-pass-review"
-   ]
+   ],
+   "id": "mx2-01",
+   "ts": "4.6",
+   "scenario": 5
   },
   {
    "q": "An e-commerce team built a custom agent loop that calls the Claude API to triage failing checkout tests in their deploy pipeline. The script scans the assistant's text for the word COMPLETE to decide when to exit. Sometimes the loop terminates while Claude is mid-investigation; other times it hangs after Claude has clearly finished. What is the correct loop control?",
@@ -2925,7 +3428,10 @@ window.BANK = {
     "d1",
     "stop_reason",
     "headless"
-   ]
+   ],
+   "id": "mx2-02",
+   "ts": "1.1",
+   "scenario": 5
   },
   {
    "q": "A monorepo platform team wants every engineer's Claude Code session to delegate dependency-graph exploration to a fast, cheap scout while the main session stays on Sonnet. Today each engineer ad-libs a prompt like use a cheaper model for this, with wildly inconsistent results. How should the team standardize this?",
@@ -2943,7 +3449,10 @@ window.BANK = {
     "d1",
     "subagents",
     "team-config"
-   ]
+   ],
+   "id": "mx2-03",
+   "ts": "1.3",
+   "scenario": 4
   },
   {
    "q": "A developer-productivity team ships an internal cross-repo code-search MCP server whose only tool is named search with the description: Searches the index. Engineers report that Claude Code keeps reaching for the built-in Grep instead, missing results from other repositories. What should the team fix first?",
@@ -2961,7 +3470,10 @@ window.BANK = {
     "d2",
     "mcp",
     "tool-descriptions"
-   ]
+   ],
+   "id": "mx2-04",
+   "ts": "2.4",
+   "scenario": 4
   },
   {
    "q": "A fintech team of 14 engineers plus a CI runner needs a shared Jira MCP server. One engineer got it working in his ~/.claude.json with his personal API token, but nobody else, including CI, has the server. He offers to commit his working config, token included, since the repo is private. What is the right setup?",
@@ -2979,7 +3491,10 @@ window.BANK = {
     "d2",
     "mcp-config",
     "secrets"
-   ]
+   ],
+   "id": "mx2-05",
+   "ts": "2.4",
+   "scenario": 4
   },
   {
    "q": "A developer-experience team distributes Claude Code skills from an internal git repo. A SessionStart hook pulls the latest skills into .claude/skills/ at the start of every session, but engineers find that skills added by the pull are not auto-invoked until they fully restart Claude Code. How should the team make newly synced skills register automatically, with no manual step?",
@@ -2997,7 +3512,10 @@ window.BANK = {
     "d3",
     "skills",
     "hooks"
-   ]
+   ],
+   "id": "mx2-06",
+   "ts": "3.2",
+   "scenario": 4
   },
   {
    "q": "A healthcare-platform team encodes its FHIR naming conventions and review standards in the tech lead's ~/.claude/CLAUDE.md. PRs generated by claude-code-action in CI, and by every other engineer locally, consistently violate the conventions. Where should the standards live?",
@@ -3015,7 +3533,10 @@ window.BANK = {
     "d3",
     "claude-md",
     "ci-cd"
-   ]
+   ],
+   "id": "mx2-07",
+   "ts": "3.1",
+   "scenario": 5
   },
   {
    "q": "An engineer must rename a core payment abstraction across 23 files in 4 packages, and there are two defensible strategies: an adapter layer versus an in-place rewrite. On a similar task last month, Claude started editing immediately, switched strategies midway, and left half-converted files. A teammate suggests simply bolting on a strict reviewer pass to catch the mess afterwards. What workflow should the engineer use?",
@@ -3033,7 +3554,10 @@ window.BANK = {
     "d3",
     "plan-mode",
     "multi-pass-review"
-   ]
+   ],
+   "id": "mx2-08",
+   "ts": "3.4",
+   "scenario": 2
   },
   {
    "q": "A release-notes pipeline runs claude -p to summarize merged PRs, and a downstream script calls JSON.parse on the output. Roughly once a week the job fails because the response begins with a sentence like: Here is the JSON you requested. What is the robust fix?",
@@ -3051,7 +3575,10 @@ window.BANK = {
     "d4",
     "structured-output",
     "headless"
-   ]
+   ],
+   "id": "mx2-09",
+   "ts": "3.6",
+   "scenario": 5
   },
   {
    "q": "An insurance company extracts fields from 80,000 scanned claim forms through the Message Batches API. The extraction tool schema marks policy_end_date as a required string; on forms where the date is illegible, Claude returns plausible fabricated dates. Adding NEVER GUESS — write UNKNOWN to the prompt cut fabrication only slightly. What fixes the root cause?",
@@ -3069,7 +3596,10 @@ window.BANK = {
     "d4",
     "schema-design",
     "batch-api"
-   ]
+   ],
+   "id": "mx2-10",
+   "ts": "4.3",
+   "scenario": 6
   },
   {
    "q": "A fintech reconciliation pipeline extracts invoice line items with tool_use against a detailed JSON schema. Every output validates against the schema, yet auditors find that on 4 percent of invoices the line_items amounts do not sum to invoice_total. The team is debating fixes. Which approach addresses the actual gap?",
@@ -3087,7 +3617,10 @@ window.BANK = {
     "d4",
     "structured-output",
     "validation"
-   ]
+   ],
+   "id": "mx2-11",
+   "ts": "4.4",
+   "scenario": 6
   },
   {
    "q": "A pre-merge CI check sends every PR diff plus the same immutable 30,000-token engineering-standards document to the Claude API, and finance has flagged the spend. An engineer proposes moving the check to the Message Batches API for the 50 percent discount. What should the architect recommend?",
@@ -3105,7 +3638,11 @@ window.BANK = {
     "d5",
     "prompt-caching",
     "batch-api"
-   ]
+   ],
+   "id": "mx2-12",
+   "ts": "4.5",
+   "scenario": 5,
+   "oos": true
   },
   {
    "q": "A support-bot team enabled prompt caching. Each request is assembled as: a timestamp and customer-context block first, then the 12,000-token policy manual carrying the cache_control breakpoint, then the conversation. The cache hit rate is near zero and costs are unchanged. What went wrong?",
@@ -3122,7 +3659,11 @@ window.BANK = {
    "tags": [
     "d5",
     "prompt-caching"
-   ]
+   ],
+   "id": "mx2-13",
+   "ts": "5.1",
+   "scenario": 1,
+   "oos": true
   },
   {
    "q": "An SRE team's observability MCP server returns 40-plus fields per query, including raw spans and verbose metadata, though incident-triage workflows in Claude Code only ever use five of them. After about 30 minutes of triage, sessions start missing findings they surfaced earlier. What is the architectural fix?",
@@ -3140,7 +3681,10 @@ window.BANK = {
     "d5",
     "hooks",
     "context-management"
-   ]
+   ],
+   "id": "mx2-14",
+   "ts": "5.1",
+   "scenario": 4
   }
  ],
  "hunt": [
@@ -3160,7 +3704,8 @@ window.BANK = {
     "hunt",
     "stop_reason",
     "agent-loop"
-   ]
+   ],
+   "id": "hunt-00"
   },
   {
    "q": "A nightly CI job drives a lint-fixing agent through the Messages API across a monorepo. The orchestration script wraps the model call in for i in range(8) and simply stops after the eighth round trip, regardless of what the API returned. Long fixes were getting abandoned with edits applied to 3 of 7 files, so the team bumped the constant to 20; now short fixes burn budget on dead turns and long ones still die mid-tool-chain. Nowhere in the script is stop_reason consulted — not for end_turn, not for tool_use, not for max_tokens. Which monster is lurking?",
@@ -3178,7 +3723,8 @@ window.BANK = {
     "hunt",
     "agent-loop",
     "ci-cd"
-   ]
+   ],
+   "id": "hunt-01"
   },
   {
    "q": "An e-commerce returns agent has a process_refund tool and a system prompt that says, in bold capitals, NEVER ISSUE A REFUND ABOVE $500 WITHOUT MANAGER APPROVAL. For four months it behaved, then during a 60-turn conversation with a persistent customer it issued a $2,300 refund — the instruction was still in context, just buried. The postmortem proposes stating the rule a second time at the end of the prompt and again inside the tool description. Nothing in the system intercepts the tool call before it executes. Name the monster.",
@@ -3195,7 +3741,8 @@ window.BANK = {
    "tags": [
     "hunt",
     "hooks"
-   ]
+   ],
+   "id": "hunt-02"
   },
   {
    "q": "A platform team built one do-everything developer assistant and registered 18 tools on it: Jira search, Jira create, Slack post, Slack search, GitHub PR review, calendar booking, deploy status, log query, and ten more. Every description is well-written, yet the agent calls search_jira_issues when it should call search_slack_messages about 20% of the time, and once booked a calendar slot when asked to file a ticket. Time to first token has also crept up as the tool definition block ballooned. Telemetry shows the failures are wrong-tool selection, not bad arguments. Which monster?",
@@ -3212,7 +3759,8 @@ window.BANK = {
    "tags": [
     "hunt",
     "tool-design"
-   ]
+   ],
+   "id": "hunt-03"
   },
   {
    "q": "A telecom support bot routes conversations to human agents whenever a classifier scores the customer's message as angry or frustrated. The human queue is now flooded with furious-but-trivial cases — 'I HATE THIS ROUTER' password resets the bot could solve in one tool call — while a polite customer with a genuinely tangled double-billing dispute was kept in the bot loop for 47 turns. Explicit requests like 'let me talk to a person' get honored only if the message also sounds upset. Escalation volume has tripled while resolution rates fell. What is the monster?",
@@ -3229,7 +3777,8 @@ window.BANK = {
    "tags": [
     "hunt",
     "escalation"
-   ]
+   ],
+   "id": "hunt-04"
   },
   {
    "q": "A healthcare intake pipeline extracts patient data from scanned forms and asks Claude to append a confidence score from 0 to 100 to each record. Records scoring 90 or above skip human review and flow straight into the EHR. A compliance audit sampled the auto-approved set and found 7% of records with confidence 95 or higher contained a wrong date of birth or a swapped medication dosage, while plenty of low-confidence records were perfectly fine. The team's proposed fix is to raise the auto-approve threshold to 97. Which monster is in the pipeline?",
@@ -3247,7 +3796,8 @@ window.BANK = {
     "hunt",
     "reliability",
     "evaluation"
-   ]
+   ],
+   "id": "hunt-05"
   },
   {
    "q": "An insurance claims agent assembles every request by inlining the claimant's full 40-field CRM record, the entire 180-page policy manual, every prior ticket from the household, and the complete raw JSON of all earlier tool results in the session. Requests average 150k tokens, costs are running 9x projections, and the model keeps missing the one deductible clause that actually matters, buried around token 80,000. Answer quality is measurably worse than an early prototype that included only the relevant policy chapter. The prompt prefix is stable and caching is configured correctly. Name the monster.",
@@ -3264,7 +3814,8 @@ window.BANK = {
    "tags": [
     "hunt",
     "context"
-   ]
+   ],
+   "id": "hunt-06"
   },
   {
    "q": "A GitHub Actions workflow has Claude Code generate a bug fix, then — in the same session, with the full generation history still in context — appends the prompt 'now review the diff you just wrote for security issues'. The reviewer approves 96% of its own diffs, including one that shipped a SQL injection a human caught two days later. When the same diffs are fed to a fresh headless claude -p session instead, it flags real problems in 31% of them. The team cannot understand why the in-session reviewer is so agreeable. Which monster?",
@@ -3282,7 +3833,8 @@ window.BANK = {
     "hunt",
     "ci-cd",
     "self-review"
-   ]
+   ],
+   "id": "hunt-07"
   },
   {
    "q": "An e-commerce agent calls a custom MCP inventory server. Whenever anything goes wrong — SKU not found, warehouse API timeout, malformed date filter — the tool returns the same string: Operation failed. The agent responds by retrying the identical call three times and then telling the customer the item is unavailable, even when the real problem was a transient timeout that a one-second backoff would have cured. Worse, a search that legitimately matches zero SKUs also comes back as Operation failed, so empty shelves get reported as system outages. Name the monster.",
@@ -3300,7 +3852,8 @@ window.BANK = {
     "hunt",
     "tool-errors",
     "mcp"
-   ]
+   ],
+   "id": "hunt-08"
   },
   {
    "q": "A fintech extraction service reports a healthy 96.4% field-level accuracy on its loan-document dashboard, and the number has been stable for two quarters. Then a regional bank complains that nearly every handwritten 1980s-era deed they submit comes back with the wrong lien amount. Digging in, the team discovers handwritten deeds are 3% of volume and only 58% accurate, drowned out by millions of clean digital PDFs. No per-document-type breakdown has ever been run; the release gate is the single blended number. Which monster?",
@@ -3318,7 +3871,8 @@ window.BANK = {
     "hunt",
     "evaluation",
     "reliability"
-   ]
+   ],
+   "id": "hunt-09"
   },
   {
    "q": "A multi-agent research system is asked to assess the competitive landscape for the company's payments product. The Opus coordinator decomposes this into exactly three subagent tasks: scrape competitor A's pricing page, scrape competitor B's pricing page, scrape competitor C's pricing page. The final report arrives fast and is impeccably formatted, but it says nothing about competitor funding rounds, the new entrant that launched last month, regulatory shifts, or hiring signals — precisely what the strategy team needed. Each Haiku subagent executed its narrow task flawlessly and propagated no errors. Name the monster.",
@@ -3336,7 +3890,8 @@ window.BANK = {
     "hunt",
     "multi-agent",
     "orchestration"
-   ]
+   ],
+   "id": "hunt-10"
   },
   {
    "q": "A legal contract review bot assembles every request in this order: first a header containing the current timestamp, a UUID request ID, and the requesting attorney's name; then the firm's stable 30,000-token clause playbook; then the contract under review. cache_control breakpoints are set right after the playbook, yet the cache hit rate sits at 0% and the monthly bill is double the estimate. The playbook has not changed in six weeks. Time to first token is also far worse than the proof of concept, which happened to send the playbook first. Which monster?",
@@ -3354,7 +3909,433 @@ window.BANK = {
     "hunt",
     "prompt-caching",
     "context"
-   ]
+   ],
+   "id": "hunt-11"
+  }
+ ],
+ "guide-extra": [
+  {
+   "q": "A CI review job must check every pull request for the same three things: security issues, breaking API contract changes, and missing tests. Today one long prompt asks for all three at once and the security section is often thin. An engineer proposes replacing it with an autonomous agent that decides for itself what to investigate on each PR. What is the better design?",
+   "options": [
+    "Keep one prompt but tell the model to spend equal effort on each of the three areas",
+    "Use the autonomous agent, since it can adapt its investigation to each pull request",
+    "Break the review into a fixed prompt chain with one focused step per aspect, since the aspects are known and identical on every PR",
+    "Run the single prompt three times and keep only findings that appear in at least two runs"
+   ],
+   "correct": 2,
+   "explanation": "When the work is predictable and multi-aspect, a fixed prompt chain gives each aspect its own focused pass and consistent coverage. Dynamic, self-directed decomposition is for open-ended investigations where the next step depends on what was found; here the steps never change. Asking for equal effort does not fix dilution inside one prompt, and majority voting suppresses real findings that only appear intermittently.",
+   "hint": "Are the steps known in advance, or discovered along the way?",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "prompt-chaining"
+   ],
+   "id": "gx-00",
+   "ts": "1.6",
+   "scenario": 5
+  },
+  {
+   "q": "A developer-productivity agent is asked to 'add comprehensive tests to our legacy billing codebase' (300 modules, almost no existing tests, unclear dependencies). Which decomposition approach should it take?",
+   "options": [
+    "Map the codebase structure first, identify the highest-impact areas, then build a prioritised plan that is revised as dependencies are discovered",
+    "Generate tests module by module in alphabetical order until every module has at least one test",
+    "Ask for all of the tests in a single pass so the model sees the whole codebase at once",
+    "Write a detailed 40-step procedure up front and have the agent follow it without deviation"
+   ],
+   "correct": 0,
+   "explanation": "An open-ended task over an unfamiliar codebase needs adaptive decomposition: explore and map first, prioritise by impact, and let the plan change as dependencies surface. Alphabetical order ignores impact, a single pass dilutes attention across 300 modules, and a rigid upfront procedure cannot account for what has not been discovered yet.",
+   "hint": "You cannot plan well for code you have not explored yet.",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "adaptive-planning"
+   ],
+   "id": "gx-01",
+   "ts": "1.6",
+   "scenario": 4
+  },
+  {
+   "q": "An on-call assistant investigates latency incidents using a fixed six-step pipeline: check CPU, check memory, check database, check cache, check network, summarise. For last week's spike the real cause was a misconfigured feature flag in a downstream service, which no step looks at, and the summary blamed the cache. What change addresses the underlying problem?",
+   "options": [
+    "Add a seventh fixed step that checks feature flags",
+    "Switch to an adaptive investigation that generates its next subtasks from what each step finds",
+    "Increase max_tokens so the summary step can consider more possibilities",
+    "Run all six steps in parallel to finish faster and leave time for a manual check"
+   ],
+   "correct": 1,
+   "explanation": "Incident investigation is open-ended: the right next step depends on the evidence so far. A fixed pipeline, however long, only finds causes someone predicted; adding a seventh step fixes last week's incident and not the next unknown one. More tokens or parallelism do not change what gets investigated.",
+   "hint": "The pipeline can only find what its author predicted.",
+   "difficulty": "hard",
+   "tags": [
+    "decomposition",
+    "adaptive-planning"
+   ],
+   "id": "gx-02",
+   "ts": "1.6",
+   "scenario": 4
+  },
+  {
+   "q": "Which of these workflows most clearly calls for dynamic, adaptive task decomposition instead of a fixed prompt chain?",
+   "options": [
+    "A nightly summary of the same four lint checks across a repository",
+    "Translating each release note into three languages",
+    "Reformatting every incoming invoice into a fixed internal template",
+    "Finding the root cause of an intermittent memory leak that spans several services"
+   ],
+   "correct": 3,
+   "explanation": "A root-cause hunt across services is open-ended, so each finding changes what to examine next, which is what adaptive decomposition is for. The other three are predictable, repeated transformations where a fixed chain is simpler and more reliable.",
+   "hint": "Which one could not be planned step by step in advance?",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "prompt-chaining"
+   ],
+   "id": "gx-03",
+   "ts": "1.6",
+   "scenario": 0
+  },
+  {
+   "q": "On Monday an engineer spent an hour in a Claude Code session named payment-flake narrowing down a flaky payments test. Nothing in the repository changed overnight. On Tuesday she wants to continue exactly where she left off. What should she do?",
+   "options": [
+    "Start a new session and paste Monday's whole transcript into the first message",
+    "Run claude --resume payment-flake to continue the named session",
+    "Use fork_session so Tuesday's work does not disturb Monday's history",
+    "Add Monday's findings to the project CLAUDE.md so any new session picks them up"
+   ],
+   "correct": 1,
+   "explanation": "Named session resumption continues a specific prior conversation with its context intact, and because nothing changed, its earlier tool results are still valid. Pasting a transcript is a clumsy copy of the same thing, forking is for exploring divergent approaches from a shared baseline, and CLAUDE.md is for durable project standards, not one investigation's notes.",
+   "hint": "The prior context is still valid, so keep it.",
+   "difficulty": "core",
+   "tags": [
+    "sessions",
+    "resume"
+   ],
+   "id": "gx-04",
+   "ts": "1.7",
+   "scenario": 2
+  },
+  {
+   "q": "Two weeks ago an agent session analysed a service's module layout. Since then the team has refactored 60 files and renamed several packages. A developer wants to pick the analysis back up today. Which approach is most reliable?",
+   "options": [
+    "Resume the old session and trust its earlier analysis, since the overall architecture is similar",
+    "Resume the old session and immediately run /compact to shrink the outdated context",
+    "Fork the old session so the original analysis is preserved while the fork works on the new code",
+    "Start a fresh session seeded with a structured summary of the earlier findings, and let it re-read the code that changed"
+   ],
+   "correct": 3,
+   "explanation": "When many earlier tool results are stale, resuming makes the agent reason from file contents that no longer exist. A new session seeded with a concise summary keeps the useful conclusions without the stale details. Compacting or forking still carries the outdated tool results forward.",
+   "hint": "How much of the old context is still true?",
+   "difficulty": "hard",
+   "tags": [
+    "sessions",
+    "stale-context"
+   ],
+   "id": "gx-05",
+   "ts": "1.7",
+   "scenario": 4
+  },
+  {
+   "q": "In a multi-agent research system, the analysis subagent has two tools: analyze_content ('Analyzes content and returns insights') and analyze_document ('Analyzes a document and returns insights'). Web search results are frequently routed to analyze_document, which expects a PDF and returns poor output. What is the most effective fix?",
+   "options": [
+    "Rename analyze_content to extract_web_results and rewrite its description to say it handles web search results, with its inputs and when to use it instead of analyze_document",
+    "Add a system prompt line telling the agent to prefer analyze_content",
+    "Lower the temperature so tool selection becomes more deterministic",
+    "Remove analyze_content so every input goes through analyze_document"
+   ],
+   "correct": 0,
+   "explanation": "The two tools are near-identical in name and description, so the model has nothing to tell them apart. Renaming and rewriting the description removes the overlap at its source. A system-prompt nudge is a workaround that can misfire, temperature does not create missing information, and deleting a tool removes needed functionality.",
+   "hint": "If two tools read the same, the model will guess.",
+   "difficulty": "core",
+   "tags": [
+    "tool-descriptions",
+    "tool-naming"
+   ],
+   "id": "gx-06",
+   "ts": "2.1",
+   "scenario": 3
+  },
+  {
+   "q": "A support agent's tools have detailed, well-differentiated descriptions. Yet whenever a customer mentions the word 'order', even in 'I can't log in to place an order', the agent calls lookup_order first. The system prompt contains: 'Always check the customer's ORDER history before anything else.' What is the most likely cause and fix?",
+   "options": [
+    "The tool descriptions are still too short; add more examples to lookup_order",
+    "The agent has too many tools; remove lookup_order from the support agent",
+    "The keyword-heavy system prompt instruction is overriding the tool descriptions; rewrite it to describe when order history is actually relevant",
+    "Force tool_choice to get_customer on every turn so the agent cannot pick lookup_order"
+   ],
+   "correct": 2,
+   "explanation": "System prompt wording can create strong keyword associations that override good tool descriptions. The fix is to review and rewrite that instruction. The descriptions are already good, removing the tool breaks order queries, and forcing a tool every turn throws away model-driven selection.",
+   "hint": "The descriptions are fine. What else is the model reading?",
+   "difficulty": "hard",
+   "tags": [
+    "tool-descriptions",
+    "system-prompt"
+   ],
+   "id": "gx-07",
+   "ts": "2.1",
+   "scenario": 1
+  },
+  {
+   "q": "A developer-productivity agent needs to change one specific 'return null;' line inside a 900-line file. Edit keeps failing because the text 'return null;' appears 14 times in the file. What is the reliable fallback?",
+   "options": [
+    "Use Bash with sed to replace every occurrence of 'return null;' in the file",
+    "Retry Edit with the same old string until it succeeds",
+    "Grep the file to count the occurrences, then call Edit again with the same string",
+    "Read the full file, make the change in that content, and Write the whole file back"
+   ],
+   "correct": 3,
+   "explanation": "Edit needs a unique anchor. When the text is not unique, Read followed by Write gives a reliable full-file modification. sed changes all 14 occurrences, retrying the same Edit fails the same way, and counting matches does not make the anchor unique.",
+   "hint": "Edit needs a unique match. What else can change a file?",
+   "difficulty": "core",
+   "tags": [
+    "built-ins",
+    "edit"
+   ],
+   "id": "gx-08",
+   "ts": "2.5",
+   "scenario": 4
+  },
+  {
+   "q": "An agent must find every caller of formatCurrency. The function is defined in utils/money.ts but re-exported from a wrapper module, src/lib/index.ts, under the names fmtMoney and toCurrency, and most of the codebase imports those names. A Grep for formatCurrency found only 3 callers. What should the agent do next?",
+   "options": [
+    "Read every file in src/ to be sure no caller is missed",
+    "Read the wrapper module to list every exported name for the function, then Grep the codebase for each name",
+    "Glob for files named *currency* and treat them as the callers",
+    "Accept the 3 results, since Grep searches the entire codebase"
+   ],
+   "correct": 1,
+   "explanation": "To trace usage through a wrapper, first identify all the names it exports, then search for each name. Reading every file wastes context, a filename Glob finds files and not call sites, and the first Grep missed the aliased imports.",
+   "hint": "The callers don't use the original name.",
+   "difficulty": "hard",
+   "tags": [
+    "built-ins",
+    "grep",
+    "tracing"
+   ],
+   "id": "gx-09",
+   "ts": "2.5",
+   "scenario": 4
+  },
+  {
+   "q": "A platform repo has Terraform files in infra/, modules/, and services/*/deploy/. The team wants Terraform conventions applied whenever Claude Code edits any .tf file, and not loaded at all during application-code work. What is the best configuration?",
+   "options": [
+    "Add a Terraform section to the root CLAUDE.md",
+    "Put a CLAUDE.md with the conventions in each of the three directories",
+    "Create .claude/rules/terraform.md with paths: [\"**/*.tf\"] in its YAML frontmatter",
+    "Create a terraform skill that developers invoke when they work on infrastructure"
+   ],
+   "correct": 2,
+   "explanation": "A path-scoped rule with a glob loads only when matching files are edited, wherever they live. Root CLAUDE.md always loads, per-directory CLAUDE.md files miss new locations and duplicate content, and a skill relies on someone remembering to invoke it.",
+   "hint": "The files are spread out, but they share an extension.",
+   "difficulty": "core",
+   "tags": [
+    "rules",
+    "path-scoping"
+   ],
+   "id": "gx-10",
+   "ts": "3.3",
+   "scenario": 2
+  },
+  {
+   "q": "A team split its large CLAUDE.md into eight files in .claude/rules/ (testing.md, api.md, migrations.md and so on), expecting context use to drop. Token usage didn't change, and all eight rule files are loaded even in a session that only touches docs. What did they miss?",
+   "options": [
+    "Rules files only load conditionally when the root CLAUDE.md @imports them",
+    "None of the files have a paths field in YAML frontmatter, so each loads unconditionally",
+    "Claude Code loads at most one rules file per session, so they must merge them back",
+    "They need to run /compact once so the rules are re-evaluated"
+   ],
+   "correct": 1,
+   "explanation": "Rule files without paths frontmatter apply everywhere. Adding paths globs makes each load only when matching files are touched, which is where the token savings come from. @import does the opposite of conditional loading, there is no one-file limit, and /compact does not change which rules apply.",
+   "hint": "What tells a rules file when it applies?",
+   "difficulty": "hard",
+   "tags": [
+    "rules",
+    "path-scoping",
+    "context"
+   ],
+   "id": "gx-11",
+   "ts": "3.3",
+   "scenario": 2
+  },
+  {
+   "q": "A bug report includes a clear stack trace pointing to a missing date check in one function, parseInvoiceDate, in a single file. The fix is a three-line conditional. How should the developer run it in Claude Code?",
+   "options": [
+    "Direct execution: describe the fix and let Claude make the change",
+    "Plan mode, so the change is reviewed before any edit",
+    "Plan mode followed by an Explore subagent to map the codebase first",
+    "Fork the session so the fix can be compared against an alternative"
+   ],
+   "correct": 0,
+   "explanation": "A well-scoped, single-file fix with a clear cause is what direct execution is for. Plan mode pays off for multi-file, architectural or multi-approach work; here it only adds overhead, as do exploration or forking.",
+   "hint": "How many valid approaches are there?",
+   "difficulty": "core",
+   "tags": [
+    "plan-mode",
+    "direct-execution"
+   ],
+   "id": "gx-12",
+   "ts": "3.4",
+   "scenario": 2
+  },
+  {
+   "q": "A developer asks Claude Code to convert a flat CSV export into nested JSON grouped by account, then by month. After three rounds of rewording the prose description, each attempt nests the data differently. What is the most effective next step?",
+   "options": [
+    "Write an even longer, more precise prose description of the nesting",
+    "Ask Claude to explain its interpretation before each attempt",
+    "Switch to a larger model, since this is a reasoning failure",
+    "Provide two or three concrete input rows with the exact JSON output expected for each"
+   ],
+   "correct": 3,
+   "explanation": "When prose is read inconsistently, concrete input/output examples are the clearest way to communicate a transformation. More prose has already failed three times, explanations don't pin down the target format, and model size isn't the problem.",
+   "hint": "Show, don't tell.",
+   "difficulty": "core",
+   "tags": [
+    "iterative-refinement",
+    "examples"
+   ],
+   "id": "gx-13",
+   "ts": "3.5",
+   "scenario": 2
+  },
+  {
+   "q": "A developer needs a caching layer for a pricing service but has never built one and doesn't know the domain's failure modes. Before any code is written, what technique best surfaces design considerations they might miss?",
+   "options": [
+    "Ask Claude to implement the simplest cache first and see what breaks in production",
+    "The interview pattern: have Claude ask questions about invalidation, staleness tolerance and failure behaviour before it implements anything",
+    "Have Claude write the cache and then review its own code in the same session",
+    "Copy a caching implementation from another service and adapt it"
+   ],
+   "correct": 1,
+   "explanation": "The interview pattern has Claude ask the questions an expert would, such as invalidation strategy and failure modes, before implementation, which is exactly what an unfamiliar domain needs. Learning from production failures is expensive, same-session self-review is weak, and copying code skips the design questions.",
+   "hint": "Who should be asking the questions?",
+   "difficulty": "core",
+   "tags": [
+    "iterative-refinement",
+    "interview-pattern"
+   ],
+   "id": "gx-14",
+   "ts": "3.5",
+   "scenario": 2
+  },
+  {
+   "q": "After Claude implements a CSV importer, a developer finds three problems: (A) the parser drops quoted commas, (B) the serializer relies on the parser's broken field count, so fixing A will change B's output, and (C) a typo in a log message. How should the feedback be given?",
+   "options": [
+    "Fix one issue per message in the order A, B, C",
+    "Send all three in one message, since batching is always faster",
+    "Describe A and B together in one detailed message because their fixes interact, and handle C separately",
+    "Ask Claude to rewrite the importer from scratch to avoid partial fixes"
+   ],
+   "correct": 2,
+   "explanation": "Interacting problems belong in one message so the fixes are designed together; independent ones can be handled on their own. Fixing A alone would break B, bundling the unrelated typo adds noise, and a full rewrite discards working code.",
+   "hint": "Which of the fixes depend on each other?",
+   "difficulty": "hard",
+   "tags": [
+    "iterative-refinement",
+    "feedback"
+   ],
+   "id": "gx-15",
+   "ts": "3.5",
+   "scenario": 2
+  },
+  {
+   "q": "A CI step asks Claude to 'check that code comments are accurate'. It flags dozens of comments per PR for minor wording, and developers have started ignoring it. Which prompt change most improves precision?",
+   "options": [
+    "Add 'only report high-confidence findings'",
+    "Ask the model to rate each finding from 1 to 10 and post only those rated 8 or higher",
+    "Add 'be conservative and avoid nitpicks'",
+    "Flag a comment only when the behaviour it describes contradicts what the code actually does"
+   ],
+   "correct": 3,
+   "explanation": "Explicit categorical criteria define what counts as an issue. General instructions like 'be conservative' or 'high confidence only' don't reliably improve precision, and self-rated confidence is poorly calibrated.",
+   "hint": "Define what counts as wrong, rather than how careful to be.",
+   "difficulty": "core",
+   "tags": [
+    "explicit-criteria",
+    "false-positives"
+   ],
+   "id": "gx-16",
+   "ts": "4.1",
+   "scenario": 5
+  },
+  {
+   "q": "An automated reviewer labels the same unchecked null dereference 'critical' on one PR and 'minor' on another, and teams can't trust its severity labels for routing. What is the most effective fix?",
+   "options": [
+    "Run the review three times and use the most common severity",
+    "Add 'be consistent with severity ratings' to the prompt",
+    "Define explicit criteria for each severity level, each with a concrete code example",
+    "Drop severity labels entirely and post every finding at the same level"
+   ],
+   "correct": 2,
+   "explanation": "Consistent classification comes from explicit level definitions illustrated by concrete examples. Majority voting averages an undefined standard, 'be consistent' gives the model nothing to be consistent with, and removing severity loses the routing signal the team needs.",
+   "hint": "Consistent with what?",
+   "difficulty": "hard",
+   "tags": [
+    "explicit-criteria",
+    "severity"
+   ],
+   "id": "gx-17",
+   "ts": "4.1",
+   "scenario": 5
+  },
+  {
+   "q": "An extraction pipeline pulls sample_size from research papers. When the paper has a Methods section it works; when the sample size is mentioned inside the results text, the model returns null even though the number is there. What change best fixes this?",
+   "options": [
+    "Add few-shot examples showing correct extraction from both layouts: a dedicated Methods section and figures embedded in the results text",
+    "Make sample_size a required field so the model must always provide a value",
+    "Retry each null result with the same prompt up to three times",
+    "Add a paragraph explaining that sample sizes can appear anywhere"
+   ],
+   "correct": 0,
+   "explanation": "Few-shot examples that show varied document structures are the most effective way to reduce empty extractions caused by layout differences. A required field pushes the model to invent values when the data really is absent, unchanged retries repeat the failure, and prose explanations are weaker than demonstrations.",
+   "hint": "Show it what the other layout looks like.",
+   "difficulty": "core",
+   "tags": [
+    "few-shot",
+    "extraction"
+   ],
+   "id": "gx-18",
+   "ts": "4.2",
+   "scenario": 6
+  },
+  {
+   "q": "A support agent handles clear requests well, but ambiguous ones like 'where's my money?', which could be a refund status check or a billing dispute, are routed inconsistently between check_refund_status and open_billing_dispute. What is the most effective improvement?",
+   "options": [
+    "Add twenty clear-cut examples for each tool",
+    "Add a keyword router in front of the agent that picks the tool",
+    "Merge the two tools into one handle_money_question tool",
+    "Add two to four examples of ambiguous requests, each showing which tool was chosen and why the other was not"
+   ],
+   "correct": 3,
+   "explanation": "Few-shot examples work best when they target the ambiguous cases and show the reasoning for one choice over a plausible alternative, which lets the model generalise its judgement. Many clear-cut examples don't cover the hard cases, a keyword router bypasses the model's understanding, and merging tools just hides the decision.",
+   "hint": "Teach the hard cases, with the reasoning.",
+   "difficulty": "hard",
+   "tags": [
+    "few-shot",
+    "ambiguous-cases",
+    "tool-selection"
+   ],
+   "id": "gx-19",
+   "ts": "4.2",
+   "scenario": 1
+  },
+  {
+   "q": "A research coordinator's document-analysis subagent could not reach 2 of 9 sources (both paywalled) and returned findings from the other 7. The final report reads as complete, and a reviewer later finds that one whole subtopic relied only on the missing sources. What should change?",
+   "options": [
+    "Have the subagent return structured error context for the failed sources, and have synthesis annotate which topic areas have gaps because of them",
+    "Stop the whole report whenever any source fails",
+    "Have the subagent retry the paywalled sources until they succeed",
+    "Leave the missing sources out silently, since 7 of 9 is good coverage"
+   ],
+   "correct": 0,
+   "explanation": "Errors should travel upward as structured context, and the synthesis should mark which findings are well supported and which areas have gaps. Stopping everything over one failure, retrying a permission failure indefinitely, and silently dropping the failures are all anti-patterns.",
+   "hint": "The reader needs to know what's missing.",
+   "difficulty": "core",
+   "tags": [
+    "error-propagation",
+    "coverage-gaps"
+   ],
+   "id": "gx-20",
+   "ts": "5.3",
+   "scenario": 3
   }
  ]
 };

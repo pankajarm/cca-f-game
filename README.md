@@ -10,7 +10,7 @@
 &nbsp;
 ![No install](https://img.shields.io/badge/no_install-runs_in_browser-4E8F83?style=for-the-badge)
 &nbsp;
-![Questions](https://img.shields.io/badge/192_questions-fact_checked-5B7FA6?style=for-the-badge)
+![Questions](https://img.shields.io/badge/213_questions-fact_checked-5B7FA6?style=for-the-badge)
 
 <br>
 
@@ -27,9 +27,11 @@
 A study game for the **Claude Certified Architect — Foundations (CCA-F)** exam,
 built from the ground up and current as of **June 2026**. Instead of grinding a
 PDF of flashcards, you climb a ten-floor tower, fight a boss made of each way
-real agent systems break, and finish against **The Proctor** — a faithful
-60-question, 120-minute exam simulator. Every one of the **192 questions** was
-written to the real exam blueprint and then put through an adversarial fact-check.
+real agent systems break, and finish against **The Proctor** — a mock exam in the
+real format: 60 questions, 120 minutes, 4 of the 6 official scenarios. **The
+Blueprint** maps the question bank to the official exam guide's 30 task statements
+so you can study the guide line by line. All **213 questions** were written to the
+exam blueprint and checked by an adversarial reviewer.
 
 It's one folder of static files. Nothing to build, nothing to install.
 
@@ -61,26 +63,32 @@ onto a broken design.
 
 ## 📋 Then survive The Proctor
 
-The exam simulator is the real thing minus the webcam: **60 questions drawn to
-the exact domain weights**, a **120-minute** countdown, flag-for-review, a live
-question navigator, and a scaled score out of **1000** with the **720** pass line —
-followed by a per-domain breakdown so you know exactly which floor to re-climb.
+The mock exam follows the official exam guide (v1.0, July 2026): **60 questions in
+the exact domain weights** (16/11/12/12/9), grouped under **4 of the 6 exam
+scenarios** drawn at random, a **120-minute** clock with a pace readout,
+flag-for-review and a question navigator. Close the tab and it resumes, with the
+clock still running, as it would on exam day. The result gives an **estimated scaled
+score** (72% raw maps to the 720 line) plus breakdowns by domain and by scenario,
+and points you at the task statements to drill next. Prefer to learn as you go? The
+**Practice Exam** uses the same build with a 2-minute timer per question and the
+answer after each one.
 
 <div align="center">
 
 |  |  |
 |:--:|:--:|
 | ![Exam simulator](docs/screenshots/exam.png) | ![Score report](docs/screenshots/score.png) |
-| **Real exam conditions** — timer, flags, navigator | **Scaled score + domain breakdown** |
+| **Real exam conditions** — scenarios, timer, pace, flags, navigator | **Estimated score + domain and scenario breakdown** |
 
 </div>
 
-## 🎮 Six ways to study
+## 🎮 Seven ways to study
 
 | Mode | What it is |
 |---|---|
 | 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Clear at 7/10 to ascend; ★ for a perfect 10. |
-| 📋 **The Proctor** | Faithful exam sim — 60 weighted questions, 120-min clock, /1000 scoring, full answer review. |
+| 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a drill of up to 10 questions for each. Also by scenario. |
+| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled score) or Practice exam (2 min per question, instant feedback). |
 | ⚡ **Lightning Round** | 90 seconds, unlimited questions, combos multiply your score. For people who read the question before the options load. |
 | 🔦 **Anti-Pattern Hunt** | Twelve production war stories, each hiding one monster. Name it to capture it. |
 | 🩹 **Mistake Clinic** | Every question you miss checks in here. Get it right twice in a row to discharge it — spaced repetition aimed at your weak spots. |
@@ -97,8 +105,11 @@ followed by a per-domain breakdown so you know exactly which floor to re-climb.
 
 ## 🧠 The question bank is the point
 
-`questions.js` holds **192 scenario questions** — 150 across the ten floors, 30
-cross-domain exam-pool questions, and 12 hunt vignettes. They were authored
+`questions.js` holds **213 scenario questions**: 150 across the ten floors, 30
+cross-domain exam-pool questions, 21 written to fill gaps in the exam guide's task
+statements, and 12 hunt vignettes. Every question has a stable `id`; non-hunt
+questions also carry the guide task statement (`ts`) and scenario they test
+(`scripts/guide_tags.py`, checked by `scripts/check_bank.py`). They were authored
 against a June-2026 brief of the real exam — `stop_reason` loop mechanics, hooks
 vs prompts, MCP config scopes, the `CLAUDE.md` hierarchy, skills frontmatter,
 `claude -p` CI patterns, batch API economics, schema design, context management,
@@ -115,14 +126,17 @@ Anything defensible got rewritten.
 
 | Fact | Value |
 |---|---|
-| Exam | Claude Certified Architect — Foundations (CCA-F) |
-| Launched | March 12, 2026 |
-| Format | 60 multiple-choice scenario questions |
-| Time | 120 minutes |
-| Scoring | Scaled out of 1000, **pass at 720** |
-| Level | 301 — expects 6+ months of production Claude experience |
-| Cost | $99 (free for early partner-org employees) |
-| Scenario pools | 6 total, 4 randomly selected per sitting |
+| Exam | Claude Certified Architect — Foundations, exam code CCAR-F |
+| Source | Official Exam Guide v1.0, effective July 2026 |
+| Format | 60 scenario-based items, multiple-choice and multiple-response |
+| Time | 120 minutes, proctored (online or Pearson VUE test center) |
+| Scoring | Scaled 100–1000, **pass at 720**; report shows % correct by domain |
+| Audience | Solution architects with 6+ months building with Claude |
+| Cost | $125 USD per attempt |
+| Scenarios | 6 in the bank, 4 drawn at random per sitting |
+| Validity | 12 months; free online renewal assessment |
+| Eligibility | Employees of Claude Partner Network organisations; the free courses on academy.claude.com are open to everyone |
+| Practice | The old official practice exam was retired in June 2026; the guide's sample questions are the only official items |
 
 **Domain blueprint** — the simulator draws with exactly these weights, and the
 tower is laid out to match:
