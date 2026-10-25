@@ -504,7 +504,7 @@ window.BANK = {
    ],
    "id": "f02-09",
    "ts": "1.2",
-   "scenario": 3
+   "scenario": 0
   },
   {
    "q": "A support platform fans every incoming ticket out to all six specialist subagents — billing, shipping, returns, technical, account, fraud — then aggregates. Telemetry shows 70% of tickets need exactly one specialist, median resolution latency is 90 seconds, and cost per ticket is six times the single-agent baseline. What is the right architectural fix?",
@@ -638,7 +638,7 @@ window.BANK = {
     "The hook fires too early to see the file path; the protection must move to a PostToolUse hook"
    ],
    "correct": 2,
-   "explanation": "For PreToolUse hooks, a zero exit code allows the tool call to proceed; exit code 2 is what blocks the call, and stderr (not stdout) is the channel fed back to the model explaining why. The first option is false because gating tool calls before they run is exactly what PreToolUse exists for. additionalContext injects information but does not block anything, and PreToolUse receives the full tool input including the file path, so it does not fire too early.",
+   "explanation": "For PreToolUse hooks, a zero exit code allows the tool call to proceed; exit code 2 is what blocks the call, and stderr (not stdout) is the channel fed back to the model explaining why. PreToolUse hooks can block calls, since gating tool calls before they run is exactly what they exist for, so no settings.json deny rule is needed. additionalContext injects information but does not block anything, and PreToolUse receives the full tool input including the file path, so it does not fire too early.",
    "hint": "Recall which exit code blocks a tool call and which output stream gets fed back to the model.",
    "difficulty": "core",
    "tags": [
@@ -907,7 +907,7 @@ window.BANK = {
     "(1) SessionStart, (2) PostToolUse, (3) PreToolUse"
    ],
    "correct": 3,
-   "explanation": "SessionStart runs once when the session opens, which is the right place for one-time context like the sprint ticket list. PostToolUse fires after a tool runs and is where outputs get normalized, such as stripping ANSI codes from Bash results. PreToolUse gates calls before they execute, so it is where vendor/ edits get blocked with exit code 2. The second option reverses the last two events: PreToolUse cannot clean a result that does not exist yet, and PostToolUse fires only after the edit has already happened.",
+   "explanation": "SessionStart runs once when the session opens, which is the right place for one-time context like the sprint ticket list. PostToolUse fires after a tool runs and is where outputs get normalized, such as stripping ANSI codes from Bash results. PreToolUse gates calls before they execute, so it is where vendor/ edits get blocked with exit code 2. Pairing (2) with PreToolUse and (3) with PostToolUse reverses the last two events: PreToolUse cannot clean a result that does not exist yet, and PostToolUse fires only after the edit has already happened.",
    "hint": "Match each behavior to when it must run: session open, after a tool returns, or before a tool executes.",
    "difficulty": "core",
    "tags": [
@@ -1564,13 +1564,13 @@ window.BANK = {
    "q": "A fintech team's pipeline runs claude -p to triage failing integration tests, then a Python script scrapes the verdict out of Claude's prose with a regex. Every few weeks the wording shifts (\"the likely culprit is...\" vs \"root cause:\") and the parser silently mis-routes tickets to the wrong on-call team. What fixes the root cause?",
    "options": [
     "Tighten the regex to cover the new phrasings and add unit tests for the parser",
-    "Run claude -p with --output-format json and read the verdict from the structured result envelope",
+    "Run claude -p with --output-format json and a --json-schema that defines the verdict and owning team as enum fields, and route on that typed output",
     "Append \"always begin your answer with the exact phrase ROOT CAUSE:\" to the prompt",
     "Capture stderr and stdout separately so the prose and the verdict do not interleave"
    ],
    "correct": 1,
-   "explanation": "Scraping free-form prose is the root flaw; --output-format json makes claude -p emit a machine-readable envelope the script can parse deterministically. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.",
-   "hint": "Choose deterministic machine-readable output over ever-smarter parsing of natural language.",
+   "explanation": "Scraping free-form prose is the root flaw. With --json-schema, claude -p returns a payload that matches a schema the script owns, with the verdict and team as fixed enum values, so routing no longer depends on wording; --output-format json alone would only wrap the same prose in an envelope. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.",
+   "hint": "Choose output typed against a schema over ever-smarter parsing of natural language.",
    "difficulty": "core",
    "tags": [
     "output-format",
@@ -1605,11 +1605,11 @@ window.BANK = {
    "options": [
     "Raise the runner's silence threshold to fifteen minutes for this one job",
     "Wrap the step in a shell loop that echoes a heartbeat line every sixty seconds",
-    "Run the job with --output-format stream-json so events are emitted incrementally as they occur",
+    "Run the job with --output-format stream-json --verbose so events are emitted incrementally as they occur",
     "Split the upgrade into several claude -p calls so each one finishes in under five minutes"
    ],
    "correct": 2,
-   "explanation": "stream-json emits each event as it happens, which keeps stdout active for the watchdog and gives the team a live trace of what Claude is actually doing. A heartbeat echo quiets the watchdog but reveals nothing about progress, raising the threshold just hides the observability gap, and splitting the job adds orchestration complexity while each call still runs as a silent blob.",
+   "explanation": "stream-json emits each event as it happens (print mode requires --verbose alongside it), which keeps stdout active for the watchdog and gives the team a live trace of what Claude is actually doing. A heartbeat echo quiets the watchdog but reveals nothing about progress, raising the threshold just hides the observability gap, and splitting the job adds orchestration complexity while each call still runs as a silent blob.",
    "hint": "Think incremental events flowing out during the run, not one blob at the end.",
    "difficulty": "core",
    "tags": [
@@ -4136,7 +4136,7 @@ window.BANK = {
    "scenario": 2
   },
   {
-   "q": "A team split its large CLAUDE.md into eight files in .claude/rules/ (testing.md, api.md, migrations.md and so on), expecting context use to drop. Token usage didn't change, and /memory shows all eight rule files loaded even in a docs-only session. What did they miss?",
+   "q": "A team split its large CLAUDE.md into eight files in .claude/rules/ (testing.md, api.md, migrations.md and so on), expecting context use to drop. Token usage didn't change, and all eight rule files are loaded even in a session that only touches docs. What did they miss?",
    "options": [
     "Rules files only load conditionally when the root CLAUDE.md @imports them",
     "None of the files have a paths field in YAML frontmatter, so each loads unconditionally",

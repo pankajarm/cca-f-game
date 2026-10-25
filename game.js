@@ -164,6 +164,9 @@ const Game = {
     if (!confirm('Reset ALL progress — XP, floors, bestiary, exam history?')) return;
     this.s = this.fresh();
     this.save();
+    const live = Exam.saved();
+    Exam.suspend(); if (live) Exam.endSaved('reset', live.attemptId);
+    Exam.items = []; Exam.submitted = false;
     UI.refreshHud(); UI.go('home');
     UI.toast('🗑️', 'Progress reset', 'The tower forgets you. For now.');
   },
@@ -373,10 +376,11 @@ const UI = {
         if (!confirm('Leave the practice exam? It will not be scored.')) return;
         Exam.abort();
       } else {
-        Exam.suspend();
+        Exam.suspend(); Exam.armExpiry();
         UI.toast('⏳', 'Mock exam still running', 'The clock keeps going, like the real exam. Resume from the Proctor card.');
       }
     }
+    if (EXAM_SETTLE_ON.has(name) && Exam.settleExpired()) return;
     if (name !== 'lightning') Lightning.stop();
     document.getElementById('overlay').classList.remove('show');
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -494,7 +498,7 @@ const UI = {
       const b = document.createElement('button');
       b.className = 'answer';
       b.innerHTML = `<span class="key">${i + 1}</span><span>${fmt(opt)}</span>`;
-      b.onclick = () => onPick(i, b);
+      b.onclick = () => { if (!b.classList.contains('disabled')) onPick(i, b); };
       box.appendChild(b);
       return b;
     });
@@ -774,6 +778,8 @@ const Battle = {
 /* ---------------- exam (The Proctor: mock + practice) ---------------- */
 const EXAM_KEY = 'aa-exam-attempt';
 const EXAM_SECS = 7200, PACE_SECS = 120;
+/* screens where a mock that ran out of time while away can be scored without interrupting anything */
+const EXAM_SETTLE_ON = new Set(['home', 'examintro', 'blueprint', 'tower', 'trophies', 'bestiary']);
 
 /* estimated scaled score — real equating is unpublished, so anchor 72% raw at the 720 cut */
 function scaledScore(pct) {
@@ -787,7 +793,7 @@ function clock(secs) {
 
 const Exam = {
   active: false, variant: 'mock', items: [], idx: 0, timer: null,
-  startedAt: 0, deadline: 0, attemptId: '', scenarios: [], submitted: false, warned: false, qStart: 0,
+  startedAt: 0, deadline: 0, attemptId: '', scenarios: [], submitted: false, warned: false, qStart: 0, away: null,
 
   /* 4 of 6 scenarios, rejecting draws that leave a domain with no primary scenario */
   drawScenarios() {
@@ -822,13 +828,19 @@ const Exam = {
   },
 
   /* ---- persistence (strict mock only) ---- */
-  saved() {
-    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && r.v === 1 && r.status === 'live' ? r : null; }
+  stored() {
+    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && r.v === 1 ? r : null; }
     catch (e) { return null; }
   },
+  saved() { const r = this.stored(); return r && r.status === 'live' ? r : null; },
   clearSaved() { try { localStorage.removeItem(EXAM_KEY); } catch (e) {} },
+  /* a finished attempt leaves a marker so another tab can't write it back as live */
+  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 1, status, attemptId })); } catch (e) {} },
+  /* true when another tab submitted, reset or replaced this attempt */
+  takenOver() { const r = this.stored(); return !!r && (r.attemptId !== this.attemptId || r.status !== 'live'); },
   persist() {
     if (this.variant !== 'mock' || this.submitted) return;
+    if (this.takenOver()) return this.detach();
     const rec = {
       v: 1, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
       startedAt: this.startedAt, deadline: this.deadline, idx: this.idx, scenarios: this.scenarios,
@@ -861,11 +873,44 @@ const Exam = {
     if (Date.now() >= this.deadline) {
       UI.toast('🛎️', 'Time ran out while you were away', 'Your mock exam was submitted with the answers you saved.');
       this.submit('expired');
-    }
+    } else this.armExpiry();
+  },
+
+  /* a suspended mock whose clock ran out while the user was elsewhere in the app: score it once */
+  settleExpired() {
+    const rec = this.saved();
+    if (this.active || !rec || Date.now() < rec.deadline) return false;
+    if (!this.restore(rec)) { this.clearSaved(); return false; }
+    UI.toast('🛎️', 'Your mock exam ran out of time', 'It was submitted with the answers you saved.');
+    this.submit('expired');
+    return true;
+  },
+
+  /* while suspended, score the mock at its deadline (or at the next calm screen) */
+  armExpiry() {
+    clearTimeout(this.away);
+    const rec = this.saved();
+    if (!rec) return;
+    this.away = setTimeout(() => {
+      const cur = this.saved();
+      if (!cur) return;
+      if (Date.now() < cur.deadline) return this.armExpiry();
+      if (document.visibilityState !== 'visible') return; // scored when this tab is next shown or navigated
+      if (EXAM_SETTLE_ON.has(UI.current)) this.settleExpired();
+      else UI.toast('🛎️', 'Mock exam time is up', 'Your result opens when you leave this screen.');
+    }, Math.max(0, rec.deadline - Date.now()) + 250);
+  },
+
+  /* another tab ended or replaced this attempt: stop here without scoring it twice */
+  detach() {
+    this.submitted = true; this.suspend();
+    UI.toast('⚠️', 'This mock exam ended in another tab', 'It was submitted or replaced there, so this tab stopped.');
+    UI.go('examintro');
   },
 
   /* ---- lifecycle ---- */
   start(variant) {
+    if (this.settleExpired()) return;
     if (this.saved() && !confirm('Abandon the mock exam you have in progress? It will not be scored.')) return;
     this.clearSaved();
     const scenarios = this.drawScenarios();
@@ -891,17 +936,20 @@ const Exam = {
     document.getElementById('screen-exam').classList.toggle('practice', this.variant === 'practice');
     document.getElementById('e-mode').textContent = this.variant === 'mock' ? 'Mock exam · no feedback until you submit' : 'Practice exam · feedback after each question';
     this.renderGrid(); this.show();
-    clearInterval(this.timer);
+    clearInterval(this.timer); clearTimeout(this.away);
     this.timer = setInterval(() => this.tick(), 1000);
     this.tick();
   },
 
   /* leaving the screen: the mock clock keeps running (it lives in the saved deadline) */
-  suspend() { this.active = false; clearInterval(this.timer); },
-  abort() { this.suspend(); if (this.variant === 'mock') this.clearSaved(); },
+  suspend() { this.active = false; clearInterval(this.timer); clearTimeout(this.away); },
+  abort() { this.suspend(); if (this.variant === 'mock') this.endSaved('abandoned'); },
 
   remaining() { return Math.max(0, Math.ceil((this.deadline - Date.now()) / 1000)); },
-  elapsed() { return Math.max(0, Math.min(EXAM_SECS, Math.round((Math.min(Date.now(), this.deadline) - this.startedAt) / 1000))); },
+  elapsed() {
+    if (this.variant !== 'mock') return Math.max(0, Math.round((Date.now() - this.startedAt) / 1000));
+    return Math.max(0, Math.min(EXAM_SECS, Math.round((Math.min(Date.now(), this.deadline) - this.startedAt) / 1000)));
+  },
 
   tick() {
     if (!this.active) return;
@@ -1024,10 +1072,11 @@ const Exam = {
   /* idempotent: history, XP and clinic updates happen exactly once per attempt */
   submit(reason) {
     if (this.submitted) return;
+    const mock = this.variant === 'mock';
+    if (mock && this.takenOver()) return this.detach();
     this.submitted = true;
     this.suspend();
-    const mock = this.variant === 'mock';
-    if (mock) this.clearSaved();
+    if (mock) this.endSaved('submitted');
 
     let correct = 0;
     const perDomain = {}, perScen = {};
@@ -1038,13 +1087,14 @@ const Exam = {
       const ps = perScen[it.scenario] || (perScen[it.scenario] = { right: 0, total: 0 });
       ps.total++;
       if (ok) { correct++; perDomain[it.domain].right++; ps.right++; }
-      if (mock) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.id); }
+      /* unanswered items score as wrong but don't count as seen in the per-question stats */
+      if (mock) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.sel != null ? it.id : null); }
     });
     const total = this.items.length, pct = correct / total;
     const score = scaledScore(pct);
     const se = Math.sqrt(Math.max(pct * (1 - pct), 0.01) / total);
     const band = pct >= 0.72 + se ? 'above' : pct >= 0.72 - se ? 'near' : 'below';
-    const used = mock ? this.elapsed() : Math.round((Date.now() - this.startedAt) / 1000);
+    const used = this.elapsed();
     const seenBefore = this.items.filter(i => i.seenBefore).length;
 
     if (mock) Game.s.examBest = Math.max(Game.s.examBest, score);
@@ -1074,7 +1124,7 @@ const Exam = {
     const banner = document.getElementById('er-banner');
     banner.textContent = { above: '📜 Above the 720 line', near: '⚖️ Right on the line', below: '❌ Below the 720 line' }[r.band];
     banner.style.color = { above: 'var(--good)', near: 'var(--gold)', below: 'var(--bad)' }[r.band];
-    document.getElementById('er-sub').textContent = `${r.correct}/${r.total} correct (${Math.round(r.pct * 100)}%) · ${Math.round(r.used / 60)} of 120 minutes · ${Math.round(r.used / r.total)}s per question · +${r.xp} XP`;
+    document.getElementById('er-sub').textContent = `${r.correct}/${r.total} correct (${Math.round(r.pct * 100)}%) · ${Math.round(r.used / 60)}${r.mock ? ' of 120' : ''} minutes · ${Math.round(r.used / r.total)}s per question · +${r.xp} XP`;
     document.getElementById('er-note').innerHTML = `Scaled score is an <strong>estimate</strong> (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
       + (r.seenBefore ? ` <strong>${r.seenBefore} of ${r.total}</strong> questions were ones you'd seen before, which can inflate the score.` : '');
 
@@ -1286,8 +1336,11 @@ const Drill = {
     this.buttons[q.correct].classList.add('correct');
     if (ok) { this.right++; this.xp += 15; Game.addXP(15); Sound.good(); }
     else { this.buttons[i].classList.add('wrong'); Game.deckAdd(q.id); Sound.bad(); }
-    setTimeout(() => UI.modal(ok, q.options[q.correct], q.explanation, () => this.next(),
-      { btn: this.qi + 1 >= this.queue.length ? 'Finish drill' : 'Next question' }), 700);
+    setTimeout(() => {
+      if (UI.current !== 'drill' || this.queue[this.qi] !== q) return;
+      UI.modal(ok, q.options[q.correct], q.explanation, () => this.next(),
+        { btn: this.qi + 1 >= this.queue.length ? 'Finish drill' : 'Next question' });
+    }, 700);
   },
 
   next() {
@@ -1553,6 +1606,12 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('m-next').click(); }
     return;
   }
+  if (e.key === 'Enter' && UI.current === 'exam' && Exam.variant === 'practice') {
+    const f = document.activeElement, next = document.querySelector('#e-feedback button');
+    if (f && f !== document.body && !f.closest('#e-answers, #e-feedback')) return;
+    if (next) { e.preventDefault(); next.click(); }
+    return;
+  }
   if (e.key >= '1' && e.key <= '4') {
     const map = { battle: 'b-answers', lightning: 'l-answers', hunt: 'h-answers', exam: 'e-answers', review: 'rv-answers', drill: 'd-answers' };
     const id = map[UI.current];
@@ -1580,5 +1639,10 @@ document.getElementById('btn-sound').onclick = () => {
 UI.refreshHud();
 Exam.checkSaved();
 window.addEventListener('storage', (e) => {
-  if (e.key === EXAM_KEY && Exam.active) UI.toast('⚠️', 'Exam open in another tab', 'Answers from two tabs will overwrite each other. Use one.');
+  if (e.key !== EXAM_KEY || !Exam.active || Exam.variant !== 'mock') return;
+  if (Exam.takenOver()) Exam.detach();
+  else if (Exam.stored()) UI.toast('⚠️', 'Exam open in another tab', 'Answers from two tabs will overwrite each other. Use one.');
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && EXAM_SETTLE_ON.has(UI.current)) Exam.settleExpired();
 });

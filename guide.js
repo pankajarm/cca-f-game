@@ -547,7 +547,7 @@ window.GUIDE.deltas = {
  "2.3": "On the newest models (Opus 5.5, Sonnet 5.5, Fable 5.1, Mythos 5.1) tool_choice \"any\" and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto / any / forced.",
  "2.4": "claude mcp add defaults to local scope (private to you, in this project); shared team servers need --scope project. SSE transport is deprecated in favour of HTTP.",
  "2.5": "On macOS, Linux and WSL, Glob and Grep are no longer in Claude Code's default tool set; Claude searches with find/grep through Bash unless you enable them.",
- "3.1": "@imports organise instructions but load together with the parent file, so they don't save context. After compaction, nested CLAUDE.md files reload only when a matching file is touched again.",
+ "3.1": "@imports organise instructions but load together with the parent file, so they don't save context. After compaction, nested CLAUDE.md files reload only when a matching file is touched again. /memory now lists and opens memory files; to see which CLAUDE.md and rules files actually loaded, run /context. Exam items keep the guide's /memory wording.",
  "3.2": "Custom commands and skills are now one system: .claude/commands/x.md and .claude/skills/x/SKILL.md both create /x. allowed-tools pre-approves tools for the skill's turn rather than blocking others.",
  "3.3": "Path-scoped rules drop out at compaction and reload when a matching file is touched again.",
  "3.4": "The built-in Explore subagent now runs on the main conversation's model and starts without CLAUDE.md.",

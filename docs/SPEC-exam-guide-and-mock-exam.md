@@ -78,7 +78,9 @@ Intro screen offers **Mock Exam** (strict) and **Practice Exam**.
   - Load after deadline → auto-submit with saved answers.
   - Missing ids or changed bankHash → attempt voided with a toast.
   - `storage` event from another tab → warning toast.
-- Submit is idempotent (status guard), so history, XP and clinic updates happen once.
+  - Deadline passes while the user is elsewhere in the app → scored at the deadline if the tab is visible and on a calm screen (home, intro, Blueprint, Tower, trophies, bestiary), otherwise when it is next shown on one or navigates to one; starting a new exam scores it first instead of offering to abandon it.
+  - Submit and reset leave a marker `{attemptId, status}`, and a new attempt replaces the record, so another tab can't write an ended attempt back as live; a tab whose attempt was ended or replaced elsewhere stops without scoring.
+- Submit is idempotent (status guard), so history, XP and clinic updates happen once. Unanswered items score as wrong but aren't recorded as seen in `qstats`.
 
 ### 4.3 Practice Exam
 - Same assembly and blocks. Answer → immediate verdict + explanation, then next. Per-question 2:00 countdown that turns red past budget (never locks). Not persisted, not counted toward best or the Certified achievement.

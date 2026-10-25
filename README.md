@@ -29,7 +29,7 @@ built from the ground up and current as of **June 2026**. Instead of grinding a
 PDF of flashcards, you climb a ten-floor tower, fight a boss made of each way
 real agent systems break, and finish against **The Proctor** — a mock exam in the
 real format: 60 questions, 120 minutes, 4 of the 6 official scenarios. **The
-Blueprint** maps every question to the official exam guide's 30 task statements
+Blueprint** maps the question bank to the official exam guide's 30 task statements
 so you can study the guide line by line. All **213 questions** were written to the
 exam blueprint and checked by an adversarial reviewer.
 
@@ -78,7 +78,7 @@ answer after each one.
 |  |  |
 |:--:|:--:|
 | ![Exam simulator](docs/screenshots/exam.png) | ![Score report](docs/screenshots/score.png) |
-| **Real exam conditions** — timer, flags, navigator | **Scaled score + domain breakdown** |
+| **Real exam conditions** — scenarios, timer, pace, flags, navigator | **Estimated score + domain and scenario breakdown** |
 
 </div>
 
@@ -87,7 +87,7 @@ answer after each one.
 | Mode | What it is |
 |---|---|
 | 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Clear at 7/10 to ascend; ★ for a perfect 10. |
-| 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a 10-question drill for each. Also by scenario. |
+| 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a drill of up to 10 questions for each. Also by scenario. |
 | 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled score) or Practice exam (2 min per question, instant feedback). |
 | ⚡ **Lightning Round** | 90 seconds, unlimited questions, combos multiply your score. For people who read the question before the options load. |
 | 🔦 **Anti-Pattern Hunt** | Twelve production war stories, each hiding one monster. Name it to capture it. |
