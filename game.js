@@ -120,7 +120,23 @@ const POWERUPS = {
 
 /* ---------------- save state ---------------- */
 const SAVE_KEY = 'architects-ascent-v2';
-const SCHEMA = 4;
+const SCHEMA = 5;
+
+/* v2 clinic cards were {src, idx}. The frozen ids were assigned from those v2 positions, so map by id,
+   not by today's array (buckets have lost items since) */
+const LEGACY_PREFIX = { 'exam-mix-1': 'mx1', 'exam-mix-2': 'mx2', hunt: 'hunt' };
+function legacyId(c) {
+  const p = LEGACY_PREFIX[c.src] || (/^floor-(\d\d)$/.test(c.src || '') ? 'f' + c.src.slice(6) : null);
+  return p && Number.isInteger(c.idx) ? p + '-' + String(c.idx).padStart(2, '0') : null;
+}
+
+/* local calendar day, so the study streak follows the player's own midnight */
+function localDay(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/* a question's revision: the bank bumps it when the key or concept changed (absent = 0) */
+function qRev(q) { return q && Number.isInteger(q.rev) && q.rev > 0 ? q.rev : 0; }
 
 const Game = {
   s: null,
@@ -131,7 +147,7 @@ const Game = {
       streak: { count: 0, last: null },
       floors: {}, powerups: { compact: 1, think: 1, shield: 1 },
       bestiary: [], achievements: [],
-      deck: [], examBest: 0, legacyExamBest: 0, examHistory: [], lightningBest: 0,
+      deck: [], clinicPeak: 0, examBest: 0, legacyExamBest: 0, examHistory: [], lightningBest: 0,
       totals: { answered: 0, correct: 0 },
       qstats: {}, mockSeen: {}, schemaVersion: SCHEMA,
     };
@@ -142,42 +158,123 @@ const Game = {
     try {
       raw = localStorage.getItem(SAVE_KEY);
       saved = raw ? JSON.parse(raw) : null;
-    } catch (e) { saved = null; }
+    } catch (e) {
+      saved = null;
+      try { if (raw) localStorage.setItem(SAVE_KEY + '.corrupt', raw); } catch (_) {}
+    }
+    if (saved && (typeof saved !== 'object' || Array.isArray(saved))) saved = null;
+    const ver = saved ? (Number(saved.schemaVersion) || 2) : SCHEMA;
+    this.adopt(saved);
+    if (ver < 3) this.migrate(raw);
+    if (ver < 4) this.migrate4(raw);
+    if (ver < 5) this.migrate5(raw);
+    this.cleanDeck();
+    const reset = this.sweepRevs();
+    if (reset && raw && ver >= SCHEMA) { try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {} }
+    if (saved && (ver < SCHEMA || reset || raw !== JSON.stringify(this.s))) this.save();
+  },
+
+  /* take a parsed save (this tab's boot, or another tab's write) and repair anything missing or mistyped */
+  adopt(saved) {
     this.s = Object.assign(this.fresh(), saved || {});
-    if (saved && (saved.schemaVersion || 2) < 3) this.migrate(raw);
-    if (saved && this.s.schemaVersion < SCHEMA) this.migrate4(raw);
+    this.normalise();
+  },
+
+  /* a null or wrongly typed field falls back to its default instead of breaking every screen */
+  normalise() {
+    const f = this.fresh(), s = this.s;
+    for (const k in f) {
+      let v = s[k];
+      const d = f[k];
+      if (typeof d === 'number' && typeof v === 'string' && v.trim() && isFinite(v)) v = s[k] = Number(v);
+      if (v == null || typeof v !== typeof d || Array.isArray(v) !== Array.isArray(d) || (typeof d === 'number' && !isFinite(v))) { s[k] = d; continue; }
+      if (d && typeof d === 'object' && !Array.isArray(d) && k !== 'qstats' && k !== 'mockSeen' && k !== 'floors') {
+        const m = Object.assign({}, d, v);
+        for (const k2 in d) if (typeof d[k2] === 'number' && (typeof m[k2] !== 'number' || !isFinite(m[k2]))) m[k2] = d[k2];
+        s[k] = m;
+      }
+    }
+    ['qstats', 'mockSeen', 'floors'].forEach(k => Object.keys(s[k]).forEach(id => {
+      const v = s[k][id];
+      if (k === 'mockSeen' ? typeof v !== 'number' || !isFinite(v) : !v || typeof v !== 'object') delete s[k][id];
+    }));
+    Object.values(s.qstats).forEach(st => ['seen', 'right', 'last', 'at'].forEach(f2 => { if (typeof st[f2] !== 'number' || !isFinite(st[f2])) st[f2] = 0; }));
+    s.deck = s.deck.filter(c => c && typeof c === 'object');
+    s.examHistory = s.examHistory.filter(h => h && typeof h === 'object');
+    s.bestiary = s.bestiary.filter(m => typeof m === 'string');
+    s.achievements = s.achievements.filter(a => typeof a === 'string');
+    s.clinicPeak = Math.max(s.clinicPeak, s.deck.length);
   },
 
   /* v2 -> v3: clinic cards {src, idx} become {id}; Proctor scores move to legacyExamBest */
   migrate(raw) {
     try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
-    this.s.deck = this.s.deck.map(c => {
-      if (c.id) return c;
-      const q = Bank.byRef(c.src, c.idx);
-      return q && q.id ? { id: q.id, streak: c.streak || 0 } : c;
-    });
+    this.s.deck = this.s.deck.map(c => c.id ? c : { id: legacyId(c), streak: c.streak || 0 });
     this.s.legacyExamBest = this.s.examBest || 0;
     this.s.examBest = 0;
     this.s.examHistory = this.s.examHistory.map(h => h.mode ? h : { ...h, mode: 'proctor' });
     this.s.schemaVersion = 3;
-    this.save();
   },
 
   /* v3 -> v4: hunt and out-of-scope questions left the bank; first-try results for readiness */
   migrate4(raw) {
     try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
-    this.s.deck = this.s.deck.filter(c => !c.id || Bank.byId(c.id));
     Object.keys(this.s.qstats).forEach(id => {
       const st = this.s.qstats[id];
       if (!Bank.byId(id)) delete this.s.qstats[id];
       else if (st.first == null && st.seen === 1) st.first = st.last;  // older multi-try stats can't tell their first try
     });
     this.s.bestiary = [...new Set(this.s.bestiary.map(m => RETIRED_MONSTERS[m] || m))].filter(m => MONSTERS[m]);
-    this.s.schemaVersion = SCHEMA;
-    this.save();
+    this.s.schemaVersion = 4;
+  },
+
+  /* v4 -> v5: questions carry a revision and qstats remember the one they were answered on (sweepRevs runs on every load) */
+  migrate5(raw) {
+    try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
+    this.s.schemaVersion = 5;
+  },
+
+  /* every clinic card must name a question still in the bank; runs on every load, so saves migrated
+     before this rule (cards left as {src, idx}) are cleaned too */
+  cleanDeck() {
+    const ids = new Set();
+    this.s.deck = this.s.deck.filter(c => {
+      if (typeof c.id !== 'string' || !Bank.byId(c.id) || ids.has(c.id)) return false;
+      ids.add(c.id);
+      if (typeof c.streak !== 'number' || !isFinite(c.streak)) c.streak = 0;
+      return true;
+    });
+  },
+
+  /* a question whose key or concept changed (its rev went up) starts over: its stats go, so readiness
+     never counts a first try on the old version, and its clinic streak restarts. Returns how many */
+  sweepRevs() {
+    let n = 0;
+    Object.keys(this.s.qstats).forEach(id => {
+      const q = Bank.byId(id);
+      if (!q || (Number(this.s.qstats[id].rev) || 0) >= qRev(q)) return;
+      delete this.s.qstats[id];
+      const c = this.s.deck.find(c => c.id === id);
+      if (c) c.streak = 0;
+      n++;
+    });
+    return n;
   },
 
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.s)); } catch (e) {} },
+
+  /* another tab wrote the save: adopt it, so this tab's next save doesn't write stale progress back */
+  syncFrom(raw) {
+    let saved;
+    try { saved = JSON.parse(raw); } catch (e) { return; }
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+    this.adopt(saved);
+    this.cleanDeck();
+    if (this.sweepRevs()) this.save();
+    document.documentElement.dataset.theme = this.s.theme;
+    UI.refreshHud();
+    if (UI.current === 'home') UI.renderHome();
+  },
 
   hardReset() {
     if (!confirm('Reset ALL progress — XP, floors, bestiary, exam history?')) return;
@@ -214,32 +311,37 @@ const Game = {
   },
 
   touchStreak() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDay(new Date());
     const st = this.s.streak;
     if (st.last === today) return;
     const y = new Date(); y.setDate(y.getDate() - 1);
-    st.count = (st.last === y.toISOString().slice(0, 10)) ? st.count + 1 : 1;
+    st.count = (st.last === localDay(y)) ? st.count + 1 : 1;
     st.last = today;
     this.save();
     UI.refreshHud();
+    if (st.count >= 7) this.unlock('streak-7');
     if (st.count >= 30) this.unlock('streak-30');
-    else if (st.count >= 7) this.unlock('streak-7');
   },
 
-  /* timed: a rushed answer (Lightning) counts as seen but never as the question's first try */
-  recordAnswer(ok, id, timed) {
-    this.touchStreak();
+  /* timed: a rushed answer (Lightning) counts as seen but never as the question's first try; the first
+     try is the first UNTIMED answer (st.t counts the timed ones before it).
+     late: answers scored after the fact (a mock that expired while away) don't touch today's streak */
+  recordAnswer(ok, id, timed, late) {
+    if (!late) this.touchStreak();
     this.s.totals.answered++;
     if (ok) this.s.totals.correct++;
     if (id) {
       const st = this.s.qstats[id] || (this.s.qstats[id] = { seen: 0, right: 0, last: 0, at: 0 });
-      if (st.seen === 0 && !timed) st.first = ok ? 1 : 0;
+      if (st.first == null && !timed && st.seen === (st.t || 0)) st.first = ok ? 1 : 0;
+      if (timed) st.t = (st.t || 0) + 1;
       st.seen++; if (ok) st.right++;
       st.last = ok ? 1 : 0; st.at = Date.now();
+      const rev = qRev(Bank.byId(id));
+      if (rev) st.rev = rev; else delete st.rev;
     }
     if (this.s.totals.correct >= 100) this.unlock('scholar-100');
     const h = new Date().getHours();
-    if (h >= 0 && h < 5) this.unlock('night-shift');
+    if (!late && h >= 0 && h < 5) this.unlock('night-shift');
     this.save();
   },
 
@@ -254,21 +356,24 @@ const Game = {
   },
 
   grantPowerup() {
-    const keys = Object.keys(POWERUPS);
+    const keys = Object.keys(POWERUPS).filter(k => this.s.powerups[k] < 9);
+    if (!keys.length) return null;
     const k = keys[Math.floor(Math.random() * keys.length)];
-    if (this.s.powerups[k] >= 9) return null;
     this.s.powerups[k]++;
     this.save();
     return k;
   },
 
-  /* mistake deck — stable question ids; correct twice in a row discharges */
+  /* mistake deck — stable question ids; correct twice in a row discharges, and a miss anywhere
+     (another mode included) restarts the run */
   deckAdd(id) {
-    if (id && !this.s.deck.some(c => c.id === id)) {
-      this.s.deck.push({ id, streak: 0 });
-      this.save();
-      UI.refreshHud();
-    }
+    if (!id) return;
+    const c = this.s.deck.find(c => c.id === id);
+    if (c) c.streak = 0;
+    else this.s.deck.push({ id, streak: 0 });
+    this.s.clinicPeak = Math.max(this.s.clinicPeak || 0, this.s.deck.length);
+    this.save();
+    UI.refreshHud();
   },
 };
 
@@ -277,9 +382,6 @@ const Bank = {
   _byId: null,
 
   floor(id) { return (window.BANK && window.BANK[id]) || []; },
-
-  /* legacy position lookup, used only by the v2 save migration */
-  byRef(src, idx) { return this.floor(src)[idx] || null; },
 
   byId(id) {
     if (!this._byId) {
@@ -312,10 +414,15 @@ const Bank = {
     const rank = r => { const st = qs[r.id]; return !st ? 0 : st.last ? 2 : 1; };
     const sorted = shuffle(refs).sort((a, b) => rank(a) - rank(b) || ((qs[a.id] || {}).at || 0) - ((qs[b.id] || {}).at || 0));
     if (!spread) return sorted.slice(0, n);
-    const lanes = {};
-    sorted.forEach(r => (lanes[r.q.ts] = lanes[r.q.ts] || []).push(r));
-    const order = shuffle(Object.keys(lanes)), out = [];
-    while (out.length < n && order.some(t => lanes[t].length)) order.forEach(t => { if (out.length < n && lanes[t].length) out.push(lanes[t].shift()); });
+    /* take turns within each rank tier, best tier first, so a lane of seen questions never
+       displaces an unseen one */
+    const out = [];
+    for (const tier of [0, 1, 2]) {
+      const lanes = {};
+      sorted.filter(r => rank(r) === tier).forEach(r => (lanes[r.q.ts] = lanes[r.q.ts] || []).push(r));
+      const order = shuffle(Object.keys(lanes));
+      while (out.length < n && order.some(t => lanes[t].length)) order.forEach(t => { if (out.length < n && lanes[t].length) out.push(lanes[t].shift()); });
+    }
     return shuffle(out);
   },
 
@@ -335,6 +442,15 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/* short hash of a question's options and key: a saved mock answer is replayed only onto the same content */
+function qFingerprint(q) {
+  if (!q || !Array.isArray(q.options)) return '';
+  const s = q.options.join('␞') + '#' + q.correct;
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
 }
 
 /* shuffle a question's options (or replay a saved order), remapping the correct index */
@@ -671,7 +787,8 @@ const Battle = {
   },
 
   usePowerup(k) {
-    if (Game.s.powerups[k] <= 0) return;
+    if (Game.s.powerups[k] <= 0 || UI.current !== 'battle') return;
+    if (this.buttons.some(b => b.classList.contains('correct'))) return;  // already answered: nothing to spend it on
     const q = this.queue[this.qi].deal;
     if (k === 'compact') {
       if (this.usedCompact) return;
@@ -745,6 +862,7 @@ const Battle = {
     }
 
     setTimeout(() => {
+      if (UI.current !== 'battle' || this.queue[this.qi] !== item) return;  // the player left this battle
       UI.modal(ok, q.options[q.correct], q.explanation, () => this.next());
     }, ok ? 700 : 900);
   },
@@ -791,7 +909,9 @@ const Battle = {
       this.xpGained += bonus;
     }
 
+    const queue = this.queue;
     setTimeout(() => {
+      if (UI.current !== 'battle' || this.queue !== queue) return;  // progress is saved; don't yank the player back
       document.getElementById('r-emoji').textContent = win ? (this.right === 10 ? '👑' : '🏆') : '💀';
       const t = document.getElementById('r-title');
       t.textContent = win ? (this.right === 10 ? 'FLAWLESS!' : 'FLOOR CLEARED') : 'DEFEATED';
@@ -888,46 +1008,84 @@ const Exam = {
     Game.save();
   },
 
-  /* ---- persistence (strict mock only) ---- */
+  /* the same, for a saved attempt that is discarded without being restored (abandoned or voided).
+     Records from before `sh` existed count the answered items */
+  creditExposure(rec) {
+    (rec.items || []).forEach(s => {
+      if (s && Bank.byId(s.id) && (s.sh == null ? s.sel != null : s.sh)) Game.s.mockSeen[s.id] = (Game.s.mockSeen[s.id] || 0) + 1;
+    });
+    Game.save();
+  },
+
+  /* ---- persistence (strict mock only) ----
+     v2 records carry a per-item fingerprint of the options and key, so an answer is only replayed onto
+     the question the player actually saw. v1 records (no fingerprints) are voided on load */
   stored() {
-    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && r.v === 1 ? r : null; }
+    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && (r.v === 1 || r.v === 2) ? r : null; }
     catch (e) { return null; }
   },
-  saved() { const r = this.stored(); return r && r.status === 'live' ? r : null; },
+  saved() { const r = this.stored(); return r && r.v === 2 && r.status === 'live' && Array.isArray(r.items) ? r : null; },
   clearSaved() { try { localStorage.removeItem(EXAM_KEY); } catch (e) {} },
   /* a finished attempt leaves a marker so another tab can't write it back as live */
-  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 1, status, attemptId })); } catch (e) {} },
+  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 2, status, attemptId })); } catch (e) {} },
   /* true when another tab submitted, reset or replaced this attempt */
   takenOver() { const r = this.stored(); return !!r && (r.attemptId !== this.attemptId || r.status !== 'live'); },
-  persist() {
+  /* fresh: a new attempt replaces whatever record or end marker is there */
+  persist(fresh) {
     if (this.variant !== 'mock' || this.submitted) return;
-    if (this.takenOver()) return this.detach();
+    if (!fresh && this.takenOver()) return this.detach();
     const rec = {
-      v: 1, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
+      v: 2, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
       startedAt: this.startedAt, deadline: this.deadline, idx: this.idx, scenarios: this.scenarios,
-      items: this.items.map(it => ({ id: it.id, o: it.deal.order, sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore, mb: it.mockBefore, sh: it.shown })),
+      items: this.items.map(it => ({ id: it.id, o: it.deal.order, fp: qFingerprint(Bank.byId(it.id)), sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore, mb: it.mockBefore, sh: it.shown })),
     };
     try { localStorage.setItem(EXAM_KEY, JSON.stringify(rec)); } catch (e) {}
   },
-  /* an attempt survives bank growth; it is void only if one of its own questions is gone */
+  /* an attempt survives bank growth; it is void only if one of its own questions is gone. An item whose
+     options or key changed since it was saved (fingerprint mismatch, or an order that isn't a permutation)
+     loses its answer and is dealt again. Returns false (void) or the number of answers cleared */
   restore(rec) {
     const items = [];
+    let cleared = 0, changed = 0;
     for (const s of rec.items) {
-      const q = Bank.byId(s.id);
+      const q = s && Bank.byId(s.id);
       if (!q) return false;
-      items.push(this.item(q, s.o, { sel: s.sel, flag: !!s.flag, scenario: s.sc, seenBefore: !!s.seen, mockBefore: !!s.mb, shown: !!s.sh }));
+      const n = q.options.length, o = s.o;
+      const perm = Array.isArray(o) && o.length === n && n === 4 && o.every(i => Number.isInteger(i) && i >= 0 && i < n) && new Set(o).size === n;
+      const same = perm && s.fp === qFingerprint(q);
+      const sel = same && Number.isInteger(s.sel) && s.sel >= 0 && s.sel < n ? s.sel : null;
+      if (!same) { changed++; if (s.sel != null) cleared++; }
+      items.push(this.item(q, same ? o : null, { sel, flag: !!s.flag, scenario: s.sc || 0, seenBefore: !!s.seen, mockBefore: !!s.mb,
+        shown: s.sh == null ? s.sel != null : !!s.sh }));
     }
-    Object.assign(this, { variant: 'mock', items, idx: rec.idx || 0, startedAt: rec.startedAt, deadline: rec.deadline,
-      attemptId: rec.attemptId, scenarios: rec.scenarios, submitted: false, warned: false, exposed: false });
+    Object.assign(this, { variant: 'mock', items, idx: Math.max(0, Math.min(items.length - 1, rec.idx || 0)), startedAt: rec.startedAt, deadline: rec.deadline,
+      attemptId: rec.attemptId, scenarios: rec.scenarios || [], submitted: false, warned: false, exposed: false });
+    if (changed) {
+      this.persist();  // store the new deal and fingerprints, so this happens once
+      if (cleared) UI.toast('✏️', cleared + (cleared === 1 ? ' answer was' : ' answers were') + ' cleared',
+        'Those questions were updated in the bank since you answered them. Answer them again.');
+    }
+    return cleared;
+  },
+
+  /* a v1 record has no fingerprints, so its answers can't be checked against today's bank: void it */
+  voidLegacy() {
+    const r = this.stored();
+    if (!r || r.v === 2 || r.status !== 'live') return false;
+    this.creditExposure(r);
+    this.endSaved('voided', r.attemptId);
+    UI.toast('🗑️', 'Saved mock exam voided', 'The question bank was updated since you started it, and that attempt can\'t be checked against the new questions safely.');
     return true;
   },
 
   /* on boot: void a stale attempt, or finish one whose clock ran out while away */
   checkSaved() {
+    if (this.voidLegacy()) return;
     const rec = this.saved();
     if (!rec) return;
-    if (!this.restore(rec)) {
-      this.clearSaved();
+    if (this.restore(rec) === false) {
+      this.creditExposure(rec);
+      this.endSaved('voided', rec.attemptId);
       UI.toast('🗑️', 'Saved mock exam voided', 'Some of its questions were removed from the bank.');
       return;
     }
@@ -941,7 +1099,7 @@ const Exam = {
   settleExpired() {
     const rec = this.saved();
     if (this.active || !rec || Date.now() < rec.deadline) return false;
-    if (!this.restore(rec)) { this.clearSaved(); return false; }
+    if (this.restore(rec) === false) { this.creditExposure(rec); this.endSaved('voided', rec.attemptId); return false; }
     UI.toast('🛎️', 'Your mock exam ran out of time', 'It was submitted with the answers you saved.');
     this.submit('expired');
     return true;
@@ -972,21 +1130,25 @@ const Exam = {
   /* ---- lifecycle ---- */
   start(variant) {
     if (this.settleExpired()) return;
-    if (this.saved() && !confirm('Abandon the mock exam you have in progress? It will not be scored.')) return;
-    this.clearSaved();
+    const old = this.saved();
+    if (old && !confirm('Abandon the mock exam you have in progress? It will not be scored.')) return;
+    /* the abandoned attempt's displayed questions still count as exposure, and its end marker makes
+       another tab on it detach (a new mock then replaces the marker) */
+    if (old) { this.creditExposure(old); this.endSaved('abandoned', old.attemptId); }
+    else this.clearSaved();
     const scenarios = this.drawScenarios();
     const items = this.build(scenarios);
     if (items.length < 60) { UI.toast('🚧', 'Bank too small for a full exam', items.length + ' eligible questions.'); return; }
     const now = Date.now();
     Object.assign(this, { variant, items, scenarios, idx: 0, startedAt: now, deadline: now + EXAM_SECS * 1000,
       attemptId: String(now), submitted: false, warned: false, exposed: false });
-    this.persist();
+    this.persist(true);
     this.enter();
   },
 
   resume() {
     const rec = this.saved();
-    if (!rec || !this.restore(rec)) { this.clearSaved(); UI.toast('🗑️', 'Nothing to resume', 'That attempt is gone or the bank changed.'); UI.go('examintro'); return; }
+    if (!rec || this.restore(rec) === false) { if (rec) { this.creditExposure(rec); this.endSaved('voided', rec.attemptId); } UI.toast('🗑️', 'Nothing to resume', 'That attempt is gone or the bank changed.'); UI.go('examintro'); return; }
     if (Date.now() >= this.deadline) { this.submit('expired'); return; }
     this.enter();
   },
@@ -1150,8 +1312,9 @@ const Exam = {
       const ps = perScen[it.scenario] || (perScen[it.scenario] = { right: 0, total: 0 });
       ps.total++;
       if (ok) { correct++; perDomain[it.domain].right++; ps.right++; }
-      /* unanswered items score as wrong but don't count as seen in the per-question stats */
-      if (mock) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.sel != null ? it.id : null); }
+      /* unanswered items score as wrong but stay out of the clinic, totals and per-question stats;
+         a mock scored after expiring while away doesn't count as studying today */
+      if (mock && it.sel != null) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.id, false, reason === 'expired'); }
     });
     const total = this.items.length, pct = correct / total;
     const score = scaledScore(pct);
@@ -1271,7 +1434,7 @@ const Readiness = {
       return { ic: '📘', label: 'Start with a D1 drill', sub: 'Domain 1 is 27% of the exam. Ten questions, explained one by one.', run: () => Blueprint.drillDomain('D1') };
     }
     if (s.deck.length >= 10) return { ic: '🩹', label: `Treat ${s.deck.length} mistakes in the Clinic`, sub: 'Your own misses are the highest-yield study there is.', run: () => Review.start() };
-    const thin = rows.filter(r => r.firstN < READY_MIN_FIRST).sort((a, b) => a.firstN / a.meta.exam - b.firstN / b.meta.exam)[0];
+    const thin = rows.filter(r => r.firstN < READY_MIN_FIRST).sort((a, b) => a.firstN - b.firstN || b.meta.weight - a.meta.weight)[0];
     if (thin) return { ic: '🧭', label: `Cover ${thin.d}: ${thin.meta.label}`, sub: `${thin.firstN} of ${READY_MIN_FIRST} first tries so far. A drill serves questions you haven't seen.`, run: () => Blueprint.drillDomain(thin.d) };
     const weighted = rows.reduce((a, r) => a + r.acc * r.meta.weight, 0) / 100, last = this.lastMock();
     if (weighted >= READY_TARGET && (!last || days(last) >= 7)) return { ic: '📋', label: 'Take a full mock exam', sub: 'Your practice says you are close. Test it under real conditions: 60 questions, 120 minutes.', run: () => UI.go('examintro') };
@@ -1564,7 +1727,8 @@ const Lightning = {
       Game.deckAdd(q.id);
       Sound.bad();
     }
-    setTimeout(() => this.running && this.show(), ok ? 350 : 900);
+    const cur = this.cur;
+    setTimeout(() => this.running && this.cur === cur && this.show(), ok ? 350 : 900);
   },
 
   finish() {
@@ -1642,7 +1806,7 @@ const Hunt = {
 
 /* ---------------- mistake clinic ---------------- */
 const Review = {
-  session: [], qi: 0, buttons: [], hadTen: false,
+  session: [], qi: 0, buttons: [],
 
   start() {
     UI.go('review');
@@ -1657,7 +1821,6 @@ const Review = {
       body.innerHTML = `<div class="deck-empty"><div class="big">🌿</div><p><strong>The clinic is empty.</strong></p><p>No outstanding mistakes. Go make some interesting new ones.</p></div>`;
       return;
     }
-    this.hadTen = this.hadTen || deck.length >= 10;
     body.innerHTML = `
       <div class="exam-rules">
         <p><strong>${deck.length}</strong> missed question${deck.length === 1 ? '' : 's'} awaiting treatment. Answer one correctly <strong>twice in a row</strong> and it is discharged for good.</p>
@@ -1713,9 +1876,14 @@ const Review = {
     }
     if (ok) { Game.addXP(10); Sound.good(); } else Sound.bad();
     if (discharged) UI.toast('🌿', 'Discharged!', 'That mistake will not haunt the exam.');
-    if (!Game.s.deck.length && this.hadTen) Game.unlock('clinic-clear');
+    if (!Game.s.deck.length) {
+      if (Game.s.clinicPeak >= 10) Game.unlock('clinic-clear');
+      Game.s.clinicPeak = 0; Game.save();
+    }
 
+    const cur = this.cur;
     setTimeout(() => {
+      if (UI.current !== 'review' || this.cur !== cur) return;  // the player left the clinic
       UI.modal(ok, this.cur.options[this.cur.correct], this.cur.explanation, () => this.next(), { btn: this.qi + 1 >= this.session.length ? 'Finish round' : 'Next card' });
     }, 800);
   },
@@ -1767,10 +1935,13 @@ document.getElementById('btn-sound').onclick = () => {
 UI.refreshHud();
 Exam.checkSaved();
 window.addEventListener('storage', (e) => {
+  if (e.key === SAVE_KEY) { if (e.newValue) Game.syncFrom(e.newValue); return; }
   if (e.key !== EXAM_KEY || !Exam.active || Exam.variant !== 'mock') return;
   if (Exam.takenOver()) Exam.detach();
   else if (Exam.stored()) UI.toast('⚠️', 'Exam open in another tab', 'Answers from two tabs will overwrite each other. Use one.');
 });
+/* practice exams aren't persisted: count what was displayed if the tab closes mid-exam */
+window.addEventListener('pagehide', () => { if (Exam.active && Exam.variant === 'practice') Exam.noteExposure(); });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && EXAM_SETTLE_ON.has(UI.current)) Exam.settleExpired();
 });
