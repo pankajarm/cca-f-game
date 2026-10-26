@@ -2,8 +2,8 @@
 """One-time, hand-reviewed mapping of existing questions to the official
 CCAR-F exam guide (v1.0): primary task statement + scenario (1-6, 0 = general).
 
-Run:  python3 scripts/guide_tags.py          # report coverage only
-      python3 scripts/guide_tags.py --write  # stamp id/ts/scenario into questions.js
+Historical: applied once in Oct 2026. The hunt and out-of-scope rows below refer to questions that
+have since been retired, and new questions carry their own ts/scenario, so --write is disabled.
 """
 import json, sys, collections, pathlib
 
@@ -51,7 +51,7 @@ def load():
 
 def main():
     head, bank, tail = load()
-    write = '--write' in sys.argv
+    write = False  # see docstring: the mapping was applied once and the bank has moved on
     for key, qs in bank.items():
         pre = PREFIX[key]
         tags = TAGS.get(key)

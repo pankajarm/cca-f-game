@@ -11,18 +11,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "practice-tests"
 
+# (bank-independent) floor -> task statements, mirroring FLOORS in game.js
 FLOORS = [
-    ("floor-01", "The Loop Chamber", "D1", "Agentic loop mechanics"),
-    ("floor-02", "Coordination Hall", "D1", "Multi-agent orchestration"),
-    ("floor-03", "The Hook Forge", "D1", "Hooks & deterministic enforcement"),
-    ("floor-04", "The Tool Armory", "D2", "Tool design & MCP"),
-    ("floor-05", "The Config Maze", "D3", "CLAUDE.md, rules, skills, commands"),
-    ("floor-06", "The Pipeline Forge", "D3", "Plan mode & CI/CD"),
-    ("floor-07", "Prompt Workshop", "D4", "Prompts & structured output"),
-    ("floor-08", "Validation Gauntlet", "D4", "Retry loops, batch, multi-pass"),
-    ("floor-09", "The Memory Halls", "D5", "Context management & escalation"),
-    ("floor-10", "Synthesis Chamber", "D5", "Provenance, sampling, degradation"),
+    ("floor-01", "The Loop Chamber", "D1", ["1.1"]),
+    ("floor-02", "Coordination Hall", "D1", ["1.2", "1.3", "1.6"]),
+    ("floor-03", "The Hook Forge", "D1", ["1.4", "1.5", "1.7"]),
+    ("floor-04", "The Tool Armory", "D2", ["2.1", "2.2", "2.3", "2.4", "2.5"]),
+    ("floor-05", "The Config Maze", "D3", ["3.1", "3.2", "3.3"]),
+    ("floor-06", "The Pipeline Forge", "D3", ["3.4", "3.5", "3.6"]),
+    ("floor-07", "Prompt Workshop", "D4", ["4.1", "4.2", "4.3"]),
+    ("floor-08", "Validation Gauntlet", "D4", ["4.4", "4.5", "4.6"]),
+    ("floor-09", "The Memory Halls", "D5", ["5.1", "5.2", "5.3"]),
+    ("floor-10", "Synthesis Chamber", "D5", ["5.4", "5.5", "5.6"]),
 ]
+FULL_EXAMS = 3
 
 DOMAINS = {
     "D1": ("Agentic Architecture & Orchestration", 27, 16),
@@ -61,16 +63,20 @@ def render_question(n, q):
     return "\n".join(lines)
 
 
+def all_questions(bank):
+    return [q for qs in bank.values() for q in qs]
+
+
 def build_floor_tests(bank):
-    for i, (fid, name, dom, focus) in enumerate(FLOORS, 1):
+    allq = all_questions(bank)
+    for i, (fid, name, dom, ts) in enumerate(FLOORS, 1):
         dlabel, weight, _ = DOMAINS[dom]
-        qs = bank[fid]
+        qs = sorted((q for q in allq if q["ts"] in ts), key=lambda q: (q["ts"], q["id"]))
         body = [
             f"# Practice Test {i:02d}: {name}",
-            f"**{dom}: {dlabel}** ({weight}% of the exam) — {focus}",
+            f"**{dom}: {dlabel}** ({weight}% of the exam) · task statements {', '.join(ts)}",
             "",
-            f"{len(qs)} questions. Exam pace is 2 minutes per question; aim for {len(qs) * 2} minutes.",
-            "Pass bar in the game: 7/10 on a random draw. Pass bar here: be honest.",
+            f"{len(qs)} questions. Exam pace is 2 minutes per question.",
             "",
             "---",
             "",
@@ -81,61 +87,38 @@ def build_floor_tests(bank):
         print(f"wrote {out.relative_to(ROOT)} ({len(qs)} questions)")
 
 
-def build_full_exam(bank, seed=2026):
+def build_full_exams(bank, seed=2026):
+    """FULL_EXAMS mock exams at exact domain weights, with no question shared between them"""
     rng = random.Random(seed)
     pools = {d: [] for d in DOMAINS}
-    for fid, _, dom, _ in FLOORS:
-        pools[dom].extend(bank[fid])
-    for fid in ("exam-mix-1", "exam-mix-2"):
-        for q in bank[fid]:
-            tag = (q.get("tags") or ["d1"])[0].upper()
-            pools.get(tag if tag in pools else "D1").append(q)
-    picked = []
-    for dom, (_, _, count) in DOMAINS.items():
-        picked.extend((dom, q) for q in rng.sample(pools[dom], count))
-    rng.shuffle(picked)
-
-    body = [
-        "# Full Practice Exam — CCA-F simulation",
-        "",
-        "Faithful to the real blueprint as of June 2026: **60 questions, 120 minutes,",
-        "scaled score out of 1000, pass at 720** (~44 of 60). Domain weighting:",
-        "D1 27% · D2 18% · D3 20% · D4 20% · D5 15%.",
-        "",
-        "Set a timer. No notes, no docs — the real exam is proctored.",
-        "For the interactive version with the clock, flags, and a score report, open the game.",
-        "",
-        "---",
-        "",
-    ]
-    body += [render_question(n + 1, q) for n, (dom, q) in enumerate(picked)]
-    key = "".join(LETTERS[q["correct"]] for _, q in picked)
-    body += [
-        "## Answer key (no peeking until scored)",
-        "",
-        " ".join(f"{n+1}:{k}" for n, k in enumerate(key)),
-        "",
-    ]
-    out = OUT / "full-exam-01.md"
-    out.write_text("\n".join(body))
-    print(f"wrote {out.relative_to(ROOT)} (60 questions, seed {seed})")
-
-
-def build_hunt(bank):
-    qs = bank["hunt"]
-    body = [
-        "# The Anti-Pattern Hunt — printable edition",
-        "",
-        "Twelve production war stories. Exactly one monster of bad architecture lurks in each.",
-        "Name it. (The interactive version in the game awards bestiary cards.)",
-        "",
-        "---",
-        "",
-    ]
-    body += [render_question(n + 1, q) for n, q in enumerate(qs)]
-    out = OUT / "anti-pattern-hunt.md"
-    out.write_text("\n".join(body))
-    print(f"wrote {out.relative_to(ROOT)} ({len(qs)} vignettes)")
+    for q in all_questions(bank):
+        pools["D" + q["ts"][0]].append(q)
+    for d in pools:
+        rng.shuffle(pools[d])
+    for k in range(1, FULL_EXAMS + 1):
+        picked = []
+        for dom, (_, _, count) in DOMAINS.items():
+            picked += pools[dom][:count]
+            pools[dom] = pools[dom][count:]
+        rng.shuffle(picked)
+        body = [
+            f"# Full Practice Exam {k:02d} — CCAR-F simulation",
+            "",
+            "Same format as the real exam guide: **60 questions, 120 minutes, scaled score out of 1000,",
+            "pass at 720.** Domain weighting: D1 27% · D2 18% · D3 20% · D4 20% · D5 15%.",
+            f"No question here appears in the other {FULL_EXAMS - 1} printable exams.",
+            "",
+            "Set a timer. No notes, no docs. For the interactive version with the clock, flags, and a score report, open the game.",
+            "",
+            "---",
+            "",
+        ]
+        body += [render_question(n + 1, q) for n, q in enumerate(picked)]
+        key = "".join(LETTERS[q["correct"]] for q in picked)
+        body += ["## Answer key (no peeking until scored)", "", " ".join(f"{n+1}:{c}" for n, c in enumerate(key)), ""]
+        out = OUT / f"full-exam-{k:02d}.md"
+        out.write_text("\n".join(body))
+        print(f"wrote {out.relative_to(ROOT)} (60 questions)")
 
 
 if __name__ == "__main__":
@@ -144,5 +127,4 @@ if __name__ == "__main__":
     total = sum(len(v) for v in bank.values())
     print(f"loaded {total} questions from questions.js")
     build_floor_tests(bank)
-    build_full_exam(bank)
-    build_hunt(bank)
+    build_full_exams(bank)

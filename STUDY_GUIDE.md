@@ -92,12 +92,13 @@ attribution (never average them away). *Boss gate: clear F10 — tower complete.
 ## Phase 5 — Exam conditioning (weeks 11–12)
 
 **Week 11.** Anti-Pattern Hunt until the bestiary is full. Empty the Mistake
-Clinic. The Proctor, untimed pressure: target 750+. Print
+Clinic. Follow the readiness panel's next best step until every domain shows 20
+first tries. The Proctor, untimed pressure: target 750+. Print
 `practice-tests/full-exam-01.md`, sit it on paper at full 120-minute conditions.
 
 **Week 12.** Drill your two weakest Proctor domains via floor rematches (aim ★).
-The Proctor twice more: 800+ and you book the real exam. Day before: Lightning
-Rounds and the bestiary table in GAME.md. Day of: read the scenario for the
+The Proctor twice more: 800+ and you book the real exam. Day before: Recall
+Sprints and the bestiary table in GAME.md. Day of: read the scenario for the
 root cause; the patch answers are the distractors.
 
 ## The one-sentence cheat sheet
