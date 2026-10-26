@@ -93,7 +93,8 @@ attribution (never average them away). *Boss gate: clear F10 — tower complete.
 
 **Week 11.** Anti-Pattern Hunt until the bestiary is full. Empty the Mistake
 Clinic. Follow the readiness panel's next best step until every domain shows 20
-first tries. The Proctor, untimed pressure: target 750+. Print
+first tries. The Proctor, full 120 minutes: target 750+. Print
+
 `practice-tests/full-exam-01.md`, sit it on paper at full 120-minute conditions.
 
 **Week 12.** Drill your two weakest Proctor domains via floor rematches (aim ★).

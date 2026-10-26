@@ -102,7 +102,7 @@ const ACHIEVEMENTS = [
   { id: 'tower-master',  ic: '🗼', nm: 'Tower Master',     ds: 'Clear all 10 floors' },
   { id: 'flawless',      ic: '👑', nm: 'Flawless Ascent',  ds: 'Earn ★ on every floor' },
   { id: 'certified',     ic: '📜', nm: 'Certified',        ds: 'Score 720+ on a strict mock exam' },
-  { id: 'beat-blogger',  ic: '✍️', nm: 'Beat the Blogger', ds: 'Score 900+ — the famous pass post was 893' },
+  { id: 'beat-blogger',  ic: '✍️', nm: 'High Scorer',      ds: 'Score 900+ on a strict mock exam' },
   { id: 'lightning-15',  ic: '⚡', nm: 'Storm Caller',     ds: 'Score 15+ in one Recall Sprint' },
   { id: 'monster-hunter',ic: '🔦', nm: 'Monster Hunter',   ds: 'Capture all 12 monsters in the Hunt' },
   { id: 'clinic-clear',  ic: '🩹', nm: 'Clean Bill',       ds: 'Empty a Mistake Clinic of 10+ cards' },
@@ -532,12 +532,14 @@ const UI = {
     }
     if (EXAM_SETTLE_ON.has(name) && Exam.settleExpired()) return;
     if (name !== 'lightning') Lightning.stop();
-    document.getElementById('overlay').classList.remove('show');
+    this.closeModal();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById('screen-' + name);
     if (el) el.classList.add('active');
     this.current = name;
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    /* the control that was clicked is now hidden: start keyboard and screen-reader users at the new heading */
+    if (el) setTimeout(() => this.focusScreen(el), 0);
     if (name === 'home') this.renderHome();
     if (name === 'tower') Tower.render();
     if (name === 'blueprint') Blueprint.render();
@@ -545,6 +547,27 @@ const UI = {
     if (name === 'bestiary') this.renderBestiary();
     if (name === 'trophies') this.renderTrophies();
     Sound.click();
+  },
+
+  /* focus the active screen's heading unless focus already sits on something visible in it */
+  focusScreen(el) {
+    const a = document.activeElement;
+    if (document.getElementById('overlay').classList.contains('show')) return;
+    if (a && a !== document.body && el.contains(a) && a.offsetParent) return;
+    const h = el.querySelector('h1');
+    if (!h) return;
+    if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+    h.focus({ preventScroll: true });
+  },
+
+  reducedMotion() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); },
+
+  /* polite screen-reader announcement */
+  announce(msg) {
+    const r = document.getElementById('sr-live');
+    if (!r) return;
+    r.textContent = '';
+    setTimeout(() => { r.textContent = msg; }, 60);
   },
 
   refreshHud() {
@@ -555,9 +578,16 @@ const UI = {
     const prev = [...TITLES].reverse().find(t => s.xp >= t.xp);
     const pct = next ? Math.min(100, ((s.xp - prev.xp) / (next.xp - prev.xp)) * 100) : 100;
     document.getElementById('hud-xpfill').style.width = pct + '%';
+    document.getElementById('hud-xpbar').setAttribute('aria-valuenow', Math.round(pct));
     document.getElementById('hud-streak').textContent = s.streak.count;
-    document.getElementById('btn-sound').textContent = s.soundOn ? '🔊' : '🔇';
-    document.getElementById('btn-theme').textContent = s.theme === 'light' ? '🌙' : '☀️';
+    document.getElementById('hud-streak-chip').setAttribute('aria-label', 'Daily streak: ' + s.streak.count + (s.streak.count === 1 ? ' day' : ' days'));
+    const snd = document.getElementById('btn-sound');
+    snd.innerHTML = '<span aria-hidden="true">' + (s.soundOn ? '🔊' : '🔇') + '</span>';
+    snd.setAttribute('aria-pressed', String(!!s.soundOn));
+    const th = document.getElementById('btn-theme'), toDark = s.theme !== 'dark';
+    th.innerHTML = '<span aria-hidden="true">' + (toDark ? '🌙' : '☀️') + '</span>';
+    th.title = toDark ? 'Switch to dark theme' : 'Switch to light theme';
+    th.setAttribute('aria-label', th.title);
     const deckN = s.deck.length;
     const db = document.getElementById('deck-badge'); if (db) db.textContent = deckN + (deckN === 1 ? ' card' : ' cards');
   },
@@ -581,7 +611,7 @@ const UI = {
     document.getElementById('trophy-badge').textContent = s.achievements.length;
     const live = Exam.saved();
     document.getElementById('exam-badge').textContent = live ? '⏳ in progress · ' + clock(Math.max(0, Math.ceil((live.deadline - Date.now()) / 1000))) + ' left'
-      : s.examBest ? 'best ' + s.examBest : 'the real format';
+      : s.examBest ? 'best est. ' + s.examBest : '60 Q · 120 min';
     const bpSt = Blueprint.stats(pool);
     document.getElementById('bp-badge').textContent = bpSt.seen + '/' + bpSt.total + ' seen';
     const learn = document.getElementById('card-learn');
@@ -604,7 +634,7 @@ const UI = {
       box.style.display = 'block';
     } else box.style.display = 'none';
     const hist = Game.s.examHistory.slice(-5).reverse();
-    document.getElementById('ei-history').innerHTML = hist.length ? '<h4>Recent attempts</h4>' + hist.map(h =>
+    document.getElementById('ei-history').innerHTML = hist.length ? '<h2>Recent attempts</h2>' + hist.map(h =>
       `<div class="hist-row"><span>${h.date} · ${h.mode === 'practice' ? 'Practice' : h.mode === 'proctor' ? 'Proctor (old)' : 'Mock'}</span><span>${h.correct}/${h.total}${h.mode === 'proctor' ? '' : ' · est. ' + h.score}</span></div>`).join('') : '';
   },
 
@@ -613,12 +643,12 @@ const UI = {
     grid.innerHTML = Object.entries(MONSTERS).map(([name, m]) => {
       const got = Game.s.bestiary.includes(name);
       return `<div class="beast-card${got ? '' : ' locked'}">
-        <div class="face">${m.face}</div>
-        <h4>${got ? name : '???'}</h4>
+        <div class="face" aria-hidden="true">${m.face}</div>
+        <h2>${got ? name : '<span aria-hidden="true">???</span><span class="sr-only">Unknown monster</span>'}</h2>
         <div class="cry">${got ? m.cry : 'Undiscovered. Hunt it down.'}</div>
         <div class="weak">${got ? '✦ Weakness: ' + m.weak : '🔒 capture to reveal weakness'}</div>
         <div class="haunts">Haunts ${m.ts.map(t => `<b>${t}</b>`).join(' · ')}</div>
-        <button class="btn small ${got ? 'ghost' : 'primary'}" onclick="Hunt.start('${name}')">🔦 ${got ? 'Hunt again' : 'Hunt'}</button>
+        <button class="btn small ${got ? 'ghost' : 'primary'}" onclick="Hunt.start('${name}')"${got ? ` aria-label="Hunt ${name} again"` : ` aria-label="Hunt the monster that haunts ${m.ts.join(', ')}"`}><span aria-hidden="true">🔦</span> ${got ? 'Hunt again' : 'Hunt'}</button>
       </div>`;
     }).join('');
   },
@@ -627,7 +657,7 @@ const UI = {
     document.getElementById('t-sub').textContent = Game.s.achievements.length + '/' + ACHIEVEMENTS.length + ' unlocked · title: ' + Game.title();
     document.getElementById('trophy-grid').innerHTML = ACHIEVEMENTS.map(a => {
       const got = Game.s.achievements.includes(a.id);
-      return `<div class="trophy${got ? '' : ' locked'}"><div class="ic">${a.ic}</div><div><div class="nm">${a.nm}</div><div class="ds">${a.ds}</div></div></div>`;
+      return `<div class="trophy${got ? '' : ' locked'}"><div class="ic" aria-hidden="true">${a.ic}</div><div><div class="nm">${a.nm}${got ? '' : '<span class="sr-only"> (locked)</span>'}</div><div class="ds">${a.ds}</div></div></div>`;
     }).join('');
   },
 
@@ -640,6 +670,7 @@ const UI = {
   },
 
   confetti() {
+    if (this.reducedMotion()) return;
     const colors = ['#D97757', '#C2912E', '#4E8F83', '#5B7FA6', '#B0628F', '#4E8F5B'];
     for (let i = 0; i < 90; i++) {
       const b = document.createElement('div');
@@ -674,9 +705,34 @@ const UI = {
     document.getElementById('m-expl').innerHTML = fmt(explanation);
     const btn = document.getElementById('m-next');
     btn.textContent = opts.btn || 'Continue';
-    btn.onclick = () => { o.classList.remove('show'); onNext && onNext(); };
+    const back = document.activeElement;
+    btn.onclick = () => {
+      this.closeModal();
+      onNext && onNext();
+      this.restoreFocus(back);
+    };
     o.classList.add('show');
+    document.getElementById('app').inert = true;
+    o.querySelector('.modal').scrollTop = 0;
+    btn.focus();
   },
+
+  closeModal() {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('app').inert = false;
+  },
+
+  /* after the dialog: back where focus was if it is still there, else the next question's first answer */
+  restoreFocus(prev) {
+    if (document.getElementById('overlay').classList.contains('show')) return;
+    const scr = document.querySelector('.screen.active');
+    if (!scr) return;
+    if (prev && prev !== document.body && prev.isConnected && prev.offsetParent && scr.contains(prev) && !prev.classList.contains('disabled')) { prev.focus(); return; }
+    const first = scr.querySelector('.answer:not(.disabled)');
+    if (first) first.focus({ preventScroll: true });
+    else this.focusScreen(scr);
+  },
+
 };
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -692,39 +748,46 @@ const Tower = {
       const fs = Game.s.floors[f.id] || {};
       const unlocked = prevCleared;
       const next = unlocked && !fs.cleared;
-      const row = document.createElement('div');
+      /* unlocked floors are buttons; a locked floor is plain text */
+      const row = document.createElement(unlocked ? 'button' : 'div');
       row.className = 'floor-card' + (fs.cleared ? ' cleared' : '') + (next ? ' next-up' : '') + (!unlocked ? ' locked' : '');
       row.innerHTML = `
-        <div class="floor-num" style="background:${f.dcolor}">F${i + 1}</div>
-        <div class="floor-meta">
-          <div class="name">${FLOORS[i].boss.face} ${f.name}</div>
-          <div class="dom">${f.domain} · task statements ${f.ts.join(', ')} · ${Bank.forTs(f.ts).length} questions · boss: ${f.boss.name}</div>
-        </div>
-        <div class="floor-right">
-          ${fs.best ? `<div class="score">${fs.best}/10${fs.best === 10 ? ' <span class="stars">★</span>' : ''}</div>` : ''}
-          <div class="status">${!unlocked ? '🔒 clear the floor below' : fs.cleared ? 'cleared — fight again' : 'ENTER'}</div>
-        </div>`;
+        <span class="floor-num" style="background:${f.dcolor}">F${i + 1}</span>
+        <span class="floor-meta">
+          <span class="name"><span aria-hidden="true">${FLOORS[i].boss.face} </span>${f.name}</span>
+          <span class="dom">${f.domain} · task statements ${f.ts.join(', ')} · ${Bank.forTs(f.ts).length} questions · boss: ${f.boss.name}</span>
+        </span>
+        <span class="floor-right">
+          ${fs.best ? `<span class="score">${fs.best}/10${fs.best === 10 ? ' <span class="stars" aria-label="perfect">★</span>' : ''}</span>` : ''}
+          <span class="status">${!unlocked ? '<span aria-hidden="true">🔒</span> locked: clear the floor below' : fs.cleared ? 'cleared — fight again' : 'ENTER'}</span>
+        </span>`;
       if (unlocked) row.onclick = () => Battle.start(i);
       rows.push(row);
       prevCleared = !!fs.cleared;
     });
     // final floor card (Proctor)
     const allClear = FLOORS.every(f => (Game.s.floors[f.id] || {}).cleared);
-    const fin = document.createElement('div');
+    const fin = document.createElement('button');
     fin.className = 'floor-card final';
     fin.innerHTML = `
-      <div class="floor-num" style="background:var(--gold)">👁️</div>
-      <div class="floor-meta">
-        <div class="name">📋 THE PROCTOR · Mock exam</div>
-        <div class="dom">All domains at exam weights · 60 questions · 120 minutes · pass 720/1000</div>
-      </div>
-      <div class="floor-right">
-        ${Game.s.examBest ? `<div class="score">${Game.s.examBest}/1000</div>` : ''}
-        <div class="status">${allClear ? 'You are ready.' : 'open early, if you dare'}</div>
-      </div>`;
+      <span class="floor-num" style="background:var(--gold-ink)" aria-hidden="true">👁️</span>
+      <span class="floor-meta">
+        <span class="name"><span aria-hidden="true">📋 </span>THE PROCTOR · Mock exam</span>
+        <span class="dom">All domains at exam weights · 60 questions · 120 minutes · pass 720/1000</span>
+      </span>
+      <span class="floor-right">
+        ${Game.s.examBest ? `<span class="score">best est. ${Game.s.examBest}</span>` : ''}
+        <span class="status">${allClear ? 'Tower cleared: take a mock to check your readiness' : 'open early, if you dare'}</span>
+      </span>`;
     fin.onclick = () => UI.go('examintro');
     rows.push(fin);
     rows.forEach(r => list.appendChild(r));
+    /* the list climbs upward, so the floor to play next can sit far below the fold on a phone */
+    const nextUp = list.querySelector('.next-up');
+    if (nextUp) requestAnimationFrame(() => {
+      const r = nextUp.getBoundingClientRect();
+      if (r.bottom > window.innerHeight) nextUp.scrollIntoView({ block: 'center', behavior: 'auto' });
+    });
   },
 };
 
@@ -749,12 +812,19 @@ const Battle = {
     sprite.className = 'boss-sprite';
     document.getElementById('b-speech').textContent = '“' + f.boss.taunt + '”';
     document.getElementById('b-boss-hp').style.width = '100%';
+    document.getElementById('b-boss-hpbar').setAttribute('aria-label', 'Boss health 100%');
     UI.go('battle');
     this.renderPowerups();
     this.show();
   },
 
   hearts() { return Math.max(0, 3 - this.wrong); },
+
+  renderHearts() {
+    const el = document.getElementById('b-hearts'), n = this.hearts();
+    el.textContent = '❤️'.repeat(n) + '🖤'.repeat(3 - n);
+    el.setAttribute('aria-label', n + ' of 3 lives left');
+  },
 
   show() {
     const item = this.queue[this.qi];
@@ -763,7 +833,7 @@ const Battle = {
     this.qStart = Date.now();
     document.getElementById('b-progress').textContent = `Q ${this.qi + 1}/${this.queue.length}`;
     document.getElementById('b-combo').textContent = this.combo >= 2 ? `🔥 combo ×${this.combo}` : '';
-    document.getElementById('b-hearts').textContent = '❤️'.repeat(this.hearts()) + '🖤'.repeat(3 - this.hearts());
+    this.renderHearts();
     document.getElementById('b-hint').className = 'hint-strip';
     document.getElementById('b-shield').className = 'shield-note' + (this.shield ? ' show' : '');
     document.getElementById('b-qtext').innerHTML = fmt(q.q);
@@ -779,8 +849,9 @@ const Battle = {
       const b = document.createElement('button');
       b.className = 'powerup';
       b.disabled = n <= 0 || (k === 'compact' && this.usedCompact) || (k === 'think' && this.usedThink) || (k === 'shield' && this.shield);
-      b.innerHTML = `${p.ic} ${p.nm} <span class="cnt">${n}</span>`;
+      b.innerHTML = `<span aria-hidden="true">${p.ic}</span> ${p.nm} <span class="cnt"><span class="sr-only">(</span>${n}<span class="sr-only"> left)</span></span>`;
       b.title = p.ds;
+
       b.onclick = () => this.usePowerup(k);
       bar.appendChild(b);
     });
@@ -794,7 +865,8 @@ const Battle = {
       if (this.usedCompact) return;
       this.usedCompact = true;
       const wrongs = shuffle([0, 1, 2, 3].filter(i => i !== q.correct)).slice(0, 2);
-      wrongs.forEach(i => { this.buttons[i].classList.add('dim', 'disabled'); });
+      wrongs.forEach(i => { this.buttons[i].classList.add('dim', 'disabled'); this.buttons[i].setAttribute('aria-disabled', 'true'); });
+      UI.announce('Two wrong options removed.');
     }
     if (k === 'think') {
       if (this.usedThink) return;
@@ -844,6 +916,7 @@ const Battle = {
       this.floatDamage(crit ? 'CRIT ' + (12 + this.combo) : '' + (10 + this.combo), crit);
       const hpLeft = Math.max(0, 100 - this.right * (100 / this.queue.length));
       document.getElementById('b-boss-hp').style.width = hpLeft + '%';
+      document.getElementById('b-boss-hpbar').setAttribute('aria-label', 'Boss health ' + Math.round(hpLeft) + '%');
       if (hpLeft <= 40) speech.textContent = '“' + f.boss.hurt + '”';
     } else {
       this.buttons[i].classList.add('wrong');
@@ -858,7 +931,7 @@ const Battle = {
       Game.deckAdd(q.id);
       Sound.bad();
       speech.textContent = pick(['“Ha! A classic trap!”', '“Your prompt-based defenses amuse me.”', '“That one costs a heart.”', '“The distractor claims another victim!”']);
-      document.getElementById('b-hearts').textContent = '❤️'.repeat(this.hearts()) + '🖤'.repeat(3 - this.hearts());
+      this.renderHearts();
     }
 
     setTimeout(() => {
@@ -927,11 +1000,12 @@ const Battle = {
       document.getElementById('r-actions').innerHTML = '';
       const acts = document.getElementById('r-actions');
       const again = document.createElement('button');
-      again.className = 'btn ghost'; again.textContent = win ? '↻ Fight again' : '⚔️ Rematch';
+      again.className = 'btn ghost'; again.innerHTML = win ? '<span aria-hidden="true">↻</span> Fight again' : '<span aria-hidden="true">⚔️</span> Rematch';
       again.onclick = () => Battle.start(this.floorIdx);
       const tower = document.createElement('button');
       tower.className = 'btn primary'; tower.style.marginLeft = '10px';
-      tower.textContent = win ? '🗼 Climb on' : '🗼 Back to tower';
+      tower.innerHTML = '<span aria-hidden="true">🗼</span> ' + (win ? 'Climb on' : 'Back to tower');
+
       tower.onclick = () => UI.go('tower');
       acts.append(again, tower);
       if (win) { Sound.win(); UI.confetti(); } else Sound.lose();
@@ -1158,6 +1232,8 @@ const Exam = {
     UI.go('exam');
     document.getElementById('screen-exam').classList.toggle('practice', this.variant === 'practice');
     document.getElementById('e-mode').textContent = this.variant === 'mock' ? 'Mock exam · no feedback until you submit' : 'Practice exam · feedback after each question';
+    this.shownIdx = -1;
+    document.getElementById('e-grid').innerHTML = '';
     this.renderGrid(); this.show();
     clearInterval(this.timer); clearTimeout(this.away);
     this.timer = setInterval(() => this.tick(), 1000);
@@ -1181,7 +1257,7 @@ const Exam = {
       const left = this.remaining();
       t.textContent = clock(left);
       t.className = 't' + (left <= 600 ? ' low' : '');
-      document.getElementById('e-timer-lbl').textContent = 'remaining';
+      document.getElementById('e-timer-lbl').textContent = left <= 600 ? 'remaining · under 10 minutes' : 'remaining';
       if (!this.warned && left <= 600 && left > 0) { this.warned = true; UI.toast('⏳', '10 minutes remain', 'The Proctor taps the desk.'); }
       if (left <= 0) { UI.toast('🛎️', 'Time!', 'Pencils down. Auto-submitting.'); this.submit('timeout'); return; }
     } else {
@@ -1214,13 +1290,18 @@ const Exam = {
     const dt = document.getElementById('e-domain');
     dt.textContent = it.domain + ' · ' + it.deal.ts;
     dt.style.background = DOMAINS[it.domain].color;
+    /* the real exam doesn't label items by domain or task statement; the strict mock shows them only in the review */
+    dt.style.display = practice ? '' : 'none';
     const sc = GUIDE.scenarios.find(x => x.id === it.scenario);
     document.getElementById('e-scen').textContent = sc ? 'Scenario: ' + sc.name : 'General';
     const box = document.getElementById('e-scenbox');
     const blockStart = !prev || prev.scenario !== it.scenario;
     box.innerHTML = blockStart ? (sc ? `<strong>${sc.name}.</strong> ${sc.blurb}` : '<strong>General questions.</strong> Items that don\'t belong to one of this exam\'s four scenarios.') : '';
     box.style.display = blockStart ? 'block' : 'none';
-    document.getElementById('e-flag').className = 'flag-btn' + (it.flag ? ' on' : '');
+    const flag = document.getElementById('e-flag');
+    flag.className = 'flag-btn' + (it.flag ? ' on' : '');
+    flag.setAttribute('aria-pressed', String(!!it.flag));
+    flag.lastChild.textContent = it.flag ? ' Flagged' : ' Flag';
     document.getElementById('e-qtext').innerHTML = fmt(it.deal.q);
     const fb = document.getElementById('e-feedback');
     fb.innerHTML = '';
@@ -1230,12 +1311,16 @@ const Exam = {
     const btns = UI.renderAnswers('e-answers', it.deal.options, (i) => {
       if (practice) { if (it.sel == null) this.practiceAnswer(i); return; }
       it.sel = i;
-      btns.forEach((b, j) => b.classList.toggle('picked', j === i));
+      btns.forEach((b, j) => { b.classList.toggle('picked', j === i); b.setAttribute('aria-pressed', String(j === i)); });
       this.renderGrid(); this.persist(); this.renderPace();
       Sound.click();
     });
     if (practice && it.sel != null) this.markPractice(btns, it);
-    else if (it.sel != null) btns[it.sel].classList.add('picked');
+    else if (!practice) btns.forEach((b, j) => { b.classList.toggle('picked', j === it.sel); b.setAttribute('aria-pressed', String(j === it.sel)); });
+    if (this.shownIdx !== this.idx) {
+      this.shownIdx = this.idx;
+      UI.announce('Question ' + (this.idx + 1) + ' of ' + this.items.length + (it.sel != null ? ', answered' : '') + (it.flag ? ', flagged' : ''));
+    }
     document.getElementById('e-prev').disabled = this.idx === 0;
     document.getElementById('e-next').disabled = this.idx === this.items.length - 1;
   },
@@ -1257,6 +1342,10 @@ const Exam = {
     btns[it.deal.correct].classList.add('correct');
     if (!ok) btns[it.sel].classList.add('wrong');
     const last = this.idx === this.items.length - 1;
+    if (this.announced !== it) {
+      this.announced = it;
+      UI.announce((ok ? 'Correct. ' : 'Not quite. The answer is ' + (it.deal.correct + 1) + ': ') + (ok ? '' : it.deal.options[it.deal.correct]));
+    }
     document.getElementById('e-feedback').innerHTML = `
       <div class="verdict ${ok ? 'good' : 'bad'}">${ok ? 'Correct' : 'Not quite'}${it.secs != null ? ` · ${clock(it.secs)}${it.secs > PACE_SECS ? ' (over 2:00)' : ''}` : ''}</div>
       <div class="expl">${fmt(it.deal.explanation)}</div>
@@ -1268,22 +1357,41 @@ const Exam = {
   jump(i) { this.idx = i; this.show(); this.renderGrid(); this.persist(); },
   toggleFlag() { const it = this.items[this.idx]; it.flag = !it.flag; this.show(); this.renderGrid(); this.persist(); },
 
+  /* cells are updated in place, so the one you just used keeps keyboard focus */
   renderGrid() {
     const g = document.getElementById('e-grid');
-    g.innerHTML = '';
+    if (g.children.length !== this.items.length) {
+      g.innerHTML = '';
+      this.items.forEach((it, i) => {
+        const c = document.createElement('button');
+        c.textContent = i + 1;
+        c.onclick = () => this.jump(i);
+        g.appendChild(c);
+      });
+    }
     const practice = this.variant === 'practice';
     this.items.forEach((it, i) => {
-      const c = document.createElement('button');
-      let cls = 'nav-cell';
-      if (it.sel != null) cls += practice ? (it.sel === it.deal.correct ? ' answered' : ' missed') : ' answered';
-      if (it.flag) cls += ' flagged';
-      if (i === this.idx) cls += ' current';
+      const c = g.children[i];
+      let cls = 'nav-cell', state = [];
+      if (it.sel != null) {
+        const right = it.sel === it.deal.correct;
+        cls += practice ? (right ? ' answered' : ' missed') : ' answered';
+        state.push(practice ? (right ? 'correct' : 'missed') : 'answered');
+      } else state.push('not answered');
+      if (it.flag) { cls += ' flagged'; state.push('flagged'); }
+      if (i === this.idx) { cls += ' current'; c.setAttribute('aria-current', 'step'); } else c.removeAttribute('aria-current');
       if (i > 0 && this.items[i - 1].scenario !== it.scenario) cls += ' block-start';
       c.className = cls;
-      c.textContent = i + 1;
-      c.onclick = () => this.jump(i);
-      g.appendChild(c);
+      c.setAttribute('aria-label', 'Question ' + (i + 1) + ', ' + state.join(', '));
     });
+  },
+
+  /* phone: jump from the sticky clock bar to the navigator, landing on the current question */
+  focusGrid() {
+    const c = document.getElementById('e-grid').children[this.idx];
+    if (!c) return;
+    c.scrollIntoView({ block: 'center', behavior: UI.reducedMotion() ? 'auto' : 'smooth' });
+    c.focus({ preventScroll: true });
   },
 
   confirmSubmit() {
@@ -1342,8 +1450,13 @@ const Exam = {
   },
 
   renderResult(r) {
-    document.getElementById('er-kind').textContent = r.mock ? '📋 Mock exam result' : '📝 Practice exam result';
-    document.getElementById('er-score').textContent = r.score;
+    document.getElementById('er-kind').textContent = r.mock ? 'Mock exam result' : 'Practice exam result';
+    /* one sitting is a noisy sample: show a band (about two standard errors), not a point */
+    const se = Math.sqrt(Math.max(r.pct * (1 - r.pct), 0.01) / r.total);
+    const r10 = x => Math.round(x / 10) * 10;
+    const lo = Math.max(100, r10(scaledScore(Math.max(0, r.pct - 2 * se)))), hi = Math.min(1000, r10(scaledScore(Math.min(1, r.pct + 2 * se))));
+    document.getElementById('er-score').textContent = '~' + lo + '–' + hi;
+    document.getElementById('er-raw').textContent = r.correct + '/' + r.total + ' raw';
     const arc = document.getElementById('er-arc');
     arc.style.transition = 'none'; arc.style.strokeDashoffset = 540;
     arc.style.stroke = r.band === 'above' ? 'var(--good)' : r.band === 'near' ? 'var(--gold)' : 'var(--bad)';
@@ -1352,7 +1465,8 @@ const Exam = {
     banner.textContent = { above: '📜 Above the 720 line', near: '⚖️ Right on the line', below: '❌ Below the 720 line' }[r.band];
     banner.style.color = { above: 'var(--good)', near: 'var(--gold)', below: 'var(--bad)' }[r.band];
     document.getElementById('er-sub').textContent = `${r.correct}/${r.total} correct (${Math.round(r.pct * 100)}%) · ${Math.round(r.used / 60)}${r.mock ? ' of 120' : ''} minutes · ${Math.round(r.used / r.total)}s per question · +${r.xp} XP`;
-    document.getElementById('er-note').innerHTML = `Scaled score is an <strong>estimate</strong> (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
+    document.getElementById('er-note').innerHTML = `The scaled score is an <strong>estimate</strong>: a likely range of ${lo}–${hi}, centred on ${r.score} (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
+      + ` This mock has no multiple-response items, which the real exam includes.`
       + ` <strong>${r.total - r.seenBefore} of ${r.total}</strong> questions were new to you`
       + (r.mockBefore ? ` and <strong>${r.mockBefore}</strong> had appeared in an earlier mock or practice exam` : '')
       + (r.seenBefore > r.total / 4 ? '. Questions you have answered before can inflate the score.' : '.');
@@ -1362,29 +1476,31 @@ const Exam = {
       return `<div class="dbar"><div class="row"><span>${label}</span><span>${right}/${total} · ${pct}%</span></div>
         <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
     };
-    document.getElementById('er-bars').innerHTML = '<h4>By domain</h4>' + Object.entries(r.perDomain).map(([d, x]) => bar(d + ' · ' + DOMAINS[d].label, x.right, x.total, DOMAINS[d].color)).join('')
-      + '<h4>By scenario</h4>' + Object.entries(r.perScen).map(([sid, x]) => {
+    document.getElementById('er-bars').innerHTML = '<h2>By domain</h2>' + Object.entries(r.perDomain).map(([d, x]) => bar(d + ' · ' + DOMAINS[d].label, x.right, x.total, DOMAINS[d].color)).join('')
+      + '<h2>By scenario</h2>' + Object.entries(r.perScen).map(([sid, x]) => {
         const sc = GUIDE.scenarios.find(s => s.id === Number(sid));
         return bar(sc ? sc.name : 'General', x.right, x.total, 'var(--accent)');
       }).join('');
 
     const focus = Blueprint.focus(3);
-    document.getElementById('er-focus').innerHTML = focus.length ? `<h4>Focus next <span class="muted">(from all your answers so far)</span></h4>` + focus.map(f =>
-      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small ghost" onclick="Blueprint.drillTs('${f.t.id}')">Drill</button></div>`).join('') : '';
+    document.getElementById('er-focus').innerHTML = focus.length ? `<h2>Focus next <span class="muted">(from all your answers so far)</span></h2>` + focus.map(f =>
+      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small ghost" onclick="Blueprint.drillTs('${f.t.id}')" aria-label="Drill ${f.t.id}">Drill</button></div>`).join('') : '';
 
     const acts = document.getElementById('er-actions');
     acts.innerHTML = '';
-    [['all', '🔍 Review all'], ['wrong', '✘ Wrong only'], ['flagged', '🚩 Flagged']].forEach(([k, label]) => {
+    [['all', '🔍', 'Review all'], ['wrong', '✘', 'Wrong only'], ['flagged', '🚩', 'Flagged']].forEach(([k, ic, label]) => {
       const b = document.createElement('button');
-      b.className = 'btn ghost small'; b.textContent = label;
+      b.className = 'btn ghost small review-filter'; b.innerHTML = `<span aria-hidden="true">${ic}</span> ${label}`;
+      b.setAttribute('aria-pressed', 'false'); b.dataset.filter = k;
+      b.setAttribute('aria-controls', 'er-review');
       b.onclick = () => this.renderReview(k);
       acts.appendChild(b);
     });
     const bp = document.createElement('button');
-    bp.className = 'btn ghost small'; bp.textContent = '📘 Blueprint';
+    bp.className = 'btn ghost small'; bp.innerHTML = '<span aria-hidden="true">📘</span> Blueprint';
     bp.onclick = () => UI.go('blueprint');
     const home = document.createElement('button');
-    home.className = 'btn primary small'; home.textContent = '🏛️ Back to the hall';
+    home.className = 'btn primary small'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Back to the hall';
     home.onclick = () => UI.go('home');
     acts.append(bp, home);
     document.getElementById('er-review').innerHTML = '';
@@ -1404,7 +1520,12 @@ const Exam = {
         <div class="ex">${fmt(it.deal.explanation)}</div>
       </div>`;
     }).join('') : '<p class="center muted">Nothing in this filter.</p>';
+    document.querySelectorAll('#er-actions .review-filter').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    UI.announce(list.length + (list.length === 1 ? ' question' : ' questions') + ' in this review');
+    const rv = document.getElementById('er-review');
+    if (rv.getBoundingClientRect().top > window.innerHeight * 0.6) rv.scrollIntoView({ block: 'start', behavior: UI.reducedMotion() ? 'auto' : 'smooth' });
   },
+
 };
 
 /* ---------------- the blueprint (exam-guide study mode) ---------------- */
@@ -1453,27 +1574,28 @@ const Readiness = {
     const weighted = ready ? Math.round(rows.reduce((a, r) => a + r.acc * r.meta.weight, 0)) : null;
     box.innerHTML = `
       <div class="ready-head">
-        <div><h3>Exam readiness</h3>
+        <div><h2>Exam readiness</h2>
           <div class="muted small">First-try accuracy on questions you've practised, by exam domain. A domain counts once you have ${READY_MIN_FIRST} first tries in it.</div></div>
         <div class="ready-sum">
           <div class="k">Practice, weighted</div><div class="v">${weighted != null ? weighted + '%' : '—'}</div>
-          <div class="k">Last mock</div><div class="v">${last ? last.score + ' <span class="muted small">est. · ' + last.date + '</span>' : '—'}</div>
+          <div class="k">Last mock</div><div class="v">${last ? '~' + last.score + ' <span class="muted small">estimate · ' + last.date + '</span>' : '—'}</div>
         </div>
       </div>
       <div class="ready-rows">${rows.map(r => {
         const pct = r.acc != null ? Math.round(r.acc * 100) : 0, cov = Math.round(Math.min(1, r.firstN / READY_MIN_FIRST) * 100);
-        return `<div class="ready-row" onclick="Blueprint.drillDomain('${r.d}')" title="Drill ${r.d}">
-          <span class="domain-tag" style="background:${r.meta.color}">${r.d}</span>
+        const counted = r.firstN >= READY_MIN_FIRST;
+        return `<button class="ready-row" onclick="Blueprint.drillDomain('${r.d}')" title="Drill ${r.d}">
+          <span class="domain-tag" style="background:${r.meta.color}"><span class="sr-only">Drill </span>${r.d}</span>
           <span class="nm">${r.meta.label}<span class="muted small"> · ${r.meta.weight}% of the exam</span></span>
-          <span class="track"><span class="cov" style="width:${cov}%"></span><span class="acc" style="width:${r.firstN >= READY_MIN_FIRST ? pct : 0}%;background:${r.meta.color}"></span><span class="target"></span></span>
-          <span class="val">${r.firstN >= READY_MIN_FIRST ? pct + '%' : r.firstN + '/' + READY_MIN_FIRST + ' tries'}</span>
-        </div>`;
+          <span class="track"><span class="cov" style="width:${cov}%"></span><span class="acc" style="width:${counted ? pct : 0}%;background:${r.meta.color}"></span><span class="target"></span></span>
+          <span class="val">${counted ? pct + '%<span class="sr-only"> right on first tries</span>' : r.firstN + '/' + READY_MIN_FIRST + ' tries'}</span>
+        </button>`;
       }).join('')}</div>
       <div class="next-step">
-        <span class="ic">${nx.ic}</span>
-        <span class="txt"><b>Next best step:</b> ${nx.label}<br><span class="muted small">${nx.sub}</span></span>
-        ${nx.lesson ? `<button class="btn small ghost" onclick="Learn.open('${nx.lesson}')">🎓 Lesson</button>` : ''}
-        <button class="btn small primary" onclick="Readiness.go()">Go →</button>
+        <span class="ic" aria-hidden="true">${nx.ic}</span>
+        <span class="txt" id="next-step-txt"><b>Next best step:</b> ${nx.label}<br><span class="muted small">${nx.sub}</span></span>
+        ${nx.lesson ? `<button class="btn small ghost" onclick="Learn.open('${nx.lesson}')"><span aria-hidden="true">🎓</span> Lesson</button>` : ''}
+        <button class="btn small primary" onclick="Readiness.go()" aria-describedby="next-step-txt">Go →</button>
       </div>
       <p class="muted small">The line on each bar marks ${Math.round(READY_TARGET * 100)}%, the raw score our mock maps to the 720 pass mark. Practice accuracy is not an exam score; a strict mock is the closest thing to one.</p>`;
   },
@@ -1525,11 +1647,11 @@ const Blueprint = {
     document.getElementById('bp-facts').innerHTML = [
       `❓ <b>${g.items}</b> items`, `⏱️ <b>${g.minutes}</b> min`, `🎬 <b>${g.scenarios}</b> of ${g.scenarioBank} scenarios`, `🎯 pass <b>${g.pass}</b> scaled (${g.scaleMin}–${g.scaleMax})`,
     ].map(x => `<div class="fact-pill">${x}</div>`).join('');
-    document.querySelectorAll('#bp-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === this.tab));
+    document.querySelectorAll('#bp-tabs button').forEach(b => { b.classList.toggle('on', b.dataset.tab === this.tab); b.setAttribute('aria-pressed', String(b.dataset.tab === this.tab)); });
 
     const focus = this.focus(3);
-    document.getElementById('bp-focus').innerHTML = `<h4>🎯 Focus next</h4>` + focus.map(f =>
-      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small primary" onclick="Blueprint.drillTs('${f.t.id}')">Drill</button></div>`).join('');
+    document.getElementById('bp-focus').innerHTML = `<h2><span aria-hidden="true">🎯</span> Focus next</h2>` + focus.map(f =>
+      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small primary" onclick="Blueprint.drillTs('${f.t.id}')" aria-label="Drill ${f.t.id}">Drill</button></div>`).join('');
 
     const body = document.getElementById('bp-body');
     body.innerHTML = this.tab === 'domains' ? this.renderDomains() : this.tab === 'scenarios' ? this.renderScenarios() : this.renderPrep();
@@ -1539,7 +1661,7 @@ const Blueprint = {
   bar(st, color) {
     const pct = st.total ? Math.round((st.right / st.total) * 100) : 0;
     const seen = st.total ? Math.round((st.seen / st.total) * 100) : 0;
-    return `<div class="bp-bar" title="seen ${seen}% · right on last try ${pct}%"><div class="seen" style="width:${seen}%"></div><div class="right" style="width:${pct}%;background:${color}"></div></div>`;
+    return `<div class="bp-bar" title="seen ${seen}% · right on last try ${pct}%" role="img" aria-label="seen ${seen}%, right on last try ${pct}%"><div class="seen" style="width:${seen}%"></div><div class="right" style="width:${pct}%;background:${color}"></div></div>`;
   },
 
   renderDomains() {
@@ -1547,14 +1669,15 @@ const Blueprint = {
       const dom = DOMAINS[d.id];
       const st = this.stats(this.refsFor(q => Bank.domainOf(q) === d.id));
       const tss = GUIDE.taskStatements.filter(t => t.id[0] === String(d.n));
-      return `<details class="bp-domain" style="--dc:${dom.color}">
+      /* the drill button sits beside the summary, not inside it (no control nested in a control) */
+      return `<div class="bp-dwrap"><details class="bp-domain" style="--dc:${dom.color}">
         <summary>
           <span class="bp-dnum">D${d.n}</span>
           <span class="bp-dmeta"><span class="nm">${d.label}</span><span class="muted">${d.weight}% · ${d.exam} of 60 items · ${this.statLine(st)}</span>${this.bar(st, dom.color)}</span>
-          <button class="btn small ghost" onclick="event.preventDefault();Blueprint.drillDomain('${d.id}')">Drill domain</button>
         </summary>
         ${tss.map(t => this.renderTs(t, dom.color)).join('')}
-      </details>`;
+      </details>
+      <button class="btn small ghost bp-ddrill" onclick="Blueprint.drillDomain('${d.id}')" aria-label="Drill domain ${d.n}: ${d.label}">Drill domain</button></div>`;
     }).join('');
   },
 
@@ -1567,12 +1690,12 @@ const Blueprint = {
       <div class="bp-tshead">
         <span class="bp-tsid">${t.id}</span>
         <span class="bp-tstitle">${t.title}<br><span class="muted">${this.statLine(st)}</span>${this.bar(st, color)}</span>
-        ${lesson ? `<button class="btn small ghost" onclick="Learn.open('${lesson}')">🎓 Lesson</button>` : ''}
-        <button class="btn small primary" ${st.total ? '' : 'disabled'} onclick="Blueprint.drillTs('${t.id}')">Drill ${Math.min(10, st.total)}</button>
+        ${lesson ? `<button class="btn small ghost" onclick="Learn.open('${lesson}')"><span aria-hidden="true">🎓</span> Lesson</button>` : ''}
+        <button class="btn small primary" ${st.total ? '' : 'disabled'} onclick="Blueprint.drillTs('${t.id}')" aria-label="Drill ${Math.min(10, st.total)} questions on ${t.id}">Drill ${Math.min(10, st.total)}</button>
       </div>
       <div class="bp-ideas">
-        <div><h5>Know</h5><ul>${t.know.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
-        <div><h5>Be able to</h5><ul>${t.skills.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
+        <div><h3>Know</h3><ul>${t.know.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
+        <div><h3>Be able to</h3><ul>${t.skills.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
       </div>
       ${docs ? `<div class="bp-docs">📚 Official docs: ${docs}</div>` : ''}
       ${delta ? `<div class="bp-delta">🔄 <strong>Docs have moved on since the guide:</strong> ${fmt(delta)}</div>` : ''}
@@ -1597,7 +1720,7 @@ const Blueprint = {
         <div class="chips">${sc.domains.map(d => `<span class="domain-tag" style="background:${DOMAINS[d].color}">${d}</span>`).join(' ')}</div>
         <p>${sc.blurb}</p>
         <div class="muted small">${this.statLine(st)}</div>${this.bar(st, 'var(--accent)')}
-        <button class="btn small primary" onclick="Blueprint.drillScenario(${sc.id})">Drill scenario</button>
+        <button class="btn small primary" onclick="Blueprint.drillScenario(${sc.id})" aria-label="Drill scenario ${sc.id}: ${sc.name}">Drill scenario</button>
       </div>`;
     }).join('') + `</div><p class="muted small mt">On the real exam, 4 of these 6 scenarios are drawn at random. Each frames a set of questions.</p>`;
   },
@@ -1612,11 +1735,15 @@ const Drill = {
     if (!refs.length) { UI.toast('🚧', 'No questions here yet', 'This part of the guide has no questions in the bank.'); return; }
     this.queue = refs.map(r => dealQuestion(r.q));
     this.qi = 0; this.right = 0; this.xp = 0; this.label = label; this.opts = opts;
+    /* a drill started from the hall (next best step, readiness rows) goes back there, so the next step updates */
+    const from = UI.current === 'drill' || UI.current === 'result' ? (this.from || 'blueprint') : UI.current;
+    this.from = from === 'home' ? 'home' : 'blueprint';
     UI.go('drill');
     document.getElementById('d-title').textContent = label;
     const back = document.getElementById('d-back');
-    back.textContent = opts.back ? opts.back[1] : '← Blueprint';
-    back.onclick = () => UI.go(opts.back ? opts.back[0] : 'blueprint');
+    const dflt = this.from === 'home' ? ['home', '← Hall'] : ['blueprint', '← Blueprint'];
+    back.textContent = opts.back ? opts.back[1] : dflt[1];
+    back.onclick = () => UI.go(opts.back ? opts.back[0] : dflt[0]);
     this.show();
   },
 
@@ -1657,10 +1784,15 @@ const Drill = {
       .map(([k, v]) => `<div class="stat-card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
     const acts = document.getElementById('r-actions');
     acts.innerHTML = '';
+    const home = document.createElement('button');
+    home.className = this.from === 'home' ? 'btn primary' : 'btn ghost';
+    home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall · next step';
+    home.onclick = () => UI.go('home');
     const bp = document.createElement('button');
-    bp.className = 'btn primary'; bp.textContent = '📘 Back to the Blueprint';
+    bp.className = this.from === 'home' ? 'btn ghost' : 'btn primary'; bp.style.marginLeft = '10px';
+    bp.innerHTML = '<span aria-hidden="true">📘</span> Back to the Blueprint';
     bp.onclick = () => UI.go('blueprint');
-    acts.appendChild(bp);
+    acts.append(home, bp);
     good ? Sound.win() : Sound.lose();
     UI.go('result');
   },
@@ -1678,9 +1810,11 @@ const Lightning = {
 
   start() {
     const pool = this.sprintPool();
-    if (pool.length < 10) { UI.toast('🚧', 'Bank not loaded', 'Generate questions first.'); return; }
+    if (pool.length < 10) { UI.toast('🚧', 'Not enough questions here yet', 'The question bank did not load. Try reloading the page.'); return; }
     this.pool = shuffle(pool);
     this.score = 0; this.combo = 0; this.secs = 90;
+    document.getElementById('l-time').style.width = '100%';
+    document.getElementById('l-timebar').setAttribute('aria-label', '90 seconds left');
     UI.go('lightning');
     this.running = true;
     document.getElementById('l-best').textContent = Game.s.lightningBest ? 'best: ' + Game.s.lightningBest : 'first run — set the bar';
@@ -1695,6 +1829,7 @@ const Lightning = {
     if (!this.running) return;
     this.secs--;
     document.getElementById('l-time').style.width = (this.secs / 90 * 100) + '%';
+    if (this.secs % 15 === 0 || this.secs === 10) document.getElementById('l-timebar').setAttribute('aria-label', this.secs + ' seconds left');
     if (this.secs <= 10 && this.secs > 0) Sound.tick();
     if (this.secs <= 0) this.finish();
   },
@@ -1727,6 +1862,7 @@ const Lightning = {
       Game.deckAdd(q.id);
       Sound.bad();
     }
+    UI.announce((ok ? 'Correct. ' : 'Wrong. ') + 'Score ' + this.score + '.');
     const cur = this.cur;
     setTimeout(() => this.running && this.cur === cur && this.show(), ok ? 350 : 900);
   },
@@ -1749,10 +1885,10 @@ const Lightning = {
     const acts = document.getElementById('r-actions');
     acts.innerHTML = '';
     const again = document.createElement('button');
-    again.className = 'btn ghost'; again.textContent = '⚡ Again';
+    again.className = 'btn ghost'; again.innerHTML = '<span aria-hidden="true">⚡</span> Again';
     again.onclick = () => Lightning.start();
     const home = document.createElement('button');
-    home.className = 'btn primary'; home.style.marginLeft = '10px'; home.textContent = '🏛️ Hall';
+    home.className = 'btn primary'; home.style.marginLeft = '10px'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall';
     home.onclick = () => UI.go('home');
     acts.append(again, home);
     Sound.win();
@@ -1793,10 +1929,10 @@ const Hunt = {
     const acts = document.getElementById('r-actions');
     acts.innerHTML = '';
     const again = document.createElement('button');
-    again.className = 'btn ghost'; again.textContent = win ? '🔦 Next monster' : '🔦 Try again';
+    again.className = 'btn ghost'; again.innerHTML = '<span aria-hidden="true">🔦</span> ' + (win ? 'Next monster' : 'Try again');
     again.onclick = () => win ? Hunt.start() : Hunt.start(name);
     const beast = document.createElement('button');
-    beast.className = 'btn primary'; beast.style.marginLeft = '10px'; beast.textContent = '📖 Bestiary';
+    beast.className = 'btn primary'; beast.style.marginLeft = '10px'; beast.innerHTML = '<span aria-hidden="true">📖</span> Bestiary';
     beast.onclick = () => UI.go('bestiary');
     acts.append(again, beast);
     win ? Sound.win() : Sound.lose();
@@ -1818,13 +1954,13 @@ const Review = {
     const deck = Game.s.deck;
     document.getElementById('rv-progress').textContent = deck.length + ' in the ward';
     if (!deck.length) {
-      body.innerHTML = `<div class="deck-empty"><div class="big">🌿</div><p><strong>The clinic is empty.</strong></p><p>No outstanding mistakes. Go make some interesting new ones.</p></div>`;
+      body.innerHTML = `<div class="deck-empty"><div class="big" aria-hidden="true">🌿</div><p><strong>The clinic is empty.</strong></p><p>No outstanding mistakes. Go make some interesting new ones.</p></div>`;
       return;
     }
     body.innerHTML = `
       <div class="exam-rules">
         <p><strong>${deck.length}</strong> missed question${deck.length === 1 ? '' : 's'} awaiting treatment. Answer one correctly <strong>twice in a row</strong> and it is discharged for good.</p>
-        <div class="center mt"><button class="btn primary" id="rv-start">🩹 Treat ${Math.min(10, deck.length)} cards</button></div>
+        <div class="center mt"><button class="btn primary" id="rv-start"><span aria-hidden="true">🩹</span> Treat ${Math.min(10, deck.length)} cards</button></div>
       </div>
       <div class="battle-stage mt" id="rv-stage" style="display:none">
         <div class="q-zone">
@@ -1851,7 +1987,7 @@ const Review = {
     document.getElementById('rv-count').textContent = `card ${this.qi + 1}/${this.session.length} · streak ${card.streak}/2`;
     document.getElementById('rv-qtext').innerHTML = fmt(this.cur.q);
     this.buttons = UI.renderAnswers('rv-answers', this.cur.options, (i) => this.answer(i));
-    document.getElementById('rv-stage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('rv-stage').scrollIntoView({ behavior: UI.reducedMotion() ? 'auto' : 'smooth', block: 'center' });
   },
 
   answer(i) {
@@ -1899,9 +2035,18 @@ const Review = {
 document.addEventListener('keydown', (e) => {
   const overlay = document.getElementById('overlay');
   if (overlay.classList.contains('show')) {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('m-next').click(); }
+    /* the dialog: Enter or Escape continues, Tab stays inside */
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); document.getElementById('m-next').click(); }
+    else if (e.key === 'Tab') {
+      const f = [...overlay.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      e.preventDefault();
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
     return;
   }
+  if (e.key === 'Escape' && UI.current === 'lightning') { e.preventDefault(); UI.go('home'); return; }
   if (e.key === 'Enter' && UI.current === 'exam' && Exam.variant === 'practice') {
     const f = document.activeElement, next = document.querySelector('#e-feedback button');
     if (f && f !== document.body && !f.closest('#e-answers, #e-feedback')) return;
@@ -1921,12 +2066,27 @@ document.addEventListener('keydown', (e) => {
 
 /* ---------------- boot ---------------- */
 Game.load();
-document.documentElement.dataset.theme = Game.s.theme;
+/* theme: the player's explicit pick, else follow the system setting (and keep following it) */
+const darkMQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+const applyTheme = () => {
+  if (!Game.s.themeSet) Game.s.theme = darkMQ && darkMQ.matches ? 'dark' : 'light';
+  document.documentElement.dataset.theme = Game.s.theme;
+};
+if (Game.s.themeSet === undefined) Game.s.themeSet = Game.s.theme === 'dark';  // an older save that picked dark keeps it
+applyTheme();
+if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', () => { if (!Game.s.themeSet) { applyTheme(); UI.refreshHud(); } });
 document.getElementById('btn-theme').onclick = () => {
   Game.s.theme = Game.s.theme === 'light' ? 'dark' : 'light';
+  Game.s.themeSet = true;
   document.documentElement.dataset.theme = Game.s.theme;
   Game.save(); UI.refreshHud(); Sound.click();
 };
+/* the sticky exam clock sits under the top bar, whose height changes as it wraps */
+const topbarEl = document.getElementById('topbar');
+const syncTopbar = () => document.documentElement.style.setProperty('--topbar-h', topbarEl.offsetHeight + 'px');
+syncTopbar();
+if (window.ResizeObserver) new ResizeObserver(syncTopbar).observe(topbarEl);
+
 document.getElementById('btn-sound').onclick = () => {
   Game.s.soundOn = !Game.s.soundOn;
   Game.save(); UI.refreshHud();

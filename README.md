@@ -27,8 +27,10 @@
 A study game for the **Claude Certified Architect — Foundations (CCA-F)** exam,
 built from the ground up and current as of **June 2026**. Instead of grinding a
 PDF of flashcards, you climb a ten-floor tower, fight a boss made of each way
-real agent systems break, and finish against **The Proctor** — a mock exam in the
-real format: 60 questions, 120 minutes, 4 of the 6 official scenarios. **The
+real agent systems break, and finish against **The Proctor** — a timed mock exam
+built to the official blueprint: 60 questions, 120 minutes, 4 of the 6 official
+scenarios (single-answer only for now; the real exam also has multiple-response
+items). **The
 Blueprint** maps the question bank to the official exam guide's 30 task statements
 so you can study the guide line by line. All **745 questions** were written to the
 exam blueprint and checked by an adversarial reviewer.
@@ -40,7 +42,7 @@ It's one folder of static files. Nothing to build, nothing to install.
 |  |  |
 |:--:|:--:|
 | ![Home hub](docs/screenshots/hub.png) | ![The Tower](docs/screenshots/tower.png) |
-| **Pick your mode** — campaign, exam sim, lightning, hunt | **The Tower** — ten floors, ten bosses, five domains |
+| **Your study hall** — readiness, then Learn · Practice · Test | **The Tower** — ten floors, ten bosses, five domains |
 
 </div>
 
@@ -66,10 +68,13 @@ onto a broken design.
 The mock exam follows the official exam guide (v1.0, July 2026): **60 questions in
 the exact domain weights** (16/11/12/12/9), grouped under **4 of the 6 exam
 scenarios** drawn at random, a **120-minute** clock with a pace readout,
-flag-for-review and a question navigator. Close the tab and it resumes, with the
-clock still running, as it would on exam day. The result gives an **estimated scaled
-score** (72% raw maps to the 720 line) plus breakdowns by domain and by scenario,
-and points you at the task statements to drill next. Prefer to learn as you go? The
+flag-for-review and a question navigator. Domains and task statements stay hidden
+until you submit. Close the tab and it resumes, with the clock still running, as it
+would on exam day. The result gives an **estimated scaled-score range** next to your
+raw score (72% raw maps to the 720 line; the real scaling isn't published) plus
+breakdowns by domain and by scenario, and points you at the task statements to drill
+next. Every item is single-answer: the real exam also has multiple-response items
+("select 2"), which this bank doesn't have yet. Prefer to learn as you go? The
 **Practice Exam** uses the same build with a 2-minute timer per question and the
 answer after each one.
 
@@ -78,7 +83,7 @@ answer after each one.
 |  |  |
 |:--:|:--:|
 | ![Exam simulator](docs/screenshots/exam.png) | ![Score report](docs/screenshots/score.png) |
-| **Real exam conditions** — scenarios, timer, pace, flags, navigator | **Estimated score + domain and scenario breakdown** |
+| **Exam-style conditions** — scenarios, timer, pace, flags, navigator | **Estimated score range + domain and scenario breakdown** |
 
 </div>
 
@@ -90,8 +95,8 @@ The home screen opens on **Exam readiness**: for each domain, how much you've co
 |---|---|
 | 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Each floor covers a group of task statements and serves 10 questions you haven't seen yet. Clear at 7/10 to ascend; ★ for a perfect 10. |
 | 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a drill of up to 10 questions for each. Also by scenario. |
-| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled score) or Practice exam (2 min per question, instant feedback). Each new exam prefers questions you haven't had in an earlier one: the bank holds a dozen fully separate mocks. |
-| ⚡ **Recall Sprint** | 90 seconds over questions you've already studied; combos multiply your score. Builds recall, doesn't count toward readiness. |
+| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled-score range, single-answer items only) or Practice exam (2 min per question, instant feedback). Each new exam prefers questions you haven't had in an earlier one: the bank holds a dozen fully separate mocks. |
+| ⚡ **Recall Sprint** | 90 seconds over questions you've already studied (the whole bank until you've seen 20); combos multiply your score. Builds recall, doesn't count toward readiness. |
 | 🔦 **Anti-Pattern Hunt** | Twelve monsters, each an anti-pattern the exam's wrong answers are built from. Hunt one through the task statements it haunts: 6 of 8 right captures it. |
 | 🩹 **Mistake Clinic** | Every question you miss checks in here. Get it right twice in a row to discharge it — spaced repetition aimed at your weak spots. |
 | 🏆 **Trophy Hall** | 14 achievements, 7 titles from *Apprentice* to *Certified Architect*, daily streaks. |
@@ -185,11 +190,16 @@ generated from it with `python3 scripts/build_tests.py`:
 Built for long study sessions, not eye strain. **Inter** for prose, **Bricolage
 Grotesque** for display, and monospace (JetBrains Mono) reserved for actual code
 tokens like `stop_reason` and `.mcp.json` — which the game detects and typesets
-automatically. Warm ivory-and-terracotta by day, a proper dark mode by night,
-answers by keyboard `1`–`4`, audio you can mute.
+automatically. Warm ivory-and-terracotta by day, a proper dark mode by night (it
+follows your system setting until you pick one), colours checked against WCAG AA in
+both. Fully playable by keyboard: every card is a button, answers take `1`–`4`,
+`Enter` or `Esc` closes the explanation, `Esc` quits a Recall Sprint. Animations
+switch off when your system asks for reduced motion, and audio can be muted.
 
 ---
 
 <sub>Not affiliated with or endorsed by Anthropic. Question content is original,
 written to the public shape of the exam — not dumps. If you can clear the tower
-and beat The Proctor at 720+, you're studying the right things. Go book the real one. 🎓</sub>
+and keep beating The Proctor comfortably above 720, you're studying the right things.
+Go book the real one. 🎓</sub>
+

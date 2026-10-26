@@ -10,9 +10,12 @@ playing with Claude Code as your dungeon master.*
 You are an apprentice architect at the foot of a tower with ten floors.
 Each floor is ruled by a **boss** — a monster made of one specific way that
 production agent systems go wrong. At the summit waits **THE PROCTOR**:
-60 questions, 120 minutes, a scaled score out of 1000, and exactly zero banter.
+60 questions, 120 minutes, an estimated scaled score out of 1000, and exactly
+zero banter.
 
-Pass at 720. The real exam works the same way. That is the point.
+The real exam passes at 720 too. The Proctor's score is an estimate (the real
+scaling isn't published) and its items are all single-answer, while the real exam
+also has multiple-response items. Treat it as a rehearsal, not a verdict.
 
 ## The floors and their bosses
 
@@ -84,8 +87,9 @@ Open this repo in Claude Code and say any of:
 - **"Quiz me on D3"** / **"flash round"** — five quick questions, any domain.
 - **"Run the full exam"** — 60 questions at real weights; Claude times you and
   produces a domain-by-domain score report at the end.
-- **"Anti-pattern hunt"** — Claude improvises *new* war-story vignettes and
-  you name the monster from the bestiary table above.
+- **"Anti-pattern hunt"** — Claude reads you a question from `questions.js` and
+  you name the anti-pattern behind the wrong answers from the bestiary table above.
+
 - **"Explain like I missed it"** — paste any question you got wrong; Claude
   explains the governing rule, then generates two fresh variations to confirm
   you actually got it.
