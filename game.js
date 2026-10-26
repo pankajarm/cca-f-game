@@ -546,6 +546,7 @@ const UI = {
     if (name === 'examintro') this.renderExamIntro();
     if (name === 'bestiary') this.renderBestiary();
     if (name === 'trophies') this.renderTrophies();
+    if (window.Learn && Learn.onGo) Learn.onGo(name);
     Sound.click();
   },
 

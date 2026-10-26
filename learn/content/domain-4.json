@@ -1,0 +1,984 @@
+[
+ {
+  "primer": "D4",
+  "minutes": 6,
+  "hook": "Domain 4 is about getting output that is precise, consistent and machine-checkable, at scale and with honest gaps.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "What Domain 4 is about",
+    "bullets": [
+     "Prompts are specifications: vague in, vague out.",
+     "Downstream code needs output it can trust and parse.",
+     "About 20% of the exam, mostly in scenarios 5 and 6.",
+     "Goal: precise, consistent, structured and verified output."
+    ],
+    "note": "Domain four treats a prompt as a specification for another system. When Claude's output feeds a parser, a database or a pull request, it has to be precise, consistent and structured, and someone has to check it. This domain is about a fifth of the exam and appears mostly in the continuous integration and data extraction scenarios."
+   },
+   {
+    "kind": "how",
+    "title": "The vocabulary",
+    "bullets": [
+     "Explicit criteria: what to report, what to skip, with examples.",
+     "False positive: a finding that is not a real problem.",
+     "Few-shot: worked examples inside the prompt.",
+     "JSON schema and tool_choice: forcing a reliable output shape.",
+     "Batch: many requests processed later at lower cost."
+    ],
+    "note": "A few terms carry this domain. Explicit criteria spell out what counts. A false positive is a finding that turns out not to be a real problem. Few shot means including worked examples in the prompt. A JSON schema, used through a tool and tool choice, fixes the output shape. And a batch sends many requests at once for later, cheaper processing."
+   },
+   {
+    "kind": "how",
+    "title": "The mental model: a quality pipeline",
+    "bullets": [
+     "Instruct precisely: criteria and examples.",
+     "Constrain the shape: tool use with a schema.",
+     "Verify the meaning: validation and targeted retries.",
+     "Scale and double-check: batches and independent review passes."
+    ],
+    "note": "Picture a pipeline with four stations. First, instruct precisely with clear criteria and examples. Second, constrain the shape with a schema so parsing never fails. Third, verify the meaning in code and retry with specific errors. Fourth, scale up with batches where nobody is waiting, and double check with independent reviewers."
+   },
+   {
+    "kind": "how",
+    "title": "How the six task statements fit",
+    "bullets": [
+     "4.1 explicit criteria, 4.2 few-shot: instruct precisely.",
+     "4.3 schemas and tool_choice: constrain the shape.",
+     "4.4 validation and retries: verify the meaning.",
+     "4.5 batches, 4.6 multi-pass review: scale and double-check."
+    ],
+    "note": "The task statements map onto the pipeline. Four point one and four point two are about precise instruction. Four point three is about structure. Four point four is about validation and retries. Four point five and four point six are about running at scale and reviewing with independent passes. Each lesson zooms into one station."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Specific criteria and examples beat adjectives like 'careful'.",
+     "Schemas guarantee shape, not truth.",
+     "Retry with the exact error; never retry missing data.",
+     "Batch what can wait; review with a fresh instance."
+    ],
+    "note": "Four ideas anchor domain four. Be specific, with criteria and examples. Use schemas for shape, but check the values yourself. Retry with the exact error, and stop when the data is not there. Batch work nobody waits for, and let an independent instance do the reviewing."
+   }
+  ],
+  "glossary": [
+   {
+    "term": "Precision",
+    "def": "Share of reported findings that are real; low precision means many false positives."
+   },
+   {
+    "term": "False positive",
+    "def": "A flagged issue that turns out not to be a real problem."
+   },
+   {
+    "term": "Few-shot prompting",
+    "def": "Including a few worked input and output examples in the prompt."
+   },
+   {
+    "term": "JSON Schema",
+    "def": "A standard way to describe the fields, types and required keys of JSON."
+   },
+   {
+    "term": "tool_choice",
+    "def": "API setting: auto (may use a tool), any (must use one), or a forced named tool."
+   },
+   {
+    "term": "Nullable field",
+    "def": "A field allowed to be null, so missing data need not be invented."
+   },
+   {
+    "term": "Validation-retry loop",
+    "def": "Check output in code, then retry with the specific error appended."
+   },
+   {
+    "term": "Message Batches API",
+    "def": "Asynchronous bulk processing at 50% cost, results within 24 hours."
+   },
+   {
+    "term": "custom_id",
+    "def": "Your identifier on each batch request, used to match results."
+   },
+   {
+    "term": "Multi-pass review",
+    "def": "Per-file review passes plus a separate cross-file integration pass."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Prompting best practices",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+   },
+   {
+    "title": "Structured outputs",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+   },
+   {
+    "title": "Batch processing",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+   },
+   {
+    "title": "Best practices for Claude Code",
+    "url": "https://code.claude.com/docs/en/best-practices"
+   }
+  ]
+ },
+ {
+  "ts": "4.1",
+  "minutes": 8,
+  "scenarios": [
+   5,
+   6
+  ],
+  "hook": "A CI reviewer that flags 40 'possible issues' per PR gets ignored, including the one real security bug.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Say exactly what counts",
+    "bullets": [
+     "Vague hedges like 'be conservative' don't change what gets flagged.",
+     "Explicit criteria say what to report and what to skip.",
+     "Like a referee's rulebook versus 'call fouls sensibly'.",
+     "Precision means fewer false alarms, not fewer real findings."
+    ],
+    "note": "When a review bot is too noisy, the tempting fix is to say be conservative or only flag high confidence issues. That rarely helps, because Claude still does not know what you consider an issue. Explicit criteria work like a referee's rulebook: they spell out exactly what counts as a foul and what does not."
+   },
+   {
+    "kind": "how",
+    "title": "Writing explicit criteria",
+    "bullets": [
+     "List the categories to report, each with a concrete example.",
+     "List what to skip: style, linter-enforced checks, generated files.",
+     "Define severity levels with examples, not adjectives.",
+     "Ask for evidence, such as a file and line, per finding."
+    ],
+    "code": {
+     "lang": "md",
+     "text": "## Report\n- Logic errors that change behaviour (e.g. off-by-one in pagination)\n- Queries not scoped to the caller's tenant\n## Do not report\n- Formatting, naming, anything the linter enforces\n- Files under src/gen/\n## Severity\n- high: data loss, security hole, wrong money amount\n- low: misleading comment, unused variable"
+    },
+    "note": "Good criteria have four parts. What to report, with an example for each category. What to skip, such as formatting or generated code. What each severity level means, illustrated with real cases instead of words like serious. And what evidence each finding must include, which cuts down on guesses dressed up as facts."
+   },
+   {
+    "kind": "how",
+    "title": "Trust is earned per category",
+    "bullets": [
+     "One noisy category makes developers ignore every comment.",
+     "Measure false positives per category, not just overall.",
+     "Temporarily disable a high-noise category while you fix it.",
+     "Keep the accurate categories running in the meantime."
+    ],
+    "note": "Developers judge a review bot as a whole. If one category, say possible null issues, is wrong most of the time, people stop reading all the comments, including the accurate security ones. So track accuracy per category. Switch off the noisy category while you rewrite its criteria, and keep the trustworthy categories running."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 5: the null-check flood",
+    "bullets": [
+     "Bot flags 'possible null' on almost every changed line.",
+     "Security findings are accurate, but nobody reads them now.",
+     "Disable the null category; keep security and logic on.",
+     "Rewrite null criteria with examples of real versus safe cases."
+    ],
+    "note": "In the continuous integration scenario, the review prompt says to look for potential problems. Most comments are about possible nulls that the type checker already rules out. Developers have learned to scroll past everything. The fix is to pause the noisy category, keep the accurate ones, and write precise criteria with examples before turning it back on."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Add 'be conservative; only report high-confidence issues'.",
+      "right": "Define report and skip criteria with concrete examples.",
+      "why": "Vague hedges do not move precision."
+     },
+     {
+      "wrong": "Keep every category on and tell developers to ignore noise.",
+      "right": "Disable the high-noise category while fixing it.",
+      "why": "Noise erodes trust in the accurate categories."
+     },
+     {
+      "wrong": "Define severity as 'critical means very bad'.",
+      "right": "Define each severity level with concrete examples.",
+      "why": "Adjectives are read inconsistently; examples are not."
+     }
+    ],
+    "note": "On the exam, any answer that relies on general caution words is usually a distractor. Look for the option that defines categories, exclusions and severities concretely. And if one category is ruining trust, the strong answer pauses that category rather than tolerating the noise or turning off the whole tool."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Explicit criteria beat 'be careful' for precision.",
+     "Say exactly what to report and what to skip.",
+     "Noisy categories erode trust in accurate ones.",
+     "Define severity with concrete examples."
+    ],
+    "note": "Precision comes from specifics. Tell Claude exactly what counts and what does not, define severity with examples, and watch accuracy per category. When a category is noisy, pause it while you fix it, so the rest of the review stays trusted."
+   }
+  ],
+  "check": [
+   {
+    "q": "A review prompt says 'only flag issues you are confident about'. False positives barely change. Most noise is about naming style, which the linter already enforces. What change will help most?",
+    "options": [
+     "Repeat the confidence instruction in capital letters",
+     "Add an explicit 'do not report' list that includes naming and other linter-enforced checks",
+     "Lower the model temperature so it flags fewer items",
+     "Ask Claude to output fewer than ten findings per review"
+    ],
+    "answer": 1,
+    "why": "Explicit skip criteria remove the noisy category directly. Confidence wording, temperature and count caps do not tell Claude what counts."
+   },
+   {
+    "q": "A code review bot's SQL-injection findings are 95% accurate, but its 'performance concern' findings are 20% accurate. Developers now ignore all bot comments. What should the team do first?",
+    "options": [
+     "Turn off the bot entirely until every category is fixed",
+     "Merge both categories into one so the average accuracy looks better",
+     "Ask developers to read every comment more carefully",
+     "Disable the performance category while rewriting its criteria, keeping SQL-injection findings on"
+    ],
+    "answer": 3,
+    "why": "Pausing the noisy category restores trust in the accurate one while the prompt is fixed."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Prompting best practices",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+   },
+   {
+    "title": "Customize Code Review",
+    "url": "https://code.claude.com/docs/en/code-review-customize"
+   },
+   {
+    "title": "Define success criteria and build evaluations",
+    "url": "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests"
+   }
+  ],
+  "lab": {
+   "title": "Measure the effect of explicit criteria",
+   "minutes": 12,
+   "steps": [
+    "Write a 40-line function with one real bug and several style quirks.",
+    "With the Claude API, review it using 'Find issues. Be conservative.' Count real versus noise findings.",
+    "Review again with explicit report and skip lists and severity examples.",
+    "Repeat each prompt three times and tally false positives per category."
+   ],
+   "expect": "The 'be conservative' run still mixes style noise with the bug; explicit criteria drop the noise while keeping the bug. Counting per category shows why one noisy category is worth disabling."
+  }
+ },
+ {
+  "ts": "4.2",
+  "minutes": 8,
+  "scenarios": [
+   6,
+   1,
+   5
+  ],
+  "hook": "Your extractor formats dates three different ways and invents tax IDs on unusual invoices; a few good examples fix both.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Show a few worked answers",
+    "bullets": [
+     "Few-shot prompting: include example inputs with the outputs you want.",
+     "It is the strongest lever for consistent format.",
+     "Like showing a new hire three filled-in forms.",
+     "Examples also teach judgment on tricky cases."
+    ],
+    "note": "Few shot prompting means putting a handful of worked examples in the prompt: an input, and the exact output you want for it. It is the most reliable way to get consistent formatting. It is like handing a new colleague three completed forms instead of a page of rules. They pick up both the format and how you handle the awkward cases."
+   },
+   {
+    "kind": "how",
+    "title": "Examples that teach judgment",
+    "bullets": [
+     "Use 2 to 4 targeted examples, not dozens.",
+     "Pick ambiguous cases, not the easy ones.",
+     "Explain why this choice beats the alternatives.",
+     "Wrap examples in tags, separate from the instructions."
+    ],
+    "code": {
+     "lang": "md",
+     "text": "<example>\nTicket: \"Charged twice this month and now I can't log in.\"\nOutput: {\"primary\": \"billing\", \"secondary\": \"account_access\"}\nWhy: money at risk outranks access; both are recorded.\n</example>"
+    },
+    "note": "Choose a small number of examples, two to four in the guide's terms, and make them count. Pick the cases where a careless reader would get it wrong, and include a short reason explaining why the chosen answer beats the other options. Wrap each one in example tags so Claude can tell them apart from the instructions."
+   },
+   {
+    "kind": "how",
+    "title": "Examples for extraction",
+    "bullets": [
+     "Show varied document layouts: tables, prose, footnotes.",
+     "Include one example where a field is missing, output null.",
+     "That reduces empty or invented values on unusual layouts.",
+     "Good examples generalise; they are not templates to copy."
+    ],
+    "note": "For data extraction, variety matters more than volume. Show a table layout, a prose layout and one with details tucked in a footnote. Include an example where a field simply is not there and the right answer is null. That teaches Claude to look carefully and to admit absence, instead of leaving fields empty or making values up."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 6: invoices from many vendors",
+    "bullets": [
+     "Tax ID appears in a header, a footer, or not at all.",
+     "Three examples: header layout, footer layout, missing case.",
+     "Each example shows the output and a one-line reason.",
+     "Result: consistent formats and fewer invented tax IDs."
+    ],
+    "note": "In the structured extraction scenario, invoices come from hundreds of vendors. The tax ID sits in a header on some, a footer on others, and is missing on a few. Three examples covering exactly those cases, each with a one line reason, do more than another paragraph of instructions ever could."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Add more paragraphs describing the output format.",
+      "right": "Add 2 to 4 examples showing the exact output.",
+      "why": "Examples are the strongest lever for consistent format."
+     },
+     {
+      "wrong": "Use ten examples, all from the same vendor layout.",
+      "right": "Use a few examples covering varied layouts.",
+      "why": "Uniform examples teach one layout and invite overfitting."
+     },
+     {
+      "wrong": "Show only the answer in each example.",
+      "right": "Show the answer plus why it beats alternatives.",
+      "why": "The reasoning helps Claude generalise to new ambiguous cases."
+     }
+    ],
+    "note": "When the problem is inconsistent format or shaky judgment on ambiguous inputs, the answer is usually few shot examples. But quality beats quantity. Look for options with a small number of varied examples that include reasoning, and be suspicious of answers that pile on more instructions or many near identical examples."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Few-shot is the strongest lever for consistent output format.",
+     "Use 2 to 4 targeted examples of ambiguous cases.",
+     "Explain why each choice beats the alternatives.",
+     "Vary layouts and include a missing-field example."
+    ],
+    "note": "Examples teach format and judgment at the same time. Keep them few, varied and pointed at the hard cases. Add a short reason to each. For extraction, cover different layouts and show what to do when a field is missing. That is how you get consistent, honest output."
+   }
+  ],
+  "check": [
+   {
+    "q": "A support-ticket classifier returns the right category but formats its output differently from run to run, which breaks the downstream parser. Detailed format instructions are already in the prompt. What is the most effective next step?",
+    "options": [
+     "Add three short examples showing tickets and the exact expected output",
+     "Ask Claude to double-check its formatting before answering",
+     "Increase max_tokens so Claude has room to format properly",
+     "Move the format instructions to the end of the prompt in capital letters"
+    ],
+    "answer": 0,
+    "why": "Few-shot examples are the most reliable way to get consistent format; more instruction wording rarely fixes it."
+   },
+   {
+    "q": "An extraction prompt includes four examples, all from one vendor's tidy table layout. On other vendors' prose-style invoices, Claude often returns empty fields or invents values. How should the examples change?",
+    "options": [
+     "Add six more examples from the same vendor for extra emphasis",
+     "Remove all examples and rely on the schema alone",
+     "Replace some with varied layouts, including one where a field is truly missing and the output is null",
+     "Keep the examples but tell Claude to never return empty fields"
+    ],
+    "answer": 2,
+    "why": "Varied layouts plus an explicit missing-field case teach Claude where to look and when null is correct. Forbidding empty fields would push it to invent values."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Prompting best practices",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+   },
+   {
+    "title": "Increase output consistency",
+    "url": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/increase-consistency"
+   },
+   {
+    "title": "Ticket routing use-case guide",
+    "url": "https://platform.claude.com/docs/en/about-claude/use-case-guides/ticket-routing"
+   }
+  ],
+  "lab": {
+   "title": "Few-shot for consistent output",
+   "minutes": 12,
+   "steps": [
+    "Pick 10 short support messages, some mixing billing and login problems.",
+    "Classify them with the Claude API using instructions only. Note format drift and shaky calls.",
+    "Add three <example> blocks covering the ambiguous mixes, each with a one-line reason.",
+    "Re-run all 10 twice and compare format consistency and the ambiguous cases."
+   ],
+   "expect": "Examples make the format stable and the borderline calls consistent across runs. That is why the exam treats few-shot as the strongest lever for consistency."
+  }
+ },
+ {
+  "ts": "4.3",
+  "minutes": 9,
+  "scenarios": [
+   6,
+   1
+  ],
+  "hook": "A downstream system crashes on one malformed JSON reply a day; tool use with a schema removes that whole class of failure.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Make the shape non-negotiable",
+    "bullets": [
+     "Asking for JSON in prose sometimes yields broken JSON.",
+     "Define a tool with a JSON schema; Claude fills its input.",
+     "The schema removes syntax errors, not wrong values.",
+     "Like a form with fixed boxes versus a blank page."
+    ],
+    "note": "If you ask for JSON in plain words, you will occasionally get a missing bracket or an extra sentence. A more reliable route is to define a tool whose input schema is the shape you want, then have Claude call it. That is like a paper form with fixed boxes. It fixes the shape, but someone can still write the wrong thing in a box."
+   },
+   {
+    "kind": "how",
+    "title": "A tool as an output schema",
+    "bullets": [
+     "Name and describe the tool for the extraction job.",
+     "input_schema declares fields, types, enums and required keys.",
+     "Read the tool_use block's input as your structured result."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "tools = [{\n  \"name\": \"record_invoice\",\n  \"description\": \"Save fields extracted from one invoice\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"vendor\": {\"type\": \"string\"},\n      \"due_date\": {\"type\": [\"string\", \"null\"]},\n      \"category\": {\"enum\": [\"goods\", \"services\", \"unclear\", \"other\"]},\n      \"category_detail\": {\"type\": [\"string\", \"null\"]}\n    },\n    \"required\": [\"vendor\", \"due_date\", \"category\"]\n  }\n}]"
+    },
+    "note": "The tool needs a name, a description, and an input schema written in JSON Schema. Required fields must appear, types are checked, and enums limit a field to known values. When Claude responds, you read the input of its tool use block, which already matches your structure. No fragile text parsing needed."
+   },
+   {
+    "kind": "how",
+    "title": "tool_choice: auto, any, forced",
+    "bullets": [
+     "auto: Claude may reply in text instead of calling a tool.",
+     "any: Claude must call a tool, but chooses which.",
+     "Forced: Claude must call the one tool you name.",
+     "Docs today: newest models reject any and forced; use auto with strict."
+    ],
+    "note": "Tool choice controls whether a call is guaranteed. With auto, Claude might just answer in text. With any, it must call one of your tools, its pick. With a forced tool, it must call that exact tool. For an extraction step that must always produce structured output, any or forced is the guide's answer. Current docs suggest auto with strict tool use on the newest models."
+   },
+   {
+    "kind": "how",
+    "title": "Schema design against fabrication",
+    "bullets": [
+     "Nullable fields let Claude say 'not in the document'.",
+     "Required non-null fields push Claude to invent values.",
+     "Enums get 'unclear' and 'other', plus a detail field.",
+     "Add normalisation rules: ISO dates, plain numbers for amounts."
+    ],
+    "note": "Schema design shapes honesty. If a field is required and cannot be null, Claude is pushed to fill it even when the document says nothing, so make such fields nullable. Give enums an unclear option and an other option with a detail field. And state normalisation rules next to the schema, such as dates in one format and amounts as plain numbers."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 6: contracts with gaps",
+    "bullets": [
+     "Some contracts have no renewal date at all.",
+     "renewal_date is nullable; null means 'not stated'.",
+     "Clause type enum includes 'unclear' and 'other' plus detail.",
+     "Forced tool call: every document yields a record."
+    ],
+    "note": "In the extraction scenario, a pipeline reads contracts. Many have no renewal date, so the field is nullable and null means not stated. Clause types use an enum with unclear and other, plus a free text detail. The extraction tool is forced, so every document produces a structured record that downstream systems can load."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Trust schema-valid output as correct.",
+      "right": "Treat the schema as shape only; validate the values too.",
+      "why": "Tool use removes syntax errors, not semantic ones."
+     },
+     {
+      "wrong": "Make every field required and non-null.",
+      "right": "Make fields nullable when the source may lack them.",
+      "why": "Required fields with no data invite fabrication."
+     },
+     {
+      "wrong": "Use tool_choice auto when a tool call must happen.",
+      "right": "Use any, or force the specific tool.",
+      "why": "auto lets Claude answer in plain text instead."
+     }
+    ],
+    "note": "Three traps dominate. Believing that valid JSON means correct data. Making every field mandatory, which encourages invented values. And picking auto when the step must always call the tool. Remember the split: the schema guarantees shape, your validation checks meaning, and tool choice controls whether the call happens at all."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Tool use with a JSON schema guarantees shape, not truth.",
+     "auto may answer in text; any must call a tool; forced calls one.",
+     "Nullable fields and 'unclear' or 'other' enums prevent fabrication.",
+     "Put normalisation rules alongside the schema."
+    ],
+    "note": "Use a tool with a JSON schema whenever downstream code needs reliable structure. Choose tool choice to match how certain the call must be. Design the schema so Claude can be honest about missing or ambiguous data. Then check the values separately, because a perfect shape can still hold a wrong number."
+   }
+  ],
+  "docsToday": "Structured outputs are generally available (no beta header) and can't be combined with citations or prefill. On the newest models, tool_choice any and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto / any / forced.",
+  "check": [
+   {
+    "q": "An extraction pipeline defines a record_receipt tool with tool_choice set to auto. About 3% of responses contain a prose summary and no tool call, which breaks the loader. What should change?",
+    "options": [
+     "Add 'always respond in JSON' to the system prompt",
+     "Set tool_choice to force the record_receipt tool",
+     "Increase max_tokens so the tool call has room",
+     "Remove the tool and parse JSON from the text reply"
+    ],
+    "answer": 1,
+    "why": "Forcing the tool (or using any) guarantees a tool call; auto allows a text reply. Prompt wording and token limits do not guarantee it."
+   },
+   {
+    "q": "A schema marks purchase_order_number as a required string. Many invoices have no PO number, and auditors find plausible-looking but fake PO numbers in the output. What is the best schema fix?",
+    "options": [
+     "Add a regex pattern so fake numbers are rejected",
+     "Keep the field required and add 'do not invent values' to the prompt",
+     "Remove the field from the schema entirely",
+     "Make purchase_order_number nullable so Claude can return null when it is absent"
+    ],
+    "answer": 3,
+    "why": "A nullable field gives Claude an honest way to say the value is not in the document. A required non-null field pressures it to fabricate."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Structured outputs",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+   },
+   {
+    "title": "Define tools",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+   },
+   {
+    "title": "Cookbook: Extracting structured JSON using Claude and tool use",
+    "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"
+   }
+  ],
+  "lab": {
+   "title": "Extraction through a tool schema",
+   "minutes": 12,
+   "steps": [
+    "Define a record_receipt tool whose input_schema has merchant, total, and a nullable tip field.",
+    "Send three receipt texts, one with no tip, using tool_choice auto, then forced to record_receipt.",
+    "Read each tool_use block's input as the result.",
+    "Make tip required and non-nullable, re-run the no-tip receipt, and inspect what Claude fills in."
+   ],
+   "expect": "Forcing the tool guarantees a structured record, while auto can drift into text. A required field with no source value invites an invented number. Schemas fix shape, not truth: an exam favourite. (On the newest models, use auto with strict: true instead of forcing.)"
+  }
+ },
+ {
+  "ts": "4.4",
+  "minutes": 8,
+  "scenarios": [
+   6
+  ],
+  "hook": "An invoice's line items add up to 410 but Claude extracted a total of 401; your loop must catch it and fix it, or flag it.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Check, then say exactly what was wrong",
+    "bullets": [
+     "Schema-valid output can still be wrong, like totals that don't add up.",
+     "Validate in code after each extraction.",
+     "On failure, retry with the specific error message.",
+     "Like a teacher's margin note, not just 'try again'."
+    ],
+    "note": "A record can match the schema perfectly and still be wrong. The line items might not add up to the total, or a date might fall before the order date. So validate in code after extraction. When something fails, send Claude the exact problem, like a teacher's margin note, rather than a bare request to try again."
+   },
+   {
+    "kind": "how",
+    "title": "Retry with the error attached",
+    "bullets": [
+     "Append the exact validation message to the retry.",
+     "Retries fix format slips and misreadings.",
+     "Retries cannot recover data missing from the source.",
+     "Missing in source: return null and flag it; stop retrying."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "errors = []\nfor attempt in range(3):\n    record = extract(doc, feedback=errors)\n    errors = validate(record)  # e.g. \"items sum to 410.00; total says 401.00\"\n    if not errors:\n        break\n    if all(e.missing_in_source for e in errors):\n        record = flag_missing(record, errors)\n        break  # retrying cannot create absent data"
+    },
+    "note": "A good retry tells Claude what failed and where. Line items sum to four hundred ten, but the total says four hundred one. Please re-read the totals section. That fixes misreadings and format slips. But if the value is simply not in the document, no number of retries will produce it. Return null, flag it, and move on."
+   },
+   {
+    "kind": "how",
+    "title": "Design fields for diagnosis",
+    "bullets": [
+     "Extract stated_total and calculated_total as separate fields.",
+     "Flag a conflict instead of silently picking one.",
+     "Add detected_pattern to findings to analyse false positives.",
+     "Group dismissed findings by pattern to improve the prompt."
+    ],
+    "note": "Some fields exist to make problems visible. Capture the total printed on the document and the total calculated from line items, and set a conflict flag when they differ. For review style outputs, record which pattern triggered each finding. Later, when people dismiss findings, you can group them by pattern and see exactly which rule is producing false positives."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 6: the totals mismatch",
+    "bullets": [
+     "Validator: stated total 401.00, items sum to 410.00.",
+     "Retry with that exact message; Claude re-reads a smudged digit.",
+     "Second document: no due date anywhere. Return null, no retry.",
+     "Real conflicts keep both totals and a conflict flag for review."
+    ],
+    "note": "In the extraction pipeline, the validator catches a total that does not match its line items. The retry includes the precise numbers, and Claude corrects a misread digit. Another document has no due date at all, so the pipeline stops retrying and records null. When the source itself is inconsistent, both totals are kept and flagged for a human."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Retry with the same prompt and hope for a different result.",
+      "right": "Retry with the specific validation error appended.",
+      "why": "Targeted feedback tells Claude what to fix."
+     },
+     {
+      "wrong": "Keep retrying when a field is absent from the document.",
+      "right": "Stop; return null and flag it.",
+      "why": "Retries cannot recover information that is not in the source."
+     },
+     {
+      "wrong": "Overwrite the stated total with the calculated one.",
+      "right": "Keep both and flag the conflict.",
+      "why": "Silent fixes hide real document errors from reviewers."
+     }
+    ],
+    "note": "Retry questions hinge on two ideas. A good retry carries the specific error, never a blind resubmission. And retries only help when the answer is actually in the document. For missing data, stop and return null. For genuine conflicts, keep both values and flag them so a person can decide."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Validate semantics in code; schemas only guarantee shape.",
+     "Retry with the specific validation error appended.",
+     "Retry format errors; stop retrying missing-data cases.",
+     "Stated versus calculated totals, plus detected_pattern, aid diagnosis."
+    ],
+    "note": "Build a loop: extract, validate, and retry with the exact error. Know when to stop, because missing data cannot be retried into existence. Design fields that expose conflicts and patterns, so you can measure and fix the prompt over time instead of guessing."
+   }
+  ],
+  "check": [
+   {
+    "q": "An extraction loop validates each record. When validation fails, it resends the original prompt unchanged, up to five times. Many failures repeat identically. What is the best improvement?",
+    "options": [
+     "Increase the retry limit to ten attempts",
+     "Switch to a larger model only for retries",
+     "Append the specific validation errors to the retry request",
+     "Lower temperature on retries to make answers more stable"
+    ],
+    "answer": 2,
+    "why": "Retrying with the exact error tells Claude what to correct. Unchanged prompts tend to reproduce the same mistake."
+   },
+   {
+    "q": "A validator reports 'policy_number missing' on a scanned form. Inspection shows the form has no policy number anywhere. What should the pipeline do?",
+    "options": [
+     "Return null for policy_number, flag the record, and stop retrying",
+     "Retry with the error until Claude produces a policy number",
+     "Generate a placeholder policy number so downstream checks pass",
+     "Re-run the whole batch with a stricter prompt"
+    ],
+    "answer": 0,
+    "why": "Retries cannot recover information that is not in the source. Returning null with a flag is honest and lets humans follow up."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Handle tool calls",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+   },
+   {
+    "title": "Get structured output from agents",
+    "url": "https://code.claude.com/docs/en/agent-sdk/structured-outputs"
+   },
+   {
+    "title": "Structured outputs",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+   }
+  ],
+  "lab": {
+   "title": "A validation-retry loop",
+   "minutes": 15,
+   "steps": [
+    "Extract line items and a stated total from an invoice text where one item price is easy to misread.",
+    "In code, sum the items and compare with the stated total.",
+    "On mismatch, retry once with the exact message, e.g. 'items sum to 410.00, total says 401.00'.",
+    "Try an invoice with no due date and confirm your loop returns null and stops instead of retrying."
+   ],
+   "expect": "A targeted retry fixes misreadings, while missing data never appears however many times you retry. Knowing when to stop retrying is a recurring exam point."
+  }
+ },
+ {
+  "ts": "4.5",
+  "minutes": 8,
+  "scenarios": [
+   5,
+   6
+  ],
+  "hook": "A nightly audit of 40,000 documents costs half as much as a batch; a pre-merge check that blocks developers must not wait for one.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Cheap and patient versus fast and full price",
+    "bullets": [
+     "The Message Batches API runs many requests asynchronously.",
+     "It costs 50% less, with results within 24 hours.",
+     "There is no latency guarantee for any single request.",
+     "Like overnight laundry service versus washing it yourself now."
+    ],
+    "note": "The Message Batches API lets you send a large set of requests and collect the results later. It costs half the normal price, and results arrive within twenty four hours, often much sooner, but with no promise for any single item. It is like an overnight laundry service: cheaper, but you would not use it for the shirt you need in ten minutes."
+   },
+   {
+    "kind": "how",
+    "title": "How a batch works",
+    "bullets": [
+     "Each request carries a custom_id that you choose.",
+     "Results can return in any order; match them on custom_id.",
+     "One request is one turn; no multi-turn tool loop inside.",
+     "Result types: succeeded, errored, canceled, expired."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "batch = client.messages.batches.create(requests=[\n    {\n        \"custom_id\": f\"doc-{d.id}\",\n        \"params\": {\n            \"model\": MODEL,\n            \"max_tokens\": 1024,\n            \"messages\": [{\"role\": \"user\", \"content\": build_prompt(d)}],\n        },\n    }\n    for d in documents\n])"
+    },
+    "note": "Every request in a batch has a custom ID that you set, such as the document ID. Results can come back in any order, so always match them by that ID. Each request is a single model turn, so an agent that needs to call tools and continue cannot run its loop inside one request. Each result is marked succeeded, errored, canceled or expired."
+   },
+   {
+    "kind": "how",
+    "title": "When and how to batch",
+    "bullets": [
+     "Batch: nightly audits, weekly reports, large backfills.",
+     "Synchronous: pre-merge checks and anything a person waits on.",
+     "Pilot the prompt on a small sample before the big run.",
+     "Resubmit only failed custom_ids, fixed first, e.g. chunked."
+    ],
+    "note": "Batch work that nobody is waiting on, such as overnight audits or weekly reports. Keep anything that blocks a person synchronous. Before sending thousands of requests, test the prompt on a small sample, because a bad prompt in a batch wastes a whole run. When some requests fail, fix the cause, such as splitting oversized documents, and resubmit only those IDs."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 6: the nightly backlog",
+    "bullets": [
+     "Pilot 50 documents; fix two prompt issues found.",
+     "Submit 40,000 overnight with custom_id = document ID.",
+     "312 errored for being too long: chunk them, resubmit only those.",
+     "Pre-merge schema checks stay synchronous."
+    ],
+    "note": "The extraction team pilots fifty documents first and fixes two prompt problems before spending money at scale. The full set goes overnight, each request tagged with its document ID. A few hundred fail because they are too long, so the team splits those into chunks and resubmits only them. Meanwhile, the check developers wait on before merging stays synchronous."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Move the blocking pre-merge check to batches to save 50%.",
+      "right": "Keep blocking checks synchronous; batch overnight work.",
+      "why": "Batches have no latency guarantee."
+     },
+     {
+      "wrong": "Resubmit the whole batch when a few percent fail.",
+      "right": "Fix and resubmit only the failed custom_ids.",
+      "why": "Avoids paying again for work that succeeded."
+     },
+     {
+      "wrong": "Match results to inputs by their position.",
+      "right": "Match results on custom_id.",
+      "why": "Result order is not guaranteed."
+     },
+     {
+      "wrong": "Run an agent's multi-turn tool loop inside one batch request.",
+      "right": "Batch single-turn work; run tool loops synchronously.",
+      "why": "Your code cannot execute a tool mid-request."
+     }
+    ],
+    "note": "Batch questions usually test fit. If a person is waiting, do not batch, however tempting the discount. If a few requests fail, fix and resend just those. Never rely on result order. And remember that a batch request is one turn, so an agent loop that needs to execute tools does not belong inside it."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Batches: 50% cheaper, up to 24 hours, no latency SLA.",
+     "custom_id correlates requests and results.",
+     "Batch overnight work; keep blocking checks synchronous.",
+     "Pilot on a sample; resubmit only failed IDs, fixed."
+    ],
+    "note": "The Message Batches API trades speed for cost. Use it for work that can wait, tag every request with a custom ID, and match results on that ID. Test the prompt on a sample first. When some requests fail, fix the cause and resend just those. Anything blocking a person stays synchronous."
+   }
+  ],
+  "docsToday": "A batch request may carry tool definitions and earlier tool turns, but your code can't run a tool mid-request. Results are kept for 29 days.",
+  "check": [
+   {
+    "q": "A team runs two jobs: a check that must pass before developers can merge, and a weekly compliance scan of 25,000 files. They want to cut cost. What is the best plan?",
+    "options": [
+     "Move both jobs to the Message Batches API",
+     "Move the merge check to batches and keep the weekly scan synchronous",
+     "Keep both synchronous and shorten the prompts instead",
+     "Batch the weekly scan and keep the merge check synchronous"
+    ],
+    "answer": 3,
+    "why": "Batches suit work nobody waits on. A blocking merge check needs predictable latency, which batches do not promise."
+   },
+   {
+    "q": "A batch of 10,000 extraction requests finishes with 240 errored results caused by documents exceeding the context window. What should the team do?",
+    "options": [
+     "Resubmit all 10,000 requests with a larger max_tokens",
+     "Split the 240 oversized documents into chunks and resubmit only those custom_ids",
+     "Resubmit the 240 requests unchanged until they succeed",
+     "Drop the 240 documents and report the batch as complete"
+    ],
+    "answer": 1,
+    "why": "Fix the cause (chunking) and resubmit only the failed custom_ids. Resending everything wastes money, and unchanged retries fail again."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Batch processing",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+   },
+   {
+    "title": "Cookbook: Batch processing with Message Batches API",
+    "url": "https://platform.claude.com/cookbook/misc-batch-processing"
+   }
+  ],
+  "lab": {
+   "title": "Run a small Message Batch",
+   "minutes": 15,
+   "steps": [
+    "Build 20 short summarisation requests, each with custom_id set to a document ID.",
+    "Submit them with client.messages.batches.create and poll until processing ends.",
+    "Stream the results and match each one by custom_id, not by position.",
+    "Collect any non-succeeded IDs and resubmit only those as a new batch."
+   ],
+   "expect": "Results arrive asynchronously, possibly out of order, at half price. Matching on custom_id and resubmitting only failures is exactly what batch questions on the exam test."
+  }
+ },
+ {
+  "ts": "4.6",
+  "minutes": 8,
+  "scenarios": [
+   5,
+   2
+  ],
+  "hook": "The session that wrote a 14-file change approves it; an independent reviewer finds the broken contract between two files.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "A second pair of eyes that did not write it",
+    "bullets": [
+     "Self-review in the same session shares the writer's blind spots.",
+     "An independent instance sees only the code and the criteria.",
+     "Like proofreading a colleague's essay versus your own.",
+     "Fresh context catches more than 'review your work' prompts."
+    ],
+    "note": "When the same session reviews its own code, it carries all its earlier assumptions, so it tends to see what it meant rather than what it wrote. A separate Claude instance starts fresh and sees only the change and your criteria. It is the difference between proofreading your own essay and proofreading someone else's."
+   },
+   {
+    "kind": "how",
+    "title": "Multi-pass review",
+    "bullets": [
+     "Pass one: review each file on its own, with focused attention.",
+     "Pass two: a cross-file integration pass for contracts and data flow.",
+     "One huge pass dilutes attention and misses issues.",
+     "Each finding carries a confidence value."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"file\": \"billing/refund.ts\",\n  \"line\": 88,\n  \"issue\": \"Refund not capped by original charge amount\",\n  \"severity\": \"high\",\n  \"confidence\": 0.62\n}"
+    },
+    "note": "Split a large review into passes. First, review each file by itself, so attention stays focused on local bugs. Then run a separate integration pass that looks across files at contracts, data flow and shared assumptions. Asking for both in one giant pass spreads attention thin. Have each finding report a confidence value so you can route it."
+   },
+   {
+    "kind": "how",
+    "title": "Route findings by confidence",
+    "bullets": [
+     "High confidence: post directly to the pull request.",
+     "Low confidence: send to a human or a verification pass.",
+     "Anthropic's Code Review: parallel finders, then a verification step.",
+     "Check that confidence matches real accuracy before relying on it."
+    ],
+    "note": "Confidence lets you route. Post high confidence findings straight away. Send low confidence ones to a person or to a verifier that tries to confirm them against the code. Anthropic's own Code Review service follows a similar shape: several agents look for issues in parallel, then a verification step filters out false positives before anything is posted."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 5: a 14-file pull request",
+    "bullets": [
+     "Generator session wrote the change; a fresh instance reviews it.",
+     "Fourteen per-file passes catch local bugs.",
+     "One integration pass finds a renamed field still used elsewhere.",
+     "Low-confidence findings go to a human reviewer first."
+    ],
+    "note": "In the continuous integration scenario, a pull request touches fourteen files. A separate reviewer instance, not the one that generated the code, runs a focused pass on each file. Then an integration pass looks across them and spots a field that was renamed in one file but still used under its old name elsewhere. Uncertain findings go to a human first."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Ask the generating session to 'carefully review your work'.",
+      "right": "Use an independent instance for review.",
+      "why": "Same-session review inherits the writer's blind spots."
+     },
+     {
+      "wrong": "Review all 14 files in one large pass.",
+      "right": "Per-file passes plus a cross-file integration pass.",
+      "why": "One big pass dilutes attention."
+     },
+     {
+      "wrong": "Post every finding with equal weight.",
+      "right": "Route by per-finding confidence.",
+      "why": "Low-confidence findings need verification before posting."
+     }
+    ],
+    "note": "Look for independence and structure. A stronger review prompt in the same session is still the same reviewer. A single huge pass misses things a per file pass would catch, and it also misses what only an integration pass would catch. And treat every finding equally only if you want noise; confidence based routing is the better design."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Self-review in the same session inherits its own blind spots.",
+     "An independent instance catches more than 'review your work'.",
+     "Per-file passes plus a cross-file integration pass.",
+     "Per-finding confidence routes what needs human review."
+    ],
+    "note": "Separate the writer from the reviewer. Break big reviews into per file passes plus an integration pass. Attach confidence to every finding and use it to decide what gets posted and what gets checked first. That design finds more real issues with less noise."
+   }
+  ],
+  "check": [
+   {
+    "q": "An agent generates a database migration and the matching application changes, then is prompted to 'review your changes thoroughly' before opening the pull request. Reviewers still find integration bugs it missed. What design change helps most?",
+    "options": [
+     "Give the same session a longer, more detailed review checklist",
+     "Run the review in an independent Claude instance that sees only the diff and the review criteria",
+     "Ask the session to review its changes twice in a row",
+     "Skip automated review and rely on human reviewers only"
+    ],
+    "answer": 1,
+    "why": "An independent instance does not share the generator's assumptions, so it catches more than self-review prompts."
+   },
+   {
+    "q": "A single review pass over a 25-file pull request finds obvious issues in the first few files but little in the rest, and misses a mismatch between an API handler and its client. What architecture fits better?",
+    "options": [
+     "Per-file review passes followed by a separate cross-file integration pass",
+     "One pass with a larger max_tokens value",
+     "Reviewing only the five largest files",
+     "Asking the reviewer to be more thorough in later files"
+    ],
+    "answer": 0,
+    "why": "Per-file passes keep attention focused, and the integration pass catches cross-file contract problems."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Code Review",
+    "url": "https://code.claude.com/docs/en/code-review"
+   },
+   {
+    "title": "Best practices for Claude Code",
+    "url": "https://code.claude.com/docs/en/best-practices"
+   },
+   {
+    "title": "Building effective agents",
+    "url": "https://www.anthropic.com/engineering/building-effective-agents"
+   }
+  ],
+  "lab": {
+   "title": "Self-review versus independent review",
+   "minutes": 12,
+   "steps": [
+    "Have Claude Code implement a small two-file change, such as renaming a field used by a second module.",
+    "In the same session, ask it to review its own work and note what it reports.",
+    "Start a fresh session and review the diff file by file, then run one cross-file pass.",
+    "Ask the reviewer to add a 0 to 1 confidence to each finding and sort by it."
+   ],
+   "expect": "The fresh reviewer and the cross-file pass tend to catch the contract mismatch the writer missed. Confidence gives you a way to route findings, matching the exam's multi-instance, multi-pass design."
+  }
+ }
+]

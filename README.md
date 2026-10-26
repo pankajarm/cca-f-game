@@ -63,6 +63,23 @@ onto a broken design.
 
 </div>
 
+## 🎓 Learn it first: slides, video, labs
+
+New to agents, MCP or Claude Code? **Learn** teaches the exam guide in three stages before you test
+yourself. **Stage 1** gives a short primer for each domain. **Stage 2** has one lesson for each of the 30
+task statements: the idea, how it works with a small original code sample, how it shows up in a scenario,
+and the exam traps (the tempting answer next to the one the exam wants, and why). **Stage 3** walks
+through all six scenarios and exam day.
+
+Every lesson comes as a slide deck (in the game, or full screen and printable at `learn/deck.html`), a
+narrated video with captions, a hands-on lab, a two-question check and a drill on the real bank. A
+placement check and a "weak spots" panel send you to the lessons you need. Each lesson links the official
+docs, Anthropic Academy courses, cookbook notebooks and official Anthropic talks that go deeper.
+
+The videos are AI-narrated with [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M), an open-weights
+text-to-speech model run locally (`scripts/build_videos.py`). Lessons are unofficial study material written
+from the exam guide and Anthropic's documentation; see [docs/SPEC-learn-track.md](docs/SPEC-learn-track.md).
+
 ## 📋 Then survive The Proctor
 
 The mock exam follows the official exam guide (v1.0, July 2026): **60 questions in
@@ -93,6 +110,7 @@ The home screen opens on **Exam readiness**: for each domain, how much you've co
 
 | Mode | What it is |
 |---|---|
+| 🎓 **Learn** | 43 lessons in three stages: domain primers, one per task statement, scenario walkthroughs. Slides, narrated video, lab, quick check, drill. |
 | 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Each floor covers a group of task statements and serves 10 questions you haven't seen yet. Clear at 7/10 to ascend; ★ for a perfect 10. |
 | 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a drill of up to 10 questions for each. Also by scenario. |
 | 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled-score range, single-answer items only) or Practice exam (2 min per question, instant feedback). Each new exam prefers questions you haven't had in an earlier one: the bank holds a dozen fully separate mocks. |

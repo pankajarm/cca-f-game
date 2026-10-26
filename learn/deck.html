@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lesson deck · Architect's Ascent</title>
+<meta name="description" content="Slide deck from the Architect's Ascent Learn track for the Claude Certified Architect – Foundations exam. Unofficial study material.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Standalone deck viewer: arrows / space / swipe to move, N for notes, P for a printable copy.
+ * ?print=1 lays out every slide for Save as PDF; ?render=1 is the fixed 1280x720 stage the video script captures. */
+:root {
+  --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
+  --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-code: 'JetBrains Mono', ui-monospace, monospace;
+
+  --bg: #F3EEE3;
+  --bg-grad: radial-gradient(1200px 600px at 50% -10%, #FAF4E6 0%, #F3EEE3 55%, #EDE5D4 100%);
+  --card: #FFFDF7;
+  --card-2: #FAF6EC;
+  --ink: #2A2620;
+  --ink-soft: #4E463C;
+  --muted: #847A6C;
+  --line: #E3DAC8;
+  --line-strong: #CFC4AD;
+  --accent: #D97757;
+  --accent-deep: #B85C3C;
+  --accent-soft: #F6E3DA;
+  --gold: #C2912E;
+  --good: #4E8F5B;
+  --good-soft: #E2EFE2;
+  --bad: #C04F44;
+  --bad-soft: #F7E1DD;
+  --d1: #D97757; --d2: #8F7BBF; --d3: #4E8F83; --d4: #5B7FA6; --d5: #B0628F;
+  --shadow: 0 1px 2px rgba(74,60,40,.06), 0 10px 30px -12px rgba(74,60,40,.18);
+  --shadow-big: 0 2px 4px rgba(74,60,40,.08), 0 24px 60px -20px rgba(74,60,40,.28);
+  --radius: 16px;
+}
+[data-theme="dark"] {
+  --bg: #201D19;
+  --bg-grad: radial-gradient(1200px 600px at 50% -10%, #2B2620 0%, #201D19 55%, #1A1815 100%);
+  --card: #2B2722;
+  --card-2: #332E27;
+  --ink: #F0EADD;
+  --ink-soft: #D9D0C0;
+  --muted: #A89C88;
+  --line: #433D33;
+  --line-strong: #57503F;
+  --accent: #E08963;
+  --accent-deep: #F0A07A;
+  --accent-soft: #46342B;
+  --gold: #D9AC4B;
+  --good: #7CB888;
+  --good-soft: #2E3B2E;
+  --bad: #E07A6B;
+  --bad-soft: #45302C;
+  --shadow: 0 1px 2px rgba(0,0,0,.25), 0 10px 30px -12px rgba(0,0,0,.5);
+  --shadow-big: 0 2px 4px rgba(0,0,0,.3), 0 24px 60px -20px rgba(0,0,0,.6);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font-body); background: #15130F; color: var(--ink); min-height: 100vh; display: flex; flex-direction: column; }
+code { font-family: var(--font-code); font-size: .85em; background: var(--accent-soft); color: var(--accent-deep); padding: .1em .35em; border-radius: 6px; }
+#stage { flex: 1; display: grid; place-items: center; padding: 16px; }
+#stage .ldeck { width: min(100%, calc((100vh - 120px) * 16 / 9)); }
+#bar { display: flex; gap: 10px; align-items: center; justify-content: center; padding: 10px 16px 14px; color: #D9D0C0; font-size: 14px; flex-wrap: wrap; }
+#bar button, #bar a { background: #2B2722; color: #F0EADD; border: 1px solid #433D33; border-radius: 10px; padding: 7px 14px; font: 600 14px var(--font-body); cursor: pointer; text-decoration: none; }
+#note { max-width: 900px; margin: 0 auto 14px; padding: 0 16px; color: #D9D0C0; font-size: 15px; display: none; }
+#note.show { display: block; }
+#disclaimer { text-align: center; color: #847A6C; font-size: 12px; padding-bottom: 10px; }
+body.render { background: #F3EEE3; display: block; }
+body.render #stage { padding: 0; display: block; }
+body.render #stage .ldeck { width: 1280px; }
+body.render .lslide { border-radius: 0; border: 0; box-shadow: none; }
+body.render #bar, body.render #note, body.render #disclaimer { display: none; }
+body.deck-print { background: #fff; display: block; }
+body.deck-print #stage { display: block; padding: 0; }
+body.deck-print #stage .ldeck { width: 100%; }
+body.deck-print .lslide { margin-bottom: 18px; }
+body.deck-print #bar, body.deck-print #note { display: none; }
+@page { size: 13.333in 7.5in; margin: 0; }
+</style>
+<link rel="stylesheet" href="learn.css">
+</head>
+<body>
+<div id="stage"><div class="ldeck" id="deck"></div></div>
+<div id="note"></div>
+<div id="bar">
+  <button onclick="move(-1)" aria-label="Previous slide">←</button><span id="count"></span><button onclick="move(1)" aria-label="Next slide">→</button>
+  <button onclick="toggleNotes()">Notes (N)</button><button onclick="printable()">Print / PDF (P)</button>
+  <a href="../index.html" id="back">Back to the game</a>
+</div>
+<div id="disclaimer">Unofficial study material for the Claude Certified Architect – Foundations exam. The official exam guide is the authority.</div>
+<script>
+/* Same code-token highlighting as the game (copied from game.js CODE_RX + fmt; keep in sync). */
+const CODE_RX = new RegExp([
+  '(?:~\\/)?\\.claude\\/[A-Za-z0-9_\\-.\\/*]+',
+  '~\\/\\.claude\\.json', '\\.mcp\\.json',
+  'claude -p\\b', 'claude-code-action',
+  '\\$\\{[A-Z_][A-Z0-9_]*\\}',
+  '--[a-z][a-z-]+\\b',
+  '\\b[A-Za-z0-9_\\-]+\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
+  '\\/(?:compact|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
+  '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|Grep|Glob)\\b',
+  '\\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\\b',
+  '"(?:auto|any|none)"',
+].join('|'), 'g');
+
+function fmt(text) {
+  const esc = String(text)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return esc.replace(CODE_RX, m => '<code>' + m + '</code>');
+}
+</script>
+<script src="lessons.js"></script>
+<script src="../learn.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const lesson = Learn.byId(params.get("id") || decodeURIComponent(location.hash.slice(1))) || Learn.all()[0];
+const slides = Learn.deck(lesson);
+let i = 0;
+document.title = lesson.title + ' · Architect\'s Ascent';
+function draw() {
+  document.getElementById('deck').innerHTML = Learn.slideHTML(lesson, i);
+  Learn.fit(document.querySelector('#deck .lslide'));
+  document.getElementById('count').textContent = (i + 1) + ' / ' + slides.length;
+  document.getElementById('note').textContent = slides[i].note || '';
+}
+function move(d) { i = Math.max(0, Math.min(slides.length - 1, i + d)); draw(); }
+function toggleNotes() { document.getElementById('note').classList.toggle('show'); }
+function printable() { location.search = '?print=1'; }
+window.showSlide = n => { i = n; draw(); return slides.length; };
+window.slideCount = slides.length;
+if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+if (params.get('render')) document.body.classList.add('render');
+if (params.get('print')) {
+  document.body.classList.add('deck-print');
+  document.getElementById('deck').innerHTML = slides.map((_, k) => Learn.slideHTML(lesson, k)).join('');
+  document.querySelectorAll('#deck .lslide').forEach(s => Learn.fit(s));
+  if (document.fonts) document.fonts.ready.then(() => setTimeout(() => window.print(), 300));
+} else draw();
+document.addEventListener('keydown', e => {
+  if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { move(1); e.preventDefault(); }
+  if (['ArrowLeft', 'PageUp'].includes(e.key)) { move(-1); e.preventDefault(); }
+  if (e.key === 'n') toggleNotes();
+  if (e.key === 'p') printable();
+});
+let x0 = null;
+document.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) move(dx < 0 ? 1 : -1); }, { passive: true });
+</script>
+</body>
+</html>
