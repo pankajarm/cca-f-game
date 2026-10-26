@@ -1,0 +1,130 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.852
+Task statement 5.2.
+
+2
+00:00:01.852 --> 00:00:06.265
+Design effective escalation and ambiguity resolution patterns.
+
+3
+00:00:06.265 --> 00:00:16.372
+A support agent that escalates on anger floods human queues, while one that ignores 'get me a human' loses customers; clear criteria fix both.
+
+4
+00:00:17.772 --> 00:00:20.322
+Escalation is about three clear triggers.
+
+5
+00:00:20.322 --> 00:00:22.250
+The customer asks for a person.
+
+6
+00:00:22.250 --> 00:00:24.800
+The request falls outside written policy.
+
+7
+00:00:24.800 --> 00:00:27.350
+Or the agent has stopped making progress.
+
+8
+00:00:27.350 --> 00:00:37.612
+A good junior employee works the same way: they handle what the rules cover, ask a manager when the rules run out, and never make a customer beg to speak to someone.
+
+9
+00:00:39.012 --> 00:00:43.715
+Write the triggers down explicitly, with examples on both sides of the line.
+
+10
+00:00:43.715 --> 00:00:48.789
+When a customer asks for a human, transfer right away, not after one more attempt.
+
+11
+00:00:48.789 --> 00:00:54.111
+When a request sits outside policy, escalate rather than inventing a rule on the spot.
+
+12
+00:00:54.111 --> 00:00:58.937
+Concrete examples help the model judge the borderline cases the way you would.
+
+13
+00:01:00.337 --> 00:01:02.691
+Two tempting signals do not work well.
+
+14
+00:01:02.691 --> 00:01:07.027
+Sentiment tells you how someone feels, not whether the agent can help.
+
+15
+00:01:07.027 --> 00:01:11.982
+And a model's own confidence score is not calibrated enough to drive escalation.
+
+16
+00:01:11.982 --> 00:01:21.521
+For ambiguity, such as two customers with the same name, the answer is to ask for one more identifier, like a postcode or order number, never to pick one.
+
+17
+00:01:22.921 --> 00:01:26.279
+Let us sort some moments from the support scenario.
+
+18
+00:01:26.279 --> 00:01:31.413
+An angry customer with a simple, covered problem gets resolved, not escalated.
+
+19
+00:01:31.413 --> 00:01:35.165
+A direct request for a person gets escalated immediately.
+
+20
+00:01:35.165 --> 00:01:38.523
+A request the policy never mentions gets escalated.
+
+21
+00:01:38.523 --> 00:01:42.670
+Two matching accounts trigger a request for another identifier.
+
+22
+00:01:42.670 --> 00:01:45.961
+Repeated failure on the same issue means escalate.
+
+23
+00:01:47.361 --> 00:01:50.018
+These four traps show up again and again.
+
+24
+00:01:50.018 --> 00:01:55.592
+Sentiment thresholds and self-rated confidence sound measurable but are poor triggers.
+
+25
+00:01:55.592 --> 00:01:59.221
+Delaying a requested handoff feels helpful but is wrong.
+
+26
+00:01:59.221 --> 00:02:03.693
+And guessing between matching records is a privacy and accuracy risk.
+
+27
+00:02:03.693 --> 00:02:04.471
+Ask instead.
+
+28
+00:02:05.871 --> 00:02:06.447
+To recap.
+
+29
+00:02:06.447 --> 00:02:11.759
+Escalate on three observable triggers and write them into the prompt with examples.
+
+30
+00:02:11.759 --> 00:02:15.471
+Ignore sentiment and self-reported confidence as triggers.
+
+31
+00:02:15.471 --> 00:02:19.823
+Resolve ambiguity by asking for more information, never by guessing.
+
+32
+00:02:19.823 --> 00:02:24.047
+And when someone asks for a human, make the handoff straight away.
+

@@ -1,0 +1,134 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.915
+Task statement 5.3.
+
+2
+00:00:01.915 --> 00:00:06.829
+Implement error propagation strategies across multi-agent systems.
+
+3
+00:00:06.829 --> 00:00:15.839
+In a multi-agent research run, one subagent's silent failure can turn into a confident report with a hole nobody can see.
+
+4
+00:00:17.239 --> 00:00:20.033
+In a multi-agent system, failures are normal.
+
+5
+00:00:20.033 --> 00:00:26.554
+What matters is whether the information about a failure reaches the agent that can do something about it.
+
+6
+00:00:26.554 --> 00:00:32.018
+If a subagent hides the error, the coordinator writes a confident but incomplete answer.
+
+7
+00:00:32.018 --> 00:00:34.937
+If it crashes the whole run, good work is lost.
+
+8
+00:00:34.937 --> 00:00:38.849
+The middle path is to report the failure clearly, with context.
+
+9
+00:00:40.249 --> 00:00:43.134
+A useful failure report answers four questions.
+
+10
+00:00:43.134 --> 00:00:44.852
+What kind of failure was it?
+
+11
+00:00:44.852 --> 00:00:45.895
+What did you try?
+
+12
+00:00:45.895 --> 00:00:47.982
+What did you get before it failed?
+
+13
+00:00:47.982 --> 00:00:50.620
+And what could the coordinator try instead?
+
+14
+00:00:50.620 --> 00:00:54.793
+Transient problems, like a timeout, should be retried locally first.
+
+15
+00:00:54.793 --> 00:00:59.641
+Only when that fails does the subagent send a structured partial result upward.
+
+16
+00:01:01.041 --> 00:01:04.173
+Two outcomes look similar but mean opposite things.
+
+17
+00:01:04.173 --> 00:01:07.735
+A valid empty result says we checked and there is nothing.
+
+18
+00:01:07.735 --> 00:01:10.314
+An access failure says we could not check.
+
+19
+00:01:10.314 --> 00:01:12.893
+Mixing them up produces false conclusions.
+
+20
+00:01:12.893 --> 00:01:20.263
+And when a gap cannot be filled, the final report should say so plainly, so readers know what the findings do not cover.
+
+21
+00:01:21.663 --> 00:01:26.184
+In the research scenario, a subagent cannot open two of its six sources.
+
+22
+00:01:26.184 --> 00:01:34.599
+It retries once, then returns the four sources it did read, marked as partial, with the access failure and two suggested alternatives.
+
+23
+00:01:34.599 --> 00:01:38.493
+The coordinator sends another subagent after the alternatives.
+
+24
+00:01:38.493 --> 00:01:43.956
+If those fail too, the final report names the gap instead of pretending it is complete.
+
+25
+00:01:45.356 --> 00:01:49.158
+The exam frames this as two bad extremes and one good middle.
+
+26
+00:01:49.158 --> 00:01:52.711
+Swallowing errors and crashing everything are both wrong.
+
+27
+00:01:52.711 --> 00:01:55.454
+A bare failure message is not enough either.
+
+28
+00:01:55.454 --> 00:02:02.124
+The right answer carries structured context upward and keeps the final output honest about what is missing.
+
+29
+00:02:03.524 --> 00:02:04.093
+To recap.
+
+30
+00:02:04.093 --> 00:02:07.189
+Failures should travel upward as structured data.
+
+31
+00:02:07.189 --> 00:02:10.791
+Keep access failures distinct from genuine empty results.
+
+32
+00:02:10.791 --> 00:02:17.363
+Retry transient problems close to the source, and pass everything else up with partial results attached.
+
+33
+00:02:17.363 --> 00:02:21.913
+Finally, make the end product honest by listing what it could not cover.
+

@@ -129,7 +129,7 @@ function draw() {
 }
 function move(d) { i = Math.max(0, Math.min(slides.length - 1, i + d)); draw(); }
 function toggleNotes() { document.getElementById('note').classList.toggle('show'); }
-function printable() { location.search = '?print=1'; }
+function printable() { params.set('print', '1'); params.set('id', lesson.id); location.search = params.toString(); }
 window.showSlide = n => { i = n; draw(); return slides.length; };
 window.slideCount = slides.length;
 if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';

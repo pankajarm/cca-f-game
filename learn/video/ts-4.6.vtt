@@ -1,0 +1,110 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.878
+Task statement 4.6.
+
+2
+00:00:01.878 --> 00:00:06.083
+Design multi-instance and multi-pass review architectures.
+
+3
+00:00:06.083 --> 00:00:14.857
+The session that wrote a 14-file change approves it; an independent reviewer finds the broken contract between two files.
+
+4
+00:00:16.257 --> 00:00:24.480
+When the same session reviews its own code, it carries all its earlier assumptions, so it tends to see what it meant rather than what it wrote.
+
+5
+00:00:24.480 --> 00:00:29.252
+A separate Claude instance starts fresh and sees only the change and your criteria.
+
+6
+00:00:29.252 --> 00:00:34.369
+It is the difference between proofreading your own essay and proofreading someone else's.
+
+7
+00:00:35.769 --> 00:00:37.892
+Split a large review into passes.
+
+8
+00:00:37.892 --> 00:00:42.780
+First, review each file by itself, so attention stays focused on local bugs.
+
+9
+00:00:42.780 --> 00:00:49.726
+Then run a separate integration pass that looks across files at contracts, data flow and shared assumptions.
+
+10
+00:00:49.726 --> 00:00:53.392
+Asking for both in one giant pass spreads attention thin.
+
+11
+00:00:53.392 --> 00:00:57.508
+Have each finding report a confidence value so you can route it.
+
+12
+00:00:58.908 --> 00:01:00.567
+Confidence lets you route.
+
+13
+00:01:00.567 --> 00:01:03.375
+Post high confidence findings straight away.
+
+14
+00:01:03.375 --> 00:01:09.629
+Send low confidence ones to a person or to a verifier that tries to confirm them against the code.
+
+15
+00:01:09.629 --> 00:01:21.372
+Anthropic's own Code Review service follows a similar shape: several agents look for issues in parallel, then a verification step filters out false positives before anything is posted.
+
+16
+00:01:22.772 --> 00:01:27.664
+In the continuous integration scenario, a pull request touches fourteen files.
+
+17
+00:01:27.664 --> 00:01:33.937
+A separate reviewer instance, not the one that generated the code, runs a focused pass on each file.
+
+18
+00:01:33.937 --> 00:01:42.342
+Then an integration pass looks across them and spots a field that was renamed in one file but still used under its old name elsewhere.
+
+19
+00:01:42.342 --> 00:01:44.788
+Uncertain findings go to a human first.
+
+20
+00:01:46.188 --> 00:01:48.444
+Look for independence and structure.
+
+21
+00:01:48.444 --> 00:01:52.955
+A stronger review prompt in the same session is still the same reviewer.
+
+22
+00:01:52.955 --> 00:02:00.661
+A single huge pass misses things a per file pass would catch, and it also misses what only an integration pass would catch.
+
+23
+00:02:00.661 --> 00:02:07.052
+And treat every finding equally only if you want noise; confidence based routing is the better design.
+
+24
+00:02:08.452 --> 00:02:10.858
+Separate the writer from the reviewer.
+
+25
+00:02:10.858 --> 00:02:14.911
+Break big reviews into per file passes plus an integration pass.
+
+26
+00:02:14.911 --> 00:02:21.308
+Attach confidence to every finding and use it to decide what gets posted and what gets checked first.
+
+27
+00:02:21.308 --> 00:02:24.537
+That design finds more real issues with less noise.
+

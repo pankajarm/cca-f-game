@@ -1,0 +1,134 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.822
+Task statement 1.1.
+
+2
+00:00:01.822 --> 00:00:06.346
+Design and implement agentic loops for autonomous task execution.
+
+3
+00:00:06.346 --> 00:00:14.836
+A support agent that stops one step early leaves a refund half done, so the loop's exit rule matters more than any prompt.
+
+4
+00:00:16.236 --> 00:00:18.478
+Here is the whole idea in one line.
+
+5
+00:00:18.478 --> 00:00:19.696
+An agent is a loop.
+
+6
+00:00:19.696 --> 00:00:25.462
+Claude asks for a tool, your code runs it, and the result goes back into the conversation.
+
+7
+00:00:25.462 --> 00:00:27.768
+Then Claude decides what to do next.
+
+8
+00:00:27.768 --> 00:00:36.225
+It keeps going until Claude itself signals that the job is done, a bit like a chef calling for ingredients until the plate is ready.
+
+9
+00:00:37.625 --> 00:00:40.157
+This is the loop in about a dozen lines.
+
+10
+00:00:40.157 --> 00:00:45.221
+Each round we send the whole history plus the tool list and save Claude's reply.
+
+11
+00:00:45.221 --> 00:00:47.120
+Then we branch on stop reason.
+
+12
+00:00:47.120 --> 00:00:48.639
+End turn means finished.
+
+13
+00:00:48.639 --> 00:00:52.120
+Tool use means run the tools and send the results back.
+
+14
+00:00:52.120 --> 00:00:58.703
+Anything else, like a reply cut off at max tokens, is not a finished answer, so we handle it on purpose.
+
+15
+00:01:00.103 --> 00:01:03.260
+Stop reason is the only signal you should trust.
+
+16
+00:01:03.260 --> 00:01:04.970
+Tool use means keep going.
+
+17
+00:01:04.970 --> 00:01:06.285
+End turn means stop.
+
+18
+00:01:06.285 --> 00:01:11.547
+Max tokens means the reply was cut off, so do not treat it as a finished answer.
+
+19
+00:01:11.547 --> 00:01:20.689
+When Claude asks for several tools at once, send every result back together in one user message, each tagged with its matching tool use ID.
+
+20
+00:01:22.089 --> 00:01:24.879
+Picture the support agent from scenario one.
+
+21
+00:01:24.879 --> 00:01:27.288
+A customer asks where their refund is.
+
+22
+00:01:27.288 --> 00:01:34.072
+Claude looks up the customer, uses that ID to find the order, sees a pending refund, and checks its status.
+
+23
+00:01:34.072 --> 00:01:36.481
+Nobody wrote that sequence in advance.
+
+24
+00:01:36.481 --> 00:01:42.377
+Claude chose each step from the last result, and the loop simply kept running until end turn.
+
+25
+00:01:43.777 --> 00:01:47.429
+Exam questions love loops that end for the wrong reason.
+
+26
+00:01:47.429 --> 00:01:55.319
+Watch for checks on words like done, an iteration cap used as the main exit, or a rule that says any text means finished.
+
+27
+00:01:55.319 --> 00:01:59.623
+Claude often writes a sentence and calls a tool in the same reply.
+
+28
+00:01:59.623 --> 00:02:03.340
+The right answer nearly always comes back to stop reason.
+
+29
+00:02:04.740 --> 00:02:05.298
+To recap.
+
+30
+00:02:05.298 --> 00:02:09.449
+Keep looping while stop reason says tool use, and stop on end turn.
+
+31
+00:02:09.449 --> 00:02:13.414
+Feed every tool result back so the next turn can reason over it.
+
+32
+00:02:13.414 --> 00:02:17.317
+Let Claude pick the tools instead of scripting a decision tree.
+
+33
+00:02:17.317 --> 00:02:22.212
+And never let a text check or an iteration cap be the thing that ends the loop.
+

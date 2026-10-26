@@ -236,15 +236,15 @@
     "why": "Critical commitments must live outside the summarised history. A persistent facts block keeps them exact no matter how much the chatter is compressed."
    },
    {
-    "q": "A research coordinator receives five subagent reports, each a long narrative of its reasoning. The final synthesis often misses figures buried mid-report. Which change best follows the guide?",
+    "q": "To save context, a team trims each shipment-tracking result down to the status field alone. Context use dropped, but the agent can no longer answer customers who ask when a parcel will arrive or where it is now. What is the right adjustment?",
     "options": [
-     "Ask subagents to return structured findings with key facts first",
-     "Concatenate the reports in alphabetical order",
-     "Ask the coordinator to re-read each report twice",
-     "Have each subagent return its full transcript for completeness"
+     "Remove trimming and pass the full 45-field result again",
+     "Have the agent call the tool twice, once trimmed and once in full",
+     "Keep the fields the agent's tasks actually need, such as delivery estimate and last scan location, and drop the rest",
+     "Ask customers to check the carrier's website for arrival times"
     ],
-    "answer": 0,
-    "why": "Structured findings with key facts up front avoid lost-in-the-middle and keep the coordinator's context focused."
+    "answer": 2,
+    "why": "Trimming should remove noise, not the facts the agent's job depends on. Choose the kept fields from the questions the agent must answer."
    }
   ],
   "sources": [
@@ -371,15 +371,15 @@
   },
   "check": [
    {
-    "q": "A broadband support agent is helping a calm customer reset a router. Midway, the customer writes 'I'd rather speak with a person, please.' The agent believes one more step will fix it. What should it do?",
+    "q": "A streaming service's support agent receives 'cancel my plan'. The account could either stop renewing at the end of the month or end today with a partial refund, and the two have different consequences. What should the agent do?",
     "options": [
-     "Suggest the final step first, then offer a transfer if it fails",
-     "Transfer to a human now, passing along what has been tried",
-     "Ask the customer to rate their frustration before deciding",
-     "Continue troubleshooting since the customer is not upset"
+     "Cancel today with a refund, since that matches the literal request",
+     "Ask which of the two the customer wants, briefly explaining the difference",
+     "Stop the renewal, since it is the safer default",
+     "Escalate to a human, since cancellations are sensitive"
     ],
     "answer": 1,
-    "why": "An explicit request for a human is honoured immediately, regardless of sentiment or how close the agent thinks it is."
+    "why": "When a request maps to different actions with different consequences, a short clarifying question beats a guess. Escalation is not needed when one question resolves it."
    },
    {
     "q": "A pharmacy refill agent searches by patient name and gets three matching profiles with different birth dates. What is the right next step?",
@@ -817,15 +817,15 @@
   },
   "check": [
    {
-    "q": "A shipping company's customs-form extractor reports 96 percent field accuracy overall. Leadership wants to remove human review entirely. What should the team do first?",
+    "q": "A claims extractor auto-accepts fields above confidence 0.9, a threshold calibrated on a labelled set last quarter. The team has since switched to a newer model and rewritten the extraction prompt. What should happen before they keep the threshold?",
     "options": [
-     "Remove review for all forms, since 96 percent beats the human baseline",
-     "Remove review only for outputs the model marks as high confidence",
-     "Double the review team to reach 100 percent",
-     "Measure accuracy per form type and per field on a labelled sample before reducing review anywhere"
+     "Re-run the calibration on the labelled set with the new model and prompt, and set thresholds from the newly measured accuracy",
+     "Keep 0.9, since a newer model is more accurate",
+     "Lower the threshold to 0.8, since a better model needs less review",
+     "Ask the new model to report its confidence more conservatively"
     ],
-    "answer": 3,
-    "why": "An aggregate figure can hide weak form types or fields. Per-slice accuracy shows where review can safely be reduced."
+    "answer": 0,
+    "why": "What a confidence score means depends on the model and prompt that produced it. Changing either means the old calibration no longer holds."
    },
    {
     "q": "A clinic's referral-letter extractor sends only its 100 lowest-confidence outputs each week for human audit. Which weakness does this create?",
@@ -975,15 +975,15 @@
     "why": "Conflicting credible figures should be shown with attribution. Averaging invents an unsourced number and silently picking one hides the disagreement."
    },
    {
-    "q": "A research pipeline's subagents each return a polished paragraph of findings. The final report reads well, but reviewers cannot trace any statistic to a source. What is the best fix?",
+    "q": "A market report cites one analyst firm putting a sector at $40 billion and another at $65 billion for the same year. On inspection, the first counts hardware only while the second includes services. How should the synthesis present this?",
     "options": [
-     "Add a bibliography of all URLs visited at the end of the report",
-     "Have subagents return structured records of claim, source, date and quote, kept through synthesis",
-     "Ask the synthesizer to add 'according to research' before each statistic",
-     "Have a final agent search the web to re-find sources for each number"
+     "Average the two into a single $52.5 billion estimate",
+     "Keep the larger figure, since it covers more",
+     "Show both figures with their sources and what each one counts, explaining that they measure different things",
+     "Drop both and say the market size is unknown"
     ],
-    "answer": 1,
-    "why": "Claim-to-source links survive only if they are kept structured from the start. A bibliography or hedging phrase does not tie each claim to its source."
+    "answer": 2,
+    "why": "Figures with different scopes are not a real contradiction. Keeping each with its source and definition stops readers treating them as competing claims."
    }
   ],
   "sources": [

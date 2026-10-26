@@ -116,10 +116,6 @@ const Learn = {
   /* ---------- screens ---------- */
   onGo(name) {
     if (name === 'learn') this.renderPath();
-    if (name === 'home') {
-      const b = document.getElementById('learn-badge'), p = this.progress();
-      if (b && p.total) b.textContent = p.done ? `${p.done}/${p.total} lessons` : `${p.total} lessons`;
-    }
     if (name !== 'lesson') this.stopMedia();
   },
 
@@ -129,12 +125,13 @@ const Learn = {
     const vid = l.video ? ' · 🎬 video' : '';
     return `<button class="ln-card${done ? ' is-done' : ''}${l.id === nextId ? ' is-next' : ''}" style="--dc:${this.domainColor(l.domain)}" onclick="Learn.open('${l.id}')">
       ${done ? '<span class="done" title="Done">✅</span>' : ''}<span class="id">${this.esc(id)}</span>
-      <span class="nm">${this.esc(l.short || l.title)}</span><span class="meta">${l.minutes} min · ${(l.slides || []).length + 1} slides${vid}</span></button>`;
+      <span class="nm">${this.esc(l.short || l.title)}</span><span class="meta">${l.minutes} min · ${this.deck(l).length} slides${vid}</span></button>`;
   },
 
   renderPath() {
     const root = document.getElementById('ln-body');
     if (!root) return;
+    this.cur = null;
     const p = this.progress(), nx = this.next();
     document.getElementById('ln-summary').innerHTML = `
       <div class="ln-prog"><b>${p.done} of ${p.total}</b> lessons done<div class="ln-bar"><div style="width:${p.total ? Math.round(100 * p.done / p.total) : 0}%"></div></div></div>
@@ -150,7 +147,7 @@ const Learn = {
           if (!dl.length) return '';
           const dn = dl.filter(l => this.isDone(l.id)).length;
           return `<div class="ln-domain" style="--dc:${this.domainColor(d.id)}"><span class="dot"></span>D${d.n} · ${d.label} <span class="muted">· ${d.exam} of 60 exam items · ${dn}/${dl.length} done</span>
-            <button class="btn small ghost" style="margin-left:auto;padding:5px 12px" onclick="Blueprint.drillDomain('${d.id}')">Drill D${d.n}</button></div>
+            <button class="btn small ghost" style="margin-left:auto;padding:5px 12px" onclick="Learn.drill('domain','${d.id}')">Drill D${d.n}</button></div>
             <div class="ln-grid">${dl.map(l => this.card(l, nextId)).join('')}</div>`;
         }).join('');
       } else grid = `<div class="ln-grid">${ls.map(l => this.card(l, nextId)).join('')}</div>`;
@@ -175,14 +172,45 @@ const Learn = {
     const weak = this.weakTs().slice(0, 4);
     if (!weak.length) {
       const seen = Object.keys(Game.s.qstats || {}).length;
-      return `<div class="bp-focus"><h4>🧭 Not sure where to start?</h4><div class="focus-row"><span>Take a 15-question placement check across all five domains, weighted like the exam. Afterwards this panel lists the lessons for the task statements you missed.${seen ? '' : ' Or start at Stage 1 below.'}</span>
+      return `<div class="bp-focus"><h3>🧭 Not sure where to start?</h3><div class="focus-row"><span>Take a 15-question placement check across all five domains, weighted like the exam. Afterwards this panel lists the lessons for the task statements you missed.${seen ? '' : ' Or start at Stage 1 below.'}</span>
         <button class="btn small primary" onclick="Learn.placement()">Placement check</button></div></div>`;
     }
-    return `<div class="bp-focus"><h4>🎯 Lessons for your weak spots</h4>` + weak.map(w => {
+    return `<div class="bp-focus"><h3>🎯 Lessons for your weak spots</h3>` + weak.map(w => {
       const id = this.forTs(w.ts), l = id && this.byId(id), t = GUIDE.taskStatements.find(x => x.id === w.ts);
       return `<div class="focus-row"><span><b>${w.ts}</b> ${this.esc(t ? t.title : '')}<br><span class="muted">right on last try ${w.right} of ${w.seen} seen${l && this.isDone(id) ? ' · lesson done, worth a re-watch' : ''}</span></span>
-        ${l ? `<button class="btn small primary" onclick="Learn.open('${id}')">Lesson</button>` : ''}<button class="btn small ghost" onclick="Blueprint.drillTs('${w.ts}')">Drill</button></div>`;
+        ${l ? `<button class="btn small primary" onclick="Learn.open('${id}')">Lesson</button>` : ''}<button class="btn small ghost" onclick="Learn.drill('ts','${w.ts}')">Drill</button></div>`;
     }).join('') + `<p class="muted small">From your answers in every mode: task statements with 2+ questions seen and under 75% right.</p></div>`;
+  },
+
+  /* drills started from Learn come back to Learn (the lesson, or the path for the placement check) */
+  drill(kind, arg) {
+    const pred = kind === 'ts' ? q => q.ts === arg : kind === 'domain' ? q => Bank.domainOf(q) === arg : q => q.scenario === arg;
+    const label = kind === 'ts' ? `${arg} · ${(GUIDE.taskStatements.find(t => t.id === arg) || {}).title}`
+      : kind === 'domain' ? `${arg} · ${DOMAINS[arg].label}` : 'Scenario · ' + GUIDE.scenarios.find(x => x.id === arg).name;
+    this.startDrill(Blueprint.pick(Blueprint.refsFor(pred), 10, kind !== 'ts'), label, this.cur ? 'lesson' : 'learn');
+  },
+  startDrill(refs, label, back) {
+    const name = back === 'lesson' ? '← Lesson' : '← Learn';
+    Drill.start(refs, label, { back: [back, name], onDone: (right, n, xp) => this.drillDone(right, n, xp, label, back, name) });
+  },
+  drillDone(right, n, xp, label, back, name) {
+    const good = right / n >= 0.75;
+    document.getElementById('r-emoji').textContent = good ? '🎓' : '📖';
+    const t = document.getElementById('r-title');
+    t.textContent = good ? 'DRILL DONE' : 'KEEP STUDYING'; t.className = good ? 'win' : 'lose';
+    document.getElementById('r-sub').textContent = label;
+    document.getElementById('r-stats').innerHTML = [['Score', right + '/' + n], ['XP earned', '+' + xp]]
+      .map(([k, v]) => `<div class="stat-card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+    const acts = document.getElementById('r-actions');
+    acts.innerHTML = '';
+    const go = (text, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = text; b.onclick = fn; acts.appendChild(b); };
+    if (back === 'lesson' && this.cur) {
+      go('↩ Back to the lesson', 'primary', () => this.open(this.cur.id));
+      const nx = this.all()[this.all().indexOf(this.cur) + 1];
+      if (nx) go(`Next lesson: ${nx.short || nx.title} →`, 'ghost', () => this.open(nx.id));
+    } else go('↩ Back to Learn', 'primary', () => UI.go('learn'));
+    good ? Sound.win() : Sound.lose();
+    UI.go('result');
   },
 
   /* 15 questions spread by exam weight (D1 4, D2 3, D3 3, D4 3, D5 2), unseen first */
@@ -195,7 +223,8 @@ const Learn = {
       pool.forEach(r => { if (out.length < n && !out.includes(r)) out.push(r); });
       return out;
     });
-    Drill.start(shuffle(refs), 'Placement check · 15 questions');
+    this.cur = null;
+    this.startDrill(shuffle(refs), 'Placement check · 15 questions', 'learn');
   },
 
   renderResources() {
@@ -205,7 +234,7 @@ const Learn = {
     if (!groups.length) return '';
     return `<section class="ln-stage"><h3>Official courses and reading</h3>
       <p>Free material from Anthropic that goes deeper than these lessons, grouped by stage. Links open the official sites.</p>
-      <div class="ln-res">${groups.map(g => `<div class="box"><h4>${this.esc(g.title)}</h4><ul>${g.items.map(li).join('')}</ul></div>`).join('')}</div></section>`;
+      <div class="ln-res">${groups.map(g => `<div class="box"><h3>${this.esc(g.title)}</h3><ul>${g.items.map(li).join('')}</ul></div>`).join('')}</div></section>`;
   },
 
   open(id) {
@@ -289,7 +318,7 @@ const Learn = {
         btns.forEach((x, j) => { x.classList.add('disabled'); if (order[j] === c.answer) x.classList.add('correct'); else if (x === b) x.classList.add('wrong'); else x.classList.add('dim'); });
         document.getElementById('lcw-' + qi).innerHTML = `<div class="ls-why${ok ? '' : ' bad'}">${ok ? '✅ Right.' : '❌ Not quite.'} ${this.rich(c.why)}</div>`;
         if (typeof Sound !== 'undefined') ok ? Sound.good() : Sound.bad();
-        if (Object.keys(this.answered).length === this.cur.check.length) this.markDone(this.cur.id);
+        if (Object.keys(this.answered).length === this.cur.check.length) { this.markDone(this.cur.id); this.dropMarkDone(); }
       };
       box.appendChild(b);
       return b;
@@ -303,11 +332,12 @@ const Learn = {
     box.innerHTML = this.slideHTML(l, this.slide);
     this.fit(box.firstElementChild);
     document.getElementById('ls-count').textContent = `${this.slide + 1} / ${d.length}`;
-    document.getElementById('ls-dots').innerHTML = d.map((_, i) => `<i class="${i === this.slide ? 'on' : ''}" onclick="Learn.goto(${i})"></i>`).join('');
+    document.getElementById('ls-dots').innerHTML = d.map((_, i) => `<button class="${i === this.slide ? 'on' : ''}" onclick="Learn.goto(${i})" aria-label="Slide ${i + 1}"${i === this.slide ? ' aria-current="step"' : ''}></button>`).join('');
     document.getElementById('ls-note').innerHTML = '🗒️ ' + this.rich(d[this.slide].note || '');
     this.state().slide[l.id] = this.slide; this.save();
-    if (this.slide === d.length - 1 && !(l.check || []).length) this.markDone(l.id);
+    if (this.slide === d.length - 1 && !(l.check || []).length) { this.markDone(l.id); this.dropMarkDone(); }
   },
+  dropMarkDone() { const b = document.getElementById('ls-markdone'); if (b) b.remove(); },
   go(step) { this.goto(this.slide + step); },
   goto(i) {
     const n = this.deck(this.cur).length;
@@ -324,7 +354,7 @@ const Learn = {
   renderLab(l) {
     const b = l.lab;
     if (!b) return '';
-    return `<div class="ls-section"><h4>🛠️ Try it yourself${b.minutes ? ` <span class="muted small">· about ${b.minutes} min</span>` : ''}</h4>
+    return `<div class="ls-section"><h3>🛠️ Try it yourself${b.minutes ? ` <span class="muted small">· about ${b.minutes} min</span>` : ''}</h3>
       <div class="ls-lab"><b>${this.rich(b.title)}</b><ol>${b.steps.map(x => `<li>${this.rich(x)}</li>`).join('')}</ol>
       ${b.expect ? `<p><strong>What to look for:</strong> ${this.rich(b.expect)}</p>` : ''}</div>
       <p class="muted small">The exam rewards people who have built these things. Ten minutes of hands-on time beats another read-through.</p></div>`;
@@ -332,7 +362,7 @@ const Learn = {
 
   renderGlossary(l) {
     if (!l.glossary || !l.glossary.length) return '';
-    return `<div class="ls-section"><h4>📖 Words to know</h4><div class="ls-gloss">${l.glossary.map(g => `<div><b>${this.rich(g.term)}</b>${this.rich(g.def)}</div>`).join('')}</div></div>`;
+    return `<div class="ls-section"><h3>📖 Words to know</h3><div class="ls-gloss">${l.glossary.map(g => `<div><b>${this.rich(g.term)}</b>${this.rich(g.def)}</div>`).join('')}</div></div>`;
   },
 
   videosFor(l) {
@@ -344,10 +374,10 @@ const Learn = {
   renderVideos(l) {
     const vs = this.videosFor(l);
     if (!vs.length) return '';
-    return `<div class="ls-section"><h4>📺 Official videos</h4><div class="ls-vids">${vs.map(v => `
-      <div class="ls-vid"><button class="frame" style="background-image:url('https://i.ytimg.com/vi/${v.id}/hqdefault.jpg')" onclick="Learn.embed(this,'${v.id}')" aria-label="Play ${this.esc(v.title)}"><span>▶ Play here</span></button>
+    return `<div class="ls-section"><h3>📺 Talks from Anthropic</h3><div class="ls-vids">${vs.map(v => `
+      <div class="ls-vid"><button class="frame" style="background-image:url('https://i.ytimg.com/vi/${v.id}/hqdefault.jpg')" onclick="Learn.embed(this,'${v.id}')" aria-label="Play here: ${this.esc(v.title)}"><span>▶ Play here</span></button>
       <div class="cap"><b>${this.esc(v.title)}</b><span class="muted">${this.esc(v.channel)}${v.minutes ? ` · ${v.minutes} min` : ''}${v.why ? ` · ${this.esc(v.why)}` : ''} · <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">YouTube ↗</a></span></div></div>`).join('')}</div>
-      <p class="muted small mt">Embedded from YouTube (privacy-enhanced mode) only when you press play.</p></div>`;
+      <p class="muted small mt">Talks by Anthropic staff, on Anthropic's channel or the AI Engineer conference channel. Embedded from YouTube (privacy-enhanced mode) only when you press play.</p></div>`;
   },
   embed(btn, id) {
     const f = document.createElement('iframe');
@@ -358,12 +388,13 @@ const Learn = {
   },
 
   renderSources(l) {
-    const src = l.sources || [];
-    const more = l.kind === 'ts' ? ((GUIDE.docs || {})[l.ts[0]] || []).filter(x => !src.some(s => s.url === x.url)) : [];
-    const all = src.concat(more);
-    const courses = l.courses || [];
+    const key = u => u.replace(/[#?].*$/, '').replace(/\/+$/, ''), seen = new Set();
+    const uniq = x => !seen.has(key(x.url)) && seen.add(key(x.url));
+    const more = l.kind === 'ts' ? ((GUIDE.docs || {})[l.ts[0]] || []) : [];
+    const all = (l.sources || []).concat(more).filter(uniq);
+    const courses = (l.courses || []).filter(uniq);
     if (!all.length && !courses.length) return '';
-    return `<div class="ls-section"><h4>📚 Go deeper</h4><ul class="ls-src">${all.map(x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a></li>`).join('')}
+    return `<div class="ls-section"><h3>📚 Go deeper</h3><ul class="ls-src">${all.map(x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a></li>`).join('')}
       ${courses.map(x => `<li>🎓 <a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a>${x.note ? ` <span class="muted small">· ${this.esc(x.note)}</span>` : ''}</li>`).join('')}</ul></div>`;
   },
 
@@ -371,11 +402,11 @@ const Learn = {
     const b = [];
     const dr = l.drill || {};
     const count = pred => Math.min(10, Blueprint.refsFor(pred).length);
-    if (dr.ts) { const n = count(q => q.ts === dr.ts); b.push(`<button class="btn primary" ${n ? '' : 'disabled'} onclick="Blueprint.drillTs('${dr.ts}')">🎯 Drill ${dr.ts}: ${n} questions</button>`); }
-    if (dr.domain) b.push(`<button class="btn primary" onclick="Blueprint.drillDomain('${dr.domain}')">🎯 Drill ${dr.domain}: ${count(q => Bank.domainOf(q) === dr.domain)} questions</button>`);
-    if (dr.scenario) b.push(`<button class="btn primary" onclick="Blueprint.drillScenario(${dr.scenario})">🎯 Drill this scenario</button>`);
+    if (dr.ts) { const n = count(q => q.ts === dr.ts); b.push(`<button class="btn primary" ${n ? '' : 'disabled'} onclick="Learn.drill('ts','${dr.ts}')">🎯 Drill ${dr.ts}: ${n} questions</button>`); }
+    if (dr.domain) b.push(`<button class="btn primary" onclick="Learn.drill('domain','${dr.domain}')">🎯 Drill ${dr.domain}: ${count(q => Bank.domainOf(q) === dr.domain)} questions</button>`);
+    if (dr.scenario) b.push(`<button class="btn primary" onclick="Learn.drill('scenario',${dr.scenario})">🎯 Drill this scenario: ${count(q => q.scenario === dr.scenario)} questions</button>`);
     if (dr.exam) b.push(`<button class="btn primary" onclick="UI.go('examintro')">📋 Sit the mock exam</button>`);
-    if (!this.isDone(l.id)) b.push(`<button class="btn ghost" onclick="Learn.markDone('${l.id}');Learn.renderLesson()">Mark as done</button>`);
+    if (!this.isDone(l.id)) b.push(`<button class="btn ghost" id="ls-markdone" onclick="Learn.markDone('${l.id}');Learn.dropMarkDone()">Mark as done</button>`);
     const i = this.all().indexOf(l), nx = this.all()[i + 1];
     if (nx) b.push(`<button class="btn ghost" onclick="Learn.open('${nx.id}')">Next lesson: ${this.esc(nx.short || nx.title)} →</button>`);
     return b.join('');
@@ -388,6 +419,12 @@ const Learn = {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') { this.go(1); e.preventDefault(); }
       if (e.key === 'ArrowLeft' || e.key === 'PageUp') { this.go(-1); e.preventDefault(); }
       if (e.key === 'n') this.toggleNotes();
+    }
+    if (this.tab === 'check' && /^[1-4]$/.test(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      // answer the first unanswered question, like 1-4 in the rest of the game
+      const qi = (this.cur.check || []).findIndex((_, i) => this.answered[i] === undefined);
+      const b = qi < 0 ? null : document.querySelectorAll(`#lc-${qi} .answer`)[+e.key - 1];
+      if (b) { b.click(); e.preventDefault(); }
     }
   },
 };

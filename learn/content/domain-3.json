@@ -380,15 +380,15 @@
     "why": "Files under the repository's .claude/ directory are shared through version control. The home-directory and local files are personal, and CLAUDE.md is for always-on instructions, not invocable workflows."
    },
    {
-    "q": "A /map-dependencies skill reads hundreds of files and prints long intermediate notes. After running it, developers find their main session cluttered and less focused. Which change addresses this directly?",
+    "q": "A team's legacy-billing-context skill explains how an old billing system works so Claude can draw on it when relevant. Engineers keep spotting it in the / menu and running it, expecting an action, and get only a wall of background text. What change fits best?",
     "options": [
-     "Add context: fork to the skill's frontmatter so it runs in an isolated subagent",
-     "Add argument-hint so developers pass a smaller directory",
-     "Move the skill to ~/.claude/skills/ so it runs outside the project",
-     "Copy the skill's instructions into CLAUDE.md so they are always loaded"
+     "Move its content into the root CLAUDE.md",
+     "Set disable-model-invocation: true so only people can run it",
+     "Set context: fork so it runs in a subagent",
+     "Set user-invocable: false so Claude can still load it but it no longer appears in the / menu"
     ],
-    "answer": 0,
-    "why": "context: fork runs the skill in its own context and returns only the result. The other changes do not isolate the noisy output."
+    "answer": 3,
+    "why": "user-invocable: false is meant for background knowledge that is not a useful command. disable-model-invocation does the opposite and would stop Claude from using the skill."
    }
   ],
   "sources": [
@@ -507,15 +507,15 @@
   "docsToday": "Path-scoped rules drop out at compaction and reload when a matching file is touched again.",
   "check": [
    {
-    "q": "A team keeps database migration files in db/migrations/ in each of 12 services. They want Claude to follow migration conventions only when editing migrations. What should they add?",
+    "q": "A rule holding API schema conventions uses paths: [\"**/*.json\"]. It now loads whenever Claude touches package.json, tsconfig.json or test fixtures, although the schemas live only under api/schemas/. What should the team change?",
     "options": [
-     "A migrations section in the root CLAUDE.md",
-     "A .claude/rules/migrations.md file with paths: [\"**/db/migrations/**\"]",
-     "A CLAUDE.md inside every service's root folder",
-     "A /migrations skill that developers must remember to run first"
+     "Narrow the pattern to api/schemas/**/*.json so the rule loads only for schema files",
+     "Remove the paths field so the rule is always loaded",
+     "Copy the conventions into the root CLAUDE.md as well",
+     "Write a separate rule file for each schema file"
     ],
-    "answer": 1,
-    "why": "A path-scoped rule loads exactly when matching migration files are touched, from one source. The root file loads for every task, and per-service copies drift."
+    "answer": 0,
+    "why": "A paths glob decides when a rule loads. Matching every JSON file pulls the rule into unrelated work, so the pattern should match only where the conventions apply."
    },
    {
     "q": "A rule file has paths: [\"src/*.tsx\"]. Claude ignores it when editing src/components/forms/Login.tsx. Why?",
@@ -649,15 +649,15 @@
   "docsToday": "The built-in Explore subagent now runs on the main conversation's model and starts without CLAUDE.md.",
   "check": [
    {
-    "q": "A developer asks Claude to replace a hand-rolled retry helper with a shared library across 18 services. Two teams disagree on backoff settings. What is the best way to start?",
+    "q": "In plan mode, Claude has drafted a plan to change how three services share authentication tokens. The security team must sign off, which will take two days, and the developer will work on other things meanwhile. What is the best way to handle the plan?",
     "options": [
-     "Execute directly and let reviewers catch disagreements in the pull request",
-     "Enter plan mode, explore the call sites, and agree an approach before editing",
-     "Ask Claude to change one service now and copy the diff to the rest later",
-     "Use CLAUDE.md to tell Claude to be careful with retry logic"
+     "Approve the plan now so Claude can start, and let security review the pull request",
+     "Keep the session open for two days so the plan stays in context",
+     "Have Claude write the plan to a file or issue for security to review, then execute it from that document once approved",
+     "Discard the plan and ask Claude to plan again after sign-off"
     ],
-    "answer": 1,
-    "why": "Multi-service changes with competing approaches are what plan mode is for. Planning first avoids rework across 18 services."
+    "answer": 2,
+    "why": "A saved plan lets reviewers work asynchronously and gives a clean starting point for execution later. Plan, agree, then carry out the agreed plan."
    },
    {
     "q": "While planning a refactor, Claude reads 60 files and the main session becomes slow and starts forgetting earlier decisions. What should the developer have done?",
@@ -952,15 +952,15 @@
     "why": "Feeding prior findings lets the re-review focus on what changed. Capping or skipping reviews loses real issues, and batching would delay a check developers wait on."
    },
    {
-    "q": "A pipeline must parse Claude's review into a list of findings with file, line and severity. Which invocation fits best?",
+    "q": "A platform team runs claude -p reviews on every pull request and wants to log an estimate of what each run costs next to the PR number, without checking a dashboard. What fits best?",
     "options": [
-     "claude -p with --output-format json and --json-schema describing the findings",
-     "claude in interactive mode with a CLAUDE.md that asks for JSON",
-     "claude -p with plain text output, parsed using regular expressions",
-     "claude --resume on the developer's last session, then copying the output"
+     "Estimate cost from the length of the review comment",
+     "Run with --output-format json and read the total_cost_usd field from the result",
+     "Move the job to the Message Batches API so each request reports its cost",
+     "Add a prompt line asking Claude to state its own cost at the end"
     ],
-    "answer": 0,
-    "why": "-p runs headless, and --json-schema with JSON output gives machine-readable, schema-shaped results. Interactive mode cannot run in CI and regex parsing of prose is fragile."
+    "answer": 1,
+    "why": "JSON output carries run metadata such as total_cost_usd and session_id, so a script can log spend per run. Claude cannot reliably report its own cost in text."
    }
   ],
   "sources": [

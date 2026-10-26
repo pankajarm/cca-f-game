@@ -215,15 +215,15 @@
   ],
   "check": [
    {
-    "q": "A review prompt says 'only flag issues you are confident about'. False positives barely change. Most noise is about naming style, which the linter already enforces. What change will help most?",
+    "q": "A CI reviewer posts many speculative findings such as 'this might fail under some conditions'. Developers waste time chasing ones that cannot happen. What prompt change best raises precision?",
     "options": [
-     "Repeat the confidence instruction in capital letters",
-     "Add an explicit 'do not report' list that includes naming and other linter-enforced checks",
-     "Lower the model temperature so it flags fewer items",
-     "Ask Claude to output fewer than ten findings per review"
+     "Ask the reviewer to use more cautious wording",
+     "Limit the reviewer to five findings per pull request",
+     "Ask the reviewer to rate how worried it is about each finding",
+     "Require each finding to name the concrete input or code path that triggers it, and tell the reviewer to skip any it cannot"
     ],
-    "answer": 1,
-    "why": "Explicit skip criteria remove the noisy category directly. Confidence wording, temperature and count caps do not tell Claude what counts."
+    "answer": 3,
+    "why": "An explicit bar for what counts as a finding filters out speculation. Softer wording, caps and self-rated worry do not define what to report."
    },
    {
     "q": "A code review bot's SQL-injection findings are 95% accurate, but its 'performance concern' findings are 20% accurate. Developers now ignore all bot comments. What should the team do first?",
@@ -403,7 +403,8 @@
     "Re-run all 10 twice and compare format consistency and the ambiguous cases."
    ],
    "expect": "Examples make the format stable and the borderline calls consistent across runs. That is why the exam treats few-shot as the strongest lever for consistency."
-  }
+  },
+  "docsToday": "Current prompting docs suggest 3 to 5 examples; the exam guide says 2 to 4."
  },
  {
   "ts": "4.3",
@@ -509,26 +510,26 @@
   "docsToday": "Structured outputs are generally available (no beta header) and can't be combined with citations or prefill. On the newest models, tool_choice any and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto / any / forced.",
   "check": [
    {
-    "q": "An extraction pipeline defines a record_receipt tool with tool_choice set to auto. About 3% of responses contain a prose summary and no tool call, which breaks the loader. What should change?",
+    "q": "A financial-report extractor returns discount_rate as a string, and values arrive as '15%', '0.15' and '15'. Every output is schema-valid, but downstream calculations are off by a factor of 100 on some rows. What should be added?",
     "options": [
-     "Add 'always respond in JSON' to the system prompt",
-     "Set tool_choice to force the record_receipt tool",
-     "Increase max_tokens so the tool call has room",
-     "Remove the tool and parse JSON from the text reply"
+     "A required flag on discount_rate so it is never missing",
+     "A longer system prompt about financial accuracy",
+     "A numeric field with a stated normalisation rule, such as a decimal fraction where 15 percent is 0.15",
+     "A retry whenever the value contains a percent sign"
     ],
-    "answer": 1,
-    "why": "Forcing the tool (or using any) guarantees a tool call; auto allows a text reply. Prompt wording and token limits do not guarantee it."
+    "answer": 2,
+    "why": "A schema guarantees structure, not consistent meaning. A typed field plus an explicit normalisation rule makes every value comparable."
    },
    {
-    "q": "A schema marks purchase_order_number as a required string. Many invoices have no PO number, and auditors find plausible-looking but fake PO numbers in the output. What is the best schema fix?",
+    "q": "An invoice extractor has one field named total. On some invoices Claude returns the amount before tax and on others the amount after tax, and finance cannot tell which it got. Every output is schema-valid. What schema change fits best?",
     "options": [
-     "Add a regex pattern so fake numbers are rejected",
-     "Keep the field required and add 'do not invent values' to the prompt",
-     "Remove the field from the schema entirely",
-     "Make purchase_order_number nullable so Claude can return null when it is absent"
+     "Replace total with separate subtotal_before_tax and total_including_tax fields, each with a description saying exactly what it holds",
+     "Mark total as required so it is always filled",
+     "Lower the temperature so the choice is more consistent",
+     "Retry each invoice until two runs agree on the total"
     ],
-    "answer": 3,
-    "why": "A nullable field gives Claude an honest way to say the value is not in the document. A required non-null field pressures it to fabricate."
+    "answer": 0,
+    "why": "An ambiguous field invites inconsistent answers. Separate, clearly described fields remove the guesswork and keep both values."
    }
   ],
   "sources": [
@@ -549,6 +550,7 @@
    "title": "Extraction through a tool schema",
    "minutes": 12,
    "steps": [
+    "Use a model that accepts forced tool_choice, or on the newest models (which return a 400 for it) use auto with strict: true throughout.",
     "Define a record_receipt tool whose input_schema has merchant, total, and a nullable tip field.",
     "Send three receipt texts, one with no tip, using tool_choice auto, then forced to record_receipt.",
     "Read each tool_use block's input as the result.",
@@ -796,15 +798,15 @@
   "docsToday": "A batch request may carry tool definitions and earlier tool turns, but your code can't run a tool mid-request. Results are kept for 29 days.",
   "check": [
    {
-    "q": "A team runs two jobs: a check that must pass before developers can merge, and a weekly compliance scan of 25,000 files. They want to cut cost. What is the best plan?",
+    "q": "Two hours into a 40,000-request Message Batch, an engineer notices the prompt never asks for the tax amount, a field every result needs. What is the best next step?",
     "options": [
-     "Move both jobs to the Message Batches API",
-     "Move the merge check to batches and keep the weekly scan synchronous",
-     "Keep both synchronous and shorten the prompts instead",
-     "Batch the weekly scan and keep the merge check synchronous"
+     "Let the batch finish, then fill in the tax field afterwards in code",
+     "Cancel the batch, fix the prompt, check it on a small sample, and submit a new batch",
+     "Submit a second batch now with the fixed prompt and let both run",
+     "Wait for the batch to end and resubmit only the errored requests"
     ],
-    "answer": 3,
-    "why": "Batches suit work nobody waits on. A blocking merge check needs predictable latency, which batches do not promise."
+    "answer": 1,
+    "why": "Cancelling stops requests that have not been processed yet, so the team stops paying for results it cannot use. A quick pilot confirms the fix before the large resubmission."
    },
    {
     "q": "A batch of 10,000 extraction requests finishes with 240 errored results caused by documents exceeding the context window. What should the team do?",
@@ -933,26 +935,26 @@
   ],
   "check": [
    {
-    "q": "An agent generates a database migration and the matching application changes, then is prompted to 'review your changes thoroughly' before opening the pull request. Reviewers still find integration bugs it missed. What design change helps most?",
+    "q": "A review pipeline sends each change to a separate Claude instance with the note 'Written by our most senior engineer and already passing all tests.' The reviewer approves nearly everything, and production bugs keep slipping through. What change helps most?",
     "options": [
-     "Give the same session a longer, more detailed review checklist",
-     "Run the review in an independent Claude instance that sees only the diff and the review criteria",
-     "Ask the session to review its changes twice in a row",
-     "Skip automated review and rely on human reviewers only"
+     "Add a second note asking the reviewer to be extra careful",
+     "Run the same reviewer twice and keep findings both runs report",
+     "Give the reviewer a larger context window",
+     "Remove the framing and give the reviewer only the change and neutral review criteria"
     ],
-    "answer": 1,
-    "why": "An independent instance does not share the generator's assumptions, so it catches more than self-review prompts."
+    "answer": 3,
+    "why": "An independent reviewer only helps if it judges the work on its merits. Framing about the author's seniority invites agreement instead of scrutiny."
    },
    {
-    "q": "A single review pass over a 25-file pull request finds obvious issues in the first few files but little in the rest, and misses a mismatch between an API handler and its client. What architecture fits better?",
+    "q": "A team adopted per-file review passes plus a cross-file integration pass for every pull request, including one-line typo fixes. CI cost has tripled and small PRs wait on several passes. What is the best adjustment?",
     "options": [
-     "Per-file review passes followed by a separate cross-file integration pass",
-     "One pass with a larger max_tokens value",
-     "Reviewing only the five largest files",
-     "Asking the reviewer to be more thorough in later files"
+     "Use a single pass for small, single-file changes and keep the multi-pass design for larger pull requests",
+     "Drop the integration pass for every pull request",
+     "Move all reviews to the Message Batches API",
+     "Keep the design and raise the CI budget"
     ],
     "answer": 0,
-    "why": "Per-file passes keep attention focused, and the integration pass catches cross-file contract problems."
+    "why": "Per-file and integration passes counter attention dilution on large, multi-file changes. A one-line fix gains nothing from them."
    }
   ],
   "sources": [

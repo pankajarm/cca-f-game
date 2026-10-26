@@ -1,0 +1,98 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.876
+Task statement 3.1.
+
+2
+00:00:01.876 --> 00:00:08.251
+Configure CLAUDE.md files with appropriate hierarchy, scoping, and modular organization.
+
+3
+00:00:08.251 --> 00:00:16.436
+A new teammate's Claude ignores your test conventions because the rule lives in your personal file, not the repo.
+
+4
+00:00:17.836 --> 00:00:24.222
+CLAUDE dot md is simply a markdown file of instructions that Claude reads every time a session starts.
+
+5
+00:00:24.222 --> 00:00:32.235
+Think of three layers: a team handbook in the repository, your own notebook at home, and sticky notes inside particular folders.
+
+6
+00:00:32.235 --> 00:00:37.932
+Claude reads all of them together, so the question is always which layer a rule belongs in.
+
+7
+00:00:39.332 --> 00:00:45.718
+The user file lives in your home folder and follows you to every project, but nobody else ever sees it.
+
+8
+00:00:45.718 --> 00:00:51.483
+The project file sits at the repository root and travels with git, so the whole team gets it.
+
+9
+00:00:51.483 --> 00:00:59.791
+Files in subfolders load when Claude starts reading or editing files in that folder, which keeps unrelated conventions out of the way.
+
+10
+00:01:01.191 --> 00:01:03.468
+As instructions grow, split them up.
+
+11
+00:01:03.468 --> 00:01:10.678
+An at-sign import pulls another file into CLAUDE dot md, and the dot claude rules folder holds one topic per file.
+
+12
+00:01:10.678 --> 00:01:15.169
+The memory slash command lists your memory files so you can check them.
+
+13
+00:01:15.169 --> 00:01:22.823
+Current docs also point to the context command for confirming exactly what loaded, but the exam keeps the memory wording.
+
+14
+00:01:24.223 --> 00:01:30.424
+In the code generation scenario, a new developer joins and their Claude keeps writing tests the old way.
+
+15
+00:01:30.424 --> 00:01:32.392
+Nothing is broken in their setup.
+
+16
+00:01:32.392 --> 00:01:37.163
+The rule was written into your user level file, which never leaves your machine.
+
+17
+00:01:37.163 --> 00:01:44.319
+Treat it as a hierarchy problem: move the rule to the committed project file, then confirm it shows up in their session.
+
+18
+00:01:45.719 --> 00:01:51.517
+Watch for answers that fix the symptom for one person instead of fixing where the rule lives.
+
+19
+00:01:51.517 --> 00:01:55.133
+Watch too for one huge file that tries to hold everything.
+
+20
+00:01:55.133 --> 00:01:58.562
+And remember that CLAUDE dot md is advice to the model.
+
+21
+00:01:58.562 --> 00:02:03.425
+If something must never happen, that is a job for a hook or a permission rule.
+
+22
+00:02:04.825 --> 00:02:08.334
+Three layers, all combined: user, project and directory.
+
+23
+00:02:08.334 --> 00:02:17.230
+Personal preferences go in your home folder, team standards go in the repository, and folder specific notes go next to the code they describe.
+
+24
+00:02:17.230 --> 00:02:24.623
+When one person's Claude is missing a rule, check which layer the rule was written into before changing anything else.
+

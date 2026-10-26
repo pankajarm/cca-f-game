@@ -1,0 +1,126 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.821
+Task statement 1.7.
+
+2
+00:00:01.821 --> 00:00:05.019
+Manage session state, resumption, and forking.
+
+3
+00:00:05.019 --> 00:00:16.628
+Resuming yesterday's analysis after teammates changed the code can leave the agent reasoning over stale file reads, so knowing when to resume, fork or restart matters.
+
+4
+00:00:18.028 --> 00:00:23.975
+A session is the saved conversation, including every file the agent read and every result it got.
+
+5
+00:00:23.975 --> 00:00:25.262
+You have three moves.
+
+6
+00:00:25.262 --> 00:00:28.328
+Resume is like opening a bookmark and carrying on.
+
+7
+00:00:28.328 --> 00:00:32.865
+Forking is like photocopying the notebook so you can try a different path.
+
+8
+00:00:32.865 --> 00:00:37.463
+And a fresh start is a new notebook with a short summary page at the front.
+
+9
+00:00:38.863 --> 00:00:42.195
+Give your sessions names so you can come back to them.
+
+10
+00:00:42.195 --> 00:00:45.527
+Resume by name to continue exactly where you left off.
+
+11
+00:00:45.527 --> 00:00:53.239
+Add the fork session flag to branch into a new session that starts with the same history, while the original stays untouched.
+
+12
+00:00:53.239 --> 00:00:58.916
+In the Agent SDK, you pass the session ID to resume, and set fork session to true to branch.
+
+13
+00:01:00.316 --> 00:01:01.474
+Here is the catch.
+
+14
+00:01:01.474 --> 00:01:05.912
+Tool results saved in a session do not refresh when the code changes.
+
+15
+00:01:05.912 --> 00:01:12.216
+If only a few files changed, resume and tell the agent exactly which ones, so it reads them again.
+
+16
+00:01:12.216 --> 00:01:17.491
+If a lot changed, start a fresh session and give it a summary of earlier findings.
+
+17
+00:01:17.491 --> 00:01:21.415
+Also remember a fork copies the conversation, not your files.
+
+18
+00:01:22.815 --> 00:01:28.499
+In the developer productivity scenario, yesterday's named session mapped the billing module.
+
+19
+00:01:28.499 --> 00:01:31.094
+Overnight, a teammate changed three files.
+
+20
+00:01:31.094 --> 00:01:35.667
+You resume and say exactly which files changed, so the agent rereads them.
+
+21
+00:01:35.667 --> 00:01:38.385
+Then you want to compare two refactor ideas.
+
+22
+00:01:38.385 --> 00:01:44.873
+You fork the session twice, so both branches start from the same analysis and neither pollutes the other.
+
+23
+00:01:46.273 --> 00:01:48.106
+Exam items here test judgment.
+
+24
+00:01:48.106 --> 00:01:52.322
+Resuming is great, but only if you tell the agent what changed since.
+
+25
+00:01:52.322 --> 00:01:59.410
+When the codebase has moved a lot, a fresh session seeded with a summary is safer than dragging along stale results.
+
+26
+00:01:59.410 --> 00:02:06.497
+And when you want to compare options fairly, fork from the shared baseline instead of trying them one after another.
+
+27
+00:02:07.897 --> 00:02:08.454
+To recap.
+
+28
+00:02:08.454 --> 00:02:10.742
+Resume a named session to keep going.
+
+29
+00:02:10.742 --> 00:02:15.196
+Fork when you want to explore alternatives from the same starting point.
+
+30
+00:02:15.196 --> 00:02:18.412
+When you resume, tell the agent which files changed.
+
+31
+00:02:18.412 --> 00:02:25.092
+And if the ground has shifted a lot, start fresh with a clear summary rather than trusting old tool results.
+

@@ -4,7 +4,7 @@
   {
    "id": "D7_ipDqhtwk",
    "title": "How We Build Effective Agents",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 15,
    "why": "when to use agents vs workflows",
    "level": "beginner",
@@ -22,7 +22,7 @@
   {
    "id": "TqC1qOfiVcQ",
    "title": "Claude Agent SDK [Full Workshop]",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 112,
    "why": "Agent SDK loop, subagents, hooks, sessions",
    "level": "advanced",
@@ -31,7 +31,7 @@
   {
    "id": "CEvIs9y1uog",
    "title": "Don't Build Agents, Build Skills Instead",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 16,
    "why": "skills as packaged know-how",
    "level": "intermediate",
@@ -58,7 +58,7 @@
   {
    "id": "aqW68Is_Kj4",
    "title": "Evolving Claude APIs for Agents",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 13,
    "why": "context editing, memory, tool-result clearing",
    "level": "intermediate",
@@ -67,7 +67,7 @@
   {
    "id": "9QebvrrY3KY",
    "title": "Claude for long-horizon tasks",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 25,
    "why": "long-horizon tasks and state",
    "level": "advanced",
@@ -75,8 +75,8 @@
   },
   {
    "id": "mR-WAvEPRwE",
-   "title": "How to Build Agents That Run for Hours (Without Losing the Plot)",
-   "channel": "AI Engineer",
+   "title": "Anthropic Workshop: Build Agents That Run for Hours",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 76,
    "why": "long-running harnesses and compaction",
    "level": "advanced",
@@ -85,16 +85,16 @@
   {
    "id": "FGftGOzfohc",
    "title": "Build a Research Agent with Claude Managed Agents (Part 2 of 4)",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 36,
-   "why": "build a research agent with subagents",
+   "why": "research agent with subagents, built on Managed Agents (a different product from the Agent SDK)",
    "level": "intermediate",
    "year": 2026
   },
   {
    "id": "kQmXtrmQ5Zg",
    "title": "Building Agents with Model Context Protocol - Full Workshop",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 104,
    "why": "MCP tools, resources and prompts, hands-on",
    "level": "intermediate",
@@ -121,7 +121,7 @@
   {
    "id": "x-8pBqWiTzk",
    "title": "MCP: Origins and Requests For Startups",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 18,
    "why": "why MCP exists",
    "level": "beginner",
@@ -130,7 +130,7 @@
   {
    "id": "0NHCyq8bBcM",
    "title": "Remote MCPs: What we learned from shipping",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 15,
    "why": "remote MCP servers in production",
    "level": "advanced",
@@ -192,8 +192,8 @@
   },
   {
    "id": "hkhDdcM5V94",
-   "title": "Building with Anthropic's Claude - The Prompt Doctor is In",
-   "channel": "AI Engineer",
+   "title": "Building with Anthropic Claude: Prompt Workshop with Zack Witten",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 95,
    "why": "live prompt critique: structure, examples, output format",
    "level": "intermediate",
@@ -201,8 +201,8 @@
   },
   {
    "id": "VhPfM_aGBVc",
-   "title": "Anthropic for VPs of AI",
-   "channel": "AI Engineer",
+   "title": "Anthropic in the Enterprise",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 21,
    "why": "evals first and human review in deployments",
    "level": "beginner",
@@ -308,9 +308,7 @@
   "ts-5.4": [
    "mR-WAvEPRwE"
   ],
-  "ts-5.5": [
-   "VhPfM_aGBVc"
-  ],
+  "ts-5.5": [],
   "scn-1": [
    "XSZP9GhhuAc"
   ],

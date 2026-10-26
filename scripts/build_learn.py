@@ -27,8 +27,15 @@ def guide_ts():
     return re.findall(r"\{ id: '(\d\.\d)', title: '([^']+)'", src)
 
 
+def guide_deltas():
+    src = open(os.path.join(ROOT, 'guide.js'), encoding='utf-8').read()
+    i = src.index('window.GUIDE.deltas = ') + len('window.GUIDE.deltas = ')
+    return json.JSONDecoder().raw_decode(src[i:])[0]
+
+
 def build():
     titles = dict(guide_ts())
+    deltas = guide_deltas()
     res = load('resources.json')
     adv = {l['id']: l for l in load('advanced.json')}
     out = [dict(adv['start-here'])]
@@ -49,6 +56,10 @@ def build():
             ts = l['ts']
             l.update(id=f'ts-{ts}', kind='ts', stage='intermediate', domain=f'D{ts[0]}', ts=[ts],
                      title=titles[ts], short=SHORT.get(ts, titles[ts]), drill={'ts': ts})
+            # the guide-vs-docs note comes verbatim from GUIDE.deltas so the two can't drift;
+            # a lesson may carry its own docsToday only where guide.js has no entry
+            if ts in deltas:
+                l['docsToday'] = deltas[ts]
             out.append(l)
     for k in ['scn-1', 'scn-2', 'scn-3', 'scn-4', 'scn-5', 'scn-6', 'exam-day']:
         l = dict(adv[k])
@@ -162,6 +173,10 @@ def main():
         json.dump({'videos': videos, 'courses': res['courses']}, f, ensure_ascii=False, indent=1)
         f.write(';\n')
     nv = sum(1 for l in lessons if l['video'])
+    if nv < len(lessons):
+        missing = [l['id'] for l in lessons if not l['video']]
+        print(f'  ! {len(missing)} lesson(s) have no narrated video yet: {" ".join(missing[:8])}{" ..." if len(missing) > 8 else ""}'
+              ' (run scripts/build_videos.py)')
     print(f'lessons.js: {len(lessons)} lessons, {nv} with narrated video, {len(videos)} official videos')
 
 

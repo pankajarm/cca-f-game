@@ -1,0 +1,134 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.846
+Task statement 2.4.
+
+2
+00:00:01.846 --> 00:00:06.026
+Integrate MCP servers into Claude Code and agent workflows.
+
+3
+00:00:06.026 --> 00:00:15.732
+A developer-productivity team wants every engineer to get the same Jira and docs servers on clone, without a single token landing in git.
+
+4
+00:00:17.132 --> 00:00:21.429
+The Model Context Protocol is a shared plug shape for integrations.
+
+5
+00:00:21.429 --> 00:00:26.431
+A server offers tools Claude can call, resources Claude can read, and prompts.
+
+6
+00:00:26.431 --> 00:00:32.138
+Claude Code and the Agent SDK speak the protocol, so a server written once works in both.
+
+7
+00:00:32.138 --> 00:00:38.295
+Your job as an architect is choosing where each server is configured and how the agent finds it.
+
+8
+00:00:39.695 --> 00:00:41.765
+Scope decides who gets a server.
+
+9
+00:00:41.765 --> 00:00:48.105
+A project file named dot mcp dot json lives in the repo and is shared with everyone who clones it.
+
+10
+00:00:48.105 --> 00:00:52.634
+User scope lives in your home config and follows you to every project.
+
+11
+00:00:52.634 --> 00:00:57.292
+Keep secrets out of the shared file with environment variable expansion.
+
+12
+00:00:57.292 --> 00:01:03.439
+Today the add command defaults to local scope, so pass the project scope flag for team servers.
+
+13
+00:01:04.839 --> 00:01:06.648
+Two things make MCP pay off.
+
+14
+00:01:06.648 --> 00:01:07.746
+First, resources.
+
+15
+00:01:07.746 --> 00:01:15.564
+A server can expose a catalog, such as a table list or a document index, that the agent reads instead of exploring blind.
+
+16
+00:01:15.564 --> 00:01:16.921
+Second, descriptions.
+
+17
+00:01:16.921 --> 00:01:23.706
+If a powerful search tool has a one-line description, the agent will happily ignore it and grep the repo.
+
+18
+00:01:23.706 --> 00:01:29.585
+And for standard systems like GitHub, reach for an existing server before writing your own.
+
+19
+00:01:30.985 --> 00:01:34.292
+Let us apply it to the developer productivity scenario.
+
+20
+00:01:34.292 --> 00:01:41.026
+The shared Jira server goes in the committed project file, with the token referenced as an environment variable.
+
+21
+00:01:41.026 --> 00:01:45.294
+Your personal experiment stays in user scope so teammates never see it.
+
+22
+00:01:45.294 --> 00:01:47.759
+GitHub uses an existing community server.
+
+23
+00:01:47.759 --> 00:01:54.793
+The one internal system, a code index, gets a custom server with a description good enough that the agent prefers it.
+
+24
+00:01:56.193 --> 00:01:59.169
+Most traps here are about scope and secrets.
+
+25
+00:01:59.169 --> 00:02:01.874
+Team servers belong in the project file.
+
+26
+00:02:01.874 --> 00:02:04.241
+Personal ones belong in user scope.
+
+27
+00:02:04.241 --> 00:02:07.893
+Tokens never go into git, only variable references do.
+
+28
+00:02:07.893 --> 00:02:13.303
+And remember the agent only prefers your MCP tool when its description earns it.
+
+29
+00:02:14.703 --> 00:02:15.277
+To recap.
+
+30
+00:02:15.277 --> 00:02:18.214
+Choose the scope by who should get the server.
+
+31
+00:02:18.214 --> 00:02:21.087
+Reference secrets with environment variables.
+
+32
+00:02:21.087 --> 00:02:25.300
+Use resources to hand the agent a map instead of making it search.
+
+33
+00:02:25.300 --> 00:02:31.940
+Describe tools well so they actually get used, and only build a custom server when no existing one fits.
+

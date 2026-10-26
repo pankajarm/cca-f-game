@@ -1,0 +1,106 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.787
+Task statement 3.3.
+
+2
+00:00:01.787 --> 00:00:05.918
+Apply path-specific rules for conditional convention loading.
+
+3
+00:00:05.918 --> 00:00:13.705
+Test files sit beside source code in forty folders; one path-scoped rule teaches Claude your test style everywhere.
+
+4
+00:00:15.105 --> 00:00:17.791
+Not every convention matters for every task.
+
+5
+00:00:17.791 --> 00:00:21.514
+Your test style only matters when Claude touches a test file.
+
+6
+00:00:21.514 --> 00:00:27.618
+Path specific rules let you attach instructions to file patterns, so they appear only when relevant.
+
+7
+00:00:27.618 --> 00:00:32.257
+Think of a shop sign that lights up only when you walk into the right aisle.
+
+8
+00:00:33.657 --> 00:00:39.249
+Create a markdown file in the dot claude rules folder and add frontmatter with a paths list.
+
+9
+00:00:39.249 --> 00:00:41.012
+Each entry is a glob pattern.
+
+10
+00:00:41.012 --> 00:00:48.427
+Two stars followed by a slash match any number of folders, so a pattern like that catches test files anywhere in the tree.
+
+11
+00:00:48.427 --> 00:00:52.985
+A rule file with no paths field simply loads at the start of every session.
+
+12
+00:00:54.385 --> 00:00:57.078
+Both approaches target part of the codebase.
+
+13
+00:00:57.078 --> 00:01:02.219
+A CLAUDE dot md inside a folder is great when the convention belongs to that folder.
+
+14
+00:01:02.219 --> 00:01:10.909
+But when the same convention applies to files scattered everywhere, like tests next to source code, a single path rule with a glob is cleaner.
+
+15
+00:01:10.909 --> 00:01:13.969
+One source of truth, loaded only where it applies.
+
+16
+00:01:15.369 --> 00:01:22.651
+In the developer productivity scenario, an engineer asks Claude to add a feature in one package and a test beside it.
+
+17
+00:01:22.651 --> 00:01:27.008
+When Claude opens the test file, the testing rule loads automatically.
+
+18
+00:01:27.008 --> 00:01:31.552
+When another engineer edits a config file, the rule stays out of the way.
+
+19
+00:01:31.552 --> 00:01:34.975
+The convention has one home and the context stays lean.
+
+20
+00:01:36.375 --> 00:01:45.294
+When the question describes a convention for a kind of file spread across many directories, the answer is a path scoped rule with a recursive glob.
+
+21
+00:01:45.294 --> 00:01:48.085
+Copying rules into many folders creates drift.
+
+22
+00:01:48.085 --> 00:01:50.816
+Putting them in the root file wastes context.
+
+23
+00:01:50.816 --> 00:01:55.852
+And check the glob itself: a pattern without the double star misses nested folders.
+
+24
+00:01:57.252 --> 00:02:00.176
+Path specific rules are conditional instructions.
+
+25
+00:02:00.176 --> 00:02:07.934
+Put them in the dot claude rules folder, give them a paths list of globs, and they load only when Claude works on a matching file.
+
+26
+00:02:07.934 --> 00:02:14.319
+Reach for them when a convention follows a file type across the codebase, rather than living in one folder.
+

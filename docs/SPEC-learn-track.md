@@ -26,9 +26,12 @@ Every lesson has:
   Labelled "AI-narrated" in the player.
 - **Hands-on lab** (task-statement lessons): 4-5 steps, 5-15 minutes, laptop + API key.
 - **Quick check**: 2 original scenario questions with explanations (options shuffled). Answering both
-  marks the lesson done (+15 XP). Not added to the question bank, which another thread owns.
+  marks the lesson done (+15 XP). Not added to the question bank, which another thread owns, and written
+  to test a different decision point than any bank item so a lesson never pre-answers the bank
+  (checked by word overlap after the Oct 26 review).
 - **Drill**: the real bank, via `Blueprint.drillTs/drillDomain/drillScenario`, showing the actual count.
-- **Docs today** note where current docs moved on since guide v1.0 (from `GUIDE.deltas`).
+- **Docs today** note where current docs moved on since guide v1.0, copied verbatim from `GUIDE.deltas`
+  at build time so the two cannot drift (a lesson may add its own only where guide.js has none, e.g. 4.2).
 - **Official videos** (click-to-load youtube-nocookie embeds) and **go deeper** links: official docs,
   Anthropic Academy, anthropics/courses, the cookbook, DeepLearning.AI courses made with Anthropic,
   Anthropic Engineering posts.
@@ -82,7 +85,9 @@ Contract agreed with the thread redesigning the home screen:
 ids `start-here`, `primer-D1..5`, `ts-1.1..5.6`, `scn-1..6`, `exam-day`;
 `Learn.open(id)`, `Learn.forTs('1.4')`, `Learn.progress()`; `UI.go('learn')`.
 game.js gets one line in `UI.go` (`Learn.onGo(name)`); index.html gets the stylesheet link, two screen
-sections, a home card and two script tags. Lesson progress lives in its own localStorage key, so the game
+sections and two script tags (the home card `#card-learn` and its badge come from the redesign, PR #2).
+Drills started from Learn use `Drill.start(refs, label, { back, onDone })` so they return to the lesson
+(or to the path for the placement check). Lesson progress lives in its own localStorage key, so the game
 save schema is unchanged.
 
 ## Consensus Board review (Oct 26 2026) and what changed

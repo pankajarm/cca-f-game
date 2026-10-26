@@ -1,0 +1,126 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:04.435
+Domain 1 primer: Agentic Architecture & Orchestration.
+
+2
+00:00:04.435 --> 00:00:14.708
+Domain 1 is the largest slice of the exam, about 27 percent, and it covers how Claude-based agents loop, delegate, follow rules and remember.
+
+3
+00:00:16.108 --> 00:00:20.064
+Welcome to domain one, agentic architecture and orchestration.
+
+4
+00:00:20.064 --> 00:00:24.594
+It is the biggest domain on the exam, about a quarter of the questions.
+
+5
+00:00:24.594 --> 00:00:30.529
+It is all about systems where Claude takes actions with tools instead of just answering once.
+
+6
+00:00:30.529 --> 00:00:37.356
+You will meet it mostly in the customer support, multi-agent research and developer productivity scenarios.
+
+7
+00:00:38.756 --> 00:00:40.470
+A few words to learn first.
+
+8
+00:00:40.470 --> 00:00:43.836
+A tool is a function Claude can ask your code to run.
+
+9
+00:00:43.836 --> 00:00:50.757
+The agentic loop is calling Claude, running the tools it asks for, and sending results back until it is done.
+
+10
+00:00:50.757 --> 00:00:55.266
+A coordinator is a manager agent and subagents are its focused helpers.
+
+11
+00:00:55.266 --> 00:00:58.123
+Hooks are your own code at fixed checkpoints.
+
+12
+00:00:58.123 --> 00:01:00.409
+A session is the saved conversation.
+
+13
+00:01:01.809 --> 00:01:04.290
+Picture an agent system as five parts.
+
+14
+00:01:04.290 --> 00:01:07.358
+The engine is the loop, steered by stop reason.
+
+15
+00:01:07.358 --> 00:01:12.711
+The team is a coordinator handing work to subagents that start with a clean slate.
+
+16
+00:01:12.711 --> 00:01:16.693
+The guardrails are hooks and code gates that hold every time.
+
+17
+00:01:16.693 --> 00:01:18.129
+Memory is the session.
+
+18
+00:01:18.129 --> 00:01:21.393
+And the plan is how you split big work into steps.
+
+19
+00:01:22.793 --> 00:01:25.734
+The seven task statements build on each other.
+
+20
+00:01:25.734 --> 00:01:27.844
+One point one is the loop itself.
+
+21
+00:01:27.844 --> 00:01:32.831
+One point two and one point three cover teams of agents and how to brief them.
+
+22
+00:01:32.831 --> 00:01:39.224
+One point four and one point five are about rules that must always hold, using code gates and hooks.
+
+23
+00:01:39.224 --> 00:01:43.316
+One point six is decomposition, and one point seven is sessions.
+
+24
+00:01:44.716 --> 00:01:47.021
+Here are the words this domain uses most.
+
+25
+00:01:47.021 --> 00:01:50.113
+Pause the video and read through them, then keep going.
+
+26
+00:01:51.513 --> 00:01:54.124
+Four ideas run through this whole domain.
+
+27
+00:01:54.124 --> 00:01:58.580
+Trust structured signals, like stop reason, over the words in a reply.
+
+28
+00:01:58.580 --> 00:02:01.063
+Subagents only know what you hand them.
+
+29
+00:02:01.063 --> 00:02:05.265
+Anything that must always happen belongs in code, not in a prompt.
+
+30
+00:02:05.265 --> 00:02:08.640
+And pick the simplest design that solves the problem.
+
+31
+00:02:08.640 --> 00:02:11.887
+Keep these in mind as you work through the lessons.
+

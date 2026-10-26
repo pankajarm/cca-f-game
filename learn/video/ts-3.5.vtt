@@ -1,0 +1,126 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.789
+Task statement 3.5.
+
+2
+00:00:01.789 --> 00:00:06.265
+Apply iterative refinement techniques for progressive improvement.
+
+3
+00:00:06.265 --> 00:00:13.727
+Three rounds of 'handle dates better' go nowhere; one message with four exact input and output pairs fixes it.
+
+4
+00:00:15.127 --> 00:00:19.505
+Iterative refinement means improving a result over several short rounds.
+
+5
+00:00:19.505 --> 00:00:23.214
+The rounds only help if each one gives Claude a clear signal.
+
+6
+00:00:23.214 --> 00:00:26.863
+A vague comment like make it better gives nothing to aim at.
+
+7
+00:00:26.863 --> 00:00:34.647
+A concrete example or a failing test is like a reference note when you tune a guitar: Claude can hear exactly how far off it is.
+
+8
+00:00:36.047 --> 00:00:38.593
+Three techniques come up again and again.
+
+9
+00:00:38.593 --> 00:00:42.443
+First, show concrete inputs with the exact outputs you expect.
+
+10
+00:00:42.443 --> 00:00:47.163
+Second, write or share failing tests and let Claude iterate until they pass.
+
+11
+00:00:47.163 --> 00:00:55.609
+Third, for bigger features, ask Claude to interview you first, so hidden requirements and edge cases surface before any code is written.
+
+12
+00:00:57.009 --> 00:00:58.865
+How you group feedback matters.
+
+13
+00:00:58.865 --> 00:01:05.269
+If two problems share the same code path, send them together, because fixing one alone can break the other.
+
+14
+00:01:05.269 --> 00:01:08.920
+If they are unrelated, fix them one at a time and check each.
+
+15
+00:01:08.920 --> 00:01:10.656
+Always name exact edge cases.
+
+16
+00:01:10.656 --> 00:01:16.103
+And if you have corrected the same thing twice, start a clean session with a better prompt.
+
+17
+00:01:17.503 --> 00:01:20.426
+A developer asks Claude to fix a date parser.
+
+18
+00:01:20.426 --> 00:01:24.648
+Asking it to handle more formats gets a random spread of changes.
+
+19
+00:01:24.648 --> 00:01:29.131
+Listing five real inputs with the expected output gets a focused fix.
+
+20
+00:01:29.131 --> 00:01:35.042
+The timezone and daylight saving bugs live in the same function, so they go in one message.
+
+21
+00:01:35.042 --> 00:01:39.135
+The CSV header bug is unrelated, so it waits for its own round.
+
+22
+00:01:40.535 --> 00:01:42.824
+Most traps here are about vagueness.
+
+23
+00:01:42.824 --> 00:01:49.500
+Prose where examples would do, generic phrases like handle edge cases, or the wrong grouping of feedback.
+
+24
+00:01:49.500 --> 00:01:52.107
+Ask yourself whether the issues interact.
+
+25
+00:01:52.107 --> 00:01:54.078
+If they do, send them together.
+
+26
+00:01:54.078 --> 00:01:56.622
+If they do not, take them one at a time.
+
+27
+00:01:56.622 --> 00:02:00.119
+And always prefer a concrete example over an adjective.
+
+28
+00:02:01.519 --> 00:02:04.808
+Refinement works when each round has a clear signal.
+
+29
+00:02:04.808 --> 00:02:11.323
+Use examples instead of descriptions, failing tests as targets, and an interview before large features.
+
+30
+00:02:11.323 --> 00:02:13.980
+Group feedback by whether issues interact.
+
+31
+00:02:13.980 --> 00:02:19.609
+Those habits turn a long, frustrating back and forth into a few short, productive rounds.
+

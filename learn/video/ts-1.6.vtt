@@ -1,0 +1,122 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.835
+Task statement 1.6.
+
+2
+00:00:01.835 --> 00:00:05.979
+Design task decomposition strategies for complex workflows.
+
+3
+00:00:05.979 --> 00:00:16.585
+A predictable nightly pipeline and an open-ended outage investigation need opposite decomposition strategies, and the exam asks you to tell them apart.
+
+4
+00:00:17.985 --> 00:00:21.053
+There are two basic ways to break down a big task.
+
+5
+00:00:21.053 --> 00:00:25.471
+If you already know the steps, use a fixed chain, like an assembly line.
+
+6
+00:00:25.471 --> 00:00:31.607
+If the steps only appear as you dig in, you need an adaptive plan, like a detective following clues.
+
+7
+00:00:31.607 --> 00:00:35.841
+Anthropic's advice is to choose the simplest shape that does the job.
+
+8
+00:00:37.241 --> 00:00:41.902
+A prompt chain runs known steps in order, with optional checks in between.
+
+9
+00:00:41.902 --> 00:00:43.917
+Code review is the classic case.
+
+10
+00:00:43.917 --> 00:00:53.805
+Review each file on its own so nothing gets skimmed, then run a separate integration pass that looks across files for broken interfaces and mismatched calls.
+
+11
+00:00:53.805 --> 00:00:58.340
+One giant pass over many files spreads attention thin and misses things.
+
+12
+00:00:59.740 --> 00:01:01.549
+Open-ended work is different.
+
+13
+00:01:01.549 --> 00:01:06.978
+Start by mapping the structure, then find the areas that matter most, then make a plan.
+
+14
+00:01:06.978 --> 00:01:09.286
+As you learn things, change the plan.
+
+15
+00:01:09.286 --> 00:01:14.216
+This is where an orchestrator that creates subtasks at run time earns its cost.
+
+16
+00:01:14.216 --> 00:01:19.644
+If you can list every subtask in advance, a fixed chain is usually simpler and cheaper.
+
+17
+00:01:21.044 --> 00:01:27.638
+In the CI scenario, a fourteen file pull request gets one review per file and then a cross-file pass.
+
+18
+00:01:27.638 --> 00:01:33.513
+In the developer productivity scenario, someone asks for tests on a legacy billing module.
+
+19
+00:01:33.513 --> 00:01:37.365
+The agent maps the modules, ranks the risky ones and plans.
+
+20
+00:01:37.365 --> 00:01:42.719
+Then it finds an undocumented tax service, and the plan changes to cover it first.
+
+21
+00:01:44.119 --> 00:01:45.577
+Watch for three traps.
+
+22
+00:01:45.577 --> 00:01:51.279
+One huge pass over many files is wrong; split it per file and add an integration pass.
+
+23
+00:01:51.279 --> 00:01:56.318
+A rigid upfront plan for an open investigation is wrong; adapt as you learn.
+
+24
+00:01:56.318 --> 00:02:01.953
+And reaching for a dynamic orchestrator when the steps are already known is overkill.
+
+25
+00:02:01.953 --> 00:02:03.809
+The simple chain wins there.
+
+26
+00:02:05.209 --> 00:02:05.764
+To recap.
+
+27
+00:02:05.764 --> 00:02:08.781
+Use a fixed chain when the steps are predictable.
+
+28
+00:02:08.781 --> 00:02:13.955
+Use an adaptive plan when the task is open-ended, starting with a map of the ground.
+
+29
+00:02:13.955 --> 00:02:18.389
+For code review, go file by file, then check how the files fit together.
+
+30
+00:02:18.389 --> 00:02:22.639
+And always start with the simplest structure that solves the problem.
+

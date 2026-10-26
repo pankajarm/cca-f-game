@@ -1,0 +1,106 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:04.004
+Scenario 3 walkthrough: Multi-Agent Research System.
+
+2
+00:00:04.004 --> 00:00:16.201
+Research systems fail quietly when a coordinator splits the work badly or a subagent hides an error, so this scenario tests how you delegate, pass context and keep sources attached.
+
+3
+00:00:17.601 --> 00:00:20.763
+Scenario three is a multi agent research system.
+
+4
+00:00:20.763 --> 00:00:31.103
+A coordinator agent takes a research question and hands parts of it to specialised subagents for web search, document analysis, synthesis and report writing.
+
+5
+00:00:31.103 --> 00:00:37.953
+The output is a research report with citations, so every claim has to stay linked to where it came from.
+
+6
+00:00:39.353 --> 00:00:49.015
+You will see coordinator and subagent patterns, how to pass context when spawning subagents, how to split the work, and which tools each agent should get.
+
+7
+00:00:49.015 --> 00:00:58.489
+Domain five adds two important ideas: how errors travel back to the coordinator, and how to keep claims linked to their sources when findings conflict.
+
+8
+00:00:59.889 --> 00:01:01.106
+Here is a classic.
+
+9
+00:01:01.106 --> 00:01:06.110
+The final report on AI in creative industries only talks about visual art.
+
+10
+00:01:06.110 --> 00:01:08.476
+Each subagent did its own job well.
+
+11
+00:01:08.476 --> 00:01:14.899
+The root cause is the coordinator's decomposition, which never assigned music, writing or film.
+
+12
+00:01:14.899 --> 00:01:21.457
+The fix is broader, non overlapping partitions, plus a coverage check before the final synthesis.
+
+13
+00:01:22.857 --> 00:01:24.041
+Now a failure case.
+
+14
+00:01:24.041 --> 00:01:25.786
+A search subagent times out.
+
+15
+00:01:25.786 --> 00:01:31.081
+Returning an empty result hides the failure and looks like a real finding of nothing.
+
+16
+00:01:31.081 --> 00:01:34.134
+Killing the whole workflow throws away good work.
+
+17
+00:01:34.134 --> 00:01:43.231
+The right move is a structured error with the failure type, the query tried and any partial results, so the coordinator can retry or note the gap.
+
+18
+00:01:44.631 --> 00:01:46.199
+Distractors to watch for.
+
+19
+00:01:46.199 --> 00:01:51.781
+Assuming subagents share the coordinator's memory, when you must pass context explicitly.
+
+20
+00:01:51.781 --> 00:01:53.726
+Handing every agent every tool.
+
+21
+00:01:53.726 --> 00:01:59.873
+Blending conflicting figures into one number instead of showing both with their sources and dates.
+
+22
+00:01:59.873 --> 00:02:05.644
+And running independent subagents one by one rather than in parallel from a single response.
+
+23
+00:02:07.044 --> 00:02:13.532
+For scenario three, remember that missing coverage usually traces back to how the coordinator split the work.
+
+24
+00:02:13.532 --> 00:02:16.507
+Subagents inherit nothing, so pass what they need.
+
+25
+00:02:16.507 --> 00:02:20.852
+Errors should travel with their type, what was tried and partial results.
+
+26
+00:02:20.852 --> 00:02:27.161
+And the synthesis must keep every claim tied to its source, showing disagreements rather than hiding them.
+

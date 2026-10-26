@@ -1,0 +1,130 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.828
+Task statement 1.5.
+
+2
+00:00:01.828 --> 00:00:06.861
+Apply Agent SDK hooks for tool call interception and data normalization.
+
+3
+00:00:06.861 --> 00:00:18.185
+When three backend tools report dates in three formats, Claude will eventually misread one, and a refund cap written only in the prompt will eventually be broken.
+
+4
+00:00:19.585 --> 00:00:23.407
+Hooks are checkpoints that run your own code at fixed moments.
+
+5
+00:00:23.407 --> 00:00:27.168
+One runs before a tool call, where you can allow or block it.
+
+6
+00:00:27.168 --> 00:00:32.839
+Another runs after a tool returns, where you can clean up the result before Claude reads it.
+
+7
+00:00:32.839 --> 00:00:34.442
+Think of airport security.
+
+8
+00:00:34.442 --> 00:00:36.969
+It does not depend on anyone remembering.
+
+9
+00:00:36.969 --> 00:00:39.127
+Every bag goes through, every time.
+
+10
+00:00:40.527 --> 00:00:44.456
+A post tool use hook sees the tool's output before Claude does.
+
+11
+00:00:44.456 --> 00:00:51.627
+Here, we convert every date to the ISO format and map status codes like shipped and in transit onto one fixed list.
+
+12
+00:00:51.627 --> 00:00:55.744
+We register it with a matcher so it only runs for the order tools.
+
+13
+00:00:55.744 --> 00:01:00.047
+The model never has to guess what a date like three slash four means.
+
+14
+00:01:01.447 --> 00:01:04.076
+A pre tool use hook runs before the tool.
+
+15
+00:01:04.076 --> 00:01:06.193
+This one reads the refund amount.
+
+16
+00:01:06.193 --> 00:01:08.437
+Anything up to five hundred passes.
+
+17
+00:01:08.437 --> 00:01:13.888
+Anything above is denied, and the reason tells Claude to escalate to a human instead.
+
+18
+00:01:13.888 --> 00:01:15.299
+That is the key point.
+
+19
+00:01:15.299 --> 00:01:22.033
+A hook gives the same answer every time, while a rule in the prompt only makes the right behavior likely.
+
+20
+00:01:23.433 --> 00:01:31.432
+In the support scenario, the orders system and the billing system disagree on dates, and statuses are spelled differently everywhere.
+
+21
+00:01:31.432 --> 00:01:34.018
+A post tool use hook cleans all of that up.
+
+22
+00:01:34.018 --> 00:01:40.152
+When the agent tries to refund nine hundred, the pre tool use hook blocks it and points to escalation.
+
+23
+00:01:40.152 --> 00:01:43.700
+Claude then tells the customer a specialist will take over.
+
+24
+00:01:45.100 --> 00:01:50.887
+Whenever the question says must, always, or compliance, lean toward a hook over a prompt rule.
+
+25
+00:01:50.887 --> 00:01:54.273
+Format chaos from several tools is a post tool use job.
+
+26
+00:01:54.273 --> 00:01:56.612
+And a good block does not just say no.
+
+27
+00:01:56.612 --> 00:02:02.337
+It gives Claude a reason that leads to the correct path, such as calling the escalation tool.
+
+28
+00:02:03.737 --> 00:02:04.284
+To recap.
+
+29
+00:02:04.284 --> 00:02:08.900
+Post tool use hooks clean and reshape tool results before Claude reads them.
+
+30
+00:02:08.900 --> 00:02:13.212
+Pre tool use hooks inspect calls and block anything that breaks policy.
+
+31
+00:02:13.212 --> 00:02:17.524
+When you block, give a reason that sends Claude to the right next step.
+
+32
+00:02:17.524 --> 00:02:22.383
+And whenever compliance has to be guaranteed, choose a hook over prompt wording.
+

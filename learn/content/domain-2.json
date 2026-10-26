@@ -69,8 +69,8 @@
     "def": "API setting: auto, any, a forced named tool, or none."
    },
    {
-    "term": "isError",
-    "def": "Flag on a tool result that marks the call as failed."
+    "term": "isError / is_error",
+    "def": "Marks a tool call as failed: isError in MCP, is_error in a Claude API tool_result."
    },
    {
     "term": "MCP",
@@ -521,24 +521,24 @@
    "title": "Force the first step, then relax",
    "minutes": 10,
    "steps": [
-    "With the Claude API, define fetch_document and three follow-up tools.",
+    "Pick a model that still accepts forced and any tool_choice (the newest models return a 400), then define fetch_document and three follow-up tools with the Claude API.",
     "Send a request with tool_choice auto and note whether Claude skips fetching.",
     "Resend with tool_choice forcing fetch_document, then continue the loop with auto.",
     "Try tool_choice any and confirm Claude always calls some tool instead of answering in text."
    ],
-   "expect": "auto can skip the required step; forcing guarantees it; any guarantees a tool call. On the newest models any and forced return a 400, so use a model that supports them or note the delta."
+   "expect": "auto can skip the required step; forcing guarantees it; any guarantees a tool call. On the newest models, which reject forced and any, compare auto with strict tool use instead."
   },
   "check": [
    {
-    "q": "A claims-intake pipeline must always begin by calling load_claim_packet before doing anything else, and afterwards Claude may pick freely among four tools. Which configuration matches the guide?",
+    "q": "After learning that agents with many tools choose badly, a team split its insurance assistant into eight agents with one or two tools each. Now most requests bounce between agents through the coordinator, adding delay and losing details at each handoff. What is the better design?",
     "options": [
-     "tool_choice auto for every request, with a system prompt saying to load the packet first",
-     "tool_choice none on the first request so Claude plans before acting",
-     "Force load_claim_packet on the first request, then switch to auto",
-     "tool_choice any for every request so a tool is always called"
+     "Regroup into a few role-based agents, each holding the four or five tools its role uses together",
+     "Merge everything back into one agent with all sixteen tools",
+     "Add a ninth agent that relays messages between the other eight",
+     "Keep the split and ask each agent to write longer handoff notes"
     ],
-    "answer": 2,
-    "why": "Forcing the named tool guarantees the required first step. Relaxing to auto afterwards lets Claude choose the right follow-up tool or answer."
+    "answer": 0,
+    "why": "Scoping by role is meant to keep each agent at a manageable handful of tools, not to isolate every tool. Grouping tools that are used together cuts handoffs and keeps selection accurate."
    },
    {
     "q": "A library's catalogue assistant has 19 tools covering search, loans, fines, events and staff rota. Wrong-tool calls rise each time a tool is added. What is the most effective change?",
@@ -692,15 +692,15 @@
     "why": "Environment variable expansion keeps the shared project config while removing the secret from version control."
    },
    {
-    "q": "An engineering team's internal code-index MCP server is connected, yet Claude Code keeps using Grep across the repo instead of calling it. The tool's description is 'Query index'. What should they change?",
+    "q": "A team's committed .mcp.json defines a ticketing server, and it works for everyone except one engineer. When she first opened the project she declined Claude Code's prompt to use the project's servers, and the server's tools have been missing for her ever since. What should she do?",
     "options": [
-     "Move the server from project scope to user scope",
-     "Remove Grep from Claude Code's built-in tools permanently",
-     "Rewrite the description to say what it indexes, what it returns, and when it beats text search",
-     "Ask engineers to start every prompt with 'use the index'"
+     "Copy the server's entry into her user scope in ~/.claude.json",
+     "Delete .mcp.json locally and ask a teammate to commit it again",
+     "Run claude mcp reset-project-choices and approve the server when Claude Code asks again",
+     "Add the server's token directly into .mcp.json"
     ],
     "answer": 2,
-    "why": "The agent chooses tools from their descriptions. A rich description is what makes it prefer the MCP tool over built-in search."
+    "why": "Claude Code asks for approval before using project-scoped servers, and a refusal is remembered. Resetting project choices brings the prompt back without changing the shared config."
    }
   ],
   "sources": [
@@ -825,11 +825,12 @@
    "minutes": 10,
    "steps": [
     "Open Claude Code in any mid-sized open-source repo you have cloned.",
+    "On macOS, Linux or WSL, Glob and Grep are off by default and searches run through Bash; either enable them or just watch which kind of search Claude picks.",
     "Ask it to list all test files by path pattern, then to find every caller of one function.",
     "Pick a function that is re-exported under another name and ask for all callers again.",
     "Ask for an edit on a line that appears several times and watch how the anchor is made unique."
    ],
-   "expect": "Path questions use pattern matching, content questions use search, wrappers need a second search, and Edit needs a unique anchor. Note whether search ran through Bash, per the docs delta."
+   "expect": "Path questions use pattern matching and content questions use search, whichever tool runs them. Wrappers need a second search, and Edit needs a unique anchor."
   },
   "check": [
    {

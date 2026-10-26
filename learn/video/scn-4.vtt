@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:04.276
+Scenario 4 walkthrough: Developer Productivity with Claude.
+
+2
+00:00:04.276 --> 00:00:13.620
+Helping engineers explore unfamiliar code is mostly about choosing the right tool for each lookup and keeping discovery from flooding the context.
+
+3
+00:00:15.020 --> 00:00:18.463
+Scenario four is an agent for developer productivity.
+
+4
+00:00:18.463 --> 00:00:25.610
+Engineers use it to find their way around unfamiliar or legacy code, generate boilerplate and automate chores.
+
+5
+00:00:25.610 --> 00:00:33.341
+It works with the built in tools such as Read, Grep, Glob and Edit, plus MCP servers for things like the issue tracker.
+
+6
+00:00:33.341 --> 00:00:36.524
+Questions come mostly from domains two and three.
+
+7
+00:00:37.924 --> 00:00:50.058
+Expect questions on picking the right built in tool, connecting MCP servers at the right scope, using plan mode and the Explore subagent, and managing context during long explorations.
+
+8
+00:00:50.058 --> 00:00:55.993
+A little of domain one appears too, for example delegating focused questions to subagents.
+
+9
+00:00:57.393 --> 00:00:58.507
+A common question.
+
+10
+00:00:58.507 --> 00:01:02.403
+You need every place that calls a function named calculate tax.
+
+11
+00:01:02.403 --> 00:01:05.805
+Glob matches file paths, so it cannot see inside files.
+
+12
+00:01:05.805 --> 00:01:09.455
+Grep searches file contents, so it is the right first step.
+
+13
+00:01:09.455 --> 00:01:12.980
+Then you Read the matching files to follow the call flow.
+
+14
+00:01:12.980 --> 00:01:17.681
+If the function is re-exported under another name, search for that name too.
+
+15
+00:01:19.081 --> 00:01:20.072
+Now a contrast.
+
+16
+00:01:20.072 --> 00:01:23.111
+If only you need a server, user scope is fine.
+
+17
+00:01:23.111 --> 00:01:31.700
+If the whole team should get it, configure it at project scope in the dot mcp dot json file, which is committed to the repository.
+
+18
+00:01:31.700 --> 00:01:38.175
+Keep the token out of git by referencing an environment variable that each developer sets locally.
+
+19
+00:01:39.575 --> 00:01:40.471
+Classic traps.
+
+20
+00:01:40.471 --> 00:01:42.711
+Using Glob to search file contents.
+
+21
+00:01:42.711 --> 00:01:49.815
+Retrying an Edit whose anchor is not unique instead of choosing a unique one or falling back to Read and Write.
+
+22
+00:01:49.815 --> 00:01:52.951
+Scattering a team server across personal configs.
+
+23
+00:01:52.951 --> 00:01:58.903
+And building a custom server for a standard integration when a maintained one already exists.
+
+24
+00:02:00.303 --> 00:02:01.555
+For scenario four.
+
+25
+00:02:01.555 --> 00:02:06.079
+Grep finds contents, Glob finds paths, and Read follows the flow.
+
+26
+00:02:06.079 --> 00:02:09.350
+Edit needs an anchor that appears exactly once.
+
+27
+00:02:09.350 --> 00:02:15.196
+Team MCP servers belong in the project config with secrets in environment variables.
+
+28
+00:02:15.196 --> 00:02:21.529
+And long, noisy discovery is best delegated to a subagent so your main context stays clean.
+

@@ -1,0 +1,102 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.846
+Task statement 5.5.
+
+2
+00:00:01.846 --> 00:00:05.883
+Design human review workflows and confidence calibration.
+
+3
+00:00:05.883 --> 00:00:16.863
+An extraction pipeline at 97 percent overall accuracy can still be wrong on a third of handwritten forms, and cutting human review would ship those errors.
+
+4
+00:00:18.263 --> 00:00:20.926
+A single accuracy number can be misleading.
+
+5
+00:00:20.926 --> 00:00:29.412
+If most documents are clean typed invoices, the average looks great even when handwritten receipts or one tricky field are failing badly.
+
+6
+00:00:29.412 --> 00:00:37.527
+Like a class average that hides one student who is failing, the overall figure tells you little about where the risk actually sits.
+
+7
+00:00:38.927 --> 00:00:40.259
+So slice the results.
+
+8
+00:00:40.259 --> 00:00:45.272
+Measure accuracy per document type and per field, using a hand-labelled sample.
+
+9
+00:00:45.272 --> 00:00:52.886
+Sample across all confidence levels, including the high-confidence outputs, because that is where unnoticed errors live.
+
+10
+00:00:52.886 --> 00:01:01.199
+Only reduce human review for a slice once that slice has proven itself on labelled data, not because the overall number looks good.
+
+11
+00:01:02.599 --> 00:01:05.854
+Confidence scores help only if they mean what they say.
+
+12
+00:01:05.854 --> 00:01:13.727
+Compare them against labelled data, so that a field marked ninety percent confident really is right about ninety percent of the time.
+
+13
+00:01:13.727 --> 00:01:21.363
+Then route the low confidence and the self-contradictory items, like a total that does not match its line items, to people first.
+
+14
+00:01:21.363 --> 00:01:24.145
+Keep sampling, because document formats change.
+
+15
+00:01:25.545 --> 00:01:29.649
+In the extraction scenario, finance asks to reduce manual review.
+
+16
+00:01:29.649 --> 00:01:34.006
+Label a stratified sample across document types and confidence bands.
+
+17
+00:01:34.006 --> 00:01:38.678
+Typed invoices are strong on every field, so review there can be cut back.
+
+18
+00:01:38.678 --> 00:01:44.423
+Handwritten receipts and the tax identifier field are weak, so they stay under full review.
+
+19
+00:01:44.423 --> 00:01:48.969
+Any document whose totals contradict each other always goes to a person.
+
+20
+00:01:50.369 --> 00:01:53.227
+Look for answers that trust a single number.
+
+21
+00:01:53.227 --> 00:02:00.308
+Overall accuracy, raw confidence, or only checking the bottom of the confidence range all miss silent errors.
+
+22
+00:02:00.308 --> 00:02:10.636
+The exam wants slicing by type and field, stratified sampling that includes confident outputs, calibration on labelled data, and smart routing of human effort.
+
+23
+00:02:12.036 --> 00:02:12.631
+To recap.
+
+24
+00:02:12.631 --> 00:02:15.741
+Never decide on review levels from one average.
+
+25
+00:02:15.741 --> 00:02:27.716
+Slice by type and field, sample across every confidence band, calibrate confidence scores against labelled examples, and direct human attention to the items most likely to be wrong.
+

@@ -147,13 +147,13 @@
     "bullets": [
      "Send the full message history with your tools every time.",
      "Branch on stop_reason, never on the words in the reply.",
-     "Append the assistant turn, then a user turn of tool results."
+     "Handle every stop reason on purpose; only end_turn means done."
     ],
     "code": {
      "lang": "python",
-     "text": "while True:\n    resp = client.messages.create(model=MODEL, max_tokens=2048,\n                                  tools=TOOLS, messages=history)\n    history.append({\"role\": \"assistant\", \"content\": resp.content})\n    if resp.stop_reason != \"tool_use\":\n        break  # end_turn: done. max_tokens: truncated, handle it\n    results = [{\"type\": \"tool_result\", \"tool_use_id\": b.id,\n                \"content\": run_tool(b.name, b.input)}\n               for b in resp.content if b.type == \"tool_use\"]\n    history.append({\"role\": \"user\", \"content\": results})"
+     "text": "while True:\n    resp = client.messages.create(model=MODEL, max_tokens=2048,\n                                  tools=TOOLS, messages=history)\n    history.append({\"role\": \"assistant\", \"content\": resp.content})\n    if resp.stop_reason == \"end_turn\":\n        return resp                      # finished\n    if resp.stop_reason == \"tool_use\":\n        history.append({\"role\": \"user\", \"content\": run_tools(resp)})\n    elif resp.stop_reason == \"pause_turn\":\n        continue                         # server tool paused: send it back\n    else:  # max_tokens, refusal, context window: not a finished answer\n        raise IncompleteReply(resp.stop_reason)"
     },
-    "note": "This is the loop in about ten lines. Each round we send the whole history plus the tool list. We save Claude's reply, then look at stop reason. If it says tool use, we run every requested tool and send the results back as a user turn. Anything else breaks out, and we deal with that case on purpose."
+    "note": "This is the loop in about a dozen lines. Each round we send the whole history plus the tool list and save Claude's reply. Then we branch on stop reason. End turn means finished. Tool use means run the tools and send the results back. Anything else, like a reply cut off at max tokens, is not a finished answer, so we handle it on purpose."
    },
    {
     "kind": "how",
@@ -233,15 +233,15 @@
     "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every non-tool_use reason as completion."
    },
    {
-    "q": "Claude returns one response with three tool_use blocks: check_inventory, get_shipping_quote and get_customer. How should your code send the results back?",
+    "q": "A tax-filing assistant's loop, on end_turn, checks whether the reply 'looks finished'. When Claude ends a turn by asking the user which tax year they mean, the code automatically sends 'Please continue', and Claude then guesses a year. What should the loop do instead?",
     "options": [
-     "Send three separate user messages, one result each, calling the API after each",
-     "Run only the first tool and let Claude ask again for the others",
-     "Combine the three outputs into one text paragraph in a new user message",
-     "Send one user message with three tool_result blocks, each with its matching tool_use_id"
+     "Send 'Please continue' twice so Claude has more room to work it out",
+     "Treat end_turn as the end of Claude's turn, show its question to the user, and add the user's answer to the history",
+     "Force a tool call on the next request so Claude must look the year up",
+     "Raise max_tokens so the reply is less likely to stop early"
     ],
-    "answer": 3,
-    "why": "Parallel tool calls are answered together in the next user message, one tool_result per tool_use, linked by tool_use_id."
+    "answer": 1,
+    "why": "end_turn means Claude has finished its turn, and here that turn is a question for the user. Judging completion from the wording and auto-continuing pushes Claude to guess."
    }
   ],
   "sources": [
@@ -372,15 +372,15 @@
   ],
   "check": [
    {
-    "q": "A research coordinator always launches its search, analysis, fact-check and report subagents, even when a user just asks for a company's founding year. Users complain about slow answers. What is the best change?",
+    "q": "A research coordinator always spawns exactly one research subagent. Quick lookups are fine, but a request to compare twelve cloud providers on price, compliance and regional coverage takes an hour, and the lone subagent runs out of context partway through. What should change?",
     "options": [
-     "Have the coordinator choose which subagents to run based on the query's complexity",
-     "Run all four subagents in parallel to cut latency",
-     "Replace the subagents with one larger agent for every query",
-     "Cache the full pipeline's output for every past query"
+     "Give the single subagent a longer time limit",
+     "Tell users to split broad questions into twelve separate requests",
+     "Have the coordinator do the comparison itself without subagents",
+     "Have the coordinator scale the number of subagents to the request, splitting a broad comparison across several that run in parallel"
     ],
-    "answer": 0,
-    "why": "The coordinator should scale effort to the query. A simple fact needs one subagent, not the whole pipeline."
+    "answer": 3,
+    "why": "Effort should match the query. A broad comparison benefits from several focused subagents, each with its own context, while a simple lookup still needs only one."
    },
    {
     "q": "Two search subagents in a market research system keep returning almost the same articles, while some subtopics get no coverage. What should you fix first?",
@@ -445,16 +445,16 @@
     "kind": "how",
     "title": "Configuring subagents",
     "bullets": [
-     "allowedTools must include Task, or nothing gets spawned.",
+     "The guide: allowedTools must include Task for the coordinator to delegate.",
      "AgentDefinition sets description, prompt and tool limits.",
      "The description tells the coordinator when to use each agent.",
-     "Docs today: Task is now named Agent; Task still works."
+     "Docs today: Task is named Agent, and allowedTools only pre-approves tools."
     ],
     "code": {
      "lang": "ts",
      "text": "const options = {\n  allowedTools: [\"Task\", \"WebSearch\", \"Read\"],\n  agents: {\n    \"web-searcher\": {\n      description: \"Finds recent sources on one bounded subtopic.\",\n      prompt: \"You search the web and return sourced findings.\",\n      tools: [\"WebSearch\", \"WebFetch\"],\n      model: \"haiku\"\n    }\n  }\n};"
     },
-    "note": "In the Agent SDK you list Task in allowed tools so the coordinator can spawn helpers. Each helper gets an agent definition with a description, a prompt and its own tool limits. The description matters most, because the coordinator reads it to decide when to delegate. Current docs call this tool Agent, and Task still works as an alias."
+    "note": "In the guide's terms, you list Task in allowed tools so the coordinator can spawn helpers. Current docs treat allowed tools as pre-approval, but the exam keeps the guide's wording. Each helper gets an agent definition with a description, a prompt and its own tool limits. The description matters most, because the coordinator reads it to decide when to delegate. Current docs call this tool Agent, and Task still works as an alias."
    },
    {
     "kind": "how",
@@ -493,8 +493,8 @@
      },
      {
       "wrong": "Define agents but leave Task out of allowedTools.",
-      "right": "Include Task so the coordinator can spawn them.",
-      "why": "Without the tool there is no way to delegate."
+      "right": "Include Task, as the guide says, so the coordinator can spawn them.",
+      "why": "Guide wording; current docs treat allowedTools as pre-approval."
      },
      {
       "wrong": "Spawn one subagent per turn to get parallel work.",
@@ -513,7 +513,7 @@
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     "Task spawns subagents; allowedTools must include it.",
+     "Task spawns subagents; the guide says allowedTools includes it.",
      "Nothing is inherited: write the brief completely.",
      "Structured context keeps metadata apart from content.",
      "Parallel means several Task calls in one response."
@@ -521,7 +521,6 @@
     "note": "To recap. The Task tool spawns subagents, so it must be allowed. Nothing carries over from the parent, so the brief must be complete. Keep source details in their own fields so citations survive. And when work is independent, send several Task calls in one response, each with a clear goal and quality bar."
    }
   ],
-  "docsToday": "Claude Code v2.1.63 renamed the Task tool to Agent (Task still works as an alias); exam items use the guide's Task wording.",
   "check": [
    {
     "q": "A synthesis subagent writes a fluent report, but many claims cite the wrong article. The coordinator briefed it with a few paragraphs summarizing what the search agents found. What change helps most?",
@@ -535,15 +534,15 @@
     "why": "Blending sources into prose loses the claim-to-source link. Structured context keeps metadata separate, so attribution survives synthesis."
    },
    {
-    "q": "A team defines three subagents in the agents option, but logs show the coordinator never delegates and does all the work itself. The config sets allowedTools to WebSearch and Read. What is the likely fix?",
+    "q": "A coordinator delegates a vendor security review to a subagent. The subagent's run shows careful work, but its final reply is just 'Review complete, no major concerns', so the coordinator has nothing specific to put in its report. What should the coordinator change?",
     "options": [
-     "Add Task to allowedTools so the coordinator can spawn subagents",
-     "Rewrite each subagent prompt in more detail",
-     "Give each subagent the same tools as the coordinator",
-     "Move the subagent definitions into the system prompt"
+     "State in the Task prompt what the final reply must contain, such as each finding with its evidence and source, because only that reply comes back",
+     "Load the subagent's full transcript into the coordinator's context after each run",
+     "Ask the subagent to write its notes into the coordinator's conversation history as it works",
+     "Run the same subagent twice and compare the two replies"
     ],
     "answer": 0,
-    "why": "Subagents are spawned through the Task tool; if the coordinator cannot call it, it cannot delegate."
+    "why": "The coordinator receives only the subagent's final message. Spelling out the required output, as part of the goal and quality bar, makes that message useful."
    }
   ],
   "sources": [
@@ -610,7 +609,7 @@
      "Resolve each item, then confirm none were missed.",
      "Escalate with a structured summary, not the transcript.",
      "Include customer id, root cause, amounts, recommended action.",
-     "Docs today: a hook can return defer to pause for a human."
+     "Docs today: hooks can defer a call in headless -p runs."
     ],
     "code": {
      "lang": "json",
@@ -655,7 +654,8 @@
       "why": "Dropped concerns mean repeat contacts and lower resolution."
      }
     ],
-    "note": "On the exam, stronger wording and more examples are tempting but wrong when an order must always hold. The answer is a code gate. For escalations, prefer the structured summary over the raw transcript. And when a message carries several requests, the right design splits them and confirms each one is resolved before ending."
+    "note": "On the exam, stronger wording and more examples are tempting but wrong when an order must always hold. The answer is a code gate. For escalations, prefer the structured summary over the raw transcript. And when a message carries several requests, the right design splits them and confirms each one is resolved before ending.",
+    "bullets": []
    },
    {
     "kind": "recap",
@@ -672,15 +672,15 @@
   "docsToday": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides.",
   "check": [
    {
-    "q": "Human agents say escalations from your support bot are slow to handle because each arrives as a 40-turn chat log. What should the bot send instead?",
+    "q": "A pharmacy agent may call submit_refill only when the prescription is still valid. The gate in code checks a prescription_verified flag that Claude passes in the submit_refill arguments. Audits find refills on expired prescriptions where Claude set the flag to true. What is the fix?",
     "options": [
-     "The last five turns of the conversation",
-     "A structured summary with customer id, root cause, amounts, steps tried and a recommended action",
-     "The full log plus a one-line apology to the customer",
-     "Only the customer's original message"
+     "Tell Claude in the system prompt never to set the flag unless it is sure",
+     "Rename the flag so its meaning is clearer to the model",
+     "Have the gate check the validity result the application recorded from the lookup tool, not a value the model supplies",
+     "Add few-shot examples of correctly set flags"
     ],
-    "answer": 1,
-    "why": "A handoff should carry the decision facts in a fixed structure so the human can act without rereading the conversation."
+    "answer": 2,
+    "why": "A gate enforces the rule only if it relies on facts the application recorded itself. A flag the model writes into its own call is just another instruction it can get wrong."
    },
    {
     "q": "A customer writes: cancel my duplicate order, update my card, and tell me when my other parcel arrives. The agent cancels the order, replies, and ends. What design fixes this?",
@@ -955,15 +955,15 @@
   ],
   "check": [
    {
-    "q": "Every night a pipeline must extract fields from invoices, validate totals, and write a summary for finance. The steps never change. Which decomposition fits best?",
+    "q": "A team is choosing how to decompose four new projects. Which one is the best fit for a fixed prompt chain?",
     "options": [
-     "An orchestrator that invents subtasks fresh for each invoice",
-     "One prompt that does all three steps in a single call",
-     "A team of peer agents that negotiate who does each step",
-     "A fixed prompt chain with a validation gate between steps"
+     "Finding out why a fleet of delivery vans reports rising fuel use",
+     "Turning each of 500 recipes into a card: extract ingredients, scale to four servings, convert units, then format",
+     "Investigating how an attacker moved through a network after a breach",
+     "Working out why a nightly job slowed down after an unknown change"
     ],
-    "answer": 3,
-    "why": "Known, repeatable steps suit a fixed chain; gates catch bad output before the next step. Dynamic orchestration adds cost for no benefit."
+    "answer": 1,
+    "why": "The recipe work runs the same known steps for every item, which is what a fixed chain suits. The others are investigations whose next steps depend on what is found."
    },
    {
     "q": "An engineer asks an agent to find out why checkout latency doubled after a database migration. Nobody knows where the cause is. How should the agent approach it?",
@@ -1097,15 +1097,15 @@
   ],
   "check": [
    {
-    "q": "A developer resumes a code analysis session from last week. Since then the team renamed modules and deleted two services. The agent keeps referring to functions that no longer exist. What is the best approach?",
+    "q": "A developer spent two hours in a session chasing a theory that a memory leak came from the image cache. The theory was wrong, and the context is now full of dead-end logs and failed attempts. A new lead points at the websocket handler. What is the best way to continue?",
     "options": [
-     "Keep resuming and correct the agent each time it is wrong",
-     "Fork the old session so the original stays clean",
-     "Start a fresh session and give it a structured summary of the earlier findings",
-     "Increase the context window so it can hold more history"
+     "Resume the session and tell it to ignore everything so far",
+     "Fork the session so the dead ends are kept for reference",
+     "Keep going in the same session, since it has seen the most code",
+     "Start a fresh session with a short summary of what was ruled out and the new lead"
     ],
-    "answer": 2,
-    "why": "After heavy changes, stale tool results mislead; a fresh session with a summary keeps the useful conclusions without the outdated reads."
+    "answer": 3,
+    "why": "A context full of discarded theories keeps pulling the agent back toward them. A fresh session with a compact summary keeps the lessons without the noise."
    },
    {
     "q": "After a long analysis of a payments service, a team wants to compare a queue-based redesign with a cache-based one, both starting from that same analysis. What should they do?",
