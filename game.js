@@ -514,7 +514,8 @@ function fmt(text) {
   const esc = String(text)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   /* `backticked` spans are code as written; elsewhere, spot identifiers */
-  return esc.split(/`([^`\n]+)`/).map((part, i) => i % 2 ? '<code>' + part + '</code>' : part.replace(CODE_RX, m => '<code>' + m + '</code>')).join('');
+  const code = m => '<code' + (m.length > 22 ? ' class="lc"' : '') + '>' + m + '</code>';
+  return esc.split(/`([^`\n]+)`/).map((part, i) => i % 2 ? code(part) : part.replace(CODE_RX, code)).join('');
 }
 
 /* ---------------- UI core ---------------- */
@@ -576,7 +577,7 @@ const UI = {
     const s = Game.s;
     document.getElementById('hud-title').textContent = Game.title();
     const next = Game.nextTitle();
-    document.getElementById('hud-xp').textContent = s.xp.toLocaleString() + ' XP' + (next ? ' · next: ' + next.t + ' @ ' + next.xp.toLocaleString() : ' · MAX');
+    document.getElementById('hud-xp').innerHTML = s.xp.toLocaleString() + ' XP<span class="xp-next">' + (next ? ' · next: ' + next.t + ' @ ' + next.xp.toLocaleString() : ' · MAX') + '</span>';
     const prev = [...TITLES].reverse().find(t => s.xp >= t.xp);
     const pct = next ? Math.min(100, ((s.xp - prev.xp) / (next.xp - prev.xp)) * 100) : 100;
     document.getElementById('hud-xpfill').style.width = pct + '%';
@@ -1580,7 +1581,7 @@ const Readiness = {
 
   /* the single most useful thing to do next */
   next(rows) {
-    const s = Game.s, days = h => (Date.now() - new Date(h.date).getTime()) / 864e5;
+    const s = Game.s, days = h => (Date.now() - new Date(h.date + 'T00:00').getTime()) / 864e5;   // a local day
     if (!s.totals.answered) {
       if (window.Learn) return { ic: '🎓', label: 'Start with the learning path', sub: 'Short lessons for each domain, then drills.', run: () => UI.go('learn') };
       return { ic: '📘', label: 'Start with a D1 drill', sub: 'Domain 1 is 27% of the exam. Ten questions, explained one by one.', run: () => Blueprint.drillDomain('D1') };
@@ -1798,7 +1799,7 @@ const Drill = {
     setTimeout(() => {
       if (UI.current !== 'drill' || this.queue[this.qi] !== q) return;
       UI.modal(ok, q.options[q.correct], q.explanation, () => this.next(),
-        { btn: this.qi + 1 >= this.queue.length ? 'Finish drill' : 'Next question' });
+        { btn: this.qi + 1 >= this.queue.length ? (this.opts.finish || 'Finish drill') : 'Next question' });
     }, 700);
   },
 
@@ -1943,7 +1944,7 @@ const Hunt = {
     if (UI.current !== 'result' && UI.current !== 'drill') this.from = UI.current === 'bestiary' ? 'bestiary' : 'home';
     const back = this.from === 'bestiary' ? ['bestiary', '← Bestiary'] : ['home', '← Hall'];
     Drill.start(Bank.pick(Bank.forTs(m.ts), HUNT_N, true), `🔦 Hunting ${m.face} ${name} · ${m.ts.join(' · ')}`,
-      { back, onDone: (right, n) => this.finish(name, right, n) });
+      { back, finish: 'Finish the hunt', onDone: (right, n) => this.finish(name, right, n) });
   },
 
   finish(name, right, n) {

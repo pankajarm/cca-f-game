@@ -108,7 +108,8 @@ const Learn = {
     if (!slide) return;
     slide.style.fontSize = '';
     if (getComputedStyle(slide).aspectRatio === 'auto') return;
-    const kids = [...slide.querySelectorAll('h2, ul, pre, .traps, .gl, .hook, .delta')], foot = slide.querySelector('.foot');
+    /* measure leaves, not containers: a bullet list stretches to fill the slide */
+    const kids = [...slide.querySelectorAll('h2, li, pre, .trap, .gl > div, .hook, .delta')], foot = slide.querySelector('.foot');
     for (let k = 1; k >= 0.62; k -= 0.04) {
       slide.style.fontSize = (2.15 * k).toFixed(3) + 'cqw';
       const limit = (foot ? foot.getBoundingClientRect().top : slide.getBoundingClientRect().bottom) - slide.clientWidth * 0.008;
@@ -347,6 +348,8 @@ const Learn = {
     const had = document.activeElement === b, next = b.nextElementSibling || b.previousElementSibling;
     b.remove();
     if (had && next) next.focus();   // keep keyboard users in the footer
+    const chips = document.querySelector('#ls-body .ls-chips');
+    if (chips && !chips.querySelector('.ls-done')) chips.insertAdjacentHTML('beforeend', '<span class="ls-chip ls-done">✅ done</span>');
   },
   go(step) { this.goto(this.slide + step); },
   goto(i) {
