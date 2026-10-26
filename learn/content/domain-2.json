@@ -1,0 +1,869 @@
+[
+ {
+  "primer": "D2",
+  "minutes": 6,
+  "hook": "Agents act through tools, so how you name, describe, scope and connect those tools decides whether the agent does the right thing.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "What Domain 2 is about",
+    "bullets": [
+     "A tool is a function Claude can ask your code to run.",
+     "Claude sees only the tool's name, description and input schema.",
+     "MCP is a standard way to plug tool servers into agents.",
+     "Domain 2 is about 18 percent of the exam."
+    ],
+    "note": "Welcome to tool design and MCP. A tool is a function that Claude can ask your application to run, like looking up an order. Claude never sees your code. It sees the tool's name, a description, and a schema for its inputs. MCP, the Model Context Protocol, is a standard way to connect servers full of tools to an agent."
+   },
+   {
+    "kind": "how",
+    "title": "The life of a tool call",
+    "bullets": [
+     "You send Claude a list of tool definitions.",
+     "Claude picks a tool by reading the descriptions.",
+     "Your code runs it and returns a result, or an error.",
+     "Claude reads the result and decides the next step.",
+     "tool_choice controls whether a call is optional or required."
+    ],
+    "note": "Here is the loop in plain terms. You give Claude a list of tools. Claude reads the descriptions and decides which one to call, and with what inputs. Your code runs it and sends back a result, or an error marked as an error. Claude reads that and decides what to do next. A setting called tool choice controls whether calling a tool is optional."
+   },
+   {
+    "kind": "how",
+    "title": "How the five task statements fit",
+    "bullets": [
+     "2.1 Describe tools so Claude picks the right one.",
+     "2.2 Return errors that guide recovery.",
+     "2.3 Give each agent only the tools it needs.",
+     "2.4 Connect MCP servers at the right scope, safely.",
+     "2.5 Use Claude Code's built-in tools well."
+    ],
+    "note": "The five task statements follow a natural order. First, describe tools clearly so the right one gets picked. Second, return errors that help the agent recover. Third, distribute tools so each agent has a small, role-shaped set. Fourth, connect MCP servers with the right scope and no leaked secrets. Fifth, use Claude Code's own built-in tools for reading, editing and searching code."
+   },
+   {
+    "kind": "recap",
+    "title": "The mental model to carry",
+    "bullets": [
+     "Descriptions steer selection; fix them before adding machinery.",
+     "Errors are information; classify them.",
+     "Fewer tools per agent means better choices.",
+     "Shared config in the repo, secrets in the environment."
+    ],
+    "note": "Carry four ideas into the lessons. Descriptions steer which tool gets picked, so improve them before adding routing layers. Errors are messages to the agent, so make them specific. Smaller tool sets per agent produce better choices. And shared configuration lives in the repository, while secrets live in each person's environment."
+   }
+  ],
+  "glossary": [
+   {
+    "term": "Tool",
+    "def": "A function your app runs when Claude asks, defined by name, description and input schema."
+   },
+   {
+    "term": "Input schema",
+    "def": "A JSON Schema describing the arguments a tool accepts."
+   },
+   {
+    "term": "Tool description",
+    "def": "Plain text that tells Claude what a tool does and when to use it."
+   },
+   {
+    "term": "tool_choice",
+    "def": "API setting: auto, any, a forced named tool, or none."
+   },
+   {
+    "term": "isError",
+    "def": "Flag on a tool result that marks the call as failed."
+   },
+   {
+    "term": "MCP",
+    "def": "Model Context Protocol, an open standard for connecting agents to tools and data."
+   },
+   {
+    "term": "MCP server",
+    "def": "A program that exposes tools, resources and prompts over MCP."
+   },
+   {
+    "term": "MCP resource",
+    "def": "Readable content a server exposes, such as a catalog or schema."
+   },
+   {
+    "term": ".mcp.json",
+    "def": "Project-scope MCP config file, committed and shared with the team."
+   },
+   {
+    "term": "Built-in tools",
+    "def": "Claude Code's own tools: Read, Write, Edit, Bash, Grep, Glob and more."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Define tools (Claude API docs)",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+   },
+   {
+    "title": "MCP specification: Tools",
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+   },
+   {
+    "title": "Connect Claude Code to tools via MCP",
+    "url": "https://code.claude.com/docs/en/mcp"
+   },
+   {
+    "title": "Writing effective tools for AI agents",
+    "url": "https://www.anthropic.com/engineering/writing-tools-for-agents"
+   }
+  ]
+ },
+ {
+  "ts": "2.1",
+  "minutes": 8,
+  "hook": "In a support agent with a dozen MCP tools, one vague description can send refund requests to the wrong tool all day.",
+  "scenarios": [
+   1,
+   3,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "The description is the steering wheel",
+    "bullets": [
+     "Claude chooses a tool by reading its name and description.",
+     "The input schema says how to call it; the description says when.",
+     "Think of labelled drawers in a shared workshop.",
+     "A vague label means the wrong drawer gets opened."
+    ],
+    "note": "Here is the core idea. Claude never sees your code, only the tool's name, its description and its input schema. The schema tells Claude how to call a tool. The description tells Claude when to call it. So if two drawers in the workshop carry almost the same label, expect the wrong one to be opened, and expect it often."
+   },
+   {
+    "kind": "how",
+    "title": "Anatomy of a good description",
+    "bullets": [
+     "Purpose: what the tool does and what it returns.",
+     "Inputs: meaning and format of each parameter.",
+     "An example call or input when the format is tricky.",
+     "Edge cases and limits, such as what it does not return.",
+     "When not to use it, and which tool to use instead.",
+     "Anthropic's docs suggest at least three to four sentences per tool."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"name\": \"lookup_order\",\n  \"description\": \"Fetch one order by its order number (format ORD-123456). Returns status, items, totals and ship date. Use for questions about a specific order the customer can name. Does not search by customer name or email: use find_customer first. Returns found=false if the number does not exist.\",\n  \"input_schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"order_number\": {\"type\": \"string\", \"description\": \"Like ORD-123456\"}\n    },\n    \"required\": [\"order_number\"]\n  }\n}"
+    },
+    "note": "A strong description reads like the note you would leave for a new teammate. Say what the tool does, what each input means, show a tricky format, name the limits, and say when to use a different tool. Anthropic's tool docs call description quality the most important factor in tool performance, and suggest three or four sentences as a floor, not a ceiling."
+   },
+   {
+    "kind": "how",
+    "title": "Fix overlap at the source",
+    "bullets": [
+     "Overlapping descriptions cause misrouting between similar tools.",
+     "Rename generic tools: search becomes search_orders or search_kb.",
+     "Split a do-everything tool into purpose-specific tools.",
+     "Watch the system prompt: a keyword can drag Claude toward one tool.",
+     "Re-test selection after every description change."
+    ],
+    "note": "When two tools sound alike, Claude has to guess. The fix is to make each tool's job distinct, by renaming, splitting, or rewriting the descriptions so their boundaries are clear. Also read your system prompt. A line like always check the order first can pull Claude toward the order tool even when the customer asked about something else entirely."
+   },
+   {
+    "kind": "practice",
+    "title": "Practice: the support agent that grabs the wrong tool",
+    "bullets": [
+     "Tools: get_account_info and get_customer_details, both 'Gets customer data'.",
+     "Claude alternates between them at random.",
+     "Step 1: decide the true job of each tool.",
+     "Step 2: rewrite both descriptions with boundaries and a 'use instead' line.",
+     "Step 3: if they truly overlap, merge or rename them.",
+     "Step 4: replay real transcripts and count wrong picks."
+    ],
+    "note": "Picture the support scenario. Two tools both say gets customer data, and the agent flips between them. Do not reach for a routing layer yet. First decide what each tool really does, then rewrite the descriptions so each one says what it covers and where the other tool takes over. Then replay real conversations and measure whether selection improved."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Add a classifier or routing layer in front of the tools",
+      "right": "Rewrite the overlapping descriptions first",
+      "why": "Descriptions are the selection mechanism; fix the root cause cheaply."
+     },
+     {
+      "wrong": "Keep one generic tool with a mode parameter for everything",
+      "right": "Split into purpose-specific tools with clear names",
+      "why": "Generic tools blur intent and invite wrong calls."
+     },
+     {
+      "wrong": "Add 'ALWAYS use tool X' to the system prompt",
+      "right": "Remove the biasing keyword and clarify both descriptions",
+      "why": "Prompt keywords pull selection away from what the user asked."
+     },
+     {
+      "wrong": "A one-line description because the name is obvious",
+      "right": "Purpose, inputs, example, edge cases, when not to use",
+      "why": "The model only knows what the description tells it."
+     }
+    ],
+    "note": "The exam loves the tempting fix that adds machinery. If tools are misrouted, the right first move is almost always to improve the descriptions and names. Extra classifiers, louder system prompt rules and catch-all tools all treat the symptom. A clear, bounded description treats the cause, and it costs almost nothing."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Claude selects tools from names and descriptions.",
+     "Say purpose, inputs, examples, edge cases and when not to use.",
+     "Overlap causes misrouting: rename or split, then re-test.",
+     "System-prompt keywords can bias selection."
+    ],
+    "note": "To recap. Descriptions are how Claude picks tools, so write them like onboarding notes. Make every tool's boundary clear, rename or split anything that overlaps, and keep an eye on system prompt wording that tilts the choice. When selection goes wrong, fix the description before you add anything new."
+   }
+  ],
+  "lab": {
+   "title": "Make two look-alike tools distinguishable",
+   "minutes": 10,
+   "steps": [
+    "With the Claude API, define two tools, get_account and get_customer, both described as 'Gets customer data'.",
+    "Send ten varied customer questions with tool_choice auto and log which tool Claude calls each time.",
+    "Rewrite both descriptions: purpose, inputs, one example, limits, and when to use the other tool.",
+    "Re-run the same ten questions and compare the tool picks against what you intended."
+   ],
+   "expect": "Selection goes from inconsistent to predictable with no routing code. That is why the exam's first fix for misrouting is better descriptions."
+  },
+  "check": [
+   {
+    "q": "A travel agency's booking agent has two MCP tools: find_trips ('Finds trips') and search_itineraries ('Searches itineraries'). Logs show Claude picks between them almost at random, and half the calls return the wrong data. What should the team do first?",
+    "options": [
+     "Add a lightweight classifier that routes each request to one of the two tools",
+     "Rewrite both descriptions to state what each returns, its inputs, and when to use the other tool",
+     "Add a system prompt line telling Claude to prefer search_itineraries",
+     "Lower the temperature so Claude picks more consistently"
+    ],
+    "answer": 1,
+    "why": "Overlapping descriptions are the root cause of misrouting. Clear, bounded descriptions fix selection without adding a routing layer or biasing the prompt."
+   },
+   {
+    "q": "A research system's analysis agent has a tool named process with the description 'Processes data'. It is used for summarising PDFs, extracting tables and translating text, and calls often use the wrong mode. Which change best fits the guide?",
+    "options": [
+     "Add a detailed enum for the mode parameter and keep one tool",
+     "Add few-shot examples of each mode to the system prompt",
+     "Split it into summarize_pdf, extract_tables and translate_text, each with its own description",
+     "Raise max_tokens so Claude has room to reason about the mode"
+    ],
+    "answer": 2,
+    "why": "A generic tool hides three different jobs. Purpose-specific tools with their own descriptions make the right choice obvious to the model."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Define tools (Claude API docs)",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+   },
+   {
+    "title": "Writing effective tools for AI agents",
+    "url": "https://www.anthropic.com/engineering/writing-tools-for-agents"
+   }
+  ]
+ },
+ {
+  "ts": "2.2",
+  "minutes": 9,
+  "hook": "When a billing lookup fails mid-conversation, the error message decides whether the agent retries, asks the customer, or escalates.",
+  "scenarios": [
+   1,
+   3
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "A failed call is still information",
+    "bullets": [
+     "Tool errors go back to Claude as tool results, not crashes.",
+     "isError: true tells the agent the call failed.",
+     "The message decides what Claude does next.",
+     "Like a good error note: what broke, and what to try."
+    ],
+    "note": "Start with a mindset shift. A failed tool call is not the end of the run. It is a message back to Claude, and Claude reads it like any other result. The isError flag says the call failed. The text you put next to it decides whether Claude retries, changes its input, asks the user, or hands off."
+   },
+   {
+    "kind": "how",
+    "title": "Structure the error, not just the flag",
+    "bullets": [
+     "Transient: timeouts, rate limits. Usually safe to retry.",
+     "Validation: bad input. Fix the arguments, then retry.",
+     "Business: policy says no. Do not retry; explain or escalate.",
+     "Permission: not allowed. Do not retry; escalate.",
+     "Return errorCategory, isRetryable and a human-readable message.",
+     "Docs today: errorCategory and isRetryable are your convention, not MCP spec fields."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "def refund_error(reason, retryable, category):\n    payload = {\n        \"errorCategory\": category,   # transient | validation | business | permission\n        \"isRetryable\": retryable,\n        \"message\": reason,\n    }\n    return {\"content\": [{\"type\": \"text\", \"text\": json.dumps(payload)}],\n            \"isError\": True}\n\n# Business rule, not a glitch: retrying will not help\nreturn refund_error(\"Order is past the 30-day refund window. Offer store credit or escalate.\",\n                    False, \"business\")"
+    },
+    "note": "Four kinds of failure need four different reactions. A timeout can be retried. Bad input needs corrected arguments. A policy refusal or a permission problem should never be retried. So return a small structured payload with a category, a retryable flag, and a plain message. Note that the MCP spec only defines the isError flag; the category and retry fields are your own convention inside the result."
+   },
+   {
+    "kind": "how",
+    "title": "Empty is not an error",
+    "bullets": [
+     "A search that finds zero matches succeeded: return an empty list.",
+     "A search that could not run failed: return isError with a reason.",
+     "Mixing them makes the agent retry pointlessly or trust missing data.",
+     "MCP: protocol errors are for bad requests; tool errors use isError.",
+     "Generic 'Operation failed' blocks any sensible recovery."
+    ],
+    "note": "A very common bug is treating no results as a failure. If the database answered and found nothing, that is a valid, useful answer. If the database was unreachable, that is a failure. Keep the two apart, or the agent will either retry forever or tell a customer they have no orders when really the lookup never ran."
+   },
+   {
+    "kind": "practice",
+    "title": "Practice: a search subagent hits a timeout",
+    "bullets": [
+     "Research scenario: the web search tool times out on query three of five.",
+     "Transient, so retry locally with a short backoff.",
+     "Still failing? Return what you have plus what failed.",
+     "Include the query tried, the category, and the partial results.",
+     "The coordinator decides: re-plan, use another source, or note the gap."
+    ],
+    "note": "In the research system, a subagent's search times out. Because the error is transient, the subagent retries locally first. If it still fails, it should not hide the problem or throw away its work. It returns the partial results together with a clear error: what was tried, what failed, and why. Now the coordinator can make an informed choice."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Return 'Operation failed' for every problem",
+      "right": "Return category, retryable flag and a specific message",
+      "why": "The agent needs to know which recovery makes sense."
+     },
+     {
+      "wrong": "Retry every error a few times",
+      "right": "Retry transient errors only; never business or permission ones",
+      "why": "Retrying a policy refusal wastes turns and annoys users."
+     },
+     {
+      "wrong": "Flag zero search results as an error",
+      "right": "Return success with an empty result",
+      "why": "No matches is a valid answer, not a failure."
+     },
+     {
+      "wrong": "Throw an exception that ends the workflow",
+      "right": "Recover locally if you can; otherwise propagate with partial results",
+      "why": "Good partial work should not be lost."
+     }
+    ],
+    "note": "Watch for these patterns. Generic messages, blanket retries, empty results flagged as errors, and failures that kill the whole run are all distractors. The exam's answer gives the agent enough structure to choose a sensible recovery: retry what is transient, explain what is final, and keep any partial results."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "isError marks failure; the message guides recovery.",
+     "Classify: transient, validation, business, permission.",
+     "Empty result is success, not an error.",
+     "Retry transient locally; propagate the rest with partial results."
+    ],
+    "note": "To recap. Mark failures with isError, classify them, and say plainly what happened and what to try. Never confuse no results with a failure. Recover from transient problems close to where they happen, and pass everything else upward with the partial results attached, so the agent above you can decide."
+   }
+  ],
+  "docsToday": "The MCP spec has no standard retryable field: errorCategory and isRetryable are an application convention inside the result. Since spec 2025-11-25, input validation errors come back as isError results.",
+  "lab": {
+   "title": "Watch Claude recover from different error kinds",
+   "minutes": 12,
+   "steps": [
+    "Build an Agent SDK custom tool, check_refund, that returns isError results.",
+    "Make it return a transient error (isRetryable true) on the first call, then succeed.",
+    "Change it to return a business error (isRetryable false, 'past refund window') and run again.",
+    "Finally return a plain 'Operation failed' and compare Claude's reply in all three runs."
+   ],
+   "expect": "Claude retries the transient case, explains the business case, and flounders on the generic one. Specific, categorised errors drive sensible recovery."
+  },
+  "check": [
+   {
+    "q": "A utility company's billing agent calls get_usage_history. The meter database is reachable, but the account has no readings yet because it was opened today. What should the tool return?",
+    "options": [
+     "isError: true with errorCategory 'transient' so the agent retries later",
+     "isError: true with the message 'Operation failed'",
+     "A protocol-level JSON-RPC error",
+     "A successful result with an empty readings list and a note that the account is new"
+    ],
+    "answer": 3,
+    "why": "The lookup ran and correctly found nothing. That is a valid empty result, not an error, so the agent should not retry or treat it as a failure."
+   },
+   {
+    "q": "An HR assistant's update_salary tool is called by a user who lacks payroll rights. Which tool response gives the agent the best chance to react correctly?",
+    "options": [
+     "isError: true, errorCategory 'permission', isRetryable false, and a message saying payroll approval is required",
+     "isError: true, errorCategory 'transient', isRetryable true, so the agent tries again",
+     "A success result with no changes, so the conversation is not interrupted",
+     "An uncaught exception so the operator sees a stack trace"
+    ],
+    "answer": 0,
+    "why": "A permission failure will not fix itself. Marking it non-retryable with a clear reason lets the agent explain or escalate instead of looping."
+   }
+  ],
+  "sources": [
+   {
+    "title": "MCP specification: Tools",
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+   },
+   {
+    "title": "Give Claude custom tools (Agent SDK)",
+    "url": "https://code.claude.com/docs/en/agent-sdk/custom-tools"
+   },
+   {
+    "title": "Handle tool calls (Claude API docs)",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+   }
+  ]
+ },
+ {
+  "ts": "2.3",
+  "minutes": 9,
+  "hook": "A research synthesis agent that also holds web search tools will start searching instead of writing, and selection gets worse as tools pile up.",
+  "scenarios": [
+   1,
+   3,
+   6
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Fewer tools, sharper choices",
+    "bullets": [
+     "More tools means more chances to pick the wrong one.",
+     "Four or five focused tools beat eighteen loosely related ones.",
+     "Agents misuse tools that sit outside their role.",
+     "Like a chef's station: only the knives this dish needs."
+    ],
+    "note": "Tool selection gets harder as the list grows. An agent with eighteen tools picks worse than one with four or five well chosen ones. And an agent that holds tools outside its job will use them, because they are there. So treat each agent like a kitchen station, stocked only for the dish it is responsible for."
+   },
+   {
+    "kind": "how",
+    "title": "Scope tools to each agent's role",
+    "bullets": [
+     "Give each subagent only the tools its role needs.",
+     "In the SDK, AgentDefinition has a tools list per subagent.",
+     "A tool left out is simply not in that agent's session.",
+     "Frequent cross-role needs get a small, narrow tool.",
+     "Example: synthesis gets verify_claim, not full web search."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "agents = {\n    \"searcher\": AgentDefinition(\n        description=\"Finds and fetches sources for a research question.\",\n        prompt=\"Search widely, return sources with URLs and dates.\",\n        tools=[\"mcp__web__search\", \"mcp__web__fetch\"],\n    ),\n    \"synthesizer\": AgentDefinition(\n        description=\"Writes the report from findings it is given.\",\n        prompt=\"Write from the findings only. Flag gaps.\",\n        tools=[\"mcp__kb__verify_claim\"],  # narrow cross-role tool\n    ),\n}"
+    },
+    "note": "Scope tools by role. In the Agent SDK each subagent definition carries its own tools list, and anything you leave out simply is not available to that agent. When a role frequently needs a little of another role's power, give it a small purpose-built tool, like a claim checker, instead of the full search toolkit."
+   },
+   {
+    "kind": "how",
+    "title": "tool_choice: auto, any, or a forced tool",
+    "bullets": [
+     "auto: Claude decides whether to call a tool. The default.",
+     "any: Claude must call some tool, its choice.",
+     "tool: Claude must call the one tool you name.",
+     "none: no tool calls at all.",
+     "Pattern: force the first step, then relax to auto.",
+     "Docs today: newest models reject any and forced; use auto plus strict."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\"tool_choice\": {\"type\": \"auto\"}}\n{\"tool_choice\": {\"type\": \"any\"}}\n{\"tool_choice\": {\"type\": \"tool\", \"name\": \"extract_invoice\"}}"
+    },
+    "note": "Tool choice controls whether a tool call is optional. Auto lets Claude decide and may answer in plain text. Any guarantees some tool is called. Naming a tool forces that exact tool. A common pattern is to force the first step, then switch back to auto. The newest models reject any and forced, but the exam keeps the guide's options."
+   },
+   {
+    "kind": "practice",
+    "title": "Practice: tighten a research pipeline",
+    "bullets": [
+     "Problem: the synthesizer keeps running searches mid-report.",
+     "Remove search tools from the synthesizer's list.",
+     "Add one narrow verify tool for quick fact checks.",
+     "Extraction step must always emit structured output: use any or forced.",
+     "After the forced first call, relax to auto for follow-ups."
+    ],
+    "note": "In the research system, the synthesizer drifts into searching. Take the search tools away and give it one narrow verify tool for the occasional check. In an extraction step that must always produce structured data, use any, or force the extraction tool, so Claude cannot reply in prose. Then relax to auto once the required step has happened."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Give every agent every tool, just in case",
+      "right": "Scope each agent to the four or five tools of its role",
+      "why": "Selection quality drops as the tool count rises."
+     },
+     {
+      "wrong": "Tell the synthesizer in its prompt not to search",
+      "right": "Remove the search tools from the synthesizer",
+      "why": "Removing a tool is deterministic; a prompt rule is not."
+     },
+     {
+      "wrong": "Use auto when a tool call must happen",
+      "right": "Use any, or force the named tool",
+      "why": "auto allows a plain text reply."
+     },
+     {
+      "wrong": "Force one tool for the whole conversation",
+      "right": "Force the first step, then relax to auto",
+      "why": "Forcing forever blocks sensible next steps."
+     }
+    ],
+    "note": "The exam rewards structural fixes. If an agent misuses a tool, take the tool away rather than asking nicely in the prompt. If a call is mandatory, auto is the wrong setting. And forcing should usually be temporary, just long enough to guarantee the critical first step."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Fewer, role-scoped tools give better selection.",
+     "Out-of-role tools get misused: remove them.",
+     "auto may answer in text; any must call a tool; forced calls one.",
+     "Force the first step, then relax."
+    ],
+    "note": "To recap. Give each agent a small, role-shaped set of tools, with narrow helpers for frequent cross-role needs. Remove tools an agent should not use. Know the three tool choice settings cold, and remember the pattern of forcing only the first required step before relaxing back to auto."
+   }
+  ],
+  "docsToday": "On the newest models (Opus 5.5, Sonnet 5.5, Fable 5.1, Mythos 5.1) tool_choice any and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto, any and forced.",
+  "lab": {
+   "title": "Force the first step, then relax",
+   "minutes": 10,
+   "steps": [
+    "With the Claude API, define fetch_document and three follow-up tools.",
+    "Send a request with tool_choice auto and note whether Claude skips fetching.",
+    "Resend with tool_choice forcing fetch_document, then continue the loop with auto.",
+    "Try tool_choice any and confirm Claude always calls some tool instead of answering in text."
+   ],
+   "expect": "auto can skip the required step; forcing guarantees it; any guarantees a tool call. On the newest models any and forced return a 400, so use a model that supports them or note the delta."
+  },
+  "check": [
+   {
+    "q": "A claims-intake pipeline must always begin by calling load_claim_packet before doing anything else, and afterwards Claude may pick freely among four tools. Which configuration matches the guide?",
+    "options": [
+     "tool_choice auto for every request, with a system prompt saying to load the packet first",
+     "tool_choice none on the first request so Claude plans before acting",
+     "Force load_claim_packet on the first request, then switch to auto",
+     "tool_choice any for every request so a tool is always called"
+    ],
+    "answer": 2,
+    "why": "Forcing the named tool guarantees the required first step. Relaxing to auto afterwards lets Claude choose the right follow-up tool or answer."
+   },
+   {
+    "q": "A library's catalogue assistant has 19 tools covering search, loans, fines, events and staff rota. Wrong-tool calls rise each time a tool is added. What is the most effective change?",
+    "options": [
+     "Split the work across role-focused agents that each hold only the few tools they need",
+     "Add a paragraph to the system prompt listing which tool to use when",
+     "Switch tool_choice to any so Claude always calls a tool",
+     "Merge all 19 tools into one tool with an action parameter"
+    ],
+    "answer": 0,
+    "why": "Selection degrades as tool count grows. Role-scoped agents with small tool sets reduce choice and misuse at the root."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Define tools (Claude API docs)",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+   },
+   {
+    "title": "Subagents in the SDK",
+    "url": "https://code.claude.com/docs/en/agent-sdk/subagents"
+   },
+   {
+    "title": "Give Claude custom tools (Agent SDK)",
+    "url": "https://code.claude.com/docs/en/agent-sdk/custom-tools"
+   }
+  ]
+ },
+ {
+  "ts": "2.4",
+  "minutes": 9,
+  "hook": "A developer-productivity team wants every engineer to get the same Jira and docs servers on clone, without a single token landing in git.",
+  "scenarios": [
+   1,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "MCP: one plug, many tools",
+    "bullets": [
+     "MCP is an open standard for connecting agents to tools and data.",
+     "A server exposes tools, resources and prompts.",
+     "Claude Code and the Agent SDK are MCP clients.",
+     "Like a universal power socket for integrations."
+    ],
+    "note": "The Model Context Protocol is a shared plug shape for integrations. A server offers tools Claude can call, resources Claude can read, and prompts. Claude Code and the Agent SDK speak the protocol, so a server written once works in both. Your job as an architect is choosing where each server is configured and how the agent finds it."
+   },
+   {
+    "kind": "how",
+    "title": "Scopes: who gets the server",
+    "bullets": [
+     "Project scope: .mcp.json in the repo root, committed, shared with the team.",
+     "User scope: ~/.claude.json, personal, available in all your projects.",
+     "Local scope: also ~/.claude.json, private, this project only.",
+     "Use ${VAR} expansion so secrets stay in the environment, not git.",
+     "Docs today: claude mcp add defaults to local; pass --scope project to share."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"mcpServers\": {\n    \"jira\": {\n      \"type\": \"http\",\n      \"url\": \"${JIRA_MCP_URL:-https://jira.example.com/mcp}\",\n      \"headers\": { \"Authorization\": \"Bearer ${JIRA_TOKEN}\" }\n    }\n  }\n}"
+    },
+    "note": "Scope decides who gets a server. A project file named dot mcp dot json lives in the repo and is shared with everyone who clones it. User scope lives in your home config and follows you to every project. Keep secrets out of the shared file with environment variable expansion. Today the add command defaults to local scope, so pass the project scope flag for team servers."
+   },
+   {
+    "kind": "how",
+    "title": "Help the agent find and prefer MCP",
+    "bullets": [
+     "Resources expose catalogs, like schemas or doc indexes, to read directly.",
+     "In Claude Code, reference resources with @server:protocol://path.",
+     "Catalogs mean less blind exploration and fewer tool calls.",
+     "Write rich tool descriptions, or the agent falls back to Grep.",
+     "Prefer existing community servers for standard systems.",
+     "Build custom servers only for your own internal systems."
+    ],
+    "note": "Two things make MCP pay off. First, resources. A server can expose a catalog, such as a table list or a document index, that the agent reads instead of exploring blind. Second, descriptions. If a powerful search tool has a one-line description, the agent will happily ignore it and grep the repo. And for standard systems like GitHub, reach for an existing server before writing your own."
+   },
+   {
+    "kind": "practice",
+    "title": "Practice: roll out servers for a team",
+    "bullets": [
+     "Team Jira server: project scope, committed .mcp.json.",
+     "Token: ${JIRA_TOKEN} in the file, real value in each shell.",
+     "Your experimental notes server: user scope, not shared.",
+     "GitHub: use the existing community server, no custom build.",
+     "Internal code index: custom server with a rich description."
+    ],
+    "note": "Let us apply it to the developer productivity scenario. The shared Jira server goes in the committed project file, with the token referenced as an environment variable. Your personal experiment stays in user scope so teammates never see it. GitHub uses an existing community server. The one internal system, a code index, gets a custom server with a description good enough that the agent prefers it."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Commit the API token inside .mcp.json",
+      "right": "Commit ${TOKEN} and set the value per environment",
+      "why": "Expansion keeps secrets out of version control."
+     },
+     {
+      "wrong": "Put the team's shared server in each person's ~/.claude.json",
+      "right": "Put it in the project .mcp.json",
+      "why": "User scope is personal and not shared on clone."
+     },
+     {
+      "wrong": "Build a custom MCP server for a standard tool like GitHub",
+      "right": "Use an existing community server",
+      "why": "Custom work is only worth it for gaps."
+     },
+     {
+      "wrong": "Ship a search tool described as 'Search'",
+      "right": "Describe what it searches, returns and beats Grep at",
+      "why": "Weak descriptions make the agent fall back to built-ins."
+     }
+    ],
+    "note": "Most traps here are about scope and secrets. Team servers belong in the project file. Personal ones belong in user scope. Tokens never go into git, only variable references do. And remember the agent only prefers your MCP tool when its description earns it."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Project .mcp.json is shared; ~/.claude.json is personal.",
+     "${VAR} expansion keeps secrets out of git.",
+     "Resources expose catalogs so agents explore less.",
+     "Rich descriptions; community servers first, custom when needed."
+    ],
+    "note": "To recap. Choose the scope by who should get the server. Reference secrets with environment variables. Use resources to hand the agent a map instead of making it search. Describe tools well so they actually get used, and only build a custom server when no existing one fits."
+   }
+  ],
+  "docsToday": "claude mcp add defaults to local scope (private to you, in this project); shared team servers need --scope project. SSE transport is deprecated in favour of HTTP.",
+  "lab": {
+   "title": "Share an MCP server without sharing the secret",
+   "minutes": 10,
+   "steps": [
+    "In a scratch repo, run claude mcp add with --scope project for any public HTTP MCP server, such as the Claude Code docs server.",
+    "Open the generated .mcp.json and add a header that uses ${DEMO_TOKEN} instead of a literal value.",
+    "Export DEMO_TOKEN in your shell, start Claude Code, approve the project server, and run /mcp.",
+    "Run claude mcp add again without --scope and check where that entry lands."
+   ],
+   "expect": "The project file is shareable and secret-free, while the default add goes to private local scope. The exam tests exactly this scope and secret split."
+  },
+  "check": [
+   {
+    "q": "A data team adds an internal warehouse MCP server to their repo for everyone. A reviewer spots the connection password written directly in the committed config. What is the best fix?",
+    "options": [
+     "Move the whole server definition to each engineer's user scope",
+     "Keep it in .mcp.json but reference the password as ${WAREHOUSE_PASSWORD}, set per environment",
+     "Encode the password in base64 before committing",
+     "Add .mcp.json to .gitignore so the file is never shared"
+    ],
+    "answer": 1,
+    "why": "Environment variable expansion keeps the shared project config while removing the secret from version control."
+   },
+   {
+    "q": "An engineering team's internal code-index MCP server is connected, yet Claude Code keeps using Grep across the repo instead of calling it. The tool's description is 'Query index'. What should they change?",
+    "options": [
+     "Move the server from project scope to user scope",
+     "Remove Grep from Claude Code's built-in tools permanently",
+     "Rewrite the description to say what it indexes, what it returns, and when it beats text search",
+     "Ask engineers to start every prompt with 'use the index'"
+    ],
+    "answer": 2,
+    "why": "The agent chooses tools from their descriptions. A rich description is what makes it prefer the MCP tool over built-in search."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Connect Claude Code to tools via MCP",
+    "url": "https://code.claude.com/docs/en/mcp"
+   },
+   {
+    "title": "Connect to external tools with MCP (Agent SDK)",
+    "url": "https://code.claude.com/docs/en/agent-sdk/mcp"
+   },
+   {
+    "title": "MCP specification: Tools",
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+   }
+  ]
+ },
+ {
+  "ts": "2.5",
+  "minutes": 7,
+  "hook": "Exploring an unfamiliar codebase is mostly choosing the right built-in tool for each step, and the wrong one burns context fast.",
+  "scenarios": [
+   2,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Six tools, six jobs",
+    "bullets": [
+     "Read: open a file. Write: create or fully replace a file.",
+     "Edit: change an exact piece of text in a file.",
+     "Bash: run commands, like tests or git.",
+     "Grep: search inside files. Glob: find files by name pattern.",
+     "Like a toolbox: the right tool makes the job short."
+    ],
+    "note": "Claude Code ships with a small toolbox. Read opens a file. Write creates or overwrites a whole file. Edit swaps one exact piece of text. Bash runs commands. Grep searches what is inside files, while Glob finds files by their path or name. Most exploration mistakes come from mixing up those last two."
+   },
+   {
+    "kind": "how",
+    "title": "Grep vs Glob, and how Edit anchors",
+    "bullets": [
+     "Glob matches paths: **/*.test.ts finds test files.",
+     "Grep matches contents: a function name inside those files.",
+     "Edit replaces old_string with new_string, exactly.",
+     "old_string must be unique; add surrounding lines to make it so.",
+     "Still ambiguous? Read the file, then Write the full new version.",
+     "Docs today: on macOS, Linux and WSL, search runs through Bash by default."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"file_path\": \"src/billing/fees.ts\",\n  \"old_string\": \"function lateFee(days) {\\n  return 0;\",\n  \"new_string\": \"function lateFee(days) {\\n  return days > 30 ? 25 : 0;\"\n}"
+    },
+    "note": "Glob answers which files exist, by name pattern. Grep answers which files mention something. Edit works by exact text match, and the old text must appear only once, so include a line or two of context to make it unique. If that fails, read the file and write it back in full. Current docs note that on Mac and Linux, search now runs through Bash by default."
+   },
+   {
+    "kind": "how",
+    "title": "An investigation flow that scales",
+    "bullets": [
+     "Start with Grep to find entry points, like routes or handlers.",
+     "Read only the files Grep pointed to.",
+     "Follow calls outward, one hop at a time.",
+     "Wrapped functions: find the exported names, then Grep each name.",
+     "Avoid reading whole directories up front."
+    ],
+    "note": "A good exploration is narrow first. Grep for the entry point, read just those files, and follow the calls outward. When a function is wrapped or re-exported under another name, find the exported names first, then grep for each one, or you will miss callers. Reading every file in a folder is the slow, context-hungry way."
+   },
+   {
+    "kind": "practice",
+    "title": "Practice: where is the late fee computed?",
+    "bullets": [
+     "Developer productivity scenario: legacy billing service, no docs.",
+     "Glob **/billing/** to see what files exist.",
+     "Grep 'lateFee' to find the definition and callers.",
+     "Read the definition; Grep the wrapper's exported name too.",
+     "Edit with a unique anchor; run tests with Bash."
+    ],
+    "note": "Here is a realistic flow. Glob shows the billing folder's shape. Grep for the function name finds where it lives and who calls it. Read the definition. If it is wrapped and exported under a new name, grep that name too. Then make the change with Edit using a unique anchor, and run the tests with Bash to confirm."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Use Glob to find where a function is called",
+      "right": "Use Grep to search file contents",
+      "why": "Glob only matches paths, not text inside files."
+     },
+     {
+      "wrong": "Read every file in the module to understand it",
+      "right": "Grep for entry points, then Read what they point to",
+      "why": "Targeted reads save context and time."
+     },
+     {
+      "wrong": "Retry Edit with the same short, repeated anchor",
+      "right": "Add surrounding context, or Read then Write the file",
+      "why": "Edit needs a unique match."
+     },
+     {
+      "wrong": "Search only the original function name",
+      "right": "Also search names it is exported or wrapped under",
+      "why": "Wrappers hide callers from a single search."
+     }
+    ],
+    "note": "Exam distractors here swap the tools around. Glob cannot find text. Reading everything is not a strategy. Edit will keep failing on a repeated anchor until you make it unique. And tracing through wrappers means searching every exported name, not just the original one."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Grep searches contents; Glob matches paths.",
+     "Edit needs a unique anchor; fall back to Read plus Write.",
+     "Grep to find entry points, Read to follow the flow.",
+     "Trace wrappers by searching each exported name."
+    ],
+    "note": "To recap. Know which tool answers which question. Grep for text, Glob for file names. Make Edit anchors unique, and when that fails, read and rewrite. Explore by finding entry points first and reading outward, and chase wrapped functions through every name they are exported under."
+   }
+  ],
+  "docsToday": "On macOS, Linux and WSL, Glob and Grep are no longer in Claude Code's default tool set; Claude searches with find and grep through Bash unless you enable them.",
+  "lab": {
+   "title": "Trace a function with Grep, Glob and Edit",
+   "minutes": 10,
+   "steps": [
+    "Open Claude Code in any mid-sized open-source repo you have cloned.",
+    "Ask it to list all test files by path pattern, then to find every caller of one function.",
+    "Pick a function that is re-exported under another name and ask for all callers again.",
+    "Ask for an edit on a line that appears several times and watch how the anchor is made unique."
+   ],
+   "expect": "Path questions use pattern matching, content questions use search, wrappers need a second search, and Edit needs a unique anchor. Note whether search ran through Bash, per the docs delta."
+  },
+  "check": [
+   {
+    "q": "In an unfamiliar logistics codebase, an engineer asks Claude Code to list every YAML config file under the deploy folder, at any depth. Which built-in tool fits best?",
+    "options": [
+     "Grep for the word 'yaml' across the repository",
+     "Read each file in the deploy folder and check its extension",
+     "Bash running the test suite",
+     "Glob with a pattern like deploy/**/*.yaml"
+    ],
+    "answer": 3,
+    "why": "The question is about file paths, not contents, so Glob's pattern matching answers it directly."
+   },
+   {
+    "q": "Claude Code needs to change a single 'retries = 3' line in a config module, but that exact text appears in four places, so Edit keeps failing. What should happen next?",
+    "options": [
+     "Include enough surrounding lines in old_string to make the match unique",
+     "Retry Edit with the same old_string until it succeeds",
+     "Use Glob to locate the right occurrence",
+     "Delete the file with Bash and recreate it from memory"
+    ],
+    "answer": 0,
+    "why": "Edit requires a unique anchor. Adding context pins down one occurrence; reading then writing the full file is the fallback."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Claude Code tools reference",
+    "url": "https://code.claude.com/docs/en/tools-reference"
+   },
+   {
+    "title": "Best practices for Claude Code",
+    "url": "https://code.claude.com/docs/en/best-practices"
+   }
+  ]
+ }
+]

@@ -1,0 +1,1145 @@
+[
+ {
+  "primer": "D1",
+  "minutes": 6,
+  "hook": "Domain 1 is the largest slice of the exam, about 27 percent, and it covers how Claude-based agents loop, delegate, follow rules and remember.",
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "What this domain is about",
+    "bullets": [
+     "How to build systems where Claude acts, not just answers.",
+     "Worth about 27 percent: roughly 16 of 60 questions.",
+     "Shows up most in support, research and developer scenarios.",
+     "Seven task statements, from single loops to saved sessions."
+    ],
+    "note": "Welcome to domain one, agentic architecture and orchestration. It is the biggest domain on the exam, about a quarter of the questions. It is all about systems where Claude takes actions with tools instead of just answering once. You will meet it mostly in the customer support, multi-agent research and developer productivity scenarios."
+   },
+   {
+    "kind": "idea",
+    "title": "Core vocabulary",
+    "bullets": [
+     "Tool: a function Claude can ask your code to run.",
+     "Agentic loop: call, run tools, return results, repeat.",
+     "Coordinator and subagent: a manager and focused helpers.",
+     "Hook: your code at fixed points around tool calls.",
+     "Session: the saved conversation you can resume or fork."
+    ],
+    "note": "A few words to learn first. A tool is a function Claude can ask your code to run. The agentic loop is calling Claude, running the tools it asks for, and sending results back until it is done. A coordinator is a manager agent and subagents are its focused helpers. Hooks are your own code at fixed checkpoints. A session is the saved conversation."
+   },
+   {
+    "kind": "how",
+    "title": "The mental model",
+    "bullets": [
+     "Engine: the loop, driven by stop_reason.",
+     "Team: a coordinator delegating to isolated subagents.",
+     "Guardrails: hooks and code gates that always apply.",
+     "Memory: sessions you resume, fork or restart.",
+     "Plan: decompose work as a fixed chain or adaptive plan."
+    ],
+    "note": "Picture an agent system as five parts. The engine is the loop, steered by stop reason. The team is a coordinator handing work to subagents that start with a clean slate. The guardrails are hooks and code gates that hold every time. Memory is the session. And the plan is how you split big work into steps."
+   },
+   {
+    "kind": "how",
+    "title": "How the seven task statements fit",
+    "bullets": [
+     "1.1 the loop: when to continue and when to stop.",
+     "1.2 and 1.3: coordinators, subagents and what to pass them.",
+     "1.4 and 1.5: enforcing order and policy with code and hooks.",
+     "1.6: breaking work into a chain or adaptive plan.",
+     "1.7: resuming, forking and restarting sessions."
+    ],
+    "note": "The seven task statements build on each other. One point one is the loop itself. One point two and one point three cover teams of agents and how to brief them. One point four and one point five are about rules that must always hold, using code gates and hooks. One point six is decomposition, and one point seven is sessions."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Trust structured signals like stop_reason, not prose.",
+     "Subagents know only what you pass them.",
+     "Must-always rules belong in code, not prompts.",
+     "Choose the simplest structure that solves the task."
+    ],
+    "note": "Four ideas run through this whole domain. Trust structured signals, like stop reason, over the words in a reply. Subagents only know what you hand them. Anything that must always happen belongs in code, not in a prompt. And pick the simplest design that solves the problem. Keep these in mind as you work through the lessons."
+   }
+  ],
+  "glossary": [
+   {
+    "term": "Agentic loop",
+    "def": "Call Claude, run the tools it requests, return results, repeat until end_turn."
+   },
+   {
+    "term": "stop_reason",
+    "def": "Field on each response saying why Claude stopped, such as tool_use or end_turn."
+   },
+   {
+    "term": "tool_use / tool_result",
+    "def": "Claude's request to run a tool, and your reply carrying the output, linked by id."
+   },
+   {
+    "term": "Coordinator",
+    "def": "The hub agent that routes work, handles errors and assembles the final answer."
+   },
+   {
+    "term": "Subagent",
+    "def": "A helper agent with its own isolated context, spawned for a focused task."
+   },
+   {
+    "term": "Task tool",
+    "def": "The tool a coordinator calls to spawn a subagent (now also called Agent)."
+   },
+   {
+    "term": "AgentDefinition",
+    "def": "Config for a subagent: description, prompt, allowed tools and optional model."
+   },
+   {
+    "term": "Hook",
+    "def": "Your code that runs at fixed points, such as before or after a tool call."
+   },
+   {
+    "term": "Prompt chain",
+    "def": "A fixed sequence of steps where each output feeds the next."
+   },
+   {
+    "term": "Session fork",
+    "def": "A new session that starts from a copy of another session's history."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Building effective AI agents",
+    "url": "https://www.anthropic.com/engineering/building-effective-agents"
+   },
+   {
+    "title": "How tool use works",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works"
+   },
+   {
+    "title": "Subagents in the SDK",
+    "url": "https://code.claude.com/docs/en/agent-sdk/subagents"
+   }
+  ]
+ },
+ {
+  "ts": "1.1",
+  "minutes": 8,
+  "hook": "A support agent that stops one step early leaves a refund half done, so the loop's exit rule matters more than any prompt.",
+  "scenarios": [
+   1,
+   3,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "An agent is a loop",
+    "bullets": [
+     "Claude asks for a tool, your code runs it, the result goes back.",
+     "Repeat until Claude says it has finished.",
+     "Claude picks the next tool from what it just learned.",
+     "Think of a chef calling for ingredients until the plate is ready."
+    ],
+    "note": "Here is the whole idea in one line. An agent is a loop. Claude asks for a tool, your code runs it, and the result goes back into the conversation. Then Claude decides what to do next. It keeps going until Claude itself signals that the job is done, a bit like a chef calling for ingredients until the plate is ready."
+   },
+   {
+    "kind": "how",
+    "title": "The loop in code",
+    "bullets": [
+     "Send the full message history with your tools every time.",
+     "Branch on stop_reason, never on the words in the reply.",
+     "Append the assistant turn, then a user turn of tool results."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "while True:\n    resp = client.messages.create(model=MODEL, max_tokens=2048,\n                                  tools=TOOLS, messages=history)\n    history.append({\"role\": \"assistant\", \"content\": resp.content})\n    if resp.stop_reason != \"tool_use\":\n        break  # end_turn: done. max_tokens: truncated, handle it\n    results = [{\"type\": \"tool_result\", \"tool_use_id\": b.id,\n                \"content\": run_tool(b.name, b.input)}\n               for b in resp.content if b.type == \"tool_use\"]\n    history.append({\"role\": \"user\", \"content\": results})"
+    },
+    "note": "This is the loop in about ten lines. Each round we send the whole history plus the tool list. We save Claude's reply, then look at stop reason. If it says tool use, we run every requested tool and send the results back as a user turn. Anything else breaks out, and we deal with that case on purpose."
+   },
+   {
+    "kind": "how",
+    "title": "Reading stop_reason",
+    "bullets": [
+     "tool_use: run every tool_use block, then call again.",
+     "end_turn: Claude is done, return the answer.",
+     "max_tokens: the reply was cut off, not finished.",
+     "Return all results in one user message, matched by tool_use_id.",
+     "tool_result blocks go first in that message, before any text.",
+     "Docs today: pause_turn, refusal and model_context_window_exceeded also exist."
+    ],
+    "note": "Stop reason is the only signal you should trust. Tool use means keep going. End turn means stop. Max tokens means the reply was cut off, so do not treat it as a finished answer. When Claude asks for several tools at once, send every result back together in one user message, each tagged with its matching tool use ID."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 1: a refund question",
+    "bullets": [
+     "Customer asks: where is my refund for order 8812?",
+     "Claude calls get_customer, then lookup_order with the returned id.",
+     "The order shows a pending refund, so Claude calls get_refund_status.",
+     "With all results in history, Claude answers and stops with end_turn.",
+     "No hard-coded tree: each step came from the previous result."
+    ],
+    "note": "Picture the support agent from scenario one. A customer asks where their refund is. Claude looks up the customer, uses that ID to find the order, sees a pending refund, and checks its status. Nobody wrote that sequence in advance. Claude chose each step from the last result, and the loop simply kept running until end turn."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Stop when the reply contains words like done or complete.",
+      "right": "Stop only when stop_reason is end_turn.",
+      "why": "Prose is unreliable; stop_reason is the API's structured signal."
+     },
+     {
+      "wrong": "Use a cap of ten iterations as the main exit.",
+      "right": "Exit on end_turn; keep a cap only as a safety net.",
+      "why": "A cap cuts off tasks that legitimately need more steps."
+     },
+     {
+      "wrong": "Treat any response with a text block as final.",
+      "right": "Check stop_reason; text and tool_use often share one reply.",
+      "why": "Claude often narrates before calling a tool."
+     },
+     {
+      "wrong": "Hard-code which tool runs after which.",
+      "right": "Give good tools and let the model choose.",
+      "why": "Model-driven choice adapts to what each result reveals."
+     }
+    ],
+    "note": "Exam questions love loops that end for the wrong reason. Watch for checks on words like done, an iteration cap used as the main exit, or a rule that says any text means finished. Claude often writes a sentence and calls a tool in the same reply. The right answer nearly always comes back to stop reason."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Loop on stop_reason: tool_use continues, end_turn stops.",
+     "Every tool result goes back into the history.",
+     "Let the model choose tools; avoid fixed decision trees.",
+     "Caps and text checks are never the primary exit."
+    ],
+    "note": "To recap. Keep looping while stop reason says tool use, and stop on end turn. Feed every tool result back so the next turn can reason over it. Let Claude pick the tools instead of scripting a decision tree. And never let a text check or an iteration cap be the thing that ends the loop."
+   }
+  ],
+  "docsToday": "The API now also returns pause_turn, refusal and model_context_window_exceeded; the exam's rule (continue on tool_use, stop on end_turn) still holds.",
+  "check": [
+   {
+    "q": "A research agent's loop exits whenever stop_reason is anything other than tool_use, and returns the last text as the final report. Some reports now end mid-sentence. What should change?",
+    "options": [
+     "Add a sentence to the prompt asking Claude to always finish its sentences",
+     "Treat max_tokens as a truncated reply and handle it, instead of returning it as finished",
+     "Exit only after the reply contains the phrase FINAL REPORT",
+     "Lower the iteration cap so the agent writes shorter reports"
+    ],
+    "answer": 1,
+    "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every non-tool_use reason as completion."
+   },
+   {
+    "q": "Claude returns one response with three tool_use blocks: check_inventory, get_shipping_quote and get_customer. How should your code send the results back?",
+    "options": [
+     "Send three separate user messages, one result each, calling the API after each",
+     "Run only the first tool and let Claude ask again for the others",
+     "Combine the three outputs into one text paragraph in a new user message",
+     "Send one user message with three tool_result blocks, each with its matching tool_use_id"
+    ],
+    "answer": 3,
+    "why": "Parallel tool calls are answered together in the next user message, one tool_result per tool_use, linked by tool_use_id."
+   }
+  ],
+  "sources": [
+   {
+    "title": "How tool use works",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works"
+   },
+   {
+    "title": "Handle tool calls",
+    "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+   },
+   {
+    "title": "Stop reasons and fallback",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons"
+   }
+  ],
+  "lab": {
+   "title": "Build a 30-line agent loop",
+   "minutes": 15,
+   "steps": [
+    "Install the anthropic Python SDK and set ANTHROPIC_API_KEY.",
+    "Define two fake tools, get_customer and lookup_order, that return hard-coded JSON.",
+    "Write a while loop that branches on stop_reason and appends tool_result blocks.",
+    "Ask: where is the refund for order 8812? Print stop_reason on every turn.",
+    "Set max_tokens to 50 and run again to see a max_tokens stop."
+   ],
+   "expect": "You see tool_use turns, possibly several tool calls in one reply, then end_turn. The tiny max_tokens run shows a cut-off reply, which is why the exam treats max_tokens as truncation, not completion."
+  }
+ },
+ {
+  "ts": "1.2",
+  "minutes": 8,
+  "hook": "A research system that sends every question to every subagent wastes time on simple queries and still misses angles on hard ones.",
+  "scenarios": [
+   3,
+   1
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Hub and spoke",
+    "bullets": [
+     "One coordinator agent sits in the middle.",
+     "Subagents do focused work and report back to it.",
+     "Subagents never talk to each other directly.",
+     "Like a news editor assigning stories, then writing the front page."
+    ],
+    "note": "A multi-agent system in this exam is shaped like a hub and spokes. One coordinator sits in the middle and hands out focused jobs. Each subagent does its piece and reports back to the coordinator, never sideways to another subagent. Think of a news editor who assigns stories to reporters and then puts the front page together."
+   },
+   {
+    "kind": "how",
+    "title": "What the coordinator owns",
+    "bullets": [
+     "Routing: which subagents to call for this query.",
+     "Errors: retry, reroute, or note a gap when one fails.",
+     "Aggregation: merge results and write the final answer.",
+     "Subagents start with isolated context, so brief them fully.",
+     "All traffic through the hub keeps the system observable."
+    ],
+    "note": "The coordinator has three jobs. It routes work to the right subagents, it handles failures when one of them comes back empty or broken, and it combines everything into the final answer. Remember that each subagent starts with a clean, isolated context. It only knows what the coordinator tells it, which is exactly why the hub must stay in charge."
+   },
+   {
+    "kind": "how",
+    "title": "Choosing and partitioning work",
+    "bullets": [
+     "Scale effort to the query: one fact needs one agent.",
+     "Comparisons need a few; broad research may need many.",
+     "Give each subagent a distinct scope to avoid overlap.",
+     "Too-narrow splits silently drop whole parts of the topic.",
+     "Check coverage for gaps, then fill them before synthesis."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"query\": \"How did remote work change city housing, 2020-2025?\",\n  \"tasks\": [\n    {\"agent\": \"search\", \"scope\": \"rents in large metros\"},\n    {\"agent\": \"search\", \"scope\": \"home prices in small towns\"},\n    {\"agent\": \"search\", \"scope\": \"office-to-housing conversions\"},\n    {\"agent\": \"search\", \"scope\": \"local zoning and tax policy\"}\n  ],\n  \"then\": \"check gaps, then synthesis\"\n}"
+    },
+    "note": "Good coordinators size the effort to the question. A single fact needs one agent, a comparison needs a few, and a broad research question may need many. Give each subagent a clearly separate scope so they do not repeat each other. Then, before writing anything, check what is still missing. A split that is too narrow drops topics without any error."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 3: a housing question",
+    "bullets": [
+     "Query: how did remote work change city housing?",
+     "Coordinator sends four search subagents with separate scopes.",
+     "Review shows nothing on rural areas, so it sends one more.",
+     "Only then does the synthesis subagent write the report.",
+     "A simple follow-up fact goes to one search agent only."
+    ],
+    "note": "In the research scenario, the coordinator splits the housing question into four separate scopes. When the results come back, it notices that rural areas are not covered at all, so it sends one more search before synthesis. Later, a user asks a quick factual follow-up. The coordinator sends that to a single search agent instead of rerunning the whole pipeline."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Run every subagent on every query.",
+      "right": "Pick subagents based on what this query needs.",
+      "why": "Full pipelines waste effort and add latency on simple asks."
+     },
+     {
+      "wrong": "Let subagents message each other to share findings.",
+      "right": "Route everything through the coordinator.",
+      "why": "The hub owns errors, context and the final view."
+     },
+     {
+      "wrong": "Blame the synthesis agent when a report misses topics.",
+      "right": "Check the coordinator's decomposition first.",
+      "why": "Missing coverage usually starts with a too-narrow split."
+     },
+     {
+      "wrong": "Give several subagents the same vague brief.",
+      "right": "Give each a distinct, bounded scope.",
+      "why": "Vague briefs cause duplicate searches and wasted tokens."
+     }
+    ],
+    "note": "On the exam, be suspicious of any design that runs the full pipeline every time, lets subagents chat directly, or blames the last agent for missing coverage. When a final report has holes, look first at how the coordinator split the work. And if two subagents keep finding the same sources, the fix is clearer scope boundaries in their briefs."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "The coordinator routes, handles errors and aggregates.",
+     "Subagents start isolated and report only to the hub.",
+     "Choose subagents per query; scale effort to complexity.",
+     "Partition scope, find gaps, then synthesize."
+    ],
+    "note": "To recap. The coordinator is the hub that routes work, handles failures and assembles the answer. Subagents start with isolated context and report only to the hub. Pick the subagents each query actually needs. And split scope cleanly, look for gaps, and fill them before you synthesize the final result."
+   }
+  ],
+  "check": [
+   {
+    "q": "A research coordinator always launches its search, analysis, fact-check and report subagents, even when a user just asks for a company's founding year. Users complain about slow answers. What is the best change?",
+    "options": [
+     "Have the coordinator choose which subagents to run based on the query's complexity",
+     "Run all four subagents in parallel to cut latency",
+     "Replace the subagents with one larger agent for every query",
+     "Cache the full pipeline's output for every past query"
+    ],
+    "answer": 0,
+    "why": "The coordinator should scale effort to the query. A simple fact needs one subagent, not the whole pipeline."
+   },
+   {
+    "q": "Two search subagents in a market research system keep returning almost the same articles, while some subtopics get no coverage. What should you fix first?",
+    "options": [
+     "Add a deduplication step after synthesis",
+     "Let the two subagents message each other to split the work",
+     "Give each subagent a distinct, bounded scope in the coordinator's delegation",
+     "Switch both subagents to a larger model"
+    ],
+    "answer": 2,
+    "why": "Overlap and gaps come from vague, overlapping briefs. The coordinator should partition scope clearly; peer-to-peer messaging bypasses the hub."
+   }
+  ],
+  "sources": [
+   {
+    "title": "How we built our multi-agent research system",
+    "url": "https://www.anthropic.com/engineering/multi-agent-research-system"
+   },
+   {
+    "title": "Create custom subagents",
+    "url": "https://code.claude.com/docs/en/sub-agents"
+   },
+   {
+    "title": "Building effective AI agents",
+    "url": "https://www.anthropic.com/engineering/building-effective-agents"
+   }
+  ],
+  "lab": {
+   "title": "Coordinator that picks its helpers",
+   "minutes": 15,
+   "steps": [
+    "With the Agent SDK, define three subagents: news-search, stats-search and writer.",
+    "Write each description so it says exactly when to use that agent.",
+    "Ask a one-fact question and note which subagents run.",
+    "Ask a broad comparison question and note which subagents run.",
+    "Narrow one search agent's scope and check the report for missing topics."
+   ],
+   "expect": "A good coordinator calls fewer helpers for simple asks and more for broad ones. Narrowing a scope too far drops coverage with no error, which is the decomposition failure the exam points to."
+  }
+ },
+ {
+  "ts": "1.3",
+  "minutes": 9,
+  "hook": "A synthesis subagent that never saw the search results will invent or drop citations, so what you pass at spawn time decides report quality.",
+  "scenarios": [
+   3,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Spawning is a tool call",
+    "bullets": [
+     "The coordinator spawns a subagent by calling the Task tool.",
+     "The subagent sees only the prompt you hand it.",
+     "Nothing from the parent conversation is inherited.",
+     "Like briefing a contractor who missed all your meetings."
+    ],
+    "note": "Spawning a subagent is just another tool call. The coordinator calls the Task tool with a prompt, and that prompt is all the subagent gets. It did not see the earlier conversation, the files you read, or the results you gathered. Treat it like briefing a contractor who missed every meeting. If it matters, write it in the brief."
+   },
+   {
+    "kind": "how",
+    "title": "Configuring subagents",
+    "bullets": [
+     "allowedTools must include Task, or nothing gets spawned.",
+     "AgentDefinition sets description, prompt and tool limits.",
+     "The description tells the coordinator when to use each agent.",
+     "Docs today: Task is now named Agent; Task still works."
+    ],
+    "code": {
+     "lang": "ts",
+     "text": "const options = {\n  allowedTools: [\"Task\", \"WebSearch\", \"Read\"],\n  agents: {\n    \"web-searcher\": {\n      description: \"Finds recent sources on one bounded subtopic.\",\n      prompt: \"You search the web and return sourced findings.\",\n      tools: [\"WebSearch\", \"WebFetch\"],\n      model: \"haiku\"\n    }\n  }\n};"
+    },
+    "note": "In the Agent SDK you list Task in allowed tools so the coordinator can spawn helpers. Each helper gets an agent definition with a description, a prompt and its own tool limits. The description matters most, because the coordinator reads it to decide when to delegate. Current docs call this tool Agent, and Task still works as an alias."
+   },
+   {
+    "kind": "how",
+    "title": "Passing context and running in parallel",
+    "bullets": [
+     "Put findings, paths and decisions directly in the prompt.",
+     "Keep source metadata in fields, separate from the content.",
+     "Several Task calls in one response run in parallel.",
+     "State the goal and quality bar, not a step-by-step script."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"goal\": \"Summarize rent trends; flag conflicting figures\",\n  \"quality_bar\": \"Every claim cites a source below\",\n  \"findings\": [\n    {\"claim\": \"Metro rents fell 6% in 2021\",\n     \"source\": {\"title\": \"City Housing Report\",\n                \"url\": \"https://example.org/r1\",\n                \"date\": \"2022-03-01\"}}\n  ]\n}"
+    },
+    "note": "Because nothing is inherited, the prompt must carry the facts. Pass findings as structured data where each claim keeps its own source title, link and date, instead of blending them into prose. To run subagents in parallel, emit several Task calls in a single response. And describe the goal and the quality bar, then let the subagent decide how to get there."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 3: briefing the synthesizer",
+    "bullets": [
+     "Four searches return; the coordinator gathers their findings.",
+     "It sends the synthesizer a structured list of claims with sources.",
+     "Brief says: cover all four scopes, cite every claim.",
+     "Two independent fact checks launch as two Task calls at once."
+    ],
+    "note": "Back in the research system, the four searches have finished. The coordinator now briefs the synthesis subagent with a structured list of claims, each tied to its source. The brief states the goal and the bar: cover every scope and cite every claim. Two independent fact checks are launched together, as two Task calls in one response."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Assume the subagent can see the coordinator's history.",
+      "right": "Pass every needed finding explicitly in the Task prompt.",
+      "why": "Subagent context starts isolated; nothing is inherited."
+     },
+     {
+      "wrong": "Define agents but leave Task out of allowedTools.",
+      "right": "Include Task so the coordinator can spawn them.",
+      "why": "Without the tool there is no way to delegate."
+     },
+     {
+      "wrong": "Spawn one subagent per turn to get parallel work.",
+      "right": "Emit several Task calls in a single response.",
+      "why": "Calls in one response run in parallel."
+     },
+     {
+      "wrong": "Merge sources into a prose summary for the subagent.",
+      "right": "Keep claim and source metadata as separate fields.",
+      "why": "Structure keeps attribution intact downstream."
+     }
+    ],
+    "note": "The most common trap is assuming the subagent already knows things. It does not. Also watch for setups that forget Task in allowed tools, that spread parallel work across several turns, or that flatten sources into prose. On the exam, the right answer keeps context explicit and structured, and launches independent work together in one response."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Task spawns subagents; allowedTools must include it.",
+     "Nothing is inherited: write the brief completely.",
+     "Structured context keeps metadata apart from content.",
+     "Parallel means several Task calls in one response."
+    ],
+    "note": "To recap. The Task tool spawns subagents, so it must be allowed. Nothing carries over from the parent, so the brief must be complete. Keep source details in their own fields so citations survive. And when work is independent, send several Task calls in one response, each with a clear goal and quality bar."
+   }
+  ],
+  "docsToday": "Claude Code v2.1.63 renamed the Task tool to Agent (Task still works as an alias); exam items use the guide's Task wording.",
+  "check": [
+   {
+    "q": "A synthesis subagent writes a fluent report, but many claims cite the wrong article. The coordinator briefed it with a few paragraphs summarizing what the search agents found. What change helps most?",
+    "options": [
+     "Tell the synthesizer to double-check its citations before answering",
+     "Give the synthesizer access to the coordinator's full conversation history",
+     "Run the synthesizer twice and keep the version with more citations",
+     "Pass findings as structured records, each claim with its own source title, URL and date"
+    ],
+    "answer": 3,
+    "why": "Blending sources into prose loses the claim-to-source link. Structured context keeps metadata separate, so attribution survives synthesis."
+   },
+   {
+    "q": "A team defines three subagents in the agents option, but logs show the coordinator never delegates and does all the work itself. The config sets allowedTools to WebSearch and Read. What is the likely fix?",
+    "options": [
+     "Add Task to allowedTools so the coordinator can spawn subagents",
+     "Rewrite each subagent prompt in more detail",
+     "Give each subagent the same tools as the coordinator",
+     "Move the subagent definitions into the system prompt"
+    ],
+    "answer": 0,
+    "why": "Subagents are spawned through the Task tool; if the coordinator cannot call it, it cannot delegate."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Subagents in the SDK",
+    "url": "https://code.claude.com/docs/en/agent-sdk/subagents"
+   },
+   {
+    "title": "Create custom subagents",
+    "url": "https://code.claude.com/docs/en/sub-agents"
+   }
+  ],
+  "lab": {
+   "title": "Prove subagents start empty",
+   "minutes": 10,
+   "steps": [
+    "In the Agent SDK, define a subagent with only Read and Grep tools.",
+    "List Task (Agent in current docs) in allowedTools alongside Read and Grep.",
+    "Tell the main agent a secret word, then have it delegate a file search.",
+    "Ask the subagent, through the coordinator, what the secret word was.",
+    "Repeat, passing the word explicitly in the delegation prompt."
+   ],
+   "expect": "The subagent cannot know the word unless it is passed in the prompt. This is the exam's core rule: nothing is inherited, so context must be passed explicitly."
+  }
+ },
+ {
+  "ts": "1.4",
+  "minutes": 8,
+  "hook": "If a support agent can issue a refund before checking who it is talking to, one bad run is a real financial loss.",
+  "scenarios": [
+   1
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "A sign versus a turnstile",
+    "bullets": [
+     "A prompt rule is a sign that says please show ID.",
+     "Most people obey; some slip past.",
+     "A code gate is a turnstile: no ID, no entry.",
+     "Required order belongs in code, not in wording."
+    ],
+    "note": "Think about a sign that says please show your ID, versus a turnstile that will not open without it. A prompt rule is the sign. Claude follows it almost every time, but almost is not always. When an order of steps is required, like verifying a customer before touching money, you build the turnstile in code."
+   },
+   {
+    "kind": "how",
+    "title": "Gating a tool in code",
+    "bullets": [
+     "Track whether the prerequisite tool has succeeded.",
+     "Block downstream tools until it has.",
+     "Return a clear reason so Claude runs the missing step."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "verified = set()  # session ids with a verified customer\n\nasync def require_verification(inp, tool_use_id, ctx):\n    if inp[\"session_id\"] in verified:\n        return {}\n    return {\"hookSpecificOutput\": {\n        \"hookEventName\": \"PreToolUse\",\n        \"permissionDecision\": \"deny\",\n        \"permissionDecisionReason\":\n            \"Verify the customer with verify_customer first.\"}}"
+    },
+    "note": "Here is a small gate. We keep track of sessions where the customer has been verified, for example by marking it after the verify tool succeeds. A pre tool use hook on the refund tool checks that record. If verification has not happened, the call is denied, and the reason tells Claude exactly which step to run first."
+   },
+   {
+    "kind": "how",
+    "title": "Many asks, and clean handoffs",
+    "bullets": [
+     "Split a multi-concern message into separate items.",
+     "Resolve each item, then confirm none were missed.",
+     "Escalate with a structured summary, not the transcript.",
+     "Include customer id, root cause, amounts, recommended action.",
+     "Docs today: a hook can return defer to pause for a human."
+    ],
+    "code": {
+     "lang": "json",
+     "text": "{\n  \"customer_id\": \"C-20931\",\n  \"issue\": \"Refund for damaged blender\",\n  \"root_cause\": \"Courier damage, photo on file\",\n  \"amount\": 640.00,\n  \"tried\": [\"verified identity\", \"checked order\"],\n  \"recommended_action\": \"Approve refund above agent limit\"\n}"
+    },
+    "note": "Customers often ask for several things in one message. Split them into separate items, resolve each one, and check that nothing was dropped. When a case must go to a person, hand off a short structured summary: who the customer is, the root cause, the amounts, what was tried, and what you recommend. Nobody wants to read a forty turn transcript."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 1: three asks in one message",
+    "bullets": [
+     "Message: damaged blender refund, new address, loyalty points question.",
+     "Gate forces verify_customer before any account change.",
+     "Address updated and points answered inside the agent.",
+     "Refund of 640 is over policy, so it escalates.",
+     "The human gets the structured summary and acts in a minute."
+    ],
+    "note": "A customer writes in about a damaged blender, a new address, and their loyalty points. The gate makes sure identity is checked before anything changes. The agent fixes the address and answers the points question. The refund is above the agent's limit, so it escalates with a structured summary, and the human can approve it without rereading the chat."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Make the prompt louder: ALWAYS verify first.",
+      "right": "Block downstream tools in code until verification succeeds.",
+      "why": "Prompts have a non-zero failure rate; gates do not."
+     },
+     {
+      "wrong": "Add few-shot examples to teach the order.",
+      "right": "Use a programmatic prerequisite check.",
+      "why": "Examples improve odds but cannot guarantee ordering."
+     },
+     {
+      "wrong": "Escalate by forwarding the full transcript.",
+      "right": "Send a structured summary with id, cause, amount, action.",
+      "why": "Humans need the decision facts fast, not the chat log."
+     },
+     {
+      "wrong": "Answer the first request and end the turn.",
+      "right": "Split the message and resolve every item.",
+      "why": "Dropped concerns mean repeat contacts and lower resolution."
+     }
+    ],
+    "note": "On the exam, stronger wording and more examples are tempting but wrong when an order must always hold. The answer is a code gate. For escalations, prefer the structured summary over the raw transcript. And when a message carries several requests, the right design splits them and confirms each one is resolved before ending."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Required ordering needs a code gate, not a prompt.",
+     "Block downstream tools until the prerequisite succeeds.",
+     "Split multi-concern requests and resolve each item.",
+     "Hand off with a structured summary, never a transcript."
+    ],
+    "note": "To recap. If an order of steps must always hold, enforce it in code. Block the risky tools until the prerequisite has really happened. Break multi-part requests into items and close each one. And when a person takes over, give them a structured summary with the customer, the cause, the amounts and a recommended action."
+   }
+  ],
+  "docsToday": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides.",
+  "check": [
+   {
+    "q": "Human agents say escalations from your support bot are slow to handle because each arrives as a 40-turn chat log. What should the bot send instead?",
+    "options": [
+     "The last five turns of the conversation",
+     "A structured summary with customer id, root cause, amounts, steps tried and a recommended action",
+     "The full log plus a one-line apology to the customer",
+     "Only the customer's original message"
+    ],
+    "answer": 1,
+    "why": "A handoff should carry the decision facts in a fixed structure so the human can act without rereading the conversation."
+   },
+   {
+    "q": "A customer writes: cancel my duplicate order, update my card, and tell me when my other parcel arrives. The agent cancels the order, replies, and ends. What design fixes this?",
+    "options": [
+     "Ask customers to send one request per message",
+     "Raise max_tokens so the agent has room to answer more",
+     "Decompose the message into items, resolve each, and confirm all are closed before ending",
+     "Escalate any message that contains more than one request"
+    ],
+    "answer": 2,
+    "why": "Multi-concern requests should be split and tracked item by item so none is silently dropped."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Intercept and control agent behavior with hooks",
+    "url": "https://code.claude.com/docs/en/agent-sdk/hooks"
+   },
+   {
+    "title": "Configure permissions",
+    "url": "https://code.claude.com/docs/en/agent-sdk/permissions"
+   }
+  ],
+  "lab": {
+   "title": "Turnstile before refunds",
+   "minutes": 15,
+   "steps": [
+    "Create two SDK tools: verify_customer and issue_refund, both returning stub JSON.",
+    "Add a PreToolUse hook that denies issue_refund until verify_customer has succeeded.",
+    "Prompt: refund order 77 now, I am in a hurry.",
+    "Read the logs: see the denial reason and Claude calling verify_customer next.",
+    "Have the agent end by writing a JSON handoff summary for a human."
+   ],
+   "expect": "The gate holds even when the user pushes to skip a step, and Claude recovers using the deny reason. The handoff comes out as fields, not a transcript, which is what exam answers favor."
+  }
+ },
+ {
+  "ts": "1.5",
+  "minutes": 9,
+  "hook": "When three backend tools report dates in three formats, Claude will eventually misread one, and a refund cap written only in the prompt will eventually be broken.",
+  "scenarios": [
+   1,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Checkpoints around every tool",
+    "bullets": [
+     "Hooks run your code at fixed points in the agent's run.",
+     "Before a tool runs: inspect, allow or block it.",
+     "After a tool runs: reshape the result Claude sees.",
+     "Like airport security: every bag, every time."
+    ],
+    "note": "Hooks are checkpoints that run your own code at fixed moments. One runs before a tool call, where you can allow or block it. Another runs after a tool returns, where you can clean up the result before Claude reads it. Think of airport security. It does not depend on anyone remembering. Every bag goes through, every time."
+   },
+   {
+    "kind": "how",
+    "title": "PostToolUse: normalize results",
+    "bullets": [
+     "Different tools return different date and status formats.",
+     "A PostToolUse hook rewrites them into one format.",
+     "Claude only ever sees the clean version.",
+     "Docs today: updatedToolOutput replaces any tool's result."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "async def normalize(inp, tool_use_id, ctx):\n    data = parse(inp[\"tool_response\"])\n    data[\"date\"] = to_iso(data[\"date\"])  # 03/04/2026 to 2026-04-03\n    data[\"status\"] = STATUS_MAP.get(data[\"status\"], \"unknown\")\n    return {\"hookSpecificOutput\": {\n        \"hookEventName\": \"PostToolUse\",\n        \"updatedToolOutput\": data}}\n\nhooks = {\"PostToolUse\": [HookMatcher(matcher=\"^mcp__orders__\",\n                                      hooks=[normalize])]}"
+    },
+    "note": "A post tool use hook sees the tool's output before Claude does. Here, we convert every date to the ISO format and map status codes like shipped and in transit onto one fixed list. We register it with a matcher so it only runs for the order tools. The model never has to guess what a date like three slash four means."
+   },
+   {
+    "kind": "how",
+    "title": "PreToolUse: enforce policy",
+    "bullets": [
+     "Inspect the tool name and its input before it runs.",
+     "Deny calls that break policy, such as refunds over a cap.",
+     "The reason tells Claude to escalate instead.",
+     "Hooks are deterministic; prompt rules are probabilistic."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "async def refund_cap(inp, tool_use_id, ctx):\n    if inp[\"tool_input\"].get(\"amount\", 0) <= 500:\n        return {}\n    return {\"hookSpecificOutput\": {\n        \"hookEventName\": \"PreToolUse\",\n        \"permissionDecision\": \"deny\",\n        \"permissionDecisionReason\":\n            \"Refunds over 500 need a human. Call escalate_to_human.\"}}"
+    },
+    "note": "A pre tool use hook runs before the tool. This one reads the refund amount. Anything up to five hundred passes. Anything above is denied, and the reason tells Claude to escalate to a human instead. That is the key point. A hook gives the same answer every time, while a rule in the prompt only makes the right behavior likely."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 1: messy backends",
+    "bullets": [
+     "Orders tool says 04/05/2026; billing sends a Unix timestamp.",
+     "PostToolUse hook turns both into ISO dates.",
+     "Statuses like SHIPPED and in_transit map to one list.",
+     "A 900 refund request is blocked and redirected to escalation.",
+     "Claude explains the handoff to the customer politely."
+    ],
+    "note": "In the support scenario, the orders system and the billing system disagree on dates, and statuses are spelled differently everywhere. A post tool use hook cleans all of that up. When the agent tries to refund nine hundred, the pre tool use hook blocks it and points to escalation. Claude then tells the customer a specialist will take over."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Add never refund over 500 to the system prompt.",
+      "right": "Block the call in a PreToolUse hook.",
+      "why": "Compliance must be guaranteed, not just likely."
+     },
+     {
+      "wrong": "Tell Claude in the prompt to convert date formats.",
+      "right": "Normalize results in a PostToolUse hook.",
+      "why": "Deterministic cleanup removes a whole class of misreads."
+     },
+     {
+      "wrong": "Deny a call silently with no explanation.",
+      "right": "Deny with a reason that points to the right next step.",
+      "why": "The reason lets Claude recover, such as escalating."
+     }
+    ],
+    "note": "Whenever the question says must, always, or compliance, lean toward a hook over a prompt rule. Format chaos from several tools is a post tool use job. And a good block does not just say no. It gives Claude a reason that leads to the correct path, such as calling the escalation tool."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "PostToolUse reshapes results before the model sees them.",
+     "PreToolUse blocks policy-breaking calls deterministically.",
+     "Redirect blocked calls toward escalation with a clear reason.",
+     "Guaranteed compliance means a hook, not a prompt."
+    ],
+    "note": "To recap. Post tool use hooks clean and reshape tool results before Claude reads them. Pre tool use hooks inspect calls and block anything that breaks policy. When you block, give a reason that sends Claude to the right next step. And whenever compliance has to be guaranteed, choose a hook over prompt wording."
+   }
+  ],
+  "docsToday": "PostToolUse hooks can replace any tool's result with updatedToolOutput; updatedMCPToolOutput is the older, MCP-only field.",
+  "check": [
+   {
+    "q": "Your support agent reads delivery dates from a European carrier tool that returns 04/05/2026 for 4 May. Claude sometimes tells customers April 5. What is the most reliable fix?",
+    "options": [
+     "Add a line to the system prompt explaining the carrier's date format",
+     "Ask Claude to confirm the date with the customer each time",
+     "Normalize the carrier's dates to ISO format in a PostToolUse hook",
+     "Remove the carrier tool and estimate dates instead"
+    ],
+    "answer": 2,
+    "why": "A PostToolUse hook rewrites the result before the model sees it, so the misread cannot happen."
+   },
+   {
+    "q": "Policy says the agent may never close an account without a manager approval code. Which design guarantees this?",
+    "options": [
+     "A PreToolUse hook that denies close_account unless a valid approval code is in the input",
+     "A system prompt rule in capital letters with three examples",
+     "A PostToolUse hook that logs every closed account",
+     "A weekly audit of closed accounts"
+    ],
+    "answer": 0,
+    "why": "Only pre-call interception blocks the action deterministically; logging and audits act after the damage."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Intercept and control agent behavior with hooks",
+    "url": "https://code.claude.com/docs/en/agent-sdk/hooks"
+   },
+   {
+    "title": "Hooks reference",
+    "url": "https://code.claude.com/docs/en/hooks"
+   }
+  ],
+  "lab": {
+   "title": "Normalize and cap with hooks",
+   "minutes": 15,
+   "steps": [
+    "Write a stub tool that returns dates like 04/05/2026 and statuses like SHIPPED.",
+    "Add a PostToolUse hook that rewrites dates to ISO and maps statuses.",
+    "Add a PreToolUse hook that denies refunds above 500 with an escalation reason.",
+    "Ask for a 900 refund and check the agent's next tool call.",
+    "Remove the hook, use only a prompt rule, and try a few pushy prompts."
+   ],
+   "expect": "With hooks, the model only ever sees clean data and the cap always holds. Without them, results depend on wording, which is why the exam prefers hooks when compliance must be guaranteed."
+  }
+ },
+ {
+  "ts": "1.6",
+  "minutes": 8,
+  "hook": "A predictable nightly pipeline and an open-ended outage investigation need opposite decomposition strategies, and the exam asks you to tell them apart.",
+  "scenarios": [
+   4,
+   5,
+   3
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Assembly line or detective",
+    "bullets": [
+     "Some work has known steps: use a fixed chain.",
+     "Some work reveals its steps as you go: adapt.",
+     "An assembly line versus a detective following clues.",
+     "Choose the simplest shape that fits the task."
+    ],
+    "note": "There are two basic ways to break down a big task. If you already know the steps, use a fixed chain, like an assembly line. If the steps only appear as you dig in, you need an adaptive plan, like a detective following clues. Anthropic's advice is to choose the simplest shape that does the job."
+   },
+   {
+    "kind": "how",
+    "title": "Fixed prompt chains",
+    "bullets": [
+     "Each step's output feeds the next step.",
+     "Code checks, called gates, can sit between steps.",
+     "Best for predictable work with several aspects.",
+     "Code review: one pass per file, then a cross-file pass."
+    ],
+    "code": {
+     "lang": "python",
+     "text": "findings = []\nfor path in changed_files:\n    findings.append(review_file(path))   # local issues only\n\nreport = integration_pass(findings, changed_files)\n# checks interfaces, shared state and calls across files"
+    },
+    "note": "A prompt chain runs known steps in order, with optional checks in between. Code review is the classic case. Review each file on its own so nothing gets skimmed, then run a separate integration pass that looks across files for broken interfaces and mismatched calls. One giant pass over many files spreads attention thin and misses things."
+   },
+   {
+    "kind": "how",
+    "title": "Adaptive plans",
+    "bullets": [
+     "Map the structure first.",
+     "Find the high-impact areas.",
+     "Make a plan, then revise it as findings arrive.",
+     "Orchestrator-workers fits when subtasks are unknown upfront."
+    ],
+    "note": "Open-ended work is different. Start by mapping the structure, then find the areas that matter most, then make a plan. As you learn things, change the plan. This is where an orchestrator that creates subtasks at run time earns its cost. If you can list every subtask in advance, a fixed chain is usually simpler and cheaper."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenarios 4 and 5",
+    "bullets": [
+     "CI review of a 14-file PR: per-file passes, then integration.",
+     "Legacy billing tests: map modules, rank risk, plan.",
+     "An undocumented tax service appears, so the plan changes.",
+     "Tests for that service move to the top of the list."
+    ],
+    "note": "In the CI scenario, a fourteen file pull request gets one review per file and then a cross-file pass. In the developer productivity scenario, someone asks for tests on a legacy billing module. The agent maps the modules, ranks the risky ones and plans. Then it finds an undocumented tax service, and the plan changes to cover it first."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Review all changed files in one big pass.",
+      "right": "Review per file, then run a cross-file integration pass.",
+      "why": "Single passes dilute attention and miss cross-file bugs."
+     },
+     {
+      "wrong": "Write a full rigid plan for an open-ended investigation.",
+      "right": "Map, prioritize, plan, then adapt to findings.",
+      "why": "The real problem often shows up mid-investigation."
+     },
+     {
+      "wrong": "Use a dynamic orchestrator for a fixed, known pipeline.",
+      "right": "Use a simple prompt chain.",
+      "why": "Add complexity only when the task needs it."
+     }
+    ],
+    "note": "Watch for three traps. One huge pass over many files is wrong; split it per file and add an integration pass. A rigid upfront plan for an open investigation is wrong; adapt as you learn. And reaching for a dynamic orchestrator when the steps are already known is overkill. The simple chain wins there."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "Predictable multi-aspect work: fixed prompt chain.",
+     "Open-ended work: map, prioritize, plan, adapt.",
+     "Reviews: per file first, then cross-file integration.",
+     "Start simple; add orchestration only when needed."
+    ],
+    "note": "To recap. Use a fixed chain when the steps are predictable. Use an adaptive plan when the task is open-ended, starting with a map of the ground. For code review, go file by file, then check how the files fit together. And always start with the simplest structure that solves the problem."
+   }
+  ],
+  "check": [
+   {
+    "q": "Every night a pipeline must extract fields from invoices, validate totals, and write a summary for finance. The steps never change. Which decomposition fits best?",
+    "options": [
+     "An orchestrator that invents subtasks fresh for each invoice",
+     "One prompt that does all three steps in a single call",
+     "A team of peer agents that negotiate who does each step",
+     "A fixed prompt chain with a validation gate between steps"
+    ],
+    "answer": 3,
+    "why": "Known, repeatable steps suit a fixed chain; gates catch bad output before the next step. Dynamic orchestration adds cost for no benefit."
+   },
+   {
+    "q": "An engineer asks an agent to find out why checkout latency doubled after a database migration. Nobody knows where the cause is. How should the agent approach it?",
+    "options": [
+     "Map the request path, find high-impact areas, plan, and revise as evidence comes in",
+     "Follow a fixed checklist of ten standard performance checks in order",
+     "Read every file in the repository before forming any hypothesis",
+     "Roll back the migration first and investigate later"
+    ],
+    "answer": 0,
+    "why": "Open-ended investigations need a plan that adapts to findings, starting from a map of the system."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Building effective AI agents",
+    "url": "https://www.anthropic.com/engineering/building-effective-agents"
+   },
+   {
+    "title": "Prompting best practices",
+    "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+   },
+   {
+    "title": "Orchestrate subagents at scale with dynamic workflows",
+    "url": "https://code.claude.com/docs/en/workflows"
+   }
+  ],
+  "lab": {
+   "title": "Per-file review versus one big pass",
+   "minutes": 15,
+   "steps": [
+    "Pick a small repo and make a branch that changes four or five files.",
+    "In Claude Code, ask for one review of the whole diff and save the output.",
+    "Ask for a separate review of each file, then one cross-file integration review.",
+    "Plant a mismatched function signature across two files before step 3.",
+    "Compare which approach catches the planted bug."
+   ],
+   "expect": "Per-file passes find more local issues, and the integration pass catches the cross-file mismatch. That is the decomposition the exam expects for multi-file reviews."
+  }
+ },
+ {
+  "ts": "1.7",
+  "minutes": 8,
+  "hook": "Resuming yesterday's analysis after teammates changed the code can leave the agent reasoning over stale file reads, so knowing when to resume, fork or restart matters.",
+  "scenarios": [
+   2,
+   4
+  ],
+  "slides": [
+   {
+    "kind": "idea",
+    "title": "Bookmark, photocopy, or fresh page",
+    "bullets": [
+     "A session is a saved conversation with all tool results.",
+     "Resume: open the bookmark and keep going.",
+     "Fork: photocopy the notebook and try another path.",
+     "Fresh start: new notebook with a summary page."
+    ],
+    "note": "A session is the saved conversation, including every file the agent read and every result it got. You have three moves. Resume is like opening a bookmark and carrying on. Forking is like photocopying the notebook so you can try a different path. And a fresh start is a new notebook with a short summary page at the front."
+   },
+   {
+    "kind": "how",
+    "title": "Resume and fork in practice",
+    "bullets": [
+     "Name sessions so you can find them again.",
+     "--resume <name> continues a named session.",
+     "--fork-session branches from it, leaving the original intact.",
+     "SDK: resume with a session id; fork_session to branch."
+    ],
+    "code": {
+     "lang": "bash",
+     "text": "claude -n billing-analysis          # start a named session\nclaude --resume billing-analysis    # continue it later\nclaude --resume billing-analysis --fork-session\n# Agent SDK (Python): resume=session_id, fork_session=True"
+    },
+    "note": "Give your sessions names so you can come back to them. Resume by name to continue exactly where you left off. Add the fork session flag to branch into a new session that starts with the same history, while the original stays untouched. In the Agent SDK, you pass the session ID to resume, and set fork session to true to branch."
+   },
+   {
+    "kind": "how",
+    "title": "Stale context and what to tell it",
+    "bullets": [
+     "Old tool results do not update when files change.",
+     "After small changes: resume and name the changed files.",
+     "After big changes: fresh session plus a structured summary.",
+     "Forks branch the conversation, not the files on disk."
+    ],
+    "note": "Here is the catch. Tool results saved in a session do not refresh when the code changes. If only a few files changed, resume and tell the agent exactly which ones, so it reads them again. If a lot changed, start a fresh session and give it a summary of earlier findings. Also remember a fork copies the conversation, not your files."
+   },
+   {
+    "kind": "practice",
+    "title": "Scenario 4: picking up legacy work",
+    "bullets": [
+     "Yesterday: a named session analyzed the billing module.",
+     "Overnight a teammate changed three files.",
+     "Resume and say: invoice.py, tax.py and api.py changed; reread them.",
+     "Then fork twice to compare two refactor approaches."
+    ],
+    "note": "In the developer productivity scenario, yesterday's named session mapped the billing module. Overnight, a teammate changed three files. You resume and say exactly which files changed, so the agent rereads them. Then you want to compare two refactor ideas. You fork the session twice, so both branches start from the same analysis and neither pollutes the other."
+   },
+   {
+    "kind": "traps",
+    "title": "Exam traps",
+    "pairs": [
+     {
+      "wrong": "Resume and assume the agent knows what changed.",
+      "right": "Tell it exactly which files changed.",
+      "why": "Saved tool results are snapshots and go stale."
+     },
+     {
+      "wrong": "Resume a week-old session after a large refactor.",
+      "right": "Start fresh with a summary of prior findings.",
+      "why": "Many stale results mislead more than they help."
+     },
+     {
+      "wrong": "Try two approaches one after another in one session.",
+      "right": "Fork so each approach starts from the same baseline.",
+      "why": "The second attempt would be biased by the first."
+     }
+    ],
+    "note": "Exam items here test judgment. Resuming is great, but only if you tell the agent what changed since. When the codebase has moved a lot, a fresh session seeded with a summary is safer than dragging along stale results. And when you want to compare options fairly, fork from the shared baseline instead of trying them one after another."
+   },
+   {
+    "kind": "recap",
+    "title": "Remember",
+    "bullets": [
+     "--resume <name> continues a named session.",
+     "fork_session branches from a shared baseline.",
+     "Tell a resumed session exactly which files changed.",
+     "Heavy changes: fresh session plus a summary beats resuming."
+    ],
+    "note": "To recap. Resume a named session to keep going. Fork when you want to explore alternatives from the same starting point. When you resume, tell the agent which files changed. And if the ground has shifted a lot, start fresh with a clear summary rather than trusting old tool results."
+   }
+  ],
+  "check": [
+   {
+    "q": "A developer resumes a code analysis session from last week. Since then the team renamed modules and deleted two services. The agent keeps referring to functions that no longer exist. What is the best approach?",
+    "options": [
+     "Keep resuming and correct the agent each time it is wrong",
+     "Fork the old session so the original stays clean",
+     "Start a fresh session and give it a structured summary of the earlier findings",
+     "Increase the context window so it can hold more history"
+    ],
+    "answer": 2,
+    "why": "After heavy changes, stale tool results mislead; a fresh session with a summary keeps the useful conclusions without the outdated reads."
+   },
+   {
+    "q": "After a long analysis of a payments service, a team wants to compare a queue-based redesign with a cache-based one, both starting from that same analysis. What should they do?",
+    "options": [
+     "Ask for both designs in the same session, one after the other",
+     "Fork the session once per approach so each starts from the shared baseline",
+     "Start two brand-new sessions with no prior context",
+     "Export the transcript and paste it into a chat"
+    ],
+    "answer": 1,
+    "why": "Forking branches from the shared analysis, so each approach is explored independently without biasing the other."
+   }
+  ],
+  "sources": [
+   {
+    "title": "Work with sessions",
+    "url": "https://code.claude.com/docs/en/agent-sdk/sessions"
+   },
+   {
+    "title": "Manage sessions",
+    "url": "https://code.claude.com/docs/en/sessions"
+   }
+  ],
+  "lab": {
+   "title": "Resume, fork and go stale",
+   "minutes": 10,
+   "steps": [
+    "Run claude -n demo-analysis and ask it to summarize one module.",
+    "Exit, edit a function in that module, then run claude --resume demo-analysis.",
+    "Ask about the edited function without mentioning the change, then with it.",
+    "Run claude --resume demo-analysis --fork-session and try a different refactor idea.",
+    "Use /resume to confirm the original session is unchanged."
+   ],
+   "expect": "The resumed session describes the old code until told which file changed. The fork gets its own history while the original stays intact, matching the exam's resume and fork rules."
+  }
+ }
+]

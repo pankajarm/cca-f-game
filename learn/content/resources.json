@@ -1,0 +1,837 @@
+{
+ "checkedOn": "2026-10-26",
+ "videos": [
+  {
+   "id": "D7_ipDqhtwk",
+   "title": "How We Build Effective Agents",
+   "channel": "AI Engineer",
+   "minutes": 15,
+   "why": "when to use agents vs workflows",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "uhJJgc-0iTQ",
+   "title": "Building more effective AI agents",
+   "channel": "Anthropic",
+   "minutes": 19,
+   "why": "workflows, agents and orchestrator-workers",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "TqC1qOfiVcQ",
+   "title": "Claude Agent SDK [Full Workshop]",
+   "channel": "AI Engineer",
+   "minutes": 112,
+   "why": "Agent SDK loop, subagents, hooks, sessions",
+   "level": "advanced",
+   "year": 2025
+  },
+  {
+   "id": "CEvIs9y1uog",
+   "title": "Don't Build Agents, Build Skills Instead",
+   "channel": "AI Engineer",
+   "minutes": 16,
+   "why": "skills as packaged know-how",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "fOxC44g8vig",
+   "title": "Claude Agent Skills Explained",
+   "channel": "Anthropic",
+   "minutes": 3,
+   "why": "what skills are, in 3 minutes",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "XSZP9GhhuAc",
+   "title": "Prompting for Agents | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": 29,
+   "why": "prompting agents and tool guidance",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "aqW68Is_Kj4",
+   "title": "Evolving Claude APIs for Agents",
+   "channel": "AI Engineer",
+   "minutes": 13,
+   "why": "context editing, memory, tool-result clearing",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "9QebvrrY3KY",
+   "title": "Claude for long-horizon tasks",
+   "channel": "AI Engineer",
+   "minutes": 25,
+   "why": "long-horizon tasks and state",
+   "level": "advanced",
+   "year": 2026
+  },
+  {
+   "id": "mR-WAvEPRwE",
+   "title": "How to Build Agents That Run for Hours (Without Losing the Plot)",
+   "channel": "AI Engineer",
+   "minutes": 76,
+   "why": "long-running harnesses and compaction",
+   "level": "advanced",
+   "year": 2026
+  },
+  {
+   "id": "FGftGOzfohc",
+   "title": "Build a Research Agent with Claude Managed Agents (Part 2 of 4)",
+   "channel": "AI Engineer",
+   "minutes": 36,
+   "why": "build a research agent with subagents",
+   "level": "intermediate",
+   "year": 2026
+  },
+  {
+   "id": "kQmXtrmQ5Zg",
+   "title": "Building Agents with Model Context Protocol - Full Workshop",
+   "channel": "AI Engineer",
+   "minutes": 104,
+   "why": "MCP tools, resources and prompts, hands-on",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "HNzH5Us1Rvg",
+   "title": "MCP 201 | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": null,
+   "why": "advanced MCP features and transports",
+   "level": "advanced",
+   "year": 2025
+  },
+  {
+   "id": "j8NlbEWAsmc",
+   "title": "MCP at Sourcegraph | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": null,
+   "why": "MCP tool design in a real product",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "x-8pBqWiTzk",
+   "title": "MCP: Origins and Requests For Startups",
+   "channel": "AI Engineer",
+   "minutes": 18,
+   "why": "why MCP exists",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "0NHCyq8bBcM",
+   "title": "Remote MCPs: What we learned from shipping",
+   "channel": "AI Engineer",
+   "minutes": 15,
+   "why": "remote MCP servers in production",
+   "level": "advanced",
+   "year": 2025
+  },
+  {
+   "id": "gv0WHhKelSE",
+   "title": "Claude Code best practices | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": 26,
+   "why": "CLAUDE.md, context, plan then code",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "6eBSHbLKuN0",
+   "title": "Mastering Claude Code in 30 minutes",
+   "channel": "Anthropic",
+   "minutes": 42,
+   "why": "setup, memory, permissions, plan mode",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "dRsjO-88nBs",
+   "title": "Building headless automation with Claude Code | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": 21,
+   "why": "headless -p and GitHub Actions",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "fHWFF_pnqDk",
+   "title": "Vibe coding in prod | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": 31,
+   "why": "review and verifiability for AI-written code",
+   "level": "intermediate",
+   "year": 2025
+  },
+  {
+   "id": "ysPbXH0LpIE",
+   "title": "Prompting 101 | Code w/ Claude",
+   "channel": "Anthropic",
+   "minutes": 25,
+   "why": "build a prompt step by step",
+   "level": "beginner",
+   "year": 2025
+  },
+  {
+   "id": "T9aRN5JkmL8",
+   "title": "AI prompt engineering: A deep dive",
+   "channel": "Anthropic",
+   "minutes": 76,
+   "why": "what good prompting is, with examples",
+   "level": "intermediate",
+   "year": 2024
+  },
+  {
+   "id": "hkhDdcM5V94",
+   "title": "Building with Anthropic's Claude - The Prompt Doctor is In",
+   "channel": "AI Engineer",
+   "minutes": 95,
+   "why": "live prompt critique: structure, examples, output format",
+   "level": "intermediate",
+   "year": 2024
+  },
+  {
+   "id": "VhPfM_aGBVc",
+   "title": "Anthropic for VPs of AI",
+   "channel": "AI Engineer",
+   "minutes": 21,
+   "why": "evals first and human review in deployments",
+   "level": "beginner",
+   "year": 2025
+  }
+ ],
+ "lessonVideos": {
+  "start-here": [
+   "D7_ipDqhtwk"
+  ],
+  "primer-D1": [
+   "D7_ipDqhtwk",
+   "uhJJgc-0iTQ"
+  ],
+  "ts-1.1": [
+   "D7_ipDqhtwk"
+  ],
+  "ts-1.2": [
+   "uhJJgc-0iTQ",
+   "FGftGOzfohc"
+  ],
+  "ts-1.3": [
+   "TqC1qOfiVcQ"
+  ],
+  "ts-1.4": [
+   "XSZP9GhhuAc"
+  ],
+  "ts-1.5": [
+   "TqC1qOfiVcQ"
+  ],
+  "ts-1.6": [
+   "uhJJgc-0iTQ"
+  ],
+  "ts-1.7": [
+   "TqC1qOfiVcQ"
+  ],
+  "primer-D2": [
+   "x-8pBqWiTzk",
+   "kQmXtrmQ5Zg"
+  ],
+  "ts-2.1": [
+   "kQmXtrmQ5Zg",
+   "j8NlbEWAsmc"
+  ],
+  "ts-2.2": [
+   "HNzH5Us1Rvg"
+  ],
+  "ts-2.3": [
+   "XSZP9GhhuAc"
+  ],
+  "ts-2.4": [
+   "kQmXtrmQ5Zg",
+   "0NHCyq8bBcM"
+  ],
+  "ts-2.5": [
+   "6eBSHbLKuN0"
+  ],
+  "primer-D3": [
+   "gv0WHhKelSE",
+   "6eBSHbLKuN0"
+  ],
+  "ts-3.1": [
+   "6eBSHbLKuN0"
+  ],
+  "ts-3.2": [
+   "fOxC44g8vig",
+   "CEvIs9y1uog"
+  ],
+  "ts-3.3": [
+   "gv0WHhKelSE"
+  ],
+  "ts-3.4": [
+   "gv0WHhKelSE"
+  ],
+  "ts-3.5": [
+   "gv0WHhKelSE"
+  ],
+  "ts-3.6": [
+   "dRsjO-88nBs"
+  ],
+  "primer-D4": [
+   "ysPbXH0LpIE"
+  ],
+  "ts-4.1": [
+   "ysPbXH0LpIE"
+  ],
+  "ts-4.2": [
+   "T9aRN5JkmL8"
+  ],
+  "ts-4.3": [
+   "hkhDdcM5V94"
+  ],
+  "ts-4.6": [
+   "fHWFF_pnqDk"
+  ],
+  "primer-D5": [
+   "aqW68Is_Kj4",
+   "9QebvrrY3KY"
+  ],
+  "ts-5.1": [
+   "aqW68Is_Kj4"
+  ],
+  "ts-5.4": [
+   "mR-WAvEPRwE"
+  ],
+  "ts-5.5": [
+   "VhPfM_aGBVc"
+  ],
+  "scn-1": [
+   "XSZP9GhhuAc"
+  ],
+  "scn-2": [
+   "gv0WHhKelSE"
+  ],
+  "scn-3": [
+   "FGftGOzfohc"
+  ],
+  "scn-4": [
+   "6eBSHbLKuN0"
+  ],
+  "scn-5": [
+   "dRsjO-88nBs"
+  ],
+  "scn-6": [
+   "hkhDdcM5V94"
+  ],
+  "exam-day": []
+ },
+ "courseIndex": {
+  "api": {
+   "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+   "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+  },
+  "platform101": {
+   "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
+   "url": "https://anthropic.skilljar.com/claude-platform-101"
+  },
+  "cc101": {
+   "title": "Claude Code 101 (Anthropic Academy, ~1.5 h)",
+   "url": "https://anthropic.skilljar.com/claude-code-101"
+  },
+  "ccaction": {
+   "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+   "url": "https://anthropic.skilljar.com/claude-code-in-action"
+  },
+  "mcp": {
+   "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
+   "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+  },
+  "mcpadv": {
+   "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
+   "url": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics"
+  },
+  "skills": {
+   "title": "Introduction to agent skills (Anthropic Academy, ~1 h)",
+   "url": "https://anthropic.skilljar.com/introduction-to-agent-skills"
+  },
+  "subagents": {
+   "title": "Introduction to subagents (Anthropic Academy, ~45 min)",
+   "url": "https://anthropic.skilljar.com/introduction-to-subagents"
+  },
+  "pe": {
+   "title": "Prompt engineering interactive tutorial (anthropics/courses)",
+   "url": "https://github.com/anthropics/courses/tree/master/prompt_engineering_interactive_tutorial"
+  },
+  "rwp": {
+   "title": "Real world prompting (anthropics/courses)",
+   "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
+  },
+  "tooluse": {
+   "title": "Tool use course (anthropics/courses)",
+   "url": "https://github.com/anthropics/courses/tree/master/tool_use"
+  },
+  "evals": {
+   "title": "Prompt evaluations (anthropics/courses)",
+   "url": "https://github.com/anthropics/courses/tree/master/prompt_evaluations"
+  },
+  "ck-cs": {
+   "title": "Cookbook: customer service agent with client-side tools",
+   "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"
+  },
+  "ck-json": {
+   "title": "Cookbook: extracting structured JSON with tool use",
+   "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"
+  },
+  "ck-choice": {
+   "title": "Cookbook: tool choice",
+   "url": "https://platform.claude.com/cookbook/tool-use-tool-choice"
+  },
+  "ck-parallel": {
+   "title": "Cookbook: parallel tool calls",
+   "url": "https://platform.claude.com/cookbook/tool-use-parallel-tools"
+  },
+  "ck-batch": {
+   "title": "Cookbook: batch processing with the Message Batches API",
+   "url": "https://platform.claude.com/cookbook/misc-batch-processing"
+  },
+  "ck-orch": {
+   "title": "Cookbook: orchestrator-workers pattern",
+   "url": "https://platform.claude.com/cookbook/patterns-agents-orchestrator-workers"
+  },
+  "ck-workflows": {
+   "title": "Cookbook: basic agent workflows",
+   "url": "https://platform.claude.com/cookbook/patterns-agents-basic-workflows"
+  },
+  "ck-evalopt": {
+   "title": "Cookbook: evaluator-optimizer pattern",
+   "url": "https://platform.claude.com/cookbook/patterns-agents-evaluator-optimizer"
+  },
+  "ck-sdk0": {
+   "title": "Cookbook: Agent SDK 00, the one-liner research agent",
+   "url": "https://platform.claude.com/cookbook/claude-agent-sdk-00-the-one-liner-research-agent"
+  },
+  "ck-sdk1": {
+   "title": "Cookbook: Agent SDK 01, the chief of staff agent",
+   "url": "https://platform.claude.com/cookbook/claude-agent-sdk-01-the-chief-of-staff-agent"
+  },
+  "ck-sdk5": {
+   "title": "Cookbook: Agent SDK 05, building a session browser",
+   "url": "https://platform.claude.com/cookbook/claude-agent-sdk-05-building-a-session-browser"
+  },
+  "ck-reviewer": {
+   "title": "Cookbook: build a scheduled repository reviewer",
+   "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
+  },
+  "ck-ctx": {
+   "title": "Cookbook: context engineering with memory, compaction and tool clearing",
+   "url": "https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools"
+  },
+  "ck-compact": {
+   "title": "Cookbook: automatic context compaction",
+   "url": "https://platform.claude.com/cookbook/tool-use-automatic-context-compaction"
+  },
+  "ck-cite": {
+   "title": "Cookbook: citations",
+   "url": "https://platform.claude.com/cookbook/misc-using-citations"
+  },
+  "ck-evals": {
+   "title": "Cookbook: building evals",
+   "url": "https://platform.claude.com/cookbook/misc-building-evals"
+  },
+  "ck-skills": {
+   "title": "Cookbook: introduction to Claude Skills",
+   "url": "https://platform.claude.com/cookbook/skills-notebooks-01-skills-introduction"
+  },
+  "ck-tooleval": {
+   "title": "Cookbook: tool evaluation",
+   "url": "https://platform.claude.com/cookbook/tool-evaluation-tool-evaluation"
+  },
+  "dl-cc": {
+   "title": "Claude Code: A Highly Agentic Coding Assistant (DeepLearning.AI, ~2 h)",
+   "url": "https://www.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant"
+  },
+  "dl-mcp": {
+   "title": "MCP: Build Rich-Context AI Apps with Anthropic (DeepLearning.AI, ~1.7 h)",
+   "url": "https://www.deeplearning.ai/courses/mcp-build-rich-context-ai-apps-with-anthropic"
+  },
+  "dl-skills": {
+   "title": "Agent Skills with Anthropic (DeepLearning.AI, ~2.3 h)",
+   "url": "https://www.deeplearning.ai/short-courses/agent-skills-with-anthropic/"
+  },
+  "b-agents": {
+   "title": "Building effective agents (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/building-effective-agents"
+  },
+  "b-tools": {
+   "title": "Writing effective tools for agents (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/writing-tools-for-agents"
+  },
+  "b-research": {
+   "title": "How we built our multi-agent research system (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/multi-agent-research-system"
+  },
+  "b-context": {
+   "title": "Effective context engineering for AI agents (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+  },
+  "b-ccbp": {
+   "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/claude-code-best-practices"
+  },
+  "b-harness": {
+   "title": "Effective harnesses for long-running agents (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+  },
+  "b-skills": {
+   "title": "Equipping agents for the real world with Agent Skills (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/equipping-agents-for-the-real-world-with-agent-skills"
+  },
+  "b-sdk": {
+   "title": "Building agents with the Claude Agent SDK (Claude blog)",
+   "url": "https://claude.com/blog/building-agents-with-the-claude-agent-sdk"
+  },
+  "b-evals": {
+   "title": "Demystifying evals for AI agents (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+  },
+  "b-mcpcode": {
+   "title": "Code execution with MCP (Anthropic Engineering)",
+   "url": "https://www.anthropic.com/research/code-execution-with-mcp"
+  },
+  "cert": {
+   "title": "CCA-F certification page (Partner Academy)",
+   "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
+  },
+  "prep": {
+   "title": "Official CCA-F prep course list (Partner Academy)",
+   "url": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses"
+  },
+  "path": {
+   "title": "Claude Architect learning path (Partner Academy, partners only)",
+   "url": "https://anthropic-partners.skilljar.com/path/claude-architect"
+  },
+  "faq": {
+   "title": "Certification FAQ",
+   "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
+  }
+ },
+ "lessonCourses": {
+  "start-here": [
+   "cert",
+   "prep",
+   "faq"
+  ],
+  "primer-D1": [
+   "platform101",
+   "api",
+   "b-agents"
+  ],
+  "ts-1.1": [
+   "tooluse",
+   "ck-cs"
+  ],
+  "ts-1.2": [
+   "subagents",
+   "ck-orch",
+   "b-research"
+  ],
+  "ts-1.3": [
+   "subagents",
+   "ck-sdk1"
+  ],
+  "ts-1.4": [
+   "ck-cs",
+   "b-sdk"
+  ],
+  "ts-1.5": [
+   "ck-sdk1",
+   "b-sdk"
+  ],
+  "ts-1.6": [
+   "ck-workflows",
+   "ck-orch",
+   "b-agents"
+  ],
+  "ts-1.7": [
+   "ck-sdk5"
+  ],
+  "primer-D2": [
+   "mcp",
+   "dl-mcp",
+   "tooluse"
+  ],
+  "ts-2.1": [
+   "b-tools",
+   "ck-tooleval"
+  ],
+  "ts-2.2": [
+   "mcpadv"
+  ],
+  "ts-2.3": [
+   "ck-choice",
+   "ck-parallel"
+  ],
+  "ts-2.4": [
+   "mcp",
+   "mcpadv",
+   "b-mcpcode"
+  ],
+  "ts-2.5": [
+   "ccaction"
+  ],
+  "primer-D3": [
+   "cc101",
+   "ccaction",
+   "dl-cc"
+  ],
+  "ts-3.1": [
+   "ccaction",
+   "b-ccbp"
+  ],
+  "ts-3.2": [
+   "skills",
+   "dl-skills",
+   "ck-skills"
+  ],
+  "ts-3.3": [
+   "ccaction"
+  ],
+  "ts-3.4": [
+   "b-ccbp",
+   "dl-cc"
+  ],
+  "ts-3.5": [
+   "b-ccbp"
+  ],
+  "ts-3.6": [
+   "ck-reviewer"
+  ],
+  "primer-D4": [
+   "pe",
+   "rwp",
+   "api"
+  ],
+  "ts-4.1": [
+   "rwp",
+   "evals"
+  ],
+  "ts-4.2": [
+   "pe",
+   "rwp"
+  ],
+  "ts-4.3": [
+   "ck-json",
+   "ck-choice"
+  ],
+  "ts-4.4": [
+   "ck-evalopt",
+   "evals"
+  ],
+  "ts-4.5": [
+   "ck-batch"
+  ],
+  "ts-4.6": [
+   "ck-reviewer",
+   "ck-evalopt"
+  ],
+  "primer-D5": [
+   "b-context",
+   "api"
+  ],
+  "ts-5.1": [
+   "b-context",
+   "ck-compact"
+  ],
+  "ts-5.2": [
+   "ck-cs"
+  ],
+  "ts-5.3": [
+   "b-research"
+  ],
+  "ts-5.4": [
+   "ck-ctx",
+   "b-harness"
+  ],
+  "ts-5.5": [
+   "b-evals",
+   "ck-evals"
+  ],
+  "ts-5.6": [
+   "ck-cite",
+   "b-research"
+  ],
+  "scn-1": [
+   "ck-cs"
+  ],
+  "scn-2": [
+   "ccaction",
+   "b-ccbp"
+  ],
+  "scn-3": [
+   "b-research",
+   "ck-orch"
+  ],
+  "scn-4": [
+   "ccaction",
+   "mcp"
+  ],
+  "scn-5": [
+   "ck-reviewer"
+  ],
+  "scn-6": [
+   "ck-json",
+   "ck-batch"
+  ],
+  "exam-day": [
+   "faq"
+  ]
+ },
+ "courses": [
+  {
+   "title": "Stage 1 · Beginner",
+   "items": [
+    {
+     "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
+     "url": "https://anthropic.skilljar.com/claude-platform-101"
+    },
+    {
+     "title": "Claude Code 101 (Anthropic Academy, ~1.5 h)",
+     "url": "https://anthropic.skilljar.com/claude-code-101"
+    },
+    {
+     "title": "Prompt engineering interactive tutorial (anthropics/courses)",
+     "url": "https://github.com/anthropics/courses/tree/master/prompt_engineering_interactive_tutorial"
+    },
+    {
+     "title": "Building effective agents (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/building-effective-agents"
+    },
+    {
+     "title": "Agent Skills with Anthropic (DeepLearning.AI, ~2.3 h)",
+     "url": "https://www.deeplearning.ai/short-courses/agent-skills-with-anthropic/"
+    }
+   ]
+  },
+  {
+   "title": "Stage 2 · Intermediate",
+   "items": [
+    {
+     "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+     "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+    },
+    {
+     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+     "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    },
+    {
+     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
+     "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    },
+    {
+     "title": "Introduction to subagents (Anthropic Academy, ~45 min)",
+     "url": "https://anthropic.skilljar.com/introduction-to-subagents"
+    },
+    {
+     "title": "Introduction to agent skills (Anthropic Academy, ~1 h)",
+     "url": "https://anthropic.skilljar.com/introduction-to-agent-skills"
+    },
+    {
+     "title": "Tool use course (anthropics/courses)",
+     "url": "https://github.com/anthropics/courses/tree/master/tool_use"
+    },
+    {
+     "title": "Real world prompting (anthropics/courses)",
+     "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
+    },
+    {
+     "title": "Claude Code: A Highly Agentic Coding Assistant (DeepLearning.AI, ~2 h)",
+     "url": "https://www.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant"
+    },
+    {
+     "title": "MCP: Build Rich-Context AI Apps with Anthropic (DeepLearning.AI, ~1.7 h)",
+     "url": "https://www.deeplearning.ai/courses/mcp-build-rich-context-ai-apps-with-anthropic"
+    },
+    {
+     "title": "Writing effective tools for agents (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/writing-tools-for-agents"
+    },
+    {
+     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/claude-code-best-practices"
+    }
+   ]
+  },
+  {
+   "title": "Stage 3 · Advanced",
+   "items": [
+    {
+     "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
+     "url": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics"
+    },
+    {
+     "title": "Prompt evaluations (anthropics/courses)",
+     "url": "https://github.com/anthropics/courses/tree/master/prompt_evaluations"
+    },
+    {
+     "title": "How we built our multi-agent research system (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/multi-agent-research-system"
+    },
+    {
+     "title": "Effective context engineering for AI agents (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+    },
+    {
+     "title": "Effective harnesses for long-running agents (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+    },
+    {
+     "title": "Demystifying evals for AI agents (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+    },
+    {
+     "title": "Code execution with MCP (Anthropic Engineering)",
+     "url": "https://www.anthropic.com/research/code-execution-with-mcp"
+    },
+    {
+     "title": "Cookbook index: every official notebook",
+     "url": "https://platform.claude.com/cookbook"
+    }
+   ]
+  },
+  {
+   "title": "The certification itself",
+   "items": [
+    {
+     "title": "CCA-F certification page (Partner Academy)",
+     "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
+    },
+    {
+     "title": "Official CCA-F prep course list (Partner Academy)",
+     "url": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses"
+    },
+    {
+     "title": "Certification FAQ",
+     "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
+    },
+    {
+     "title": "Claude Architect learning path (Partner Academy, partners only)",
+     "url": "https://anthropic-partners.skilljar.com/path/claude-architect"
+    },
+    {
+     "title": "Code w/ Claude 2025 talks (YouTube playlist)",
+     "url": "https://www.youtube.com/playlist?list=PLf2m23nhTg1P5BsOHUOXyQz5RhfUSSVUi"
+    },
+    {
+     "title": "Anthropic talks at AI Engineer (index)",
+     "url": "https://ai.engineer/orgs/anthropic"
+    }
+   ]
+  }
+ ]
+}
