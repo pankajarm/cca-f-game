@@ -86,6 +86,8 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+/* keep focused and scrolled-to things clear of the sticky top bar */
+html { scroll-padding-top: calc(var(--topbar-h, 70px) + 12px); }
 body {
   font-family: var(--font-body);
   font-size: 16px;
@@ -127,6 +129,8 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
     animation-duration: .01ms !important; animation-iteration-count: 1 !important;
     transition-duration: .01ms !important; scroll-behavior: auto !important;
   }
+  /* slides are sized by measuring them (Learn.fit), so their text must change size instantly */
+  .lslide, .lslide * { transition: none !important; }
 }
 
 #app { max-width: 1020px; margin: 0 auto; padding: 0 20px 80px; }
@@ -217,6 +221,10 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
   display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px; margin-bottom: 26px;
 }
+/* five stats: never leave one card alone on the last row */
+@media (max-width: 860px) { .hub-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } .hub-stats > * { grid-column: span 2; } .hub-stats > :nth-last-child(-n+2):nth-child(3n+1), .hub-stats > :nth-last-child(-n+2):nth-child(3n+1) ~ * { grid-column: span 3; } }
+@media (max-width: 480px) { .hub-stats > *, .hub-stats > :nth-last-child(-n+2):nth-child(3n+1), .hub-stats > :nth-last-child(-n+2):nth-child(3n+1) ~ * { grid-column: span 3; } .hub-stats > :last-child:nth-child(odd) { grid-column: 1 / -1; } }
+}
 .stat-card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 14px 18px; box-shadow: var(--shadow);
@@ -295,6 +303,8 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .hp-track { width: clamp(110px, 22vw, 220px); height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 5px; }
 .hp-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--bad), #E0876B); transition: width .5s cubic-bezier(.2,.8,.2,1); }
 .hearts { font-size: 19px; letter-spacing: 3px; text-align: right; margin-top: 2px; }
+.h-lost::before { content: '🖤'; opacity: .45; }
+[data-theme="dark"] .h-lost::before { content: '🤍'; opacity: .4; }
 .q-progress { font-size: 12.5px; font-weight: 700; color: var(--muted); text-align: center; }
 .combo-chip { font-weight: 800; font-family: var(--font-display); color: var(--gold-ink); font-size: 14px; height: 18px; text-align: center; }
 
@@ -463,10 +473,12 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .score-dial .val .d { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.3; }
 .pass-banner { font-family: var(--font-display); font-weight: 800; font-size: 26px; text-align: center; margin: 8px 0 22px; }
 .domain-bars { max-width: 560px; margin: 0 auto 26px; display: grid; gap: 12px; }
-.dbar .row { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
+.dbar .row { display: flex; justify-content: space-between; gap: 12px; text-align: left; font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
+.dbar .row > :last-child { flex: none; text-align: right; }
 .dbar .track { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .dbar .fill { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.2,.8,.2,1); }
-.exam-review-list { display: grid; gap: 12px; margin-top: 24px; text-align: left; }
+.exam-review-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 24px; text-align: left; }
+.rev-item { overflow-wrap: anywhere; }
 .rev-item { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
 .rev-item .q { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
 .rev-item .row { font-size: 14px; margin: 3px 0; }
@@ -478,6 +490,7 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .lightning-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
 .time-track { flex: 1; height: 14px; border-radius: 99px; background: var(--line); overflow: hidden; }
 .time-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold), var(--accent)); transition: width .2s linear; }
+.l-secs { font-weight: 700; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 34px; }
 .lightning-score { font-family: var(--font-display); font-weight: 800; font-size: 26px; min-width: 60px; text-align: right; }
 
 /* ---------- bestiary ---------- */
@@ -514,7 +527,8 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .deck-empty .big { font-size: 64px; }
 
 /* ---------- toasts ---------- */
-#toasts { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+#toasts { position: fixed; bottom: 24px; right: 24px; z-index: 200; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast { pointer-events: none; }
 .toast {
   display: flex; gap: 12px; align-items: center;
   background: var(--ink); color: var(--bg);
@@ -547,7 +561,9 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .qclock.over { color: var(--bad); }
 #screen-exam:not(.practice) .qclock { display: none; }
 #screen-exam.practice .flag-btn { display: none; }
-.answer.picked { border-color: var(--accent); background: var(--accent-soft); }
+/* a pick is not a verdict: keep it clearly apart from the red 'wrong' state */
+.answer.picked { border-color: var(--accent); background: var(--card); box-shadow: inset 0 0 0 1px var(--accent); }
+.answer.picked .key { background: var(--accent); color: var(--on-strong); }
 .practice-fb:empty { display: none; }
 .practice-fb { margin-top: 16px; background: var(--card-2); border-radius: 12px; padding: 14px 16px; }
 .practice-fb .verdict { font-family: var(--font-display); font-weight: 800; font-size: 18px; margin-bottom: 4px; }
@@ -589,7 +605,8 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .bp-bar .seen { position: absolute; inset: 0 auto 0 0; background: var(--line-strong); }
 .bp-bar .right { position: absolute; inset: 0 auto 0 0; }
 .bp-ts { border-top: 1px solid var(--line); padding: 14px 18px; }
-.bp-tshead { display: flex; gap: 12px; align-items: flex-start; }
+.bp-tshead { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+@media (max-width: 640px) { .bp-tstitle { flex-basis: calc(100% - 46px); } .bp-tshead .btn { margin-left: 46px; } .bp-tshead .btn + .btn { margin-left: 0; } }
 .bp-tsid { font-family: var(--font-display); font-weight: 800; color: var(--dc); flex: none; width: 34px; }
 .bp-tstitle { flex: 1; min-width: 0; font-weight: 600; font-size: 15px; }
 .bp-tstitle .muted { font-weight: 500; font-size: 12.5px; }
@@ -610,12 +627,23 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .bp-oos summary { cursor: pointer; font-weight: 600; }
 .bp-oos ul { columns: 2; margin: 10px 0 0 18px; font-size: 13.5px; color: var(--ink-soft); }
 .drill-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 10px; }
+/* top bar: below 800px the XP bar takes its own row so title and XP never run together */
+@media (max-width: 800px) {
+  #topbar { flex-wrap: wrap; gap: 10px; }
+  #topbar .logo { margin-right: auto; }
+  .xp-wrap { order: 5; flex-basis: 100%; }
+}
+@media (max-width: 400px) {
+  #app { padding: 0 12px 80px; }
+  #topbar { gap: 8px; }
+  #topbar .logo { font-size: 15px; }
+  #topbar .logo > [aria-hidden] { display: none; }
+  .streak-chip { padding: 5px 9px; }
+}
 @media (max-width: 640px) {
   #app { padding: 0 16px 80px; }
-  #topbar { flex-wrap: wrap; gap: 10px; }
-  #topbar .logo { margin-right: auto; font-size: 16px; }
+  #topbar .logo { font-size: 16px; }
   .icon-btn { width: 34px; height: 34px; }
-  .xp-wrap { order: 5; flex-basis: 100%; }
   .bp-ideas, .bp-docs, .bp-delta { grid-template-columns: 1fr; margin-left: 0; }
   .bp-oos ul { columns: 1; }
   .bp-domain > summary { flex-wrap: wrap; }
@@ -683,7 +711,7 @@ h2.band-title { font-weight: 700; }
 .small-cards .mode-card { padding: 14px 18px; }
 .small-cards .mode-card .emoji { font-size: 26px; margin-bottom: 6px; }
 .beast-card .haunts { font-size: 12.5px; color: var(--muted); margin: 6px 0 8px; }
-@media (max-width: 560px) {
+@media (max-width: 1000px) {
   .ready-row { grid-template-columns: auto minmax(0, 1fr) 70px; align-items: start; }
   .ready-row .nm { white-space: normal; line-height: 1.35; }
   .ready-row .nm .muted { display: block; }
@@ -718,6 +746,7 @@ h2.band-title { font-weight: 700; }
         <div class="fact-pill"><span aria-hidden="true">🎯</span> Pass at <b>720/1000</b></div>
       </div>
       <button class="btn primary" onclick="UI.go('home')"><span aria-hidden="true">⚔️</span> Begin the Ascent</button>
+      <button class="btn ghost" id="title-resume" hidden onclick="UI.go('examintro')"><span aria-hidden="true">⏳</span> Resume your mock exam · <b></b></button>
       <p class="kbd-tip">Answer with <kbd>1</kbd>–<kbd>4</kbd> · advance with <kbd>Enter</kbd> · your progress saves automatically</p>
     </section>
 
@@ -822,7 +851,7 @@ h2.band-title { font-weight: 700; }
           </div>
           <div class="combatant you">
             <div class="nm" id="b-player-name">You</div>
-            <div class="hearts" id="b-hearts" role="img" aria-label="3 of 3 lives left">❤️❤️❤️</div>
+            <div class="hearts" id="b-hearts" role="img" aria-label="4 of 4 lives left">❤️❤️❤️❤️</div>
           </div>
         </div>
         <div class="boss-zone">
@@ -847,7 +876,7 @@ h2.band-title { font-weight: 700; }
         <h1 id="r-title" class="win" tabindex="-1">VICTORY</h1>
         <p class="result-sub" id="r-sub"></p>
         <div class="result-stats" id="r-stats"></div>
-        <div id="r-actions"></div>
+        <div id="r-actions" class="er-actions"></div>
       </div>
     </section>
 
@@ -911,7 +940,7 @@ h2.band-title { font-weight: 700; }
             <button class="btn small" id="e-next" onclick="Exam.nav(1)">Next →</button>
           </div>
         </div>
-        <aside class="exam-side">
+        <div class="exam-side">
           <div class="exam-timer">
             <div class="t" id="e-timer">120:00</div>
             <div class="lbl" id="e-timer-lbl">remaining</div>
@@ -919,7 +948,7 @@ h2.band-title { font-weight: 700; }
             <button class="grid-jump" onclick="Exam.focusGrid()" title="Go to the question navigator">Grid<span aria-hidden="true"> ▾</span></button>
           </div>
           <div class="nav-grid" id="e-grid" role="group" aria-label="Question navigator"></div>
-        </aside>
+        </div>
       </div>
     </section>
 
@@ -1014,6 +1043,7 @@ h2.band-title { font-weight: 700; }
       </div>
       <div class="lightning-head">
         <div class="time-track" id="l-timebar" role="img" aria-label="90 seconds left"><div class="time-fill" id="l-time" style="width:100%"></div></div>
+        <div class="l-secs" id="l-secs" aria-hidden="true">90s</div>
         <div class="lightning-score" id="l-score" aria-label="Score">0</div>
       </div>
       <div class="battle-stage">

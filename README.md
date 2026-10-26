@@ -58,7 +58,7 @@ onto a broken design.
 
 ![Boss battle](docs/screenshots/battle.png)
 
-*10 questions, 3 hearts, combo streaks that land critical hits and drop power-ups:*
+*10 questions, 4 hearts, combo streaks that land critical hits and drop power-ups:*
 *🗜️ `/compact` trims two wrong options · 💭 Extended Thinking reveals a hint · 🛡️ Checkpoint forgives a miss.*
 
 </div>

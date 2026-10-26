@@ -36,7 +36,7 @@ also has multiple-response items. Treat it as a rehearsal, not a verdict.
 ## Combat rules (in the game)
 
 - **10 questions** per battle, drawn from every question on the floor's task
-  statements, unseen first. **3 hearts.**
+  statements, unseen first. **4 hearts** (the 4th miss makes 7/10 impossible).
   A fourth miss ends the run. Clear at **7/10**; a perfect 10 earns a ★.
 - **Combos:** consecutive correct answers. At ×3 your hits become critical.
   Every third combo step forges a random power-up.
