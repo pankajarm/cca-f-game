@@ -107,7 +107,8 @@ code {
   color: var(--accent-deep);
   padding: .1em .35em;
   border-radius: 6px;
-  white-space: nowrap;
+  /* identifiers stay whole unless one is wider than the column (long paths on phones) */
+  overflow-wrap: anywhere; -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
 button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
