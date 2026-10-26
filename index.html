@@ -420,7 +420,7 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .exam-rules ul { margin: 14px 0 20px 20px; }
 .exam-rules li { margin-bottom: 8px; color: var(--ink-soft); }
 .exam-shell { display: grid; grid-template-columns: 1fr 240px; gap: 18px; align-items: start; }
-.exam-main { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 24px; }
+.exam-main { min-width: 0; overflow-wrap: break-word; background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 24px; }
 .exam-side { position: sticky; top: calc(var(--topbar-h, 70px) + 12px); display: flex; flex-direction: column; gap: 14px; }
 .grid-jump { display: none; }
 .exam-timer {
@@ -449,7 +449,7 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .exam-foot { display: flex; justify-content: space-between; margin-top: 18px; gap: 10px; flex-wrap: wrap; }
 /* phone: the clock and pace ride along at the top; the question grid follows the question */
 @media (max-width: 800px) {
-  .exam-shell { grid-template-columns: 1fr; gap: 12px; }
+  .exam-shell { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .exam-side { display: contents; }
   .exam-timer {
     order: -1; position: sticky; top: var(--topbar-h, 70px); z-index: 40;
