@@ -340,7 +340,7 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .answer {
   display: flex; gap: 12px; align-items: flex-start; text-align: left;
   background: var(--card-2); border: 1.5px solid var(--line); border-radius: 13px;
-  padding: 13px 16px; font-size: 15.5px; line-height: 1.55; color: var(--ink);
+  padding: 13px 16px; font-size: 15.5px; line-height: 1.55; color: var(--ink); overflow-wrap: anywhere;
   transition: transform .12s, border-color .12s, background .15s;
 }
 .answer:hover:not(.disabled) { border-color: var(--accent); transform: translateX(4px); }

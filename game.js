@@ -721,7 +721,7 @@ const CODE_RX = new RegExp([
   'claude -p\\b', 'claude-code-action',
   '\\$\\{[A-Z_][A-Z0-9_]*\\}',
   '--[a-z][a-z-]+\\b',
-  '\\b[A-Za-z0-9_\\-]+\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
+  '(?:\\.{1,2}\\/|\\b)[A-Za-z0-9_\\-][A-Za-z0-9_\\-.]*\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
   '\\/(?:compact|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
   '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|Grep|Glob)\\b',
   '\\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\\b',
@@ -1711,8 +1711,9 @@ const Exam = {
     ok ? Sound.good() : Sound.bad();
     this.show(); this.renderGrid(); this.renderPace();
     /* the answers were redrawn: keep keyboard users on the feedback's Next button */
+    /* keep the marked answers in view on phones: focus Next without jumping to it */
     const next = document.querySelector('#e-feedback button');
-    if (next) next.focus();
+    if (next) next.focus({ preventScroll: true });
   },
 
   markPractice(btns, it) {
