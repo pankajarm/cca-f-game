@@ -120,7 +120,8 @@ const POWERUPS = {
 
 /* ---------------- save state ---------------- */
 const SAVE_KEY = 'architects-ascent-v2';
-const SCHEMA = 5;
+const SCHEMA = 6;
+const SAVE_HOLD_MS = 30;
 
 /* v2 clinic cards were {src, idx}. The frozen ids were assigned from those v2 positions, so map by id,
    not by today's array (buckets have lost items since) */
@@ -138,6 +139,104 @@ function localDay(d) {
 /* a question's revision: the bank bumps it when the key or concept changed (absent = 0) */
 function qRev(q) { return q && Number.isInteger(q.rev) && q.rev > 0 ? q.rev : 0; }
 
+/* ---------------- merging saves across tabs ----------------
+   merge(base, mine, theirs): base is what this tab last read or wrote, mine is this tab's state now,
+   theirs is what storage holds now. Only the fields this tab changed since base are applied to theirs:
+   counters as deltas (xp, totals, powerups), achievements and bestiary as unions, mockSeen per id max,
+   qstats per id (the entry answered latest wins, but a first try once recorded is kept), the clinic deck
+   by card id, floors per floor (cleared stays cleared, best is the max), new exam history appended,
+   bests as max, anything else (settings) as this tab set it. A hard reset elsewhere (new epoch) wins */
+const Sync = {
+  clone(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); },
+  same(a, b) { return JSON.stringify(a) === JSON.stringify(b); },
+  num(v) { return typeof v === 'number' && isFinite(v) ? v : 0; },
+
+  merge(base, mine, theirs) {
+    if (!base) return this.clone(mine);
+    if ((base.epoch || '0') !== (theirs.epoch || '0')) return this.clone(theirs);
+    const out = this.clone(theirs);
+    new Set([...Object.keys(mine), ...Object.keys(theirs)]).forEach(k => {
+      const b = base[k], m = mine[k], t = theirs[k];
+      if (this.same(m, b)) return;  // this tab didn't touch it: storage's value stands
+      switch (k) {
+        case 'xp': out.xp = Math.max(0, this.num(t) + this.num(m) - this.num(b)); break;
+        case 'totals': case 'powerups': out[k] = this.counters(b || {}, m || {}, t || {}); break;
+        case 'achievements': case 'bestiary': out[k] = [...new Set([...(t || []), ...(m || [])])]; break;
+        case 'mockSeen': {
+          const o = Object.assign({}, t);
+          Object.entries(m || {}).forEach(([id, n]) => { o[id] = Math.max(this.num(o[id]), this.num(n)); });
+          out.mockSeen = o; break;
+        }
+        case 'qstats': out.qstats = this.stats(b || {}, m || {}, t || {}); break;
+        case 'deck': out.deck = this.deck(b || [], m || [], t || []); break;
+        case 'floors': {
+          const o = this.clone(t || {});
+          Object.entries(m || {}).forEach(([id, f]) => {
+            if (this.same(f, (b || {})[id])) return;
+            const x = o[id] || {};
+            o[id] = Object.assign({}, x, f, { cleared: !!(x.cleared || f.cleared), best: Math.max(this.num(x.best), this.num(f.best)) });
+          });
+          out.floors = o; break;
+        }
+        case 'examHistory': {
+          const seen = new Set((b || []).concat(t || []).map(h => JSON.stringify(h)));
+          out.examHistory = (t || []).concat((m || []).filter(h => !seen.has(JSON.stringify(h)))).slice(-50);
+          break;
+        }
+        case 'streak': {
+          const ml = (m && m.last) || '', tl = (t && t.last) || '';
+          out.streak = this.clone(ml > tl || (ml === tl && this.num(m && m.count) >= this.num(t && t.count)) ? m : t);
+          break;
+        }
+        case 'examBest': case 'legacyExamBest': case 'lightningBest': case 'schemaVersion':
+          out[k] = Math.max(this.num(t), this.num(m)); break;
+        default: out[k] = this.clone(m);
+      }
+    });
+    return out;
+  },
+
+  counters(b, m, t) {
+    const o = Object.assign({}, t);
+    new Set([...Object.keys(m), ...Object.keys(t)]).forEach(k => { o[k] = Math.max(0, this.num(t[k]) + this.num(m[k]) - this.num(b[k])); });
+    return o;
+  },
+
+  /* per question: an entry only this tab changed is taken as is; if both changed it, the later answer
+     (`at`) wins, but a first try already stored is never replaced (it was written first), and one
+     recorded only here is kept. An entry this tab dropped (its question was revised) is dropped unless
+     the other tab answered it since */
+  stats(b, m, t) {
+    const o = this.clone(t);
+    new Set([...Object.keys(m), ...Object.keys(b)]).forEach(id => {
+      const mb = b[id], mm = m[id], tt = t[id];
+      if (this.same(mm, mb)) return;
+      if (!mm) { if (this.same(tt, mb)) delete o[id]; return; }
+      if (!tt || this.same(tt, mb)) { o[id] = this.clone(mm); return; }
+      o[id] = this.clone(this.num(mm.at) >= this.num(tt.at) ? mm : tt);
+      const first = tt.first != null ? tt.first : mm.first;
+      if (first != null) o[id].first = first; else delete o[id].first;
+    });
+    return o;
+  },
+
+  /* clinic deck by card id: cards this tab added are added, cards it discharged are removed, a streak it
+     changed is applied (a fresh miss re-admits a card the other tab discharged) */
+  deck(b, m, t) {
+    const byId = a => new Map(a.filter(c => c && c.id).map(c => [c.id, c]));
+    const bm = byId(b), mm = byId(m), o = this.clone(t).filter(c => !(c && c.id && bm.has(c.id) && !mm.has(c.id)));
+    const om = byId(o);
+    m.forEach(c => {
+      if (!c || !c.id) return;
+      const was = bm.get(c.id), cur = om.get(c.id);
+      if (was && was.streak === c.streak) return;
+      if (cur) cur.streak = c.streak;
+      else if (!was || c.streak === 0) o.push(this.clone(c));
+    });
+    return o;
+  },
+};
+
 const Game = {
   s: null,
 
@@ -150,6 +249,7 @@ const Game = {
       deck: [], clinicPeak: 0, examBest: 0, legacyExamBest: 0, examHistory: [], lightningBest: 0,
       totals: { answered: 0, correct: 0 },
       qstats: {}, mockSeen: {}, schemaVersion: SCHEMA,
+      epoch: '0',  // changes on a hard reset, so another tab's pending changes aren't merged into the wiped save
     };
   },
 
@@ -165,24 +265,36 @@ const Game = {
     if (saved && (typeof saved !== 'object' || Array.isArray(saved))) saved = null;
     const ver = saved ? (Number(saved.schemaVersion) || 2) : SCHEMA;
     this.adopt(saved);
+    /* what storage held when this tab read it: the base its later changes are measured against (see Sync).
+       A save that needs a structural migration is written over whole the first time */
+    this.base = ver >= 5 ? Sync.clone(this.s) : null;
     if (ver < 3) this.migrate(raw);
     if (ver < 4) this.migrate4(raw);
     if (ver < 5) this.migrate5(raw);
+    if (ver < 6) this.migrate6(raw);
     this.cleanDeck();
     const reset = this.sweepRevs();
     if (reset && raw && ver >= SCHEMA) { try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {} }
     if (saved && (ver < SCHEMA || reset || raw !== JSON.stringify(this.s))) this.save();
   },
 
-  /* take a parsed save (this tab's boot, or another tab's write) and repair anything missing or mistyped */
+  /* take a parsed save (this tab's boot) and repair anything missing or mistyped */
   adopt(saved) {
     this.s = Object.assign(this.fresh(), saved || {});
     this.normalise();
   },
 
+  /* a stored save string as a repaired state object, or null */
+  parse(raw) {
+    let o;
+    try { o = JSON.parse(raw); } catch (e) { return null; }
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+    return this.normalise(Object.assign(this.fresh(), o));
+  },
+
   /* a null or wrongly typed field falls back to its default instead of breaking every screen */
-  normalise() {
-    const f = this.fresh(), s = this.s;
+  normalise(s = this.s) {
+    const f = this.fresh();
     for (const k in f) {
       let v = s[k];
       const d = f[k];
@@ -204,6 +316,7 @@ const Game = {
     s.bestiary = s.bestiary.filter(m => typeof m === 'string');
     s.achievements = s.achievements.filter(a => typeof a === 'string');
     s.clinicPeak = Math.max(s.clinicPeak, s.deck.length);
+    return s;
   },
 
   /* v2 -> v3: clinic cards {src, idx} become {id}; Proctor scores move to legacyExamBest */
@@ -234,6 +347,14 @@ const Game = {
     this.s.schemaVersion = 5;
   },
 
+  /* v5 -> v6: saves are merged between tabs (an epoch marks hard resets); the mock record moves to v3
+     (choose-two selections are arrays) and reads v2 records as they are */
+  migrate6(raw) {
+    try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
+    if (typeof this.s.epoch !== 'string') this.s.epoch = '0';
+    this.s.schemaVersion = 6;
+  },
+
   /* every clinic card must name a question still in the bank; runs on every load, so saves migrated
      before this rule (cards left as {src, idx}) are cleaned too */
   cleanDeck() {
@@ -261,16 +382,52 @@ const Game = {
     return n;
   },
 
-  save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.s)); } catch (e) {} },
+  /* Two tabs can act at nearly the same moment, so a save never writes this tab's whole state over the
+     stored one. It re-reads storage, applies this tab's delta since its last sync (this.s against
+     this.base) and writes the result, inside navigator.locks 'aa-save' so no other tab writes in between
+     (without Web Locks: the same re-read, apply, write, which narrows the race but can't close it).
+     Calls in one task share one commit. The lock is held a moment after the write: browsers deliver a
+     localStorage write to other tabs asynchronously, so the next tab must not re-read before it lands */
+  save() {
+    if (this._queued) return;
+    this._queued = true;
+    const run = () => { if (this._queued) this.commit(); };
+    if (navigator.locks && navigator.locks.request) {
+      navigator.locks.request('aa-save', () => { run(); return new Promise(r => setTimeout(r, SAVE_HOLD_MS)); }).catch(run);
+    } else run();
+  },
 
-  /* another tab wrote the save: adopt it, so this tab's next save doesn't write stale progress back */
-  syncFrom(raw) {
-    let saved;
-    try { saved = JSON.parse(raw); } catch (e) { return; }
-    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
-    this.adopt(saved);
+  commit() {
+    this._queued = false;
+    let raw = null;
+    try { raw = localStorage.getItem(SAVE_KEY); } catch (e) {}
+    const theirs = raw ? this.parse(raw) : null;
+    const mine = JSON.stringify(this.s);
+    const merged = theirs && this.base ? Sync.merge(this.base, this.s, theirs) : Sync.clone(this.s);
+    this.replaceState(merged);
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(merged)); } catch (e) {}
+    this.base = Sync.clone(merged);
+    /* another tab's progress came in with this write */
+    if (JSON.stringify(merged) !== mine && typeof UI !== 'undefined') UI.refreshHud();
+  },
+
+  /* swap in new state while keeping the Game.s object itself */
+  replaceState(o) {
+    Object.keys(this.s).forEach(k => { delete this.s[k]; });
+    Object.assign(this.s, o);
+  },
+
+  /* another tab wrote the save: refresh memory and screen only. Unsaved changes of this tab are carried
+     over (merged onto what storage holds now); the storage event's own value may already be stale */
+  syncFrom() {
+    let raw = null;
+    try { raw = localStorage.getItem(SAVE_KEY); } catch (e) {}
+    const theirs = raw ? this.parse(raw) : null;
+    if (!theirs) return;
+    this.replaceState(this.base ? Sync.merge(this.base, this.s, theirs) : Sync.clone(theirs));
+    this.base = Sync.clone(theirs);
     this.cleanDeck();
-    if (this.sweepRevs()) this.save();
+    if (this.sweepRevs() || this._queued) this.save();
     document.documentElement.dataset.theme = this.s.theme;
     UI.refreshHud();
     if (UI.current === 'home') UI.renderHome();
@@ -278,7 +435,9 @@ const Game = {
 
   hardReset() {
     if (!confirm('Reset ALL progress — XP, floors, bestiary, exam history?')) return;
-    this.s = this.fresh();
+    this.replaceState(this.fresh());
+    this.s.epoch = String(Date.now());
+    this.base = null;  // a reset replaces the stored save instead of merging into it
     this.save();
     const live = Exam.saved();
     Exam.suspend(); if (live) Exam.endSaved('reset', live.attemptId);
@@ -444,23 +603,82 @@ function shuffle(arr) {
   return a;
 }
 
-/* short hash of a question's options and key: a saved mock answer is replayed only onto the same content */
+/* SCORE-BEGIN */
+/* ---------------- scoring: the one place that reads an answer key ----------------
+   A single-answer item ('mc', the default when type is absent) has 4 options and an integer key;
+   a multiple-response item (type 'mr') has 5 options and a sorted array of key indices.
+   `x` is a bank question or a deal (deal.correct is already remapped to displayed positions).
+   `sel` is null | int (mc) | array of indices (mr). Scoring is all-or-nothing everywhere.
+   scripts/check_correct_usage.sh fails if code outside these markers reads an answer key. */
+const Score = {
+  isMR(x) { return !!x && x.type === 'mr'; },
+  /* the key as a sorted array of option indices */
+  keys(x) {
+    const c = x ? x.correct : null;
+    return (Array.isArray(c) ? c.filter(Number.isInteger) : Number.isInteger(c) ? [c] : []).sort((a, b) => a - b);
+  },
+  /* how many options the player must choose */
+  need(x) { return Math.max(1, this.keys(x).length); },
+  /* a selection as a sorted array of unique indices */
+  picks(sel) {
+    if (sel == null) return [];
+    return [...new Set((Array.isArray(sel) ? sel : [sel]).filter(Number.isInteger))].sort((a, b) => a - b);
+  },
+  isKey(x, i) { return this.keys(x).includes(i); },
+  isCorrect(x, sel) {
+    const k = this.keys(x), p = this.picks(sel);
+    return k.length > 0 && p.length === k.length && p.every((v, i) => v === k[i]);
+  },
+  /* the player chose as many options as the item asks for (a choose-two item with one pick is incomplete) */
+  isComplete(x, sel) { return this.picks(sel).length === this.need(x); },
+  isPartial(x, sel) { const n = this.picks(sel).length; return n > 0 && n < this.need(x); },
+  hits(x, sel) { return this.picks(sel).filter(i => this.isKey(x, i)).length; },
+  /* per option: 'hit' key you picked · 'miss' key you missed · 'wrong' distractor you picked · '' */
+  marks(x, sel) {
+    const p = this.picks(sel);
+    return x.options.map((_, i) => this.isKey(x, i) ? (p.includes(i) ? 'hit' : 'miss') : (p.includes(i) ? 'wrong' : ''));
+  },
+  distractors(x) { return x.options.map((_, i) => i).filter(i => !this.isKey(x, i)); },
+  keyTexts(x) { return this.keys(x).map(i => x.options[i]); },
+  /* the key of a question dealt in `order` (order[j] = bank index shown at position j) */
+  dealKey(q, order) {
+    const k = this.keys(q).map(i => order.indexOf(i)).sort((a, b) => a - b);
+    return this.isMR(q) ? k : k[0];
+  },
+  /* the key as fingerprint text: sorted, so it is the same however the bank lists it */
+  fpKey(q) { return this.keys(q).join(','); },
+  /* a saved selection that still fits the item, else null (mc: one index; mr: up to `need` unique indices) */
+  validSel(x, sel) {
+    const n = x.options.length, ok = i => Number.isInteger(i) && i >= 0 && i < n;
+    if (!this.isMR(x)) return ok(sel) ? sel : null;
+    if (!Array.isArray(sel) || !sel.length || !sel.every(ok)) return null;
+    const p = this.picks(sel);
+    return p.length === sel.length && p.length <= this.need(x) ? p : null;
+  },
+};
+/* SCORE-END */
+
+const NUM_WORD = ['zero', 'one', 'two', 'three', 'four', 'five'];
+function chooseText(x) { const n = Score.need(x); return 'Choose ' + (NUM_WORD[n] || n) + '.'; }
+
+/* short hash of a question's options and SORTED key: a saved mock answer is replayed only onto the same
+   content. For a single-answer item the hashed text is exactly what it was before choose-two items existed */
 function qFingerprint(q) {
   if (!q || !Array.isArray(q.options)) return '';
-  const s = q.options.join('␞') + '#' + q.correct;
+  const s = q.options.join('␞') + '#' + Score.fpKey(q);
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return (h >>> 0).toString(36);
 }
 
-/* shuffle a question's options (or replay a saved order), remapping the correct index */
+/* shuffle a question's options (or replay a saved order), remapping the key; 4 or 5 options */
 function dealQuestion(q, order) {
-  order = order || shuffle([0, 1, 2, 3]);
+  order = order || shuffle(q.options.map((_, i) => i));
   return {
-    id: q.id, order, ts: q.ts, scenario: q.scenario,
+    id: q.id, type: Score.isMR(q) ? 'mr' : 'mc', order, ts: q.ts, scenario: q.scenario,
     q: q.q,
     options: order.map(i => q.options[i]),
-    correct: order.indexOf(q.correct),
+    correct: Score.dealKey(q, order),
     explanation: q.explanation, hint: q.hint || '',
     difficulty: q.difficulty, tags: q.tags || [],
   };
@@ -629,7 +847,7 @@ const UI = {
     const box = document.getElementById('ei-resume');
     if (live) {
       const left = Math.max(0, Math.ceil((live.deadline - Date.now()) / 1000));
-      const answered = live.items.filter(i => i.sel != null).length;
+      const answered = live.items.filter(i => { const q = i && Bank.byId(i.id); return q && Score.isComplete(q, i.sel); }).length;
       box.innerHTML = `<p><strong>⏳ You have a mock exam in progress</strong>: ${answered}/${live.items.length} answered, ${clock(left)} left on the clock.</p>
         <button class="btn primary" onclick="Exam.resume()">▶ Resume mock exam</button>`;
       box.style.display = 'block';
@@ -683,26 +901,131 @@ const UI = {
     }
   },
 
-  /* shared answer renderer: returns array of button elements */
-  renderAnswers(containerId, options, onPick) {
+  /* a question stem; a multiple-response item gets its "Choose two." from the key's length */
+  renderStem(elId, deal) {
+    document.getElementById(elId).innerHTML = fmt(deal.q) + (Score.isMR(deal) ? ` <strong class="mr-choose">${chooseText(deal)}</strong>` : '');
+  },
+
+  /* shared answer renderer. Single-answer: a click (or key 1–4) answers at once, onAnswer(i).
+     Multiple-response: each option is a checkbox; a live "N of 2 selected" counter; Submit stays
+     disabled (and says why) until exactly 2 are chosen, then onAnswer([i, j]). A third pick is refused,
+     never swapped in, and nothing auto-submits. opts.live (strict mock): no Submit, every change goes
+     to opts.onChange(picks). opts.sel restores a selection. Returns the option buttons */
+  renderAnswers(containerId, deal, onAnswer, opts = {}) {
     const box = document.getElementById(containerId);
     box.innerHTML = '';
-    return options.map((opt, i) => {
+    const mr = Score.isMR(deal);
+    box.classList.toggle('mr', mr);
+    box._mr = null;
+    if (!mr) {
+      box.removeAttribute('role'); box.removeAttribute('aria-label');
+      return deal.options.map((opt, i) => {
+        const b = document.createElement('button');
+        b.className = 'answer';
+        b.innerHTML = `<span class="key">${i + 1}</span><span class="opt">${fmt(opt)}</span>`;
+        b.onclick = () => { if (!b.classList.contains('disabled')) onAnswer(i, b); };
+        box.appendChild(b);
+        return b;
+      });
+    }
+    const need = Score.need(deal), uid = containerId + '-mr';
+    let sel = Score.picks(opts.sel).slice(0, need);
+    box.setAttribute('role', 'group');
+    box.setAttribute('aria-label', 'Options. ' + chooseText(deal));
+    const btns = deal.options.map((opt, i) => {
       const b = document.createElement('button');
       b.className = 'answer';
-      b.innerHTML = `<span class="key">${i + 1}</span><span>${fmt(opt)}</span>`;
-      b.onclick = () => { if (!b.classList.contains('disabled')) onPick(i, b); };
+      b.setAttribute('role', 'checkbox');
+      b.innerHTML = `<span class="key">${i + 1}</span><span class="opt">${fmt(opt)}</span>`;
+      b.onclick = () => { if (!b.classList.contains('disabled')) toggle(i); };
       box.appendChild(b);
       return b;
     });
+    const bar = document.createElement('div');
+    bar.className = 'mr-bar';
+    bar.innerHTML = `<span class="mr-count" id="${uid}-count" aria-live="polite"></span>`
+      + (opts.live ? '' : `<span class="mr-why" id="${uid}-why"></span><button class="btn small primary mr-submit" id="${uid}-submit" aria-describedby="${uid}-why">Submit answer</button>`);
+    box.appendChild(bar);
+    const count = bar.querySelector('.mr-count'), why = bar.querySelector('.mr-why'), submit = bar.querySelector('.mr-submit');
+    const api = box._mr = { done: false, need, deal, sel: () => sel.slice(), submit: () => trySubmit() };
+    const update = () => {
+      btns.forEach((b, i) => { const on = sel.includes(i); b.setAttribute('aria-checked', String(on)); b.classList.toggle('picked', on); });
+      count.textContent = sel.length + ' of ' + need + ' selected' + (opts.live && sel.length && sel.length < need ? ' · incomplete' : '');
+      if (submit) {
+        const ready = sel.length === need;
+        submit.setAttribute('aria-disabled', String(!ready));
+        submit.classList.toggle('is-disabled', !ready);
+        why.textContent = ready ? 'Ready. Press Submit or Enter.' : 'Select ' + (need - sel.length) + ' more to submit.';
+      }
+    };
+    const toggle = (i) => {
+      if (api.done) return;
+      const at = sel.indexOf(i);
+      if (at >= 0) sel.splice(at, 1);
+      else if (sel.length >= need) {
+        UI.announce('You already chose ' + need + '. Clear one before choosing another.');
+        bar.classList.remove('nudge'); void bar.offsetWidth; bar.classList.add('nudge');
+        return;
+      } else sel.push(i);
+      sel.sort((a, b) => a - b);
+      update();
+      Sound.click();
+      if (opts.onChange) opts.onChange(sel.slice());
+    };
+    const trySubmit = () => {
+      if (api.done || opts.live) return;
+      if (sel.length !== need) { UI.announce(why.textContent); bar.classList.remove('nudge'); void bar.offsetWidth; bar.classList.add('nudge'); return; }
+      onAnswer(sel.slice());
+    };
+    if (submit) submit.onclick = () => trySubmit();
+    update();
+    return btns;
   },
 
+  /* after an answer: single-answer shows the key and your wrong pick; multiple-response marks every
+     option (key you picked, key you missed, distractor you picked) and says "1 of 2 correct" */
+  markAnswers(btns, deal, sel) {
+    const marks = Score.marks(deal, sel);
+    btns.forEach((b, i) => {
+      b.classList.add('disabled');
+      if (marks[i] === 'hit' || marks[i] === 'miss') b.classList.add('correct');
+      if (marks[i] === 'wrong') b.classList.add('wrong');
+    });
+    if (!Score.isMR(deal)) return;
+    const label = { hit: '✓ Correct · you chose it', miss: '✓ Correct · you missed it', wrong: '✗ Not correct · you chose it', '': '' };
+    btns.forEach((b, i) => {
+      b.setAttribute('aria-disabled', 'true');
+      b.setAttribute('aria-checked', String(marks[i] === 'hit' || marks[i] === 'wrong'));
+      b.classList.toggle('missed', marks[i] === 'miss');
+      b.classList.remove('picked');
+      if (marks[i]) b.insertAdjacentHTML('beforeend', `<span class="mark">${label[marks[i]]}</span>`);
+    });
+    const box = btns[0] && btns[0].parentNode;
+    if (!box) return;
+    if (box._mr) box._mr.done = true;
+    const bar = box.querySelector('.mr-bar');
+    if (bar) bar.innerHTML = `<span class="mr-count">${this.hitsText(deal, sel)}</span>`;
+  },
+
+  /* the answer dialog for a dealt question */
+  feedback(deal, sel, ok, onNext, opts = {}) {
+    const note = Score.isMR(deal) ? (ok ? 'Both correct options chosen.' : 'You chose ' + this.hitsText(deal, sel) + '.') : '';
+    this.modal(ok, Score.keyTexts(deal), deal.explanation, onNext, { ...opts, note });
+  },
+
+  hitsText(deal, sel) {
+    const h = Score.hits(deal, sel), n = Score.need(deal);
+    return h + ' of ' + n + ' correct' + (h === n ? '' : ' · scored as wrong (all or nothing)');
+  },
+
+  /* correct: the key's option text (string, or an array for a multiple-response item) */
   modal(verdictOk, correctText, explanation, onNext, opts = {}) {
     const o = document.getElementById('overlay');
     const v = document.getElementById('m-verdict');
     v.textContent = opts.title || (verdictOk ? pick(['Correct!', 'Direct hit!', 'Critical insight!', 'Root cause: fixed.', 'The tower approves.']) : pick(['Not quite.', 'The boss counters!', 'A trap — and it worked.', 'That patch hides the root cause.']));
     v.className = 'verdict ' + (verdictOk ? 'good' : 'bad');
-    document.getElementById('m-right').innerHTML = '✅ ' + fmt(correctText);
+    document.getElementById('m-right').innerHTML = (opts.note ? `<div class="m-note">${opts.note}</div>` : '')
+      + [].concat(correctText).map(t => '<div>✅ ' + fmt(t) + '</div>').join('');
     document.getElementById('m-expl').innerHTML = fmt(explanation);
     const btn = document.getElementById('m-next');
     btn.textContent = opts.btn || 'Continue';
@@ -830,29 +1153,33 @@ const Battle = {
   show() {
     const item = this.queue[this.qi];
     const q = item.deal;
-    this.usedCompact = false; this.usedThink = false;
+    this.usedCompact = false; this.usedThink = false; this.answered = false;
     this.qStart = Date.now();
     document.getElementById('b-progress').textContent = `Q ${this.qi + 1}/${this.queue.length}`;
     document.getElementById('b-combo').textContent = this.combo >= 2 ? `🔥 combo ×${this.combo}` : '';
     this.renderHearts();
     document.getElementById('b-hint').className = 'hint-strip';
     document.getElementById('b-shield').className = 'shield-note' + (this.shield ? ' show' : '');
-    document.getElementById('b-qtext').innerHTML = fmt(q.q);
-    this.buttons = UI.renderAnswers('b-answers', q.options, (i) => this.answer(i));
+    UI.renderStem('b-qtext', q);
+    this.buttons = UI.renderAnswers('b-answers', q, (sel) => this.answer(sel));
     this.renderPowerups();
   },
 
+  /* /compact can't halve a choose-two item (it would leave the key in plain sight), so it is
+     unavailable there: shown disabled with the reason, and not spent */
   renderPowerups() {
     const bar = document.getElementById('b-powerups');
     bar.innerHTML = '';
+    const cur = this.queue[this.qi], mr = !!cur && Score.isMR(cur.deal);
     Object.entries(POWERUPS).forEach(([k, p]) => {
       const n = Game.s.powerups[k];
       const b = document.createElement('button');
-      b.className = 'powerup';
-      b.disabled = n <= 0 || (k === 'compact' && this.usedCompact) || (k === 'think' && this.usedThink) || (k === 'shield' && this.shield);
-      b.innerHTML = `<span aria-hidden="true">${p.ic}</span> ${p.nm} <span class="cnt"><span class="sr-only">(</span>${n}<span class="sr-only"> left)</span></span>`;
-      b.title = p.ds;
-
+      const blocked = k === 'compact' && mr;
+      b.className = 'powerup' + (blocked ? ' blocked' : '');
+      b.disabled = n <= 0 || blocked || (k === 'compact' && this.usedCompact) || (k === 'think' && this.usedThink) || (k === 'shield' && this.shield);
+      b.innerHTML = `<span aria-hidden="true">${p.ic}</span> ${p.nm} <span class="cnt"><span class="sr-only">(</span>${n}<span class="sr-only"> left)</span></span>`
+        + (blocked ? '<span class="pu-why">not on choose-two items</span>' : '');
+      b.title = blocked ? p.nm + ' is not available on choose-two items' : p.ds;
       b.onclick = () => this.usePowerup(k);
       bar.appendChild(b);
     });
@@ -860,12 +1187,12 @@ const Battle = {
 
   usePowerup(k) {
     if (Game.s.powerups[k] <= 0 || UI.current !== 'battle') return;
-    if (this.buttons.some(b => b.classList.contains('correct'))) return;  // already answered: nothing to spend it on
+    if (this.answered) return;  // already answered: nothing to spend it on
     const q = this.queue[this.qi].deal;
     if (k === 'compact') {
-      if (this.usedCompact) return;
+      if (this.usedCompact || Score.isMR(q)) return;
       this.usedCompact = true;
-      const wrongs = shuffle([0, 1, 2, 3].filter(i => i !== q.correct)).slice(0, 2);
+      const wrongs = shuffle(Score.distractors(q)).slice(0, 2);
       wrongs.forEach(i => { this.buttons[i].classList.add('dim', 'disabled'); this.buttons[i].setAttribute('aria-disabled', 'true'); });
       UI.announce('Two wrong options removed.');
     }
@@ -887,13 +1214,16 @@ const Battle = {
     this.renderPowerups();
   },
 
-  answer(i) {
+  /* sel: an option index, or the chosen indices of a choose-two item (one item for combo and hearts) */
+  answer(sel) {
     const item = this.queue[this.qi];
     const q = item.deal;
-    const ok = i === q.correct;
+    if (this.answered) return;
+    this.answered = true;
+    const ok = Score.isCorrect(q, sel);
     const fast = (Date.now() - this.qStart) < 15000;
-    this.buttons.forEach(b => b.classList.add('disabled'));
-    this.buttons[q.correct].classList.add('correct');
+    UI.markAnswers(this.buttons, q, sel);
+    this.renderPowerups();
     Game.recordAnswer(ok, q.id);
 
     const f = FLOORS[this.floorIdx];
@@ -920,7 +1250,6 @@ const Battle = {
       document.getElementById('b-boss-hpbar').setAttribute('aria-label', 'Boss health ' + Math.round(hpLeft) + '%');
       if (hpLeft <= 40) speech.textContent = '“' + f.boss.hurt + '”';
     } else {
-      this.buttons[i].classList.add('wrong');
       if (this.shield) {
         this.shield = false;
         document.getElementById('b-shield').className = 'shield-note';
@@ -937,7 +1266,7 @@ const Battle = {
 
     setTimeout(() => {
       if (UI.current !== 'battle' || this.queue[this.qi] !== item) return;  // the player left this battle
-      UI.modal(ok, q.options[q.correct], q.explanation, () => this.next());
+      UI.feedback(q, sel, ok, () => this.next());
     }, ok ? 700 : 900);
   },
 
@@ -1018,6 +1347,9 @@ const Battle = {
 /* ---------------- exam (The Proctor: mock + practice) ---------------- */
 const EXAM_KEY = 'aa-exam-attempt';
 const EXAM_SECS = 7200, PACE_SECS = 120;
+/* share of each domain's mock quota drawn from choose-two items. The real exam's multiple-response share
+   and format aren't published; this is a practice choice, said so on the intro screen */
+const MR_SHARE = 0.12;
 /* screens where a mock that ran out of time while away can be scored without interrupting anything */
 const EXAM_SETTLE_ON = new Set(['home', 'examintro', 'blueprint', 'tower', 'trophies', 'bestiary']);
 
@@ -1056,9 +1388,18 @@ const Exam = {
         for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
         return 0;
       });
+      /* MR_SHARE of the quota are choose-two items when the bank has them (16→2, 11/12/12/9→1), the rest
+         single-answer; both lists keep the same ranking and share the per-task-statement cap */
+      const mr = cand.filter(r => Score.isMR(r.q)), mc = cand.filter(r => !Score.isMR(r.q));
+      const wantMR = Math.min(mr.length, Math.round(meta.exam * MR_SHARE));
       const nTs = new Set(cand.map(r => r.q.ts)).size, cap = Math.ceil(meta.exam / nTs) + 1, per = {}, take = [];
-      cand.forEach(r => { if (take.length < meta.exam && (per[r.q.ts] || 0) < cap) { per[r.q.ts] = (per[r.q.ts] || 0) + 1; take.push(r); } });
-      cand.forEach(r => { if (take.length < meta.exam && !take.includes(r)) take.push(r); });
+      const fill = (list, upto, capped) => list.forEach(r => {
+        if (take.length >= upto || take.includes(r) || (capped && (per[r.q.ts] || 0) >= cap)) return;
+        per[r.q.ts] = (per[r.q.ts] || 0) + 1; take.push(r);
+      });
+      fill(mr, wantMR, true); fill(mr, wantMR, false);
+      fill(mc, meta.exam, true); fill(mc, meta.exam, false);
+      fill(mr, meta.exam, false);  // a bank short of single-answer items tops up with choose-two ones
       picked.push(...take);
     });
     const blocks = scenarios.map(sid => shuffle(picked.filter(r => r.q.scenario === sid)));
@@ -1093,16 +1434,18 @@ const Exam = {
   },
 
   /* ---- persistence (strict mock only) ----
-     v2 records carry a per-item fingerprint of the options and key, so an answer is only replayed onto
-     the question the player actually saw. v1 records (no fingerprints) are voided on load */
+     v2+ records carry a per-item fingerprint of the options and key, so an answer is only replayed onto
+     the question the player actually saw. v1 records (no fingerprints) are voided on load.
+     v3: an item's sel is null | int (single-answer) | array of displayed indices (choose-two, possibly
+     incomplete). A v2 record is read as-is: its sel is an int and every item is single-answer */
   stored() {
-    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && (r.v === 1 || r.v === 2) ? r : null; }
+    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && (r.v === 1 || r.v === 2 || r.v === 3) ? r : null; }
     catch (e) { return null; }
   },
-  saved() { const r = this.stored(); return r && r.v === 2 && r.status === 'live' && Array.isArray(r.items) ? r : null; },
+  saved() { const r = this.stored(); return r && r.v >= 2 && r.status === 'live' && Array.isArray(r.items) ? r : null; },
   clearSaved() { try { localStorage.removeItem(EXAM_KEY); } catch (e) {} },
   /* a finished attempt leaves a marker so another tab can't write it back as live */
-  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 2, status, attemptId })); } catch (e) {} },
+  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 3, status, attemptId })); } catch (e) {} },
   /* true when another tab submitted, reset or replaced this attempt */
   takenOver() { const r = this.stored(); return !!r && (r.attemptId !== this.attemptId || r.status !== 'live'); },
   /* fresh: a new attempt replaces whatever record or end marker is there */
@@ -1110,7 +1453,7 @@ const Exam = {
     if (this.variant !== 'mock' || this.submitted) return;
     if (!fresh && this.takenOver()) return this.detach();
     const rec = {
-      v: 2, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
+      v: 3, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
       startedAt: this.startedAt, deadline: this.deadline, idx: this.idx, scenarios: this.scenarios,
       items: this.items.map(it => ({ id: it.id, o: it.deal.order, fp: qFingerprint(Bank.byId(it.id)), sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore, mb: it.mockBefore, sh: it.shown })),
     };
@@ -1126,12 +1469,13 @@ const Exam = {
       const q = s && Bank.byId(s.id);
       if (!q) return false;
       const n = q.options.length, o = s.o;
-      const perm = Array.isArray(o) && o.length === n && n === 4 && o.every(i => Number.isInteger(i) && i >= 0 && i < n) && new Set(o).size === n;
+      const perm = Array.isArray(o) && o.length === n && (n === 4 || n === 5) && o.every(i => Number.isInteger(i) && i >= 0 && i < n) && new Set(o).size === n;
       const same = perm && s.fp === qFingerprint(q);
-      const sel = same && Number.isInteger(s.sel) && s.sel >= 0 && s.sel < n ? s.sel : null;
+      const it = this.item(q, same ? o : null, { flag: !!s.flag, scenario: s.sc || 0, seenBefore: !!s.seen, mockBefore: !!s.mb,
+        shown: s.sh == null ? s.sel != null : !!s.sh });
+      it.sel = same ? Score.validSel(it.deal, s.sel) : null;
       if (!same) { changed++; if (s.sel != null) cleared++; }
-      items.push(this.item(q, same ? o : null, { sel, flag: !!s.flag, scenario: s.sc || 0, seenBefore: !!s.seen, mockBefore: !!s.mb,
-        shown: s.sh == null ? s.sel != null : !!s.sh }));
+      items.push(it);
     }
     Object.assign(this, { variant: 'mock', items, idx: Math.max(0, Math.min(items.length - 1, rec.idx || 0)), startedAt: rec.startedAt, deadline: rec.deadline,
       attemptId: rec.attemptId, scenarios: rec.scenarios || [], submitted: false, warned: false, exposed: false });
@@ -1146,7 +1490,7 @@ const Exam = {
   /* a v1 record has no fingerprints, so its answers can't be checked against today's bank: void it */
   voidLegacy() {
     const r = this.stored();
-    if (!r || r.v === 2 || r.status !== 'live') return false;
+    if (!r || r.v >= 2 || r.status !== 'live') return false;
     this.creditExposure(r);
     this.endSaved('voided', r.attemptId);
     UI.toast('🗑️', 'Saved mock exam voided', 'The question bank was updated since you started it, and that attempt can\'t be checked against the new questions safely.');
@@ -1274,8 +1618,12 @@ const Exam = {
     this.renderPace();
   },
 
+  /* answered = as many options chosen as the item asks for; a choose-two item with one pick is incomplete */
+  done(it) { return Score.isComplete(it.deal, it.sel); },
+  partial(it) { return Score.isPartial(it.deal, it.sel); },
+
   renderPace() {
-    const answered = this.items.filter(i => i.sel != null).length;
+    const answered = this.items.filter(i => this.done(i)).length;
     const diff = Math.round((answered * PACE_SECS - this.elapsed()) / 60);
     const pace = Math.abs(diff) < 2 ? 'on pace' : diff > 0 ? diff + ' min ahead' : -diff + ' min behind';
     const el = document.getElementById('e-pace');
@@ -1303,34 +1651,40 @@ const Exam = {
     flag.className = 'flag-btn' + (it.flag ? ' on' : '');
     flag.setAttribute('aria-pressed', String(!!it.flag));
     flag.lastChild.textContent = it.flag ? ' Flagged' : ' Flag';
-    document.getElementById('e-qtext').innerHTML = fmt(it.deal.q);
+    UI.renderStem('e-qtext', it.deal);
     const fb = document.getElementById('e-feedback');
     fb.innerHTML = '';
     document.getElementById('e-qclock').textContent = '';
     this.qStart = Date.now();
 
-    const btns = UI.renderAnswers('e-answers', it.deal.options, (i) => {
-      if (practice) { if (it.sel == null) this.practiceAnswer(i); return; }
-      it.sel = i;
-      btns.forEach((b, j) => { b.classList.toggle('picked', j === i); b.setAttribute('aria-pressed', String(j === i)); });
+    const mr = Score.isMR(it.deal);
+    /* strict mock, choose-two: no per-item Submit; the selection is saved as it is made */
+    const btns = UI.renderAnswers('e-answers', it.deal, (sel) => {
+      if (practice) { if (it.sel == null) this.practiceAnswer(sel); return; }
+      it.sel = sel;
+      btns.forEach((b, j) => { b.classList.toggle('picked', j === sel); b.setAttribute('aria-pressed', String(j === sel)); });
       this.renderGrid(); this.persist(); this.renderPace();
       Sound.click();
+    }, practice || !mr ? { sel: practice ? it.sel : null } : {
+      live: true, sel: it.sel,
+      onChange: (sel) => { it.sel = sel.length ? sel : null; this.renderGrid(); this.persist(); this.renderPace(); },
     });
     if (practice && it.sel != null) this.markPractice(btns, it);
-    else if (!practice) btns.forEach((b, j) => { b.classList.toggle('picked', j === it.sel); b.setAttribute('aria-pressed', String(j === it.sel)); });
+    else if (!practice && !mr) btns.forEach((b, j) => { b.classList.toggle('picked', j === it.sel); b.setAttribute('aria-pressed', String(j === it.sel)); });
     if (this.shownIdx !== this.idx) {
       this.shownIdx = this.idx;
-      UI.announce('Question ' + (this.idx + 1) + ' of ' + this.items.length + (it.sel != null ? ', answered' : '') + (it.flag ? ', flagged' : ''));
+      UI.announce('Question ' + (this.idx + 1) + ' of ' + this.items.length + (mr ? ', ' + chooseText(it.deal).toLowerCase().replace('.', '') : '')
+        + (this.done(it) ? ', answered' : this.partial(it) ? ', incomplete' : '') + (it.flag ? ', flagged' : ''));
     }
     document.getElementById('e-prev').disabled = this.idx === 0;
     document.getElementById('e-next').disabled = this.idx === this.items.length - 1;
   },
 
-  practiceAnswer(i) {
+  practiceAnswer(sel) {
     const it = this.items[this.idx];
-    it.sel = i;
+    it.sel = sel;
     it.secs = Math.round((Date.now() - this.qStart) / 1000);
-    const ok = i === it.deal.correct;
+    const ok = Score.isCorrect(it.deal, sel);
     Game.recordAnswer(ok, it.id);
     if (!ok) Game.deckAdd(it.id);
     ok ? Sound.good() : Sound.bad();
@@ -1338,17 +1692,16 @@ const Exam = {
   },
 
   markPractice(btns, it) {
-    const ok = it.sel === it.deal.correct;
-    btns.forEach(b => b.classList.add('disabled'));
-    btns[it.deal.correct].classList.add('correct');
-    if (!ok) btns[it.sel].classList.add('wrong');
+    const ok = Score.isCorrect(it.deal, it.sel), mr = Score.isMR(it.deal);
+    UI.markAnswers(btns, it.deal, it.sel);
     const last = this.idx === this.items.length - 1;
     if (this.announced !== it) {
       this.announced = it;
-      UI.announce((ok ? 'Correct. ' : 'Not quite. The answer is ' + (it.deal.correct + 1) + ': ') + (ok ? '' : it.deal.options[it.deal.correct]));
+      const keys = Score.keys(it.deal).map(k => (k + 1) + ': ' + it.deal.options[k]).join('; ');
+      UI.announce((ok ? 'Correct. ' : 'Not quite. ' + (mr ? UI.hitsText(it.deal, it.sel) + '. The answers are ' : 'The answer is ') + keys));
     }
     document.getElementById('e-feedback').innerHTML = `
-      <div class="verdict ${ok ? 'good' : 'bad'}">${ok ? 'Correct' : 'Not quite'}${it.secs != null ? ` · ${clock(it.secs)}${it.secs > PACE_SECS ? ' (over 2:00)' : ''}` : ''}</div>
+      <div class="verdict ${ok ? 'good' : 'bad'}">${ok ? 'Correct' : 'Not quite'}${mr ? ' · ' + UI.hitsText(it.deal, it.sel) : ''}${it.secs != null ? ` · ${clock(it.secs)}${it.secs > PACE_SECS ? ' (over 2:00)' : ''}` : ''}</div>
       <div class="expl">${fmt(it.deal.explanation)}</div>
       <div class="right"><button class="btn small primary" onclick="${last ? 'Exam.confirmSubmit()' : 'Exam.nav(1)'}">${last ? 'Finish' : 'Next →'}</button></div>`;
     document.getElementById('e-qclock').textContent = '';
@@ -1374,10 +1727,13 @@ const Exam = {
     this.items.forEach((it, i) => {
       const c = g.children[i];
       let cls = 'nav-cell', state = [];
-      if (it.sel != null) {
-        const right = it.sel === it.deal.correct;
+      if (this.done(it)) {
+        const right = Score.isCorrect(it.deal, it.sel);
         cls += practice ? (right ? ' answered' : ' missed') : ' answered';
         state.push(practice ? (right ? 'correct' : 'missed') : 'answered');
+      } else if (this.partial(it)) {
+        cls += ' incomplete';
+        state.push('incomplete, ' + Score.picks(it.sel).length + ' of ' + Score.need(it.deal) + ' chosen');
       } else state.push('not answered');
       if (it.flag) { cls += ' flagged'; state.push('flagged'); }
       if (i === this.idx) { cls += ' current'; c.setAttribute('aria-current', 'step'); } else c.removeAttribute('aria-current');
@@ -1396,9 +1752,11 @@ const Exam = {
   },
 
   confirmSubmit() {
-    const un = this.items.filter(i => i.sel == null).length;
+    const un = this.items.filter(i => !this.done(i)).length;
+    const inc = this.items.filter(i => this.partial(i)).length;
     const fl = this.items.filter(i => i.flag).length;
-    if (!confirm(`Submit exam?\n\n${un ? '⚠️ ' + un + ' unanswered (scored as wrong).' : 'All answered.'}${fl ? '\n🚩 ' + fl + ' still flagged.' : ''}`)) return;
+    const unTxt = un ? '⚠️ ' + un + ' unanswered (scored as wrong)' + (inc ? ', including ' + inc + ' incomplete choose-two ' + (inc === 1 ? 'item' : 'items') + ' with only one option chosen' : '') + '.' : 'All answered.';
+    if (!confirm(`Submit exam?\n\n${unTxt}${fl ? '\n🚩 ' + fl + ' still flagged.' : ''}`)) return;
     this.submit('submitted');
   },
 
@@ -1416,14 +1774,14 @@ const Exam = {
     const perDomain = {}, perScen = {};
     Object.keys(DOMAINS).forEach(d => perDomain[d] = { right: 0, total: 0 });
     this.items.forEach(it => {
-      const ok = it.sel === it.deal.correct;
+      const ok = Score.isCorrect(it.deal, it.sel);
       perDomain[it.domain].total++;
       const ps = perScen[it.scenario] || (perScen[it.scenario] = { right: 0, total: 0 });
       ps.total++;
       if (ok) { correct++; perDomain[it.domain].right++; ps.right++; }
-      /* unanswered items score as wrong but stay out of the clinic, totals and per-question stats;
-         a mock scored after expiring while away doesn't count as studying today */
-      if (mock && it.sel != null) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.id, false, reason === 'expired'); }
+      /* unanswered (and incomplete choose-two) items score as wrong but stay out of the clinic, totals and
+         per-question stats; a mock scored after expiring while away doesn't count as studying today */
+      if (mock && this.done(it)) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.id, false, reason === 'expired'); }
     });
     const total = this.items.length, pct = correct / total;
     const score = scaledScore(pct);
@@ -1445,7 +1803,9 @@ const Exam = {
     if (mock && score >= 720) Game.unlock('certified');
     if (mock && score >= 900) Game.unlock('beat-blogger');
 
-    this.renderResult({ correct, total, pct, score, band, used, seenBefore, mockBefore, perDomain, perScen, xp, mock });
+    const mrItems = this.items.filter(i => Score.isMR(i.deal));
+    const mr = { total: mrItems.length, right: mrItems.filter(i => Score.isCorrect(i.deal, i.sel)).length };
+    this.renderResult({ correct, total, pct, score, band, used, seenBefore, mockBefore, perDomain, perScen, xp, mock, mr });
     if (band === 'above') { Sound.win(); UI.confetti(); } else Sound.lose();
     UI.go('examresult');
   },
@@ -1467,7 +1827,8 @@ const Exam = {
     banner.style.color = { above: 'var(--good)', near: 'var(--gold)', below: 'var(--bad)' }[r.band];
     document.getElementById('er-sub').textContent = `${r.correct}/${r.total} correct (${Math.round(r.pct * 100)}%) · ${Math.round(r.used / 60)}${r.mock ? ' of 120' : ''} minutes · ${Math.round(r.used / r.total)}s per question · +${r.xp} XP`;
     document.getElementById('er-note').innerHTML = `The scaled score is an <strong>estimate</strong>: a likely range of ${lo}–${hi}, centred on ${r.score} (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
-      + ` This mock has no multiple-response items, which the real exam includes.`
+      + (r.mr.total ? ` ${r.mr.total} of ${r.total} items were choose-two (${r.mr.right} right, scored all or nothing); the real exam's multiple-response share isn't published, so that mix is our practice choice.`
+        : ` This attempt had no choose-two items; the real exam includes multiple-response items.`)
       + ` <strong>${r.total - r.seenBefore} of ${r.total}</strong> questions were new to you`
       + (r.mockBefore ? ` and <strong>${r.mockBefore}</strong> had appeared in an earlier mock or practice exam` : '')
       + (r.seenBefore > r.total / 4 ? '. Questions you have answered before can inflate the score.' : '.');
@@ -1509,15 +1870,21 @@ const Exam = {
 
   renderReview(filter) {
     const list = this.items.map((it, n) => ({ it, n })).filter(({ it }) =>
-      filter === 'wrong' ? it.sel !== it.deal.correct : filter === 'flagged' ? it.flag : true);
+      filter === 'wrong' ? !Score.isCorrect(it.deal, it.sel) : filter === 'flagged' ? it.flag : true);
+    const MARK = { hit: ['ok', '✔ correct · you chose it'], miss: ['miss', '○ correct · you missed it'], wrong: ['no', '✘ not correct · you chose it'], '': ['plain', ''] };
     document.getElementById('er-review').innerHTML = list.length ? list.map(({ it, n }) => {
-      const ok = it.sel === it.deal.correct;
+      const ok = Score.isCorrect(it.deal, it.sel);
       const ts = GUIDE.taskStatements.find(t => t.id === it.deal.ts);
+      /* choose-two: every option with its mark, and how many of the two you got */
+      const body = Score.isMR(it.deal)
+        ? `<div class="row ${ok ? 'ok' : 'no'}">${ok ? '✔' : '✘'} ${Score.picks(it.sel).length ? UI.hitsText(it.deal, it.sel) : 'no answer'}${this.partial(it) ? ' · incomplete' : ''}</div>
+           <ul class="rev-opts">${Score.marks(it.deal, it.sel).map((m, i) => `<li class="${MARK[m][0]}">${MARK[m][1] ? `<b>${MARK[m][1]}:</b> ` : ''}${fmt(it.deal.options[i])}</li>`).join('')}</ul>`
+        : `<div class="row ${ok ? 'ok' : 'no'}">${ok ? '✔' : '✘'} you: ${it.sel != null ? fmt(it.deal.options[it.sel]) : '<em>no answer</em>'}</div>
+           ${ok ? '' : `<div class="row ok">✔ correct: ${fmt(Score.keyTexts(it.deal)[0])}</div>`}`;
       return `<div class="rev-item">
         <div class="tsline">${it.domain} · ${ts ? ts.id + ' ' + ts.title : ''}${it.flag ? ' · 🚩' : ''}</div>
-        <div class="q">${n + 1}. ${fmt(it.deal.q)}</div>
-        <div class="row ${ok ? 'ok' : 'no'}">${ok ? '✔' : '✘'} you: ${it.sel != null ? fmt(it.deal.options[it.sel]) : '<em>no answer</em>'}</div>
-        ${ok ? '' : `<div class="row ok">✔ correct: ${fmt(it.deal.options[it.deal.correct])}</div>`}
+        <div class="q">${n + 1}. ${fmt(it.deal.q)}${Score.isMR(it.deal) ? ` <strong>${chooseText(it.deal)}</strong>` : ''}</div>
+        ${body}
         <div class="ex">${fmt(it.deal.explanation)}</div>
       </div>`;
     }).join('') : '<p class="center muted">Nothing in this filter.</p>';
@@ -1544,6 +1911,24 @@ const Readiness = {
       refs.forEach(r => { const st = qs[r.id]; if (!st || !st.seen) return; seen++; if (st.first != null) { firstN++; firstRight += st.first; } });
       return { d, meta, total: refs.length, seen, firstN, firstRight, acc: firstN ? firstRight / firstN : null };
     });
+  },
+
+  /* first-try accuracy split by item format: blind guessing gets 25% on a single-answer item but only
+     10% on a choose-two item (1 of the 10 possible pairs), so the two aren't pooled silently */
+  formats() {
+    const qs = Game.s.qstats, out = { mc: { n: 0, right: 0, total: 0 }, mr: { n: 0, right: 0, total: 0 } };
+    Bank.inScope().forEach(r => {
+      const f = out[Score.isMR(r.q) ? 'mr' : 'mc'], st = qs[r.id];
+      f.total++;
+      if (st && st.seen && st.first != null) { f.n++; f.right += st.first; }
+    });
+    return out;
+  },
+
+  formatLine() {
+    const f = this.formats();
+    const part = (x, name, chance) => `${name}: ${x.n ? Math.round(x.right / x.n * 100) + '% of ' + x.n + ' first ' + (x.n === 1 ? 'try' : 'tries') : x.total ? 'no first tries yet' : 'none in the bank yet'} <span class="muted">(chance ${chance})</span>`;
+    return `<p class="ready-fmt small" id="ready-fmt"><b>By format.</b> ${part(f.mc, 'Single-answer', '25%')} · ${part(f.mr, 'Choose-two', '10%')}. The domain rows above pool both.</p>`;
   },
 
   lastMock() { return [...Game.s.examHistory].reverse().find(h => h.mode === 'mock') || null; },
@@ -1592,6 +1977,7 @@ const Readiness = {
           <span class="val">${counted ? pct + '%<span class="sr-only"> right on first tries</span>' : r.firstN + '/' + READY_MIN_FIRST + ' tries'}</span>
         </button>`;
       }).join('')}</div>
+      ${this.formatLine()}
       <div class="next-step">
         <span class="ic" aria-hidden="true">${nx.ic}</span>
         <span class="txt" id="next-step-txt"><b>Next best step:</b> ${nx.label}<br><span class="muted small">${nx.sub}</span></span>
@@ -1753,21 +2139,23 @@ const Drill = {
     const t = GUIDE.taskStatements.find(x => x.id === q.ts);
     document.getElementById('d-progress').textContent = `Q ${this.qi + 1}/${this.queue.length} · ${this.right} right`;
     document.getElementById('d-ts').textContent = t ? `${t.id} · ${t.title}` : '';
-    document.getElementById('d-qtext').innerHTML = fmt(q.q);
-    this.buttons = UI.renderAnswers('d-answers', q.options, (i) => this.answer(i));
+    UI.renderStem('d-qtext', q);
+    this.answered = false;
+    this.buttons = UI.renderAnswers('d-answers', q, (sel) => this.answer(sel));
   },
 
-  answer(i) {
+  answer(sel) {
     const q = this.queue[this.qi];
-    const ok = i === q.correct;
+    if (this.answered) return;
+    this.answered = true;
+    const ok = Score.isCorrect(q, sel);
     Game.recordAnswer(ok, q.id);
-    this.buttons.forEach(b => b.classList.add('disabled'));
-    this.buttons[q.correct].classList.add('correct');
+    UI.markAnswers(this.buttons, q, sel);
     if (ok) { this.right++; this.xp += 15; Game.addXP(15); Sound.good(); }
-    else { this.buttons[i].classList.add('wrong'); Game.deckAdd(q.id); Sound.bad(); }
+    else { Game.deckAdd(q.id); Sound.bad(); }
     setTimeout(() => {
       if (UI.current !== 'drill' || this.queue[this.qi] !== q) return;
-      UI.modal(ok, q.options[q.correct], q.explanation, () => this.next(),
+      UI.feedback(q, sel, ok, () => this.next(),
         { btn: this.qi + 1 >= this.queue.length ? 'Finish drill' : 'Next question' });
     }, 700);
   },
@@ -1803,10 +2191,12 @@ const Drill = {
 const Lightning = {
   running: false, score: 0, combo: 0, secs: 90, timer: null, pool: [], buttons: [],
 
-  /* a recall sprint: questions you've already studied, so speed trains recall instead of skimming new stems */
+  /* a recall sprint: questions you've already studied, so speed trains recall instead of skimming new stems.
+     Single-answer only: a choose-two item doesn't fit a one-tap sprint */
   sprintPool() {
-    const seen = Bank.inScope().filter(r => (Game.s.qstats[r.id] || {}).seen);
-    return seen.length >= 20 ? seen : Bank.inScope();
+    const all = Bank.inScope().filter(r => !Score.isMR(r.q));
+    const seen = all.filter(r => (Game.s.qstats[r.id] || {}).seen);
+    return seen.length >= 20 ? seen : all;
   },
 
   start() {
@@ -1841,25 +2231,22 @@ const Lightning = {
     this.cur = { deal: dealQuestion(ref.q) };
     document.getElementById('l-score').textContent = this.score;
     document.getElementById('l-combo').textContent = this.combo >= 2 ? `🔥 ×${this.combo} combo — +${1 + Math.floor(this.combo / 3)} per hit` : '';
-    document.getElementById('l-qtext').innerHTML = fmt(this.cur.deal.q);
-    this.buttons = UI.renderAnswers('l-answers', this.cur.deal.options, (i) => this.answer(i));
+    UI.renderStem('l-qtext', this.cur.deal);
+    this.buttons = UI.renderAnswers('l-answers', this.cur.deal, (i) => this.answer(i));
   },
 
   answer(i) {
     if (!this.running) return;
     const q = this.cur.deal;
-    const ok = i === q.correct;
+    const ok = Score.isCorrect(q, i);
     Game.recordAnswer(ok, q.id, true);
-    this.buttons.forEach(b => b.classList.add('disabled'));
+    UI.markAnswers(this.buttons, q, i);
     if (ok) {
       this.combo++;
       this.score += 1 + Math.floor(this.combo / 3);
-      this.buttons[i].classList.add('correct');
       this.combo >= 3 ? Sound.crit() : Sound.good();
     } else {
       this.combo = 0;
-      this.buttons[i].classList.add('wrong');
-      this.buttons[q.correct].classList.add('correct');
       Game.deckAdd(q.id);
       Sound.bad();
     }
@@ -1986,18 +2373,19 @@ const Review = {
     if (!q) { this.next(); return; }
     this.cur = dealQuestion(q);
     document.getElementById('rv-count').textContent = `card ${this.qi + 1}/${this.session.length} · streak ${card.streak}/2`;
-    document.getElementById('rv-qtext').innerHTML = fmt(this.cur.q);
-    this.buttons = UI.renderAnswers('rv-answers', this.cur.options, (i) => this.answer(i));
+    UI.renderStem('rv-qtext', this.cur);
+    this.answered = false;
+    this.buttons = UI.renderAnswers('rv-answers', this.cur, (sel) => this.answer(sel));
     document.getElementById('rv-stage').scrollIntoView({ behavior: UI.reducedMotion() ? 'auto' : 'smooth', block: 'center' });
   },
 
-  answer(i) {
+  answer(sel) {
     const card = this.session[this.qi];
-    const ok = i === this.cur.correct;
+    if (this.answered) return;
+    this.answered = true;
+    const ok = Score.isCorrect(this.cur, sel);
     Game.recordAnswer(ok, card.id);
-    this.buttons.forEach(b => b.classList.add('disabled'));
-    this.buttons[this.cur.correct].classList.add('correct');
-    if (!ok) this.buttons[i].classList.add('wrong');
+    UI.markAnswers(this.buttons, this.cur, sel);
 
     const real = Game.s.deck.find(c => c.id === card.id);
     let discharged = false;
@@ -2021,7 +2409,7 @@ const Review = {
     const cur = this.cur;
     setTimeout(() => {
       if (UI.current !== 'review' || this.cur !== cur) return;  // the player left the clinic
-      UI.modal(ok, this.cur.options[this.cur.correct], this.cur.explanation, () => this.next(), { btn: this.qi + 1 >= this.session.length ? 'Finish round' : 'Next card' });
+      UI.feedback(this.cur, sel, ok, () => this.next(), { btn: this.qi + 1 >= this.session.length ? 'Finish round' : 'Next card' });
     }, 800);
   },
 
@@ -2048,16 +2436,27 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (e.key === 'Escape' && UI.current === 'lightning') { e.preventDefault(); UI.go('home'); return; }
+  const map = { battle: 'b-answers', lightning: 'l-answers', exam: 'e-answers', review: 'rv-answers', drill: 'd-answers' };
+  const id = map[UI.current];
+  const box = id && document.getElementById(id);
+  /* choose-two: Enter submits (or says why it can't yet), unless focus is on another control, which keeps
+     its own Enter */
+  if (e.key === 'Enter' && box && box._mr && !box._mr.done && !(UI.current === 'exam' && Exam.variant === 'mock')) {
+    const f = document.activeElement;
+    const other = f && f !== document.body && !box.contains(f) && f.matches('button, a[href], input, select, textarea, summary, [role="button"]');
+    if (!other) { e.preventDefault(); box._mr.submit(); return; }
+  }
   if (e.key === 'Enter' && UI.current === 'exam' && Exam.variant === 'practice') {
     const f = document.activeElement, next = document.querySelector('#e-feedback button');
     if (f && f !== document.body && !f.closest('#e-answers, #e-feedback')) return;
     if (next) { e.preventDefault(); next.click(); }
     return;
   }
-  if (e.key >= '1' && e.key <= '4') {
-    const map = { battle: 'b-answers', lightning: 'l-answers', exam: 'e-answers', review: 'rv-answers', drill: 'd-answers' };
-    const id = map[UI.current];
+  /* 1–5: answer (single-answer) or toggle an option (choose-two) */
+  if (e.key >= '1' && e.key <= '5' && !e.altKey && !e.ctrlKey && !e.metaKey) {
     if (!id) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     const btns = document.querySelectorAll('#' + id + ' .answer:not(.disabled)');
     const all = document.querySelectorAll('#' + id + ' .answer');
     const target = all[Number(e.key) - 1];
@@ -2096,13 +2495,16 @@ document.getElementById('btn-sound').onclick = () => {
 UI.refreshHud();
 Exam.checkSaved();
 window.addEventListener('storage', (e) => {
-  if (e.key === SAVE_KEY) { if (e.newValue) Game.syncFrom(e.newValue); return; }
+  if (e.key === SAVE_KEY) { if (e.newValue) Game.syncFrom(); return; }
   if (e.key !== EXAM_KEY || !Exam.active || Exam.variant !== 'mock') return;
   if (Exam.takenOver()) Exam.detach();
   else if (Exam.stored()) UI.toast('⚠️', 'Exam open in another tab', 'Answers from two tabs will overwrite each other. Use one.');
 });
 /* practice exams aren't persisted: count what was displayed if the tab closes mid-exam */
-window.addEventListener('pagehide', () => { if (Exam.active && Exam.variant === 'practice') Exam.noteExposure(); });
+window.addEventListener('pagehide', () => {
+  if (Exam.active && Exam.variant === 'practice') Exam.noteExposure();
+  if (Game._queued) Game.commit();  // a save still waiting for the lock: write it before the tab goes
+});
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && EXAM_SETTLE_ON.has(UI.current)) Exam.settleExpired();
 });
