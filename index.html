@@ -88,6 +88,7 @@
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 /* keep focused and scrolled-to things clear of the sticky top bar */
 html { scroll-padding-top: calc(var(--topbar-h, 70px) + 12px); }
+@media (max-width: 800px) { html:has(#screen-exam.active) { scroll-padding-top: calc(var(--topbar-h, 70px) + 64px); } }
 body {
   font-family: var(--font-body);
   font-size: 16px;
@@ -633,13 +634,7 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
   #topbar .logo { margin-right: auto; }
   .xp-wrap { order: 5; flex-basis: 100%; }
 }
-@media (max-width: 400px) {
-  #app { padding: 0 12px 80px; }
-  #topbar { gap: 8px; }
-  #topbar .logo { font-size: 15px; }
-  #topbar .logo > [aria-hidden] { display: none; }
-  .streak-chip { padding: 5px 9px; }
-}
+
 @media (max-width: 640px) {
   #app { padding: 0 16px 80px; }
   #topbar .logo { font-size: 16px; }
@@ -678,7 +673,15 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
   #toasts { left: 16px; right: 16px; bottom: 16px; }
   .toast { max-width: none; }
 }
-
+@media (max-width: 400px) {
+  #app { padding: 0 12px 80px; }
+  #topbar { gap: 6px; }
+  #topbar .logo { font-size: 14.5px; }
+  #topbar .logo > [aria-hidden] { display: none; }
+  .streak-chip { padding: 4px 8px; font-size: 13px; gap: 3px; }
+  #topbar .icon-btn { width: 32px; height: 32px; font-size: 15px; }
+  .exam-timer .pace { flex: 1 1 0; min-width: 0; }
+}
 .center { text-align: center; }
 .mt { margin-top: 22px; }
 .kbd-tip { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 14px; }
