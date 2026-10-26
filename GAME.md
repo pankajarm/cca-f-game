@@ -14,8 +14,8 @@ production agent systems go wrong. At the summit waits **THE PROCTOR**:
 zero banter.
 
 The real exam passes at 720 too. The Proctor's score is an estimate (the real
-scaling isn't published) and its items are all single-answer, while the real exam
-also has multiple-response items. Treat it as a rehearsal, not a verdict.
+scaling isn't published), and about one item in ten is choose-two (pick 2 of 5,
+all or nothing); the real exam's share of those isn't published. Treat it as a rehearsal, not a verdict.
 
 ## The floors and their bosses
 

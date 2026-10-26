@@ -364,6 +364,35 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .answer.picked::after { content: '✓ Selected'; color: var(--accent-deep); }
 .answer.dim { background: transparent; color: var(--muted); text-decoration: line-through; border-style: dashed; }
 .answer.disabled { pointer-events: none; }
+/* choose-two (multiple-response) items: checkboxes, a counter and a Submit that says why it waits */
+.mr-choose { display: inline-block; margin-left: 4px; font-size: 13.5px; font-weight: 800; color: var(--accent-deep); background: var(--accent-soft); border-radius: 99px; padding: 1px 10px; white-space: nowrap; }
+.answers.mr .answer .key { border-radius: 5px; border: 2px solid var(--line-strong); background: var(--card); color: var(--ink-soft); }
+.answers.mr .answer[aria-checked="true"] .key { background: var(--accent-deep); border-color: var(--accent-deep); color: var(--on-strong); }
+.answers.mr .answer::after { display: none !important; }
+.answers.mr .answer.correct .key { background: var(--good); border-color: var(--good); color: var(--on-strong); }
+.answers.mr .answer.wrong .key { background: var(--bad); border-color: var(--bad); color: var(--on-strong); }
+.answers.mr .answer.missed { border-style: dashed; background: transparent; }
+.answers.mr .answer.missed .key { background: var(--card); color: var(--good); }
+.answer .opt { flex: 1 1 auto; min-width: 0; }
+.answer .mark { flex: none; margin-left: auto; align-self: center; padding-left: 8px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.answer.correct .mark { color: var(--good); }
+.answer.wrong .mark { color: var(--bad); }
+.mr-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 2px; }
+.mr-count { font-weight: 700; font-size: 14px; color: var(--ink-soft); }
+.mr-why { font-size: 13px; color: var(--muted); }
+.mr-submit { margin-left: auto; }
+.mr-submit.is-disabled { opacity: .6; cursor: not-allowed; }
+.mr-bar.nudge { animation: mrNudge .3s; }
+@keyframes mrNudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+@media (prefers-reduced-motion: reduce) { .mr-bar.nudge { animation: none; } }
+.powerup .pu-why { font-size: 11px; font-weight: 600; }
+.ready-fmt { margin: 10px 0 0; color: var(--ink-soft); }
+.m-note { font-weight: 700; margin-bottom: 6px; }
+.rev-opts { list-style: none; padding: 0; margin: 6px 0; text-align: left; }
+.rev-opts li { padding: 3px 0; font-size: 14px; }
+.rev-opts li.ok b { color: var(--good); }
+.rev-opts li.no b { color: var(--bad); }
+.rev-opts li.miss b { color: var(--gold-ink); }
 
 .powerup-bar { display: flex; gap: 9px; justify-content: center; padding: 0 22px 18px; flex-wrap: wrap; }
 .powerup {
@@ -578,6 +607,8 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .pace { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 6px; }
 .pace.behind { color: var(--bad); }
 .nav-cell.missed { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+.nav-cell.incomplete { background: var(--card); color: var(--gold-ink); border: 1.5px dashed var(--gold-ink); }
+.nav-cell.incomplete::before { content: '½'; font-size: 9px; margin-right: 1px; }
 .nav-cell.block-start { box-shadow: -3px 0 0 var(--accent); }
 .er-kind { font-weight: 700; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
 .er-note { max-width: 620px; margin: -10px auto 22px; font-size: 13.5px; color: var(--muted); }
@@ -676,6 +707,8 @@ a.btn { text-decoration: none; }
   .answer.wrong .key::after { content: '✗'; }
   .answer.picked .key::after { content: '✓'; }
   .answer .key { width: auto; min-width: 24px; padding: 0 5px; gap: 2px; grid-auto-flow: column; }
+  .answer .mark { white-space: normal; font-size: 11.5px; max-width: 34%; text-align: right; }
+  .mr-submit { margin-left: 0; width: 100%; }
   .modal { padding: 20px 18px 0; max-height: 88vh; }
   .score-dial-wrap .score-dial { transform: scale(.9); }
   #toasts { left: 16px; right: 16px; bottom: 16px; }
@@ -761,7 +794,7 @@ h2.band-title { font-weight: 700; }
       </div>
       <button class="btn primary" onclick="UI.go('home')"><span aria-hidden="true">⚔️</span> Begin the Ascent</button>
       <button class="btn ghost" id="title-resume" hidden onclick="UI.go('examintro')"><span aria-hidden="true">⏳</span> Resume your mock exam · <b></b></button>
-      <p class="kbd-tip">Answer with <kbd>1</kbd>–<kbd>4</kbd> · advance with <kbd>Enter</kbd> · your progress saves automatically</p>
+      <p class="kbd-tip">Answer with <kbd>1</kbd>–<kbd>4</kbd> (choose-two items: <kbd>1</kbd>–<kbd>5</kbd> toggle, <kbd>Enter</kbd> submits) · advance with <kbd>Enter</kbd> · your progress saves automatically</p>
     </section>
 
     <!-- HOME: a study path built around the real exam -->
@@ -819,7 +852,7 @@ h2.band-title { font-weight: 700; }
           <span class="badge" id="exam-badge">60 Q · 120 min</span>
           <span class="emoji" aria-hidden="true">📋</span>
           <h3><button class="card-link" aria-describedby="card-exam-d">The Proctor · Mock Exam</button></h3>
-          <p id="card-exam-d">60 questions, 120 minutes, 4 of 6 scenarios, exact domain weights, results by domain. Each mock serves questions you haven't had in an earlier one. Or take a practice run with feedback after every question. <strong>Single-answer only:</strong> the real exam also has multiple-response items.</p>
+          <p id="card-exam-d">60 questions, 120 minutes, 4 of 6 scenarios, exact domain weights, results by domain. Each mock serves questions you haven't had in an earlier one. Or take a practice run with feedback after every question. Includes a few <strong>choose-two</strong> (multiple-response) items.</p>
         </div>
       </div>
 
@@ -880,7 +913,7 @@ h2.band-title { font-weight: 700; }
         <div class="shield-note" id="b-shield"><span aria-hidden="true">🛡️</span> Checkpoint active — next miss is forgiven</div>
         <div class="powerup-bar" id="b-powerups"></div>
       </div>
-      <p class="kbd-tip">Keys <kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>Enter</kbd> continues</p>
+      <p class="kbd-tip">Keys <kbd>1</kbd>–<kbd>4</kbd> answer · choose-two: <kbd>1</kbd>–<kbd>5</kbd> toggle, <kbd>Enter</kbd> submits · <kbd>Enter</kbd> continues</p>
     </section>
 
     <!-- RESULT -->
@@ -906,7 +939,7 @@ h2.band-title { font-weight: 700; }
         <div class="exam-rules">
           <h2><span aria-hidden="true">📋</span> Mock Exam</h2>
           <ul>
-            <li><strong>Single-answer only.</strong> The real exam also has multiple-response items ("select 2"); this bank has none yet, so expect some items on exam day that look different.</li>
+            <li><strong>About 1 in 10 items are choose-two</strong> (multiple-response: 5 options, pick 2, scored all or nothing). The real exam includes multiple-response items, but their share and exact format aren't published: this mix is our practice choice, not the exam's. A choose-two item with only one option picked counts as unanswered.</li>
             <li><strong>60 questions</strong> in blueprint proportions: D1 16 · D2 11 · D3 12 · D4 12 · D5 9.</li>
             <li><strong>4 of the 6 exam scenarios</strong> drawn at random; questions are grouped under them.</li>
             <li><strong>120-minute</strong> clock (2 minutes a question), with a pace readout. Auto-submits at zero.</li>
@@ -920,7 +953,7 @@ h2.band-title { font-weight: 700; }
         <div class="exam-rules">
           <h2><span aria-hidden="true">📝</span> Practice Exam</h2>
           <ul>
-            <li>Same 60-question, 4-scenario build, single-answer only.</li>
+            <li>Same 60-question, 4-scenario build, choose-two items included.</li>
             <li>A <strong>2:00 timer per question</strong> that turns red when you go over (it never locks you out).</li>
             <li>Answer and explanation <strong>right after each question</strong>.</li>
             <li>Not saved if you leave, and doesn't count toward your best mock score.</li>
@@ -1046,7 +1079,7 @@ h2.band-title { font-weight: 700; }
           <div class="answers" id="d-answers"></div>
         </div>
       </div>
-      <p class="kbd-tip">Keys <kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>Enter</kbd> continues</p>
+      <p class="kbd-tip">Keys <kbd>1</kbd>–<kbd>4</kbd> answer · choose-two: <kbd>1</kbd>–<kbd>5</kbd> toggle, <kbd>Enter</kbd> submits · <kbd>Enter</kbd> continues</p>
     </section>
 
     <!-- LIGHTNING -->

@@ -1,7 +1,7 @@
 # Practice Test 08: Validation Gauntlet
 **D4: Prompt Engineering & Structured Output** (20% of the exam) · task statements 4.4, 4.5, 4.6
 
-70 questions. Exam pace is 2 minutes per question.
+79 questions. Exam pace is 2 minutes per question.
 
 ---
 
@@ -27,7 +27,7 @@ D) Recognise when the value is not recoverable from the source, stop retrying, a
 A purchasing pipeline extracts purchase orders with quantity, unit price and line amount for each line. Auditors find that when a supplier's line amount does not equal quantity times unit price, the model quietly writes the product instead of the printed amount, hiding supplier errors. What design best preserves this audit signal?
 
 A) Extract all three printed values as written, compute the product in code, and flag lines where the printed amount differs
-B) Tell the model to always copy the printed line amount and to never do arithmetic of its own while it is extracting
+B) Tell the model to copy the printed line amount as written and to do no arithmetic of its own while extracting
 C) Drop the line amount field and calculate it downstream from quantity and unit price, since the printed value is redundant
 D) Ask the model to set a boolean field to true whenever it notices that the printed amount looks wrong for a given line
 
@@ -80,10 +80,10 @@ D) Use a lenient JSON parser that repairs unclosed brackets so that the partial 
 ## Question 5
 A research system's synthesis agent quotes sources directly. A validator checks each quote against the fetched source text and finds that about 8 percent are paraphrases presented as quotes. Currently the team adds "double-check your quotes" to the prompt and reruns the whole synthesis. What is a better feedback loop?
 
-A) Return the specific quotes that were not found in their sources and ask the agent to fix or remove only those quotes
+A) Return the quotes that were not found in their sources and ask the agent to fix or remove those quotes
 B) Have the same agent review its full report for misquotes before submitting, adding a final self-check step to the prompt
-C) Remove all direct quotes from reports and ask the agent to paraphrase every source, so that misquotes can never happen
-D) Keep rerunning the full synthesis with the double-check instruction until the validator finds no misquoted passages at all
+C) Remove direct quotes from reports and ask the agent to paraphrase each source, so that misquotes cannot happen
+D) Keep rerunning the full synthesis with the double-check instruction until the validator finds no misquoted passages
 
 <details>
 <summary>Answer & explanation</summary>
@@ -135,9 +135,9 @@ D) Switch to a free-text extraction followed by a second model call that convert
 A pipeline extracts certifications from supplier onboarding packets, and the validator produces two kinds of errors: date fields in the wrong format, and a required ISO certificate number that is blank. Both currently trigger the same three-attempt feedback loop. Most blank certificate numbers are packets that simply do not include the certificate. How should the loop treat these errors?
 
 A) Treat both the same, but increase the retry limit for the blank certificate field since it is the more important one
-B) Retry both with feedback, but add an instruction that the certificate number must be present in every valid packet
-C) Skip retries for both types and mark every packet that fails validation for manual completion by the onboarding team
-D) Retry the date-format errors with feedback, and route a blank certificate to a request for the missing document
+B) Retry both with feedback, but add an instruction that the certificate number must be present in a valid packet
+C) Skip retries for both types and mark each packet that fails validation for manual completion by the onboarding team
+D) Retry the date-format errors with feedback, and route a blank certificate to a request for the document
 
 <details>
 <summary>Answer & explanation</summary>
@@ -153,8 +153,8 @@ D) Retry the date-format errors with feedback, and route a blank certificate to 
 A developer-productivity tool extracts breaking API changes from PR descriptions into a JSON changelog. On validation failure, the retry sends only the failed JSON and the error message, to save tokens. Retried outputs fix the reported field but often change other fields to values that are not in the PR at all. What is the most likely fix?
 
 A) Include the original PR description in the retry along with the failed output and the specific validation error
-B) Add an instruction to keep every field unchanged except the one named in the error message from the validator
-C) Send only the failed field and its error, so the model cannot touch any of the other fields in the changelog entry
+B) Add an instruction to keep each field unchanged except the one named in the error message from the validator
+C) Send the failed field and its error alone, so the model cannot touch any of the other fields in the changelog entry
 D) Run a second validator that rejects changes to any field other than the failed one, and retry again when it fires
 
 <details>
@@ -224,10 +224,10 @@ D) Let the subagent continue computing percentages but require that it always ro
 ## Question 13
 A customs-declaration pipeline retries with feedback on the failed field only, then re-validates only that field. Spot checks show some retried declarations now have a corrected tariff code but a country of origin that changed and now breaks the origin-versus-port rule the first attempt had passed. What change should the architect make?
 
-A) Keep re-validating only the corrected field, but log every other field the retry changed so auditors can review it later
+A) Keep re-validating the corrected field alone, but log each other field the retry changed so auditors can review it later
 B) Lower the temperature on retries so that the model is less likely to change any fields it was not asked to correct
 C) Re-run the full validation on every retried output and accept it only when the whole declaration passes all checks
-D) Add an instruction to each retry asking the model to keep every other field exactly as it was in the first output
+D) Add an instruction to each retry asking the model to keep the other fields exactly as they were in the first output
 
 <details>
 <summary>Answer & explanation</summary>
@@ -240,6 +240,63 @@ D) Add an instruction to each retry asking the model to keep every other field e
 ---
 
 ## Question 14
+A contract-extraction pipeline validates each result and retries failures. Retries resend the identical request, and the same invalid date format often comes back three times in a row. Meanwhile a large share of retry spend goes to contracts whose renewal_date fails validation because the contract never states a renewal date. Which changes improve the retry loop? (Choose two.)
+
+A) Raise the temperature on each retry so later attempts are less likely to repeat the earlier mistake
+B) Retry up to ten times for each failure, since more attempts raise the odds that one of them passes
+C) Add "be careful with date formats" to the retry request and keep the rest of the message as it was
+D) Include the validation error in the retry: the field, the value returned and the format expected
+E) Stop retrying when the source has no renewal date; record null and route the contract to human review
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** A retry that carries the exact validation error (which field, what came back, what was expected) gives the model what it needs to correct a format mistake. When the information is not in the document, no number of retries can produce it, so the loop should stop, record the absence and send the case to review. Higher temperature or more attempts just repeat an uninformed request, and a generic warning about dates does not say what was wrong.
+
+*Hint if stuck: For each failure, ask whether another attempt has anything new to work with.*
+</details>
+
+---
+
+## Question 15
+An invoice pipeline flags suspected duplicate charges for the finance team, which dismisses about half of them, but nobody can tell what triggered each flag, so the prompt can't be tuned. Separately, when an invoice's printed total disagrees with its line items, the model returns the sum of the lines as the total, which hides vendor billing errors. Which changes address these? (Choose two.)
+
+A) Add a detected_pattern field recording which rule or phrase triggered each duplicate flag
+B) Retry invoices whose totals disagree, with the mismatch appended, until the two values match
+C) Have the model give each duplicate flag a confidence score and drop the flags below a cutoff
+D) Extract stated_total and calculated_total as separate fields, with a flag when they differ
+E) Tell the model to prefer the printed total and drop line items that make the sum disagree
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** Recording the pattern behind each flag lets the team see which triggers produce the dismissed flags and fix those criteria. Keeping the stated and calculated totals apart, with a conflict flag, surfaces the vendor's error instead of silently correcting it. A retry can't reconcile a disagreement that is in the source document itself. A confidence cutoff hides flags without showing why they were raised. Dropping line items to force agreement destroys the evidence finance needs.
+
+*Hint if stuck: Ask what each team needs to see in the output, rather than how to make the output look consistent.*
+</details>
+
+---
+
+## Question 16
+A pipeline extracts key findings from papers, each with a supporting quote, and a validator checks that every quote appears verbatim in the source. When a check fails, the whole set is regenerated with the note 'some quotes were not found', and the new set often breaks findings that had passed. Many failures also turn out to be correct quotes that differ only in curly quotes or line breaks. Which changes help? (Choose two.)
+
+A) Switch to strict structured outputs so that each quote is constrained to text in the source
+B) Turn on citations together with output_config.format so quotes come back as cited spans
+C) Send back only the quotes that failed, naming each one and keeping the passing findings fixed
+D) Ask the model in the same request to check its quotes against the paper before it replies
+E) Normalise whitespace and quote characters in both texts before the validator compares them
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** Targeted feedback that names the failed quotes, while holding the passing findings, fixes what's wrong without reopening what was right. Some failures are the validator's own false alarms, so normalising typography and whitespace on both sides removes them. Strict outputs constrain the JSON's shape, not whether a string occurs in the source. Citations can't be combined with output_config.format; the API returns a 400 error. A self-check inside the same request shares the same blind spots and gives no specific error to act on.
+
+*Hint if stuck: Ask whether each failed check is really the model's mistake, and how much a retry needs to redo.*
+</details>
+
+---
+
+## Question 17
 A fintech extraction pipeline validates Claude's invoice JSON against a schema plus business rules. When a rule fails — line_items sum to 4,210.50 but invoice_total reads 4,120.50 — the pipeline resends the exact same prompt, and all three retries return the same wrong output. What change makes the retry loop actually effective?
 
 A) Raise the temperature on retries so each attempt samples a different output instead of repeating the same mistake
@@ -257,7 +314,7 @@ D) Increase the retry count from three to ten so that one of the attempts eventu
 
 ---
 
-## Question 15
+## Question 18
 A healthcare intake pipeline extracts discharge_date from referral packets, and the validator requires the field. About 12% of packets are outpatient referrals that contain no discharge date at all; for those, the retry-with-feedback loop burns all five attempts, and the model sometimes fabricates a plausible date on attempt four or five just to satisfy the validator. What is the root-cause fix?
 
 A) Make discharge_date nullable and accept null as a valid result when the source omits it
@@ -275,7 +332,7 @@ D) Route every packet that exhausts its five retries into a human review queue f
 
 ---
 
-## Question 16
+## Question 19
 A logistics company extracts line items and a total from carrier freight invoices. On about 3% of invoices the printed total does not equal the sum of the line charges — carrier billing errors the audit team is paid to find. Today the validator rejects those extractions as model mistakes, and the retry loop pressures the model until the numbers agree. How should the design change?
 
 A) Keep a single total field and have post-processing overwrite whatever was extracted with the computed sum of the line items
@@ -293,12 +350,12 @@ D) Remove the total field from the schema entirely and compute invoice totals do
 
 ---
 
-## Question 17
+## Question 20
 A ticket-routing extractor uses structured outputs with an enum of queue names such as Billing support and Account access. A validator does exact string matching against the enum and rejects a small share of otherwise correct responses because they contain Billing Support with a capital S. Retries usually pass. What is the better fix?
 
 A) Compare enum values case-insensitively in the validator and avoid values that differ only by case
 B) Treat each casing mismatch as a model failure and keep retrying until the exact string comes back
-C) Add few-shot examples showing the exact casing, which makes enum casing guaranteed from then on
+C) Add few-shot examples showing the exact casing so the model stops varying the capitalisation
 D) Replace the enum with a free-text string field and map whatever queue name comes back afterwards
 
 <details>
@@ -311,7 +368,7 @@ D) Replace the enum with a free-text string field and map whatever queue name co
 
 ---
 
-## Question 18
+## Question 21
 An insurance claims extraction service wraps its Claude calls in one retry loop. Logs reveal two failure modes handled identically with three immediate, unchanged resends: HTTP 529 overloaded errors, and schema-valid JSON that violates the rule that claim_amount must not exceed policy_limit. Neither mode improves across retries. What is the correct redesign?
 
 A) Apply exponential backoff to both failure modes, since waiting longer between attempts gives the model time to produce a better answer
@@ -329,13 +386,13 @@ D) Raise both retry limits to ten attempts so transient capacity issues and rule
 
 ---
 
-## Question 19
+## Question 22
 A records pipeline uses structured outputs for every extraction. Monitoring finds a handful of responses that came back with HTTP 200 yet fail the team's JSON parser, and each has stop_reason set to refusal. The current code retries any parse failure up to five times with the parser error appended. What is the better handling?
 
 A) Raise max_tokens on retries, since a refusal means the JSON was cut off before it could be closed
-B) Remove the schema for these documents, since refusals can only happen when structured outputs are on
+B) Remove the schema for these documents, since refusals are caused by having structured outputs turned on
 C) Branch on stop_reason first, and send refusals down a separate path instead of the format-retry loop
-D) Keep the retry loop, since a 200 status means the schema guarantee held and the parser is at fault
+D) Keep the retry loop, since a 200 status means the schema held and the parser is at fault
 
 <details>
 <summary>Answer & explanation</summary>
@@ -347,7 +404,7 @@ D) Keep the retry loop, since a 200 status means the schema guarantee held and t
 
 ---
 
-## Question 20
+## Question 23
 An extraction agent runs in a loop: Claude calls save_record, and the team's code validates the input before writing it to the database. When validation fails, the code returns a tool_result whose content is just the word failed, and Claude often repeats the same bad call or gives up. How should the code report validation failures inside the loop?
 
 A) Discard the failed turn and restart the whole conversation from the original prompt from scratch
@@ -365,11 +422,11 @@ D) Return a tool_result with is_error set and a message naming the field, the ba
 
 ---
 
-## Question 21
+## Question 24
 A fintech reconciliation pipeline extracts invoice line items with tool_use against a detailed JSON schema. Every output validates against the schema, yet auditors find that on 4 percent of invoices the line_items amounts do not sum to invoice_total. The team is debating fixes. Which approach addresses the actual gap?
 
-A) Tighten the schema with stricter numeric types, minimums, and required flags on every amount field
-B) Migrate to strict structured outputs mode so the platform hard-guarantees every response honors the schema
+A) Tighten the schema with stricter numeric types, minimums, and required flags on each amount field
+B) Migrate to strict structured outputs mode so the platform enforces the schema on each response
 C) Add a prompt instruction telling the model to double-check that line items sum to the total before answering
 D) Add a post-validation step that checks the sum invariant and routes failures to re-extraction or review
 
@@ -383,11 +440,11 @@ D) Add a post-validation step that checks the sum invariant and routes failures 
 
 ---
 
-## Question 22
+## Question 25
 A platform team runs two Claude-powered jobs: a security check that must pass before any PR can merge, and a weekly report scoring every repository's dependency hygiene for the architecture board. Both run synchronously and the bill has doubled. Which plan cuts cost without hurting developers?
 
-A) Move both jobs to the Message Batches API and ask developers to wait for the security check results before merging on every pull request in the queue
-B) Keep both synchronous and run the weekly dependency report only once a month so that it costs a quarter as much
+A) Move both jobs to the Message Batches API and ask developers to wait for the security check results before merging on each pull request in the queue
+B) Keep both synchronous and run the weekly dependency report once a month so that it costs a quarter as much
 C) Move the security check to the Message Batches API, since it runs most often, and keep the weekly report synchronous
 D) Keep the security check synchronous and move the weekly dependency report to the Message Batches API with a custom_id per repository
 
@@ -401,10 +458,10 @@ D) Keep the security check synchronous and move the weekly dependency report to 
 
 ---
 
-## Question 23
+## Question 26
 A records team submits 20,000 scanned forms as a Message Batch and writes the results back to their database by matching the nth result line to the nth form submitted. After a run, spot checks show extracted names attached to the wrong forms. What is the fix?
 
-A) Give each request a custom_id equal to the form's record ID and match results by custom_id, not by line position
+A) Give each request a custom_id equal to the form's record ID and match results by custom_id, not position
 B) Submit the forms in sorted order by record ID so that the results come back in the same sorted order as the input
 C) Submit smaller batches of 1,000 forms so that the result order is more likely to match the order of submission
 D) Include the form's record ID in the prompt and ask the model to echo it back at the start of every extracted record
@@ -419,12 +476,12 @@ D) Include the form's record ID in the prompt and ask the model to echo it back 
 
 ---
 
-## Question 24
+## Question 27
 A logistics company submits each day's delivery notes as a Message Batch, with custom_id set to the row number in that day's CSV, such as row-42. A monthly job merges results from all daily batches into one table, and the analytics team reports deliveries overwritten by other days' data. What change fixes this at the root?
 
-A) Store each day's results in a separate table so that row numbers from different days never collide during the merge
+A) Store each day's results in a separate table so that row numbers from different days do not collide during the merge
 B) Use a stable business identifier such as the delivery note number as the custom_id, unique across all batches
-C) Merge the daily results in submission order so that the newest batch always wins and overwrites the older rows
+C) Merge the daily results in submission order so that the newest batch wins and overwrites the older rows
 D) Add the batch submission date to the result rows after download so that the merge job can tell days apart by date
 
 <details>
@@ -437,7 +494,7 @@ D) Add the batch submission date to the result rows after download so that the m
 
 ---
 
-## Question 25
+## Question 28
 A research team has 15,000 finished agent transcripts. Each already includes the assistant's tool_use calls to the team's own search tool and the matching tool_result blocks. They want one final summary turn for each, as cheaply as possible, and they keep the tool definitions in every request. Which plan is correct?
 
 A) Batch them with the history; a result that ends in tool_use needs the team's code to run it and resubmit
@@ -455,31 +512,31 @@ D) Run them synchronously, since a request that defines client-side tools cannot
 
 ---
 
-## Question 26
-A batch of 15,000 warranty-claim extractions finishes with 14,700 succeeded and 300 errored. Of the errors, 220 are invalid_request_error because their attachments were sent in a malformed content block, and 80 are server errors. What is the right recovery?
+## Question 29
+An overnight batch sends 20,000 contract-extraction requests. Each one starts with the same 30,000-token block of extraction instructions and worked examples, followed by one contract. The team wants to cut cost further without moving off the Message Batches API. What should they do?
 
-A) Resubmit all 300 errored requests unchanged as a new batch, since one retry usually clears transient batch errors
-B) Fix the 220 invalid requests and send them synchronously, and drop the 80 server errors as an acceptable loss
-C) Resubmit the whole batch of 15,000 with the fix applied so that every result comes from the same run and prompt
-D) Fix the content block for the 220 invalid requests and resubmit them with the 80 server errors in a new batch
+A) Move the requests to synchronous calls, since prompt caching cannot be used inside a batch request
+B) Pick one discount, because the batch and prompt caching discounts do not stack with each other
+C) Shorten the shared block to a one-line instruction so that each request carries fewer input tokens
+D) Put an identical cache_control block on the shared prefix in each request, with the 1-hour cache
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** invalid_request_error means the body must be fixed before resending, while other errors can usually be retried as-is, and custom_ids let you resubmit only those 300. Resending the invalid ones unchanged fails again, rerunning all 15,000 pays twice for good results, and dropping retryable server errors loses data for no reason.
+**D)** Prompt caching works with Message Batches and the two discounts stack. Identical cache_control blocks on the shared prefix in every request raise the chance of cache hits, which are best-effort in a batch, and the 1-hour cache duration helps because a batch can run longer than the default 5-minute lifetime. Caching is not ruled out in batches, the discounts are not exclusive, and cutting the instructions and examples trades accuracy for a saving caching already provides.
 
-*Hint if stuck: Not every errored request needs the same treatment.*
+*Hint if stuck: Two cost features apply here; check whether using one rules out the other.*
 </details>
 
 ---
 
-## Question 27
+## Question 30
 A national retailer submits one 90,000-request batch every month-end to extract supplier rebate terms. During a period of heavy demand, the batch hit the 24-hour window with 6,000 requests marked expired. Downstream reports are due in three days. What should the team do?
 
 A) Resubmit only the 6,000 expired requests, by custom_id, as a new batch now, which leaves ample time before the reports are due
 B) Resubmit the entire 90,000-request batch, since an expired batch must be rerun from scratch to keep results consistent
 C) Wait for the expired requests to finish in the background, since the API completes them after the window closes
-D) Move all future month-end extraction to synchronous calls, since batches cannot be relied upon to finish on time
+D) Move future month-end extraction to synchronous calls, since batches cannot be relied upon to finish on time
 
 <details>
 <summary>Answer & explanation</summary>
@@ -491,7 +548,7 @@ D) Move all future month-end extraction to synchronous calls, since batches cann
 
 ---
 
-## Question 28
+## Question 31
 A developer-experience team regenerates reference docs for 3,000 internal modules every Sunday so engineers see fresh docs on Monday morning. The job uses synchronous calls in a loop and takes six hours of runner time. Nothing reads the docs until Monday, and the team has been asked to cut the job's API cost. What is the best change?
 
 A) Run the loop with more parallel synchronous workers so that the six-hour job finishes in under an hour on Sunday
@@ -509,7 +566,7 @@ D) Move the job to run every night instead of Sundays so that each run covers fe
 
 ---
 
-## Question 29
+## Question 32
 A support organisation uses Claude both to answer customers live in chat and to score yesterday's 40,000 closed conversations for quality coaching, which supervisors read at 10 AM. Finance asks to move everything to the Message Batches API for the discount. What should the architect recommend?
 
 A) Move both workloads to batches, and show chat customers a message saying a reply will arrive within the next day
@@ -527,12 +584,12 @@ D) Keep both workloads synchronous, because mixing batch and synchronous calls m
 
 ---
 
-## Question 30
+## Question 33
 An insurer submitted 50,000 claim-extraction requests as one batch. Twelve hours later every request came back errored because each used a parameter the model does not accept. The prompt had been tested in a notebook, but the batch request bodies were built by a different script. What practice would have caught this earliest?
 
-A) Polling the batch every few minutes so that the team could cancel it as soon as the first errored results appeared
+A) Polling the batch at short intervals so that the team could cancel it as soon as the first errored results appeared
 B) Adding a validation step that checks each extracted claim against the schema as soon as the results are downloaded
-C) Splitting the job into fifty batches of 1,000 so that a bad parameter would only affect a small fraction of requests
+C) Splitting the job into fifty batches of 1,000 so that a bad parameter would affect a small fraction of requests
 D) Sending a few request bodies from the batch script through the Messages API first, since batch params are checked later
 
 <details>
@@ -545,7 +602,7 @@ D) Sending a few request bodies from the batch script through the Messages API f
 
 ---
 
-## Question 31
+## Question 34
 A research group wants to screen 260,000 abstracts for relevance to a systematic review overnight. Their single Message Batch submission is rejected because it is too large. What should the architect do?
 
 A) Split the abstracts into several batches within the limits, each request carrying a custom_id that is the abstract's ID
@@ -563,13 +620,13 @@ D) Screen only a random sample of 100,000 abstracts, since that is enough to est
 
 ---
 
-## Question 32
+## Question 35
 A developer-tools team notices that their in-IDE assistant, which explains a selected code block when a developer presses a hotkey, is their largest cost line. A manager proposes moving those requests to the Message Batches API to halve the cost. What should the architect say?
 
 A) Agree, as long as the IDE plugin polls frequently enough that most explanations still arrive within a few seconds
 B) Disagree: a developer is waiting on each explanation, and batches give no latency guarantee, so it must stay synchronous
 C) Agree, and add a loading spinner so that developers understand that explanations can take a little longer to arrive from the API
-D) Agree, but only for explanations of very large code blocks, since those are the most expensive individual requests
+D) Agree, but limit it to explanations of very large code blocks, since those are the most expensive individual requests
 
 <details>
 <summary>Answer & explanation</summary>
@@ -581,7 +638,7 @@ D) Agree, but only for explanations of very large code blocks, since those are t
 
 ---
 
-## Question 33
+## Question 36
 A pipeline downloads the full results of a 100,000-request extraction batch into memory before parsing, and the worker crashes with out-of-memory errors on the largest batches. The same results must be written to a database keyed by custom_id. What is the recommended approach?
 
 A) Increase the worker's memory allocation so the full results file can be loaded and parsed in a single pass
@@ -599,13 +656,13 @@ D) Cancel any batch larger than 20,000 requests and resubmit it as smaller batch
 
 ---
 
-## Question 34
+## Question 37
 Ninety minutes into a 30,000-request batch of lease extractions, an engineer sees a handful of errored results for oversized documents and proposes cancelling the whole batch, fixing those few and resubmitting all 30,000. What should the team lead advise?
 
 A) Agree, because results from a batch that contained errors are not reliable and must be regenerated in a clean run
 B) Agree, but resubmit the 30,000 synchronously this time so that each error is visible the moment it happens
-C) Let the batch finish, then rerun all 30,000 with the fix so that every lease is extracted by the same request shape
-D) Let the batch finish, since one failed request does not affect the others, then fix and resubmit only failed custom_ids
+C) Let the batch finish, then rerun the 30,000 with the fix so that each lease is extracted by the same request shape
+D) Let the batch finish, since one failed request does not affect the others, then fix and resubmit the failed custom_ids
 
 <details>
 <summary>Answer & explanation</summary>
@@ -617,7 +674,7 @@ D) Let the batch finish, since one failed request does not affect the others, th
 
 ---
 
-## Question 35
+## Question 38
 A support team wants Claude to draft updated help-centre articles every Friday night by summarising the week's clustered tickets, about 1,500 clusters. Editors review drafts on Monday. Meanwhile, the live support agent answers customers using the current articles. How should the article drafting run?
 
 A) As a Message Batch on Friday night, with each cluster's ID as its custom_id, so drafts are ready well before Monday
@@ -635,13 +692,13 @@ D) As a Message Batch submitted Monday morning, so editors see the drafts appear
 
 ---
 
-## Question 36
+## Question 39
 A research system must screen 25,000 papers for inclusion, then do a deep analysis using the team's own client-side data tools, on the few hundred that qualify, for a report due in a week. The team wants to minimise cost without missing the deadline. Which pipeline fits best?
 
-A) Run the deep tool-assisted analysis on all 25,000 papers as one batch so that screening and analysis happen together
+A) Run the deep tool-assisted analysis on the 25,000 papers as one batch so that screening and analysis happen together
 B) Screen with a Message Batch, then run the deep tool-assisted analysis synchronously on the qualifying papers only
-C) Skip screening and run the deep analysis synchronously on every paper, since a week is enough time to finish it
-D) Screen all 25,000 papers synchronously so that the shortlist is ready quickly, then batch the deep analysis afterwards
+C) Skip screening and run the deep analysis synchronously on each paper, since a week is enough time to finish it
+D) Screen the 25,000 papers synchronously so that the shortlist is ready quickly, then batch the deep analysis afterwards
 
 <details>
 <summary>Answer & explanation</summary>
@@ -653,13 +710,13 @@ D) Screen all 25,000 papers synchronously so that the shortlist is ready quickly
 
 ---
 
-## Question 37
+## Question 40
 A CI team wants a nightly batch job to triage the day's flaky-test failures. In their prototype, Claude calls get_logs, a tool their own code executes, for each failure before classifying it. The team wants the batch discount. What is the simplest design that works?
 
 A) Define get_logs as a tool in each batch request so that Claude can call it while the batch request is being processed
-B) Keep the whole nightly triage on synchronous calls, because tool-dependent work can never use batch processing
+B) Keep the whole nightly triage on synchronous calls, because tool-dependent work cannot use batch processing
 C) Fetch each failure's logs in code before submitting, include them in the request, and batch the classification step
-D) Use tool_choice to force a single get_logs call per request, so each batch request needs only one round trip
+D) Use tool_choice to force a single get_logs call per request, so each batch request needs one round trip
 
 <details>
 <summary>Answer & explanation</summary>
@@ -671,7 +728,7 @@ D) Use tool_choice to force a single get_logs call per request, so each batch re
 
 ---
 
-## Question 38
+## Question 41
 A batch monitor marks a nightly extraction job as complete as soon as the batch's processing status changes to ended, and the downstream load then runs. Weeks later, finance finds invoices that were never extracted. What should the monitor do instead?
 
 A) Check that the processing status is ended and that the results file was downloaded without any network errors
@@ -689,10 +746,10 @@ D) Count result types and send any errored or expired custom_ids back for retry 
 
 ---
 
-## Question 39
+## Question 42
 A medical-coding team's batch reports 9,950 of 10,000 requests as succeeded and loads them straight into the billing system. Billing then rejects a cluster of records with truncated code lists. Inspection shows those succeeded messages stopped with max_tokens. What should change in the pipeline?
 
-A) Treat succeeded only as a message created, validate each result and stop_reason, and resubmit truncated custom_ids with more room
+A) Treat succeeded as meaning a message was created, validate each result and stop_reason, and resubmit truncated custom_ids with more room
 B) Trust the succeeded type for loading, but ask billing to reject truncated records so the team can fix them by hand
 C) Resubmit the entire 10,000-request batch with a higher max_tokens limit so that no result can be truncated again
 D) Treat any max_tokens result as an errored request and leave it out of the billing load until the next monthly batch is submitted and processed
@@ -707,7 +764,64 @@ D) Treat any max_tokens result as an errored request and leave it out of the bil
 
 ---
 
-## Question 40
+## Question 43
+A nightly job sends 40,000 document-classification requests through the Message Batches API. The team's code matches results to documents by line position, and some labels end up on the wrong documents. About 300 requests come back errored, mostly invalid_request_error from documents over the size limit, and the job then resubmits the whole batch. Which changes should they make? (Choose two.)
+
+A) Give each request a unique custom_id and join each result to its document on that ID, not on position
+B) Sort the results file by creation time before matching, so that it lines up with the order of submission
+C) Resubmit just the errored custom_ids, after fixing those requests, e.g. by chunking big documents
+D) Resubmit the errored requests unchanged in a new batch, since errors in a batch are usually transient
+E) Split the job into 40 batches of 1,000 so that each smaller results file stays in submission order
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** Batch results can come back in any order, so custom_id is the way to correlate each result with its request. Only the failed requests need resubmitting, and an invalid_request_error means the request body must be fixed (here, chunking oversize documents) before it can succeed. Sorting by time or using smaller batches still relies on an order the API does not guarantee. Resending invalid requests unchanged fails the same way again.
+
+*Hint if stuck: Ask what the API promises about result order, and what an invalid request needs before it can succeed.*
+</details>
+
+---
+
+## Question 44
+A platform team moved both of its Claude jobs to the Message Batches API: a pre-merge check that must pass before a PR can merge, and a weekly audit of 40,000 config files whose requests all start with the same 30,000-token policy document, cached with the default cache lifetime. Developers now sometimes wait hours to merge, and the audit gets few cache hits. Which changes should the team make? (Choose two.)
+
+A) Run the pre-merge check as synchronous Messages API calls and keep only the audit in a batch
+B) Use the 1-hour cache duration for the shared policy prefix in the audit's batch requests
+C) Put the pre-merge requests in a batch of their own so they don't queue behind the audit
+D) Turn off prompt caching for the audit, since batch pricing and cache discounts don't stack
+E) Poll the pre-merge batch every few seconds so a merge goes ahead as soon as results land
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** Batches trade latency for a 50% discount and carry no latency guarantee, so a check someone is waiting on belongs on synchronous calls. Batch requests run asynchronously and can take longer than the default 5-minute cache lifetime, so the docs recommend the 1-hour cache for shared context in batches. A separate batch still has no latency guarantee. Prompt caching does work in batches, on a best-effort basis. Polling more often doesn't make processing any faster.
+
+*Hint if stuck: Ask what each job needs from timing, and how a batch's processing time compares with a cache entry's life.*
+</details>
+
+---
+
+## Question 45
+A team's first 60,000-request extraction batch came back after nine hours with every request errored on an invalid parameter. After the fix, the second run succeeded, but reviewers then found the prompt mislabelled a common document type, and the whole batch had to run again. Before the next large batch, which steps would have prevented both losses? (Choose two.)
+
+A) Set stream: true on the batch requests so that errors show up while the batch is running
+B) Watch results while the batch runs and cancel it as soon as the first errored item shows
+C) Send one request with the batch's exact params through the Messages API to check its shape
+D) Run the prompt on a sample of about 50 representative documents and check the outputs
+E) Resubmit errored requests automatically when the batch ends, so failures recover overnight
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, D** Batch params are validated asynchronously, so a bad parameter shows up only when the whole batch ends; the docs recommend checking a request's shape with the Messages API first. A mislabelling prompt is a quality problem, not an error, and a small representative pilot catches it before 60,000 requests are spent on it. Batch requests can't stream; stream: true is rejected. Results become available only when the batch ends, so there is no first error to react to mid-run. Resubmitting an invalid request unchanged fails again.
+
+*Hint if stuck: Ask when each kind of problem becomes visible in a batch, and what could surface it sooner.*
+</details>
+
+---
+
+## Question 46
 A platform team runs a nightly deprecation audit over 7,500 source files using parallel synchronous API calls at 2 a.m. The findings feed a weekly cleanup rotation, so nothing downstream ever blocks on the results, and the job now accounts for 30% of monthly model spend. Which change cuts cost without reducing coverage?
 
 A) Downgrade the audit to a weekly run so the spend is divided by seven
@@ -725,13 +839,13 @@ D) Submit the audit through the Batch API with a custom_id per file and poll unt
 
 ---
 
-## Question 41
+## Question 47
 An engineer submits a Message Batch of 20,000 document extractions, then finds that 5,000 of the documents are duplicates she does not need. She cancels the batch about an hour in. When it reaches ended, some requests show succeeded and the rest show canceled. What should she do next?
 
-A) Resubmit all 20,000 requests, since a canceled batch throws away every result it had produced
-B) Wait for the canceled requests to resume, since cancelling only pauses a batch for 24 hours
+A) Resubmit the 20,000 requests, since a canceled batch throws away the results it had produced
+B) Wait for the canceled requests to resume, since cancelling merely pauses a batch for 24 hours
 C) Add the canceled custom_ids back to the same batch, since a canceled batch accepts new requests
-D) Keep the succeeded results, then resubmit only the canceled custom_ids that are still needed
+D) Keep the succeeded results, then resubmit the canceled custom_ids that are still needed
 
 <details>
 <summary>Answer & explanation</summary>
@@ -743,13 +857,13 @@ D) Keep the succeeded results, then resubmit only the canceled custom_ids that a
 
 ---
 
-## Question 42
+## Question 48
 A structured-extraction team submits a Message Batches job covering 8,000 archived support tickets, each request tagged with a custom_id. Results show 7,760 successes, 180 failures for exceeding the maximum request size, and 60 failures from intermittent server errors. What is the most efficient recovery?
 
 A) Resubmit the full 8,000-request batch from scratch, since the 50% batch discount makes a complete rerun affordable
-B) Resubmit all 240 failed requests unchanged as a new batch and repeat the resubmission until every request succeeds
+B) Resubmit the 240 failed requests unchanged as a new batch and repeat the resubmission until each request succeeds
 C) Use the custom_ids to isolate failures, chunk the 180 oversized tickets, and resubmit them plus the 60 transient ones
-D) Convert all 240 failed requests into synchronous API calls so an engineer can step through and debug each one interactively
+D) Convert the 240 failed requests into synchronous API calls so an engineer can step through and debug each one interactively
 
 <details>
 <summary>Answer & explanation</summary>
@@ -761,13 +875,13 @@ D) Convert all 240 failed requests into synchronous API calls so an engineer can
 
 ---
 
-## Question 43
+## Question 49
 An e-commerce team has finalized a new extraction prompt for product attributes and plans to submit all 10,000 legacy listings as a single Message Batch tonight. The prompt has only been eyeballed against two listings. A teammate objects to the plan. What should the team do before committing the full batch?
 
-A) Submit the full batch now — at the 50% discount, even a flawed run only costs as much as half a synchronous run
+A) Submit the full batch now — at the 50% discount, even a flawed run costs half as much as a synchronous run
 B) Run a small synchronous pilot of around 50 representative listings, validate the outputs, then submit the full batch
 C) Submit the 10,000 listings as ten sequential batches of 1,000, checking each batch's results before sending the next
-D) Add a system-prompt instruction asking the model to double-check its own work, then submit all 10,000 tonight
+D) Add a system-prompt instruction asking the model to double-check its own work, then submit the 10,000 tonight
 
 <details>
 <summary>Answer & explanation</summary>
@@ -779,7 +893,7 @@ D) Add a system-prompt instruction asking the model to double-check its own work
 
 ---
 
-## Question 44
+## Question 50
 A fintech compliance pipeline must file a regulator-facing report by 9:00 AM daily. It submits the day's transactions as a Message Batch at 6:00 PM the prior evening; results usually land by midnight, but twice this month they arrived after 9:00 AM and the filing was late. Which redesign aligns the pipeline with the Batch API's actual guarantees?
 
 A) Poll the batch status every 30 seconds instead of every 10 minutes so results are fetched the instant processing finishes
@@ -797,7 +911,7 @@ D) Plan for the 24-hour worst case: set a cutoff before 9:00 AM and run any unfi
 
 ---
 
-## Question 45
+## Question 51
 A media company summarizes each day's articles through the Batch API, submitting at 8:00 PM for a newsletter that ships at 8:00 AM. Results had arrived within three hours for months — until one night they had not arrived by 7:30 AM, the team panic-submitted a duplicate batch, and the newsletter shipped late and double-billed. What is the most robust redesign?
 
 A) Submit rolling batches as articles publish during the day, with a synchronous fallback for stragglers at a hard cutoff
@@ -815,7 +929,7 @@ D) Move the entire workload to synchronous calls so every summary reliably compl
 
 ---
 
-## Question 46
+## Question 52
 A compliance team submits a monthly Message Batch of 30,000 contract extractions. An auditor wants to re-download the raw results of the March batch in the second week of May. The team's plan was to keep only the batch IDs and fetch results from the API whenever they are needed. What does this plan miss?
 
 A) Results are kept only until the first download, so any later fetch by the auditor returns an empty file
@@ -833,12 +947,12 @@ D) Results expire 24 hours after the batch ends, so they must be fetched on the 
 
 ---
 
-## Question 47
+## Question 53
 A developer uses Claude Code to write a rate-limiter middleware, then types in the same session: 'Act as a strict senior reviewer and find every flaw.' The review lists only cosmetic nits. A colleague later finds the limiter resets its counter on every deploy. Which workflow would most reliably have caught the defect?
 
 A) Keep the same session but switch to a stronger persona prompt that says the code was written by an untrusted contractor
 B) Open a fresh Claude Code session that sees only the diff and the requirements, and ask it to review the middleware
-C) Ask the same session to review the code three more times and only accept a pass when all reviews agree
+C) Ask the same session to review the code three more times and accept a pass once the reviews agree
 D) Have the same session write unit tests for the middleware first, then review the code with those tests already in its context
 
 <details>
@@ -851,13 +965,13 @@ D) Have the same session write unit tests for the middleware first, then review 
 
 ---
 
-## Question 48
+## Question 54
 A CI review bot posts about 25 inline comments per PR, and engineers have started ignoring all of them because roughly half are false positives. Recall on real bugs is good. The team lead wants fewer comments without losing the real bugs. Which design change best fits?
 
-A) Add a prompt line telling the reviewer to report only issues it is completely certain about and skip anything speculative
+A) Add a prompt line telling the reviewer to report issues it is certain about and skip anything speculative
 B) Cap the bot at five comments per PR, keeping whichever findings the reviewer happens to list first in its output
 C) Add a verification pass in which a separate instance checks each candidate finding against the code and drops unconfirmed ones
-D) Switch the bot to only review files over 200 changed lines, since that is where most of the real bugs have been found
+D) Switch the bot to review files over 200 changed lines, since that is where most of the real bugs have been found
 
 <details>
 <summary>Answer & explanation</summary>
@@ -869,7 +983,7 @@ D) Switch the bot to only review files over 200 changed lines, since that is whe
 
 ---
 
-## Question 49
+## Question 55
 An extraction pipeline pulls 30 fields from commercial leases. The team adds a second step in which the same conversation is asked 'double-check every field you just extracted.' Accuracy barely moves, and the misread renewal dates stay wrong. What should replace the double-check step?
 
 A) A second call in the same conversation that re-reads the lease with temperature lowered to zero for consistency
@@ -887,7 +1001,7 @@ D) An independent instance that re-reads the source lease and checks the fields 
 
 ---
 
-## Question 50
+## Question 56
 A research system's report subagent drafts a 20-page market analysis. The coordinator wants a quality gate before publishing that catches unsupported claims. Budget allows one extra model call per report section. How should the gate be designed?
 
 A) Send each section and its cited sources to a separate reviewer instance that flags claims the sources do not support
@@ -905,13 +1019,13 @@ D) Have the report subagent regenerate each section once and publish whichever v
 
 ---
 
-## Question 51
+## Question 57
 A CI review pipeline now asks the reviewer to output each finding with a severity and a confidence score. Leadership wants to use those fields to reduce the human workload. Which routing design uses them best?
 
-A) Post every finding as a blocking comment regardless of score, so the scores only serve as metadata for later reporting
+A) Post each finding as a blocking comment regardless of score, so the scores serve as metadata for later reporting
 B) Post high-confidence findings directly; route low-confidence or high-severity ones to a verification pass or a human first
-C) Drop all findings below a confidence of 0.9 without anyone seeing them, since low-confidence findings are mostly noise
-D) Sort the findings by confidence and post only the top three on each PR, so that engineers are never overwhelmed by the volume of review output
+C) Drop findings below a confidence of 0.9 without anyone seeing them, since low-confidence findings are mostly noise
+D) Sort the findings by confidence and post the top three on each PR, so that engineers are not overwhelmed by the volume of review output
 
 <details>
 <summary>Answer & explanation</summary>
@@ -923,7 +1037,7 @@ D) Sort the findings by confidence and post only the top three on each PR, so th
 
 ---
 
-## Question 52
+## Question 58
 A platform team splits PR review into three parallel reviewer instances: security, performance and correctness. Engineers now complain that the same SQL injection appears as three slightly different comments, and two of the reviewers disagree on its severity. What step is missing from the architecture?
 
 A) Merging the three reviewers back into a single generalist reviewer so that no finding can ever be reported more than once
@@ -941,11 +1055,11 @@ D) Running the three reviewers sequentially so that each one can read the commen
 
 ---
 
-## Question 53
+## Question 59
 A team in Claude Code wants a writer/reviewer workflow for a new OAuth callback handler. One engineer proposes giving the reviewer session the full transcript of the writer session 'so it understands the design choices.' Another proposes giving it only the diff and the spec. Which should the architect choose, and why?
 
 A) The full transcript, because the reviewer cannot judge design choices without the reasoning that led to them
-B) The full transcript plus the spec, because more context always produces a more accurate and thorough review
+B) The full transcript plus the spec, because more context produces a more accurate and thorough review
 C) Neither of them; the reviewer should instead get a short summary written by the writer session explaining which areas it should check most closely
 D) Only the diff and the spec, because a reviewer that reads the writer's reasoning tends to adopt it rather than test it
 
@@ -959,12 +1073,12 @@ D) Only the diff and the spec, because a reviewer that reads the writer's reason
 
 ---
 
-## Question 54
+## Question 60
 A legal-tech team uses Claude to review 400-page contract bundles for risky clauses. A single review call over the whole bundle catches risks in the opening and closing sections but misses an indemnity clause on page 210. What is the most effective redesign?
 
 A) Review each contract section in its own pass, then run a final pass over the collected findings for cross-section conflicts
-B) Move the instructions to the end of the prompt and ask the model to give every section equal attention as it reads
-C) Ask the single review call to first list every clause it read, as proof it covered the whole bundle, before giving findings
+B) Move the instructions to the end of the prompt and ask the model to give each section equal attention as it reads
+C) Ask the single review call to first list each clause it read, as proof it covered the whole bundle, before giving findings
 D) Use extended thinking with the largest allowed budget so the single pass can reason more carefully about the middle pages
 
 <details>
@@ -977,13 +1091,13 @@ D) Use extended thinking with the largest allowed budget so the single pass can 
 
 ---
 
-## Question 55
+## Question 61
 A support organisation wants automated QA on agent replies before they are sent for refunds above $200. The draft design has the support agent append 'Before sending, review your reply for policy compliance' to its own instructions. Policy violations still slip through at the same rate. What should the architect propose?
 
-A) Make the self-review instruction more specific by listing all fourteen refund policy rules directly inside it
+A) Make the self-review instruction more specific by listing the fourteen refund policy rules directly inside it
 B) Route qualifying replies to a separate checker instance that compares the reply and case facts against the refund policy
 C) Have the agent rate its own compliance from 1 to 10 and hold any reply that it scores below 8 for a human to check
-D) Lower the threshold so that the self-review instruction applies to every refund reply the agent sends, and not only to the ones above $200
+D) Lower the threshold so that the self-review instruction applies to each refund reply the agent sends, not just those above $200
 
 <details>
 <summary>Answer & explanation</summary>
@@ -995,13 +1109,13 @@ D) Lower the threshold so that the self-review instruction applies to every refu
 
 ---
 
-## Question 56
+## Question 62
 A CI pipeline runs a per-file review pass and then an integration pass. The integration pass gets the full 9,000-line diff again and keeps re-reporting per-file nits while still missing interface mismatches. What should the integration pass receive instead?
 
 A) The full diff again, but with a prompt telling it to ignore anything that the per-file passes already reported
-B) Only the files with the highest number of per-file findings, since those are the most likely places for broken interfaces
+B) The files with the highest number of per-file findings, since those are the most likely places for broken interfaces
 C) A focused input: changed public signatures, exports and schemas, plus their call sites, alongside the per-file findings
-D) The per-file findings only, so it can rank and deduplicate them without needing to see any of the code at all
+D) The per-file findings by themselves, so it can rank and deduplicate them without needing to see any of the code
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1013,12 +1127,12 @@ D) The per-file findings only, so it can rank and deduplicate them without needi
 
 ---
 
-## Question 57
+## Question 63
 An engineer asks Claude Code to generate unit tests for a date-parsing utility it wrote earlier in the same session. All tests pass, but production fails on leap-day inputs. The team wants the tests to act as a real check on the code. What is the best change?
 
 A) Ask the same session to list the edge cases it considered before writing tests, then add any it marks as untested
 B) Tell the same session to write tests that try their hardest to break the code, with heavy emphasis on adversarial edge cases such as leap years
-C) Require a code coverage target of 100 percent so the session is forced to write a test for every branch in the parser
+C) Require a code coverage target of 100 percent so the session is forced to write a test for each branch in the parser
 D) Generate the tests in a separate session that receives only the function signature and the spec, not the implementation
 
 <details>
@@ -1031,7 +1145,7 @@ D) Generate the tests in a separate session that receives only the function sign
 
 ---
 
-## Question 58
+## Question 64
 A developer-productivity agent proposes a refactor across 40 files of a legacy billing module. The staff engineer wants an automated review before a human looks at it, and the agent's session is already near its context limit. What review setup is most appropriate?
 
 A) Spawn fresh reviewer instances for groups of related files, then run one integration review over the module's public interfaces
@@ -1049,7 +1163,7 @@ D) Skip the automated review and send all 40 files to the staff engineer, since 
 
 ---
 
-## Question 59
+## Question 65
 An invoice extraction pipeline adds a reviewer instance that re-extracts totals independently. When the two instances disagree, the current code simply keeps the second instance's value. Error rates did not improve. What should happen on a disagreement?
 
 A) Always keep the first instance's value, because the original extraction had the most complete view of the document
@@ -1067,13 +1181,13 @@ D) Average the two numeric values so that small discrepancies between the instan
 
 ---
 
-## Question 60
+## Question 66
 A team asks why their Claude Code CI review over a 6-file PR should be split into per-file passes plus an integration pass when the whole diff fits easily in the context window. Which reasoning should the architect give?
 
-A) Context windows silently truncate long diffs, so splitting is the only way to guarantee every line is actually received
-B) Splitting into passes is mainly a cost optimisation, because many small calls are always cheaper than one large call
+A) Context windows silently truncate long diffs, so splitting is needed to make sure each line actually reaches the model
+B) Splitting into passes is mainly a cost optimisation, because several small calls use fewer tokens than one large call
 C) Fitting in the window does not mean even scrutiny; focused passes deepen each file and a separate pass covers the seams
-D) Per-file passes let the reviewer skip integration concerns entirely, removing the most error-prone part of the review
+D) Per-file passes let the reviewer drop integration concerns from scope, removing the most error-prone part of the review
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1085,7 +1199,7 @@ D) Per-file passes let the reviewer skip integration concerns entirely, removing
 
 ---
 
-## Question 61
+## Question 67
 A research coordinator runs a fact-check step on its final report. Today the fact-checker is the same synthesis subagent that wrote the report, re-invoked with 'verify every number.' It passes reports in which a market-size figure was copied from the wrong year. What is the root-cause fix?
 
 A) Give the synthesis subagent a stricter fact-check prompt that lists the kinds of numeric errors it tends to make
@@ -1103,12 +1217,12 @@ D) Use a separate fact-check instance that compares each figure against the sour
 
 ---
 
-## Question 62
+## Question 68
 A team designing a review pipeline asks whether the reviewer instance should also be allowed to edit and push fixes for what it finds, to save a round trip. The repository has strict change-control requirements. What should the architect recommend?
 
 A) Keep the reviewer read-only and posting findings; any fixes go through a separate change that is itself reviewed
-B) Let the reviewer push fixes, but only for findings it rates as high confidence, and leave the rest as review comments
-C) Let the reviewer fix issues in the same session and then review its own fixes, so that every change is still reviewed once
+B) Let the reviewer push fixes, but limited to findings it rates as high confidence, and leave the rest as review comments
+C) Let the reviewer fix issues in the same session and then review its own fixes, so that each change is still reviewed once
 D) Let the reviewer push fixes directly, since it already understands the issues and fixing them in the same pass is fastest
 
 <details>
@@ -1121,13 +1235,13 @@ D) Let the reviewer push fixes directly, since it already understands the issues
 
 ---
 
-## Question 63
+## Question 69
 A data team uses Claude to generate SQL migrations in a developer-productivity workflow. They want a review step that catches destructive operations such as dropped columns. Two designs are on the table: an independent reviewer instance, or a deterministic check in code that blocks any migration containing DROP or ALTER ... DROP without a waiver. Which is the best design?
 
-A) Use only the deterministic check, because an AI reviewer adds no value once a hard block exists
+A) Rely on the deterministic check by itself, since an AI reviewer adds little once a hard block exists
 B) Use the deterministic block for known-destructive patterns and an independent reviewer for logic no pattern catches
-C) Use only the independent reviewer instance, because a model reviewer can understand the intent behind each migration
-D) Use only the reviewer instance, with a system-prompt rule to always reject any migration that drops or alters a column
+C) Use the independent reviewer instance instead of the check, because a model reviewer understands each migration's intent
+D) Replace the check with the reviewer instance, plus a system-prompt rule to reject any migration that drops or alters a column
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1139,7 +1253,7 @@ D) Use only the reviewer instance, with a system-prompt rule to always reject an
 
 ---
 
-## Question 64
+## Question 70
 An architect is designing a generic review harness for several Claude-generated artifacts. For each finding, the harness asks the reviewer to output the location, the issue, the evidence and a confidence level. A teammate asks why the confidence field is needed if every finding will be seen eventually. What is the best answer?
 
 A) Confidence is mainly for audit records; it has no effect on how findings flow through the harness once produced
@@ -1157,7 +1271,64 @@ D) Confidence tells the reviewer to work harder on low-confidence areas, which i
 
 ---
 
-## Question 65
+## Question 71
+A CI job uses one claude -p session to write a fix and then asks it, 'Now review your changes critically.' The review rarely finds anything, yet bugs reach production. The same job reviews teammates' 20-file PRs in a single pass, and comments on files near the end of the diff are thin and miss interface changes that break other files. Which changes should the team make? (Choose two.)
+
+A) Run the review in a separate session that sees the diff and the spec, not the writer's context
+B) Give the reviewer the writing session's reasoning so it knows what each change intended
+C) Ask the writing session to review twice, the second time in the role of a security expert
+D) Move to a model with a larger context window so all 20 files fit in a single review pass
+E) Review each file in its own pass, then run one pass on how the changed files fit together
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, E** A session reviewing its own work carries the reasoning that produced it and tends to confirm it; a fresh instance that sees only the diff and the requirements judges the result on its own terms. Per-file passes give each file full attention, and a separate integration pass catches cross-file breaks that per-file passes can't see. Handing the reviewer the writer's reasoning recreates the bias. A role change inside the same session keeps the same context. The PR already fits in the window; the problem is how attention spreads across it.
+
+*Hint if stuck: Ask what the reviewer already believes when it starts, and how much each pass has to hold at once.*
+</details>
+
+---
+
+## Question 72
+A CI reviewer posts about 25 findings per pull request, and developers have started to ignore most of them. The team plans to have the reviewer score its confidence, post the confident findings inline, and route the uncertain rest to a separate verification instance rather than posting them. Which design choices does this plan need? (Choose two.)
+
+A) Drop findings below the threshold without review, since low-confidence ones are mostly noise
+B) Have each finding carry its own confidence in the structured output so routing is per finding
+C) Check the confidence scores against past findings labelled real or false before relying on them
+D) Have the reviewer re-read its own uncertain findings in the same session and confirm them
+E) Give each review one overall confidence and post the whole review when that score is high enough
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, C** Routing works per finding, so each finding needs its own confidence (alongside its severity) in the structured output. A model's own confidence is only useful once it has been checked against labelled outcomes; otherwise the threshold may pass false findings and hold back real ones. Dropping low-confidence findings unreviewed throws away real bugs the verifier would have confirmed. A confirmation pass in the same session inherits the original judgement. One score per review can't separate the good findings from the noise inside it.
+
+*Hint if stuck: Ask at what grain the routing decision is made, and what makes a model's own score worth trusting.*
+</details>
+
+---
+
+## Question 73
+A security gate reviews every PR to an authentication service and must not miss injection or auth-bypass bugs. Re-running the same single reviewer on the same PR shows that it catches different real bugs on different runs. The team expects wider coverage to raise false positives too, and wants those kept off the PR. Which architecture changes fit? (Choose two.)
+
+A) Post a finding when three identical reviewer runs each report it on the same lines of code
+B) Ask the same reviewer, after its first pass, what it might have missed and add those findings
+C) Merge the vulnerability classes into one longer prompt so a single pass can cover them together
+D) Run several independent reviewer instances, each on one class of vulnerability, and pool them
+E) Send each pooled finding to a separate instance that checks it against the code before posting
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** Independent instances each focused on one vulnerability class widen recall, because each catches bugs the others miss, and pooling keeps any bug one of them finds. A verification step by a separate instance then checks each candidate against the code and filters false positives before posting, as Claude's managed Code Review does. Requiring unanimity among runs that miss different bugs discards exactly the catches the team needs. A follow-up in the same session shares the first pass's blind spots. One longer prompt asks a single pass to attend to everything at once.
+
+*Hint if stuck: Separate the goal of finding more from the goal of posting less, and ask what each needs.*
+</details>
+
+---
+
+## Question 74
 A healthcare intake startup has one Claude Code session generate a FHIR message parser and then, in the same session, asks "now review the code you just wrote for bugs." The review comes back clean, yet a null-handling defect ships to staging that week. What is the architectural flaw?
 
 A) The reviewer shares the generator's context, so it inherits and re-confirms the same reasoning that produced the bug
@@ -1175,7 +1346,7 @@ D) The generation step used too small a thinking budget, leaving the review with
 
 ---
 
-## Question 66
+## Question 75
 A claude-code-action review handles the team's typical 300-line PRs well, but on a 4,800-line vendored-library upgrade it produced detailed comments on the first dozen files, skimmed the remaining forty with one-line notes, and closed with a normal wrap-up well under its output limit — missing a known injection bug in file 38. What should the team change?
 
 A) Split large PRs into multiple review passes, one per module, and aggregate the findings
@@ -1193,7 +1364,7 @@ D) Raise the action's maximum output tokens so the review is not truncated partw
 
 ---
 
-## Question 67
+## Question 76
 A CI pipeline runs claude -p to review pull requests. A 14-file PR fits comfortably in the context window at roughly 60k tokens, yet the review consistently produces detailed findings for the first four or five files and shallow or zero findings for the rest — even when humans later find real bugs in files 10 through 14. What is the most likely cause?
 
 A) The context window was silently truncated, so the later files were never actually delivered to the model
@@ -1211,11 +1382,11 @@ D) The JSON output schema caps the number of findings, cutting off results befor
 
 ---
 
-## Question 68
+## Question 77
 A CI workflow has Claude Code generate a payment-reconciliation module, then prompts in the same session: 'Now critically review the code you just wrote for bugs.' The review almost always concludes the implementation looks correct, yet QA keeps finding logic errors in the merged code. Which change most improves bug detection?
 
 A) Strengthen the review prompt to 'act as a hostile senior reviewer and assume the code is broken until proven otherwise'
-B) Repeat the same-session review three times and take the union of all findings to compensate for individual misses
+B) Repeat the same-session review three times and take the union of their findings to compensate for individual misses
 C) Run the review in a separate session whose context contains only the diff, not the generation conversation
 D) Enable extended thinking on the same-session review so the model reasons more deeply before approving the code
 
@@ -1229,11 +1400,11 @@ D) Enable extended thinking on the same-session review so the model reasons more
 
 ---
 
-## Question 69
+## Question 78
 After fighting attention dilution, a monorepo team redesigned its CI review so each file in a PR gets its own headless claude -p pass. Per-file bug detection improved sharply, but last week the pipeline approved a PR in which api-client.ts called an endpoint whose request shape had changed in routes.ts — each file was internally consistent on its own. What fixes the architecture?
 
-A) Return to a single pass over all files at once, since only one shared context can observe relationships between the changed files in the PR
-B) Enlarge each per-file pass so its prompt also includes the complete diff of every other file in the PR for reference
+A) Return to a single pass over the files at once, since a shared context is needed to observe relationships between the changed files in the PR
+B) Enlarge each per-file pass so its prompt also includes the complete diff of each other file in the PR for reference
 C) Keep the per-file passes and add a final integration pass that checks cross-file contracts like call sites against changed signatures
 D) Require each per-file pass to emit an approval confidence score and block the merge whenever any file scores below 0.8
 
@@ -1247,13 +1418,13 @@ D) Require each per-file pass to emit an approval confidence score and block the
 
 ---
 
-## Question 70
+## Question 79
 A CI pipeline has a fresh Claude session review each generated change against its spec with the prompt: list every gap you can find. The reviewer reports gaps on nearly every change, and the generating agent addresses them all, adding wrapper layers, defensive checks and tests for impossible inputs. Code size has doubled with no drop in bugs. What should change?
 
 A) Cap the generating agent's output size, so it cannot add new layers while it fixes reported gaps
 B) Tell the reviewer to flag only gaps that affect correctness or the spec and to mark the rest optional
 C) Merge the review back into the generating session, so the reviewer knows why each choice was made
-D) Add a second independent reviewer, and act only on the gaps that both reviewers report separately
+D) Add a second independent reviewer, and act on the gaps that both reviewers report separately
 
 <details>
 <summary>Answer & explanation</summary>

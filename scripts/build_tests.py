@@ -34,7 +34,16 @@ DOMAINS = {
     "D5": ("Context Management & Reliability", 15, 9),
 }
 
-LETTERS = "ABCD"
+LETTERS = "ABCDE"
+
+
+def is_mr(q):
+    return q.get("type") == "mr"
+
+
+def key_letters(q):
+    """answer key as letters: "B" for MC, "B, D" for multiple-response"""
+    return ", ".join(LETTERS[i] for i in (q["correct"] if is_mr(q) else [q["correct"]]))
 
 
 def load_bank():
@@ -44,7 +53,8 @@ def load_bank():
 
 
 def render_question(n, q):
-    lines = [f"## Question {n}", q["q"], ""]
+    stem = q["q"] + (" (Choose two.)" if is_mr(q) else "")
+    lines = [f"## Question {n}", stem, ""]
     for i, opt in enumerate(q["options"]):
         lines.append(f"{LETTERS[i]}) {opt}")
     lines += [
@@ -52,7 +62,7 @@ def render_question(n, q):
         "<details>",
         "<summary>Answer & explanation</summary>",
         "",
-        f"**{LETTERS[q['correct']]})** {q['explanation']}",
+        f"**{key_letters(q)}** {q['explanation']}" if is_mr(q) else f"**{key_letters(q)})** {q['explanation']}",
         "",
         f"*Hint if stuck: {q['hint']}*",
         "</details>",
@@ -114,7 +124,7 @@ def build_full_exams(bank, seed=2026):
             "",
         ]
         body += [render_question(n + 1, q) for n, q in enumerate(picked)]
-        key = "".join(LETTERS[q["correct"]] for q in picked)
+        key = [key_letters(q).replace(" ", "") for q in picked]
         body += ["## Answer key (no peeking until scored)", "", " ".join(f"{n+1}:{c}" for n, c in enumerate(key)), ""]
         out = OUT / f"full-exam-{k:02d}.md"
         out.write_text("\n".join(body))
