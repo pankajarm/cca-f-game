@@ -78,9 +78,9 @@
     "note": "For scenario one, remember four things. Required ordering and money limits are enforced in code or hooks. Escalation follows explicit criteria and comes with a structured handoff. Tool errors say what kind of failure it was and whether a retry makes sense. And exact amounts and identifiers live in a case facts block that summaries cannot blur."}
   ],
   "check": [
-   {"q": "Transcripts show the support agent quoting a refund of $47 to a customer whose order was $147.23, twenty turns after the order lookup. What is the best fix?",
-    "options": ["Ask the model to double-check numbers before replying", "Keep a persistent case-facts block with order ids and amounts outside the summarised history", "Raise max_tokens so the model can think longer", "Switch the escalation threshold to trigger on long conversations"],
-    "answer": 1, "why": "Progressive summaries blur exact values. A case-facts block keeps the numbers verbatim in every turn."},
+   {"q": "A signed-in customer writes 'where is my order?'. The account has exactly one open order, yet the support agent replies by asking for the order number, and customers find this frustrating. What should the agent do?",
+    "options": ["Keep asking for the order number, since identifiers should always come from the customer", "Escalate to a human, since the request is vague", "List the customer's last ten orders and ask them to pick one", "Look up the account's orders and, since only one is open, report its status directly"],
+    "answer": 3, "why": "Ask for more information only when lookups cannot settle the question. With a single open order there is nothing to disambiguate."},
    {"q": "A customer writes: 'I don't want the bot, put me through to a person.' The issue is a simple address change the agent could finish. What should the agent do?",
     "options": ["Finish the address change first, then offer a human", "Explain that it can solve this faster than a human", "Escalate to a human right away with a short structured summary", "Ask the customer to rate their frustration before deciding"],
     "answer": 2, "why": "An explicit request for a human is an escalation trigger on its own. Honour it immediately and pass the context along."}
@@ -127,9 +127,9 @@
    {"q": "Your API handlers in src/api/ and services/*/api/ must all use the same error format, but no other code should load that rule. What is the best place for it?",
     "options": ["The project root CLAUDE.md, so everyone sees it", "A .claude/rules/ file with a paths glob matching the API handler files", "Each developer's ~/.claude/CLAUDE.md", "A slash command developers run before editing handlers"],
     "answer": 1, "why": "A path-scoped rule loads only when matching files are touched, and one glob can cover several directories."},
-   {"q": "A developer asks Claude Code to rename a misspelled variable in one function. Which approach fits best?",
-    "options": ["Enter plan mode and review a written plan first", "Spawn an Explore subagent to map the codebase", "Make the change directly", "Write a custom skill for renames"],
-    "answer": 2, "why": "Small, clear, well-scoped changes do not need a planning phase."}
+   {"q": "While Claude Code iterates on a feature, every developer on the team approves npm test dozens of times per session. The team wants those runs to go through without prompts for everyone, without loosening anything else. What is the best change?",
+    "options": ["Start every session with --dangerously-skip-permissions", "Add 'never ask before running tests' to CLAUDE.md", "Add an allow rule for the test command, such as Bash(npm test *), to the project's committed .claude/settings.json", "Have each developer add the rule to their own user settings"],
+    "answer": 2, "why": "An allow rule in shared project settings pre-approves exactly that command for the whole team. CLAUDE.md text does not change permissions, and skipping all permissions loosens everything."}
   ],
   "sources": [
    {"title": "How Claude remembers your project (memory and rules)", "url": "https://code.claude.com/docs/en/memory"},
@@ -262,9 +262,9 @@
     "note": "For scenario five. Use dash p for headless runs and JSON output with a schema when a pipeline consumes the result. Write explicit criteria rather than asking for caution. Review with an independent instance, file by file and then across files. And keep the Message Batches API for work that can wait, like a nightly audit."}
   ],
   "check": [
-   {"q": "The CI job must fail the build when Claude's review finds a critical issue, so it needs to read a severity field reliably. What should the job use?",
-    "options": ["claude -p with --output-format json and a --json-schema defining the findings", "A regex over the plain-text review comment", "The Message Batches API with a custom_id per file", "An interactive Claude Code session started by the runner"],
-    "answer": 0, "why": "Print mode with JSON output and a schema gives the pipeline structured, validated fields to act on."},
+   {"q": "A CI pipeline implements a ticket with claude -p, then reviews the change by resuming that session with --fork-session, believing the fork acts as an independent reviewer. Reviews keep approving flawed changes. What is wrong?",
+    "options": ["Forked sessions cannot run in print mode", "A fork copies the implementing session's history and assumptions, so it is not independent of the author", "The review needs --output-format stream-json to see the whole diff", "The fork should resume with a higher --max-turns"],
+    "answer": 1, "why": "Forking copies the conversation so far, including the reasoning that produced the change. An independent review needs a session that has not seen it."},
    {"q": "After a developer pushes fixes, the re-review repeats the same eight comments it posted last time. What is the best fix?",
     "options": ["Ask the model to be more concise", "Lower the temperature", "Include the previous findings in the prompt and ask only for new or unresolved issues", "Review only the first file of the diff"],
     "answer": 2, "why": "Feeding prior findings lets the reviewer report only what is new or still open."}
@@ -308,9 +308,9 @@
     "note": "For scenario six. Nullable fields stop the model inventing values, and enums need an escape hatch. Retry format problems with the specific error, but do not retry when the data is not there. Look at accuracy per document type and per field before reducing human review. And only trust confidence scores you have calibrated."}
   ],
   "check": [
-   {"q": "Extraction accuracy is 97% across 50,000 documents, so the team plans to stop human review entirely. What should they check first?",
-    "options": ["Whether a larger model gets 98%", "Accuracy broken down by document type and by field", "Whether the schema validates every output", "The average confidence score across all documents"],
-    "answer": 1, "why": "Aggregate accuracy can hide a document type or field that fails often. Stratify before reducing review."},
+   {"q": "A warranty extractor has a boolean field transferable. When a document says nothing about transfers, Claude returns false, and the resale team treats those products as non-transferable. What schema change fits best?",
+    "options": ["Allow null, or use an enum such as yes, no and not_stated, so a silent document is not recorded as a no", "Make the field required so it is always filled", "Default the field to true when the document is silent", "Remove the field and let the resale team read each document"],
+    "answer": 0, "why": "A plain boolean has no way to say the document is silent, so silence becomes false. A null or not_stated option keeps absence distinct from a real no."},
    {"q": "The model returns a contract_date of '13/45/2024', which fails validation. What is the best next step?",
     "options": ["Drop the document from the batch", "Retry with the same prompt", "Retry and include the specific validation error about the date format", "Accept it and let downstream systems fix it"],
     "answer": 2, "why": "Format errors are worth retrying, and appending the exact validation error tells the model what to correct."}

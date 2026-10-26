@@ -150,7 +150,12 @@ window.LESSONS = [
     "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/start-here.mp4",
+   "vtt": "learn/video/start-here.vtt",
+   "poster": "learn/video/start-here.jpg",
+   "seconds": 146.9
+  }
  },
  {
   "minutes": 6,
@@ -299,7 +304,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/building-effective-agents"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/primer-D1.mp4",
+   "vtt": "learn/video/primer-D1.vtt",
+   "poster": "learn/video/primer-D1.jpg",
+   "seconds": 132.8
+  }
  },
  {
   "minutes": 6,
@@ -370,8 +380,8 @@ window.LESSONS = [
     "def": "API setting: auto, any, a forced named tool, or none."
    },
    {
-    "term": "isError",
-    "def": "Flag on a tool result that marks the call as failed."
+    "term": "isError / is_error",
+    "def": "Marks a tool call as failed: isError in MCP, is_error in a Claude API tool_result."
    },
    {
     "term": "MCP",
@@ -440,7 +450,12 @@ window.LESSONS = [
     "url": "https://github.com/anthropics/courses/tree/master/tool_use"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/primer-D2.mp4",
+   "vtt": "learn/video/primer-D2.vtt",
+   "poster": "learn/video/primer-D2.jpg",
+   "seconds": 112.1
+  }
  },
  {
   "minutes": 6,
@@ -591,7 +606,12 @@ window.LESSONS = [
     "url": "https://www.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/primer-D3.mp4",
+   "vtt": "learn/video/primer-D3.vtt",
+   "poster": "learn/video/primer-D3.jpg",
+   "seconds": 129.1
+  }
  },
  {
   "minutes": 6,
@@ -741,7 +761,12 @@ window.LESSONS = [
     "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/primer-D4.mp4",
+   "vtt": "learn/video/primer-D4.vtt",
+   "poster": "learn/video/primer-D4.jpg",
+   "seconds": 128.3
+  }
  },
  {
   "minutes": 6,
@@ -878,7 +903,12 @@ window.LESSONS = [
     "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/primer-D5.mp4",
+   "vtt": "learn/video/primer-D5.vtt",
+   "poster": "learn/video/primer-D5.jpg",
+   "seconds": 116.0
+  }
  },
  {
   "ts": [
@@ -909,13 +939,13 @@ window.LESSONS = [
     "bullets": [
      "Send the full message history with your tools every time.",
      "Branch on stop_reason, never on the words in the reply.",
-     "Append the assistant turn, then a user turn of tool results."
+     "Handle every stop reason on purpose; only end_turn means done."
     ],
     "code": {
      "lang": "python",
-     "text": "while True:\n    resp = client.messages.create(model=MODEL, max_tokens=2048,\n                                  tools=TOOLS, messages=history)\n    history.append({\"role\": \"assistant\", \"content\": resp.content})\n    if resp.stop_reason != \"tool_use\":\n        break  # end_turn: done. max_tokens: truncated, handle it\n    results = [{\"type\": \"tool_result\", \"tool_use_id\": b.id,\n                \"content\": run_tool(b.name, b.input)}\n               for b in resp.content if b.type == \"tool_use\"]\n    history.append({\"role\": \"user\", \"content\": results})"
+     "text": "while True:\n    resp = client.messages.create(model=MODEL, max_tokens=2048,\n                                  tools=TOOLS, messages=history)\n    history.append({\"role\": \"assistant\", \"content\": resp.content})\n    if resp.stop_reason == \"end_turn\":\n        return resp                      # finished\n    if resp.stop_reason == \"tool_use\":\n        history.append({\"role\": \"user\", \"content\": run_tools(resp)})\n    elif resp.stop_reason == \"pause_turn\":\n        continue                         # server tool paused: send it back\n    else:  # max_tokens, refusal, context window: not a finished answer\n        raise IncompleteReply(resp.stop_reason)"
     },
-    "note": "This is the loop in about ten lines. Each round we send the whole history plus the tool list. We save Claude's reply, then look at stop reason. If it says tool use, we run every requested tool and send the results back as a user turn. Anything else breaks out, and we deal with that case on purpose."
+    "note": "This is the loop in about a dozen lines. Each round we send the whole history plus the tool list and save Claude's reply. Then we branch on stop reason. End turn means finished. Tool use means run the tools and send the results back. Anything else, like a reply cut off at max tokens, is not a finished answer, so we handle it on purpose."
    },
    {
     "kind": "how",
@@ -981,7 +1011,7 @@ window.LESSONS = [
     "note": "To recap. Keep looping while stop reason says tool use, and stop on end turn. Feed every tool result back so the next turn can reason over it. Let Claude pick the tools instead of scripting a decision tree. And never let a text check or an iteration cap be the thing that ends the loop."
    }
   ],
-  "docsToday": "The API now also returns pause_turn, refusal and model_context_window_exceeded; the exam's rule (continue on tool_use, stop on end_turn) still holds.",
+  "docsToday": "The API has newer stop reasons (pause_turn, refusal, model_context_window_exceeded). The core rule the exam tests still holds: continue on tool_use, stop on end_turn.",
   "check": [
    {
     "q": "A research agent's loop exits whenever stop_reason is anything other than tool_use, and returns the last text as the final report. Some reports now end mid-sentence. What should change?",
@@ -995,15 +1025,15 @@ window.LESSONS = [
     "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every non-tool_use reason as completion."
    },
    {
-    "q": "Claude returns one response with three tool_use blocks: check_inventory, get_shipping_quote and get_customer. How should your code send the results back?",
+    "q": "A tax-filing assistant's loop, on end_turn, checks whether the reply 'looks finished'. When Claude ends a turn by asking the user which tax year they mean, the code automatically sends 'Please continue', and Claude then guesses a year. What should the loop do instead?",
     "options": [
-     "Send three separate user messages, one result each, calling the API after each",
-     "Run only the first tool and let Claude ask again for the others",
-     "Combine the three outputs into one text paragraph in a new user message",
-     "Send one user message with three tool_result blocks, each with its matching tool_use_id"
+     "Send 'Please continue' twice so Claude has more room to work it out",
+     "Treat end_turn as the end of Claude's turn, show its question to the user, and add the user's answer to the history",
+     "Force a tool call on the next request so Claude must look the year up",
+     "Raise max_tokens so the reply is less likely to stop early"
     ],
-    "answer": 3,
-    "why": "Parallel tool calls are answered together in the next user message, one tool_result per tool_use, linked by tool_use_id."
+    "answer": 1,
+    "why": "end_turn means Claude has finished its turn, and here that turn is a question for the user. Judging completion from the wording and auto-continuing pushes Claude to guess."
    }
   ],
   "sources": [
@@ -1054,7 +1084,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.1.mp4",
+   "vtt": "learn/video/ts-1.1.vtt",
+   "poster": "learn/video/ts-1.1.jpg",
+   "seconds": 140.1
+  }
  },
  {
   "ts": [
@@ -1159,15 +1194,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "A research coordinator always launches its search, analysis, fact-check and report subagents, even when a user just asks for a company's founding year. Users complain about slow answers. What is the best change?",
+    "q": "A research coordinator always spawns exactly one research subagent. Quick lookups are fine, but a request to compare twelve cloud providers on price, compliance and regional coverage takes an hour, and the lone subagent runs out of context partway through. What should change?",
     "options": [
-     "Have the coordinator choose which subagents to run based on the query's complexity",
-     "Run all four subagents in parallel to cut latency",
-     "Replace the subagents with one larger agent for every query",
-     "Cache the full pipeline's output for every past query"
+     "Give the single subagent a longer time limit",
+     "Tell users to split broad questions into twelve separate requests",
+     "Have the coordinator do the comparison itself without subagents",
+     "Have the coordinator scale the number of subagents to the request, splitting a broad comparison across several that run in parallel"
     ],
-    "answer": 0,
-    "why": "The coordinator should scale effort to the query. A simple fact needs one subagent, not the whole pipeline."
+    "answer": 3,
+    "why": "Effort should match the query. A broad comparison benefits from several focused subagents, each with its own context, while a simple lookup still needs only one."
    },
    {
     "q": "Two search subagents in a market research system keep returning almost the same articles, while some subtopics get no coverage. What should you fix first?",
@@ -1234,7 +1269,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/multi-agent-research-system"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.2.mp4",
+   "vtt": "learn/video/ts-1.2.vtt",
+   "poster": "learn/video/ts-1.2.jpg",
+   "seconds": 150.2
+  }
  },
  {
   "ts": [
@@ -1262,16 +1302,16 @@ window.LESSONS = [
     "kind": "how",
     "title": "Configuring subagents",
     "bullets": [
-     "allowedTools must include Task, or nothing gets spawned.",
+     "The guide: allowedTools must include Task for the coordinator to delegate.",
      "AgentDefinition sets description, prompt and tool limits.",
      "The description tells the coordinator when to use each agent.",
-     "Docs today: Task is now named Agent; Task still works."
+     "Docs today: Task is named Agent, and allowedTools only pre-approves tools."
     ],
     "code": {
      "lang": "ts",
      "text": "const options = {\n  allowedTools: [\"Task\", \"WebSearch\", \"Read\"],\n  agents: {\n    \"web-searcher\": {\n      description: \"Finds recent sources on one bounded subtopic.\",\n      prompt: \"You search the web and return sourced findings.\",\n      tools: [\"WebSearch\", \"WebFetch\"],\n      model: \"haiku\"\n    }\n  }\n};"
     },
-    "note": "In the Agent SDK you list Task in allowed tools so the coordinator can spawn helpers. Each helper gets an agent definition with a description, a prompt and its own tool limits. The description matters most, because the coordinator reads it to decide when to delegate. Current docs call this tool Agent, and Task still works as an alias."
+    "note": "In the guide's terms, you list Task in allowed tools so the coordinator can spawn helpers. Current docs treat allowed tools as pre-approval, but the exam keeps the guide's wording. Each helper gets an agent definition with a description, a prompt and its own tool limits. The description matters most, because the coordinator reads it to decide when to delegate. Current docs call this tool Agent, and Task still works as an alias."
    },
    {
     "kind": "how",
@@ -1310,8 +1350,8 @@ window.LESSONS = [
      },
      {
       "wrong": "Define agents but leave Task out of allowedTools.",
-      "right": "Include Task so the coordinator can spawn them.",
-      "why": "Without the tool there is no way to delegate."
+      "right": "Include Task, as the guide says, so the coordinator can spawn them.",
+      "why": "Guide wording; current docs treat allowedTools as pre-approval."
      },
      {
       "wrong": "Spawn one subagent per turn to get parallel work.",
@@ -1330,7 +1370,7 @@ window.LESSONS = [
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     "Task spawns subagents; allowedTools must include it.",
+     "Task spawns subagents; the guide says allowedTools includes it.",
      "Nothing is inherited: write the brief completely.",
      "Structured context keeps metadata apart from content.",
      "Parallel means several Task calls in one response."
@@ -1338,7 +1378,6 @@ window.LESSONS = [
     "note": "To recap. The Task tool spawns subagents, so it must be allowed. Nothing carries over from the parent, so the brief must be complete. Keep source details in their own fields so citations survive. And when work is independent, send several Task calls in one response, each with a clear goal and quality bar."
    }
   ],
-  "docsToday": "Claude Code v2.1.63 renamed the Task tool to Agent (Task still works as an alias); exam items use the guide's Task wording.",
   "check": [
    {
     "q": "A synthesis subagent writes a fluent report, but many claims cite the wrong article. The coordinator briefed it with a few paragraphs summarizing what the search agents found. What change helps most?",
@@ -1352,15 +1391,15 @@ window.LESSONS = [
     "why": "Blending sources into prose loses the claim-to-source link. Structured context keeps metadata separate, so attribution survives synthesis."
    },
    {
-    "q": "A team defines three subagents in the agents option, but logs show the coordinator never delegates and does all the work itself. The config sets allowedTools to WebSearch and Read. What is the likely fix?",
+    "q": "A coordinator delegates a vendor security review to a subagent. The subagent's run shows careful work, but its final reply is just 'Review complete, no major concerns', so the coordinator has nothing specific to put in its report. What should the coordinator change?",
     "options": [
-     "Add Task to allowedTools so the coordinator can spawn subagents",
-     "Rewrite each subagent prompt in more detail",
-     "Give each subagent the same tools as the coordinator",
-     "Move the subagent definitions into the system prompt"
+     "State in the Task prompt what the final reply must contain, such as each finding with its evidence and source, because only that reply comes back",
+     "Load the subagent's full transcript into the coordinator's context after each run",
+     "Ask the subagent to write its notes into the coordinator's conversation history as it works",
+     "Run the same subagent twice and compare the two replies"
     ],
     "answer": 0,
-    "why": "Subagents are spawned through the Task tool; if the coordinator cannot call it, it cannot delegate."
+    "why": "The coordinator receives only the subagent's final message. Spelling out the required output, as part of the goal and quality bar, makes that message useful."
    }
   ],
   "sources": [
@@ -1394,6 +1433,7 @@ window.LESSONS = [
   "drill": {
    "ts": "1.3"
   },
+  "docsToday": "Claude Code v2.1.63 renamed the Task tool to Agent (Task still works as an alias). allowedTools auto-approves tools; restricting them uses tools / disallowedTools. Subagents now run in the background and can nest. Answer exam items in the guide's terms.",
   "videos": [
    "TqC1qOfiVcQ"
   ],
@@ -1407,7 +1447,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-01-the-chief-of-staff-agent"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.3.mp4",
+   "vtt": "learn/video/ts-1.3.vtt",
+   "poster": "learn/video/ts-1.3.jpg",
+   "seconds": 148.7
+  }
  },
  {
   "ts": [
@@ -1452,7 +1497,7 @@ window.LESSONS = [
      "Resolve each item, then confirm none were missed.",
      "Escalate with a structured summary, not the transcript.",
      "Include customer id, root cause, amounts, recommended action.",
-     "Docs today: a hook can return defer to pause for a human."
+     "Docs today: hooks can defer a call in headless -p runs."
     ],
     "code": {
      "lang": "json",
@@ -1497,7 +1542,8 @@ window.LESSONS = [
       "why": "Dropped concerns mean repeat contacts and lower resolution."
      }
     ],
-    "note": "On the exam, stronger wording and more examples are tempting but wrong when an order must always hold. The answer is a code gate. For escalations, prefer the structured summary over the raw transcript. And when a message carries several requests, the right design splits them and confirms each one is resolved before ending."
+    "note": "On the exam, stronger wording and more examples are tempting but wrong when an order must always hold. The answer is a code gate. For escalations, prefer the structured summary over the raw transcript. And when a message carries several requests, the right design splits them and confirms each one is resolved before ending.",
+    "bullets": []
    },
    {
     "kind": "recap",
@@ -1514,15 +1560,15 @@ window.LESSONS = [
   "docsToday": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides.",
   "check": [
    {
-    "q": "Human agents say escalations from your support bot are slow to handle because each arrives as a 40-turn chat log. What should the bot send instead?",
+    "q": "A pharmacy agent may call submit_refill only when the prescription is still valid. The gate in code checks a prescription_verified flag that Claude passes in the submit_refill arguments. Audits find refills on expired prescriptions where Claude set the flag to true. What is the fix?",
     "options": [
-     "The last five turns of the conversation",
-     "A structured summary with customer id, root cause, amounts, steps tried and a recommended action",
-     "The full log plus a one-line apology to the customer",
-     "Only the customer's original message"
+     "Tell Claude in the system prompt never to set the flag unless it is sure",
+     "Rename the flag so its meaning is clearer to the model",
+     "Have the gate check the validity result the application recorded from the lookup tool, not a value the model supplies",
+     "Add few-shot examples of correctly set flags"
     ],
-    "answer": 1,
-    "why": "A handoff should carry the decision facts in a fixed structure so the human can act without rereading the conversation."
+    "answer": 2,
+    "why": "A gate enforces the rule only if it relies on facts the application recorded itself. A flag the model writes into its own call is just another instruction it can get wrong."
    },
    {
     "q": "A customer writes: cancel my duplicate order, update my card, and tell me when my other parcel arrives. The agent cancels the order, replies, and ends. What design fixes this?",
@@ -1580,7 +1626,12 @@ window.LESSONS = [
     "url": "https://claude.com/blog/building-agents-with-the-claude-agent-sdk"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.4.mp4",
+   "vtt": "learn/video/ts-1.4.vtt",
+   "poster": "learn/video/ts-1.4.jpg",
+   "seconds": 144.1
+  }
  },
  {
   "ts": [
@@ -1680,7 +1731,7 @@ window.LESSONS = [
     "note": "To recap. Post tool use hooks clean and reshape tool results before Claude reads them. Pre tool use hooks inspect calls and block anything that breaks policy. When you block, give a reason that sends Claude to the right next step. And whenever compliance has to be guaranteed, choose a hook over prompt wording."
    }
   ],
-  "docsToday": "PostToolUse hooks can replace any tool's result with updatedToolOutput; updatedMCPToolOutput is the older, MCP-only field.",
+  "docsToday": "PostToolUse hooks can replace any tool's result with updatedToolOutput (updatedMCPToolOutput is the older, MCP-only field).",
   "check": [
    {
     "q": "Your support agent reads delivery dates from a European carrier tool that returns 04/05/2026 for 4 May. Claude sometimes tells customers April 5. What is the most reliable fix?",
@@ -1749,7 +1800,12 @@ window.LESSONS = [
     "url": "https://claude.com/blog/building-agents-with-the-claude-agent-sdk"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.5.mp4",
+   "vtt": "learn/video/ts-1.5.vtt",
+   "poster": "learn/video/ts-1.5.jpg",
+   "seconds": 143.3
+  }
  },
  {
   "ts": [
@@ -1847,15 +1903,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "Every night a pipeline must extract fields from invoices, validate totals, and write a summary for finance. The steps never change. Which decomposition fits best?",
+    "q": "A team is choosing how to decompose four new projects. Which one is the best fit for a fixed prompt chain?",
     "options": [
-     "An orchestrator that invents subtasks fresh for each invoice",
-     "One prompt that does all three steps in a single call",
-     "A team of peer agents that negotiate who does each step",
-     "A fixed prompt chain with a validation gate between steps"
+     "Finding out why a fleet of delivery vans reports rising fuel use",
+     "Turning each of 500 recipes into a card: extract ingredients, scale to four servings, convert units, then format",
+     "Investigating how an attacker moved through a network after a breach",
+     "Working out why a nightly job slowed down after an unknown change"
     ],
-    "answer": 3,
-    "why": "Known, repeatable steps suit a fixed chain; gates catch bad output before the next step. Dynamic orchestration adds cost for no benefit."
+    "answer": 1,
+    "why": "The recipe work runs the same known steps for every item, which is what a fixed chain suits. The others are investigations whose next steps depend on what is found."
    },
    {
     "q": "An engineer asks an agent to find out why checkout latency doubled after a database migration. Nobody knows where the cause is. How should the agent approach it?",
@@ -1921,7 +1977,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/building-effective-agents"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.6.mp4",
+   "vtt": "learn/video/ts-1.6.vtt",
+   "poster": "learn/video/ts-1.6.jpg",
+   "seconds": 143.5
+  }
  },
  {
   "ts": [
@@ -2018,15 +2079,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "A developer resumes a code analysis session from last week. Since then the team renamed modules and deleted two services. The agent keeps referring to functions that no longer exist. What is the best approach?",
+    "q": "A developer spent two hours in a session chasing a theory that a memory leak came from the image cache. The theory was wrong, and the context is now full of dead-end logs and failed attempts. A new lead points at the websocket handler. What is the best way to continue?",
     "options": [
-     "Keep resuming and correct the agent each time it is wrong",
-     "Fork the old session so the original stays clean",
-     "Start a fresh session and give it a structured summary of the earlier findings",
-     "Increase the context window so it can hold more history"
+     "Resume the session and tell it to ignore everything so far",
+     "Fork the session so the dead ends are kept for reference",
+     "Keep going in the same session, since it has seen the most code",
+     "Start a fresh session with a short summary of what was ruled out and the new lead"
     ],
-    "answer": 2,
-    "why": "After heavy changes, stale tool results mislead; a fresh session with a summary keeps the useful conclusions without the outdated reads."
+    "answer": 3,
+    "why": "A context full of discarded theories keeps pulling the agent back toward them. A fresh session with a compact summary keeps the lessons without the noise."
    },
    {
     "q": "After a long analysis of a payments service, a team wants to compare a queue-based redesign with a cache-based one, both starting from that same analysis. What should they do?",
@@ -2080,7 +2141,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-05-building-a-session-browser"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-1.7.mp4",
+   "vtt": "learn/video/ts-1.7.vtt",
+   "poster": "learn/video/ts-1.7.jpg",
+   "seconds": 146.0
+  }
  },
  {
   "ts": [
@@ -2254,7 +2320,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-evaluation-tool-evaluation"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-2.1.mp4",
+   "vtt": "learn/video/ts-2.1.vtt",
+   "poster": "learn/video/ts-2.1.jpg",
+   "seconds": 144.6
+  }
  },
  {
   "ts": [
@@ -2358,7 +2429,7 @@ window.LESSONS = [
     "note": "To recap. Mark failures with isError, classify them, and say plainly what happened and what to try. Never confuse no results with a failure. Recover from transient problems close to where they happen, and pass everything else upward with the partial results attached, so the agent above you can decide."
    }
   ],
-  "docsToday": "The MCP spec has no standard retryable field: errorCategory and isRetryable are an application convention inside the result. Since spec 2025-11-25, input validation errors come back as isError results.",
+  "docsToday": "The MCP spec has no standard retryable field: errorCategory / isRetryable are an application convention inside the result. Since spec 2025-11-25, input validation errors come back as isError results.",
   "lab": {
    "title": "Watch Claude recover from different error kinds",
    "minutes": 12,
@@ -2426,7 +2497,12 @@ window.LESSONS = [
     "url": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-2.2.mp4",
+   "vtt": "learn/video/ts-2.2.vtt",
+   "poster": "learn/video/ts-2.2.jpg",
+   "seconds": 148.1
+  }
  },
  {
   "ts": [
@@ -2535,29 +2611,29 @@ window.LESSONS = [
     "note": "To recap. Give each agent a small, role-shaped set of tools, with narrow helpers for frequent cross-role needs. Remove tools an agent should not use. Know the three tool choice settings cold, and remember the pattern of forcing only the first required step before relaxing back to auto."
    }
   ],
-  "docsToday": "On the newest models (Opus 5.5, Sonnet 5.5, Fable 5.1, Mythos 5.1) tool_choice any and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto, any and forced.",
+  "docsToday": "On the newest models (Opus 5.5, Sonnet 5.5, Fable 5.1, Mythos 5.1) tool_choice \"any\" and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto / any / forced.",
   "lab": {
    "title": "Force the first step, then relax",
    "minutes": 10,
    "steps": [
-    "With the Claude API, define fetch_document and three follow-up tools.",
+    "Pick a model that still accepts forced and any tool_choice (the newest models return a 400), then define fetch_document and three follow-up tools with the Claude API.",
     "Send a request with tool_choice auto and note whether Claude skips fetching.",
     "Resend with tool_choice forcing fetch_document, then continue the loop with auto.",
     "Try tool_choice any and confirm Claude always calls some tool instead of answering in text."
    ],
-   "expect": "auto can skip the required step; forcing guarantees it; any guarantees a tool call. On the newest models any and forced return a 400, so use a model that supports them or note the delta."
+   "expect": "auto can skip the required step; forcing guarantees it; any guarantees a tool call. On the newest models, which reject forced and any, compare auto with strict tool use instead."
   },
   "check": [
    {
-    "q": "A claims-intake pipeline must always begin by calling load_claim_packet before doing anything else, and afterwards Claude may pick freely among four tools. Which configuration matches the guide?",
+    "q": "After learning that agents with many tools choose badly, a team split its insurance assistant into eight agents with one or two tools each. Now most requests bounce between agents through the coordinator, adding delay and losing details at each handoff. What is the better design?",
     "options": [
-     "tool_choice auto for every request, with a system prompt saying to load the packet first",
-     "tool_choice none on the first request so Claude plans before acting",
-     "Force load_claim_packet on the first request, then switch to auto",
-     "tool_choice any for every request so a tool is always called"
+     "Regroup into a few role-based agents, each holding the four or five tools its role uses together",
+     "Merge everything back into one agent with all sixteen tools",
+     "Add a ninth agent that relays messages between the other eight",
+     "Keep the split and ask each agent to write longer handoff notes"
     ],
-    "answer": 2,
-    "why": "Forcing the named tool guarantees the required first step. Relaxing to auto afterwards lets Claude choose the right follow-up tool or answer."
+    "answer": 0,
+    "why": "Scoping by role is meant to keep each agent at a manageable handful of tools, not to isolate every tool. Grouping tools that are used together cuts handoffs and keeps selection accurate."
    },
    {
     "q": "A library's catalogue assistant has 19 tools covering search, loans, fines, events and staff rota. Wrong-tool calls rise each time a tool is added. What is the most effective change?",
@@ -2607,7 +2683,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-use-parallel-tools"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-2.3.mp4",
+   "vtt": "learn/video/ts-2.3.vtt",
+   "poster": "learn/video/ts-2.3.jpg",
+   "seconds": 140.9
+  }
  },
  {
   "ts": [
@@ -2736,15 +2817,15 @@ window.LESSONS = [
     "why": "Environment variable expansion keeps the shared project config while removing the secret from version control."
    },
    {
-    "q": "An engineering team's internal code-index MCP server is connected, yet Claude Code keeps using Grep across the repo instead of calling it. The tool's description is 'Query index'. What should they change?",
+    "q": "A team's committed .mcp.json defines a ticketing server, and it works for everyone except one engineer. When she first opened the project she declined Claude Code's prompt to use the project's servers, and the server's tools have been missing for her ever since. What should she do?",
     "options": [
-     "Move the server from project scope to user scope",
-     "Remove Grep from Claude Code's built-in tools permanently",
-     "Rewrite the description to say what it indexes, what it returns, and when it beats text search",
-     "Ask engineers to start every prompt with 'use the index'"
+     "Copy the server's entry into her user scope in ~/.claude.json",
+     "Delete .mcp.json locally and ask a teammate to commit it again",
+     "Run claude mcp reset-project-choices and approve the server when Claude Code asks again",
+     "Add the server's token directly into .mcp.json"
     ],
     "answer": 2,
-    "why": "The agent chooses tools from their descriptions. A rich description is what makes it prefer the MCP tool over built-in search."
+    "why": "Claude Code asks for approval before using project-scoped servers, and a refusal is remembered. Resetting project choices brings the prompt back without changing the shared config."
    }
   ],
   "sources": [
@@ -2788,7 +2869,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/code-execution-with-mcp"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-2.4.mp4",
+   "vtt": "learn/video/ts-2.4.vtt",
+   "poster": "learn/video/ts-2.4.jpg",
+   "seconds": 152.8
+  }
  },
  {
   "ts": [
@@ -2893,17 +2979,18 @@ window.LESSONS = [
     "note": "To recap. Know which tool answers which question. Grep for text, Glob for file names. Make Edit anchors unique, and when that fails, read and rewrite. Explore by finding entry points first and reading outward, and chase wrapped functions through every name they are exported under."
    }
   ],
-  "docsToday": "On macOS, Linux and WSL, Glob and Grep are no longer in Claude Code's default tool set; Claude searches with find and grep through Bash unless you enable them.",
+  "docsToday": "On macOS, Linux and WSL, Glob and Grep are no longer in Claude Code's default tool set; Claude searches with find/grep through Bash unless you enable them.",
   "lab": {
    "title": "Trace a function with Grep, Glob and Edit",
    "minutes": 10,
    "steps": [
     "Open Claude Code in any mid-sized open-source repo you have cloned.",
+    "On macOS, Linux or WSL, Glob and Grep are off by default and searches run through Bash; either enable them or just watch which kind of search Claude picks.",
     "Ask it to list all test files by path pattern, then to find every caller of one function.",
     "Pick a function that is re-exported under another name and ask for all callers again.",
     "Ask for an edit on a line that appears several times and watch how the anchor is made unique."
    ],
-   "expect": "Path questions use pattern matching, content questions use search, wrappers need a second search, and Edit needs a unique anchor. Note whether search ran through Bash, per the docs delta."
+   "expect": "Path questions use pattern matching and content questions use search, whichever tool runs them. Wrappers need a second search, and Edit needs a unique anchor."
   },
   "check": [
    {
@@ -2957,7 +3044,12 @@ window.LESSONS = [
     "url": "https://anthropic.skilljar.com/claude-code-in-action"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-2.5.mp4",
+   "vtt": "learn/video/ts-2.5.vtt",
+   "poster": "learn/video/ts-2.5.jpg",
+   "seconds": 141.1
+  }
  },
  {
   "ts": [
@@ -3057,7 +3149,7 @@ window.LESSONS = [
     "note": "Three layers, all combined: user, project and directory. Personal preferences go in your home folder, team standards go in the repository, and folder specific notes go next to the code they describe. When one person's Claude is missing a rule, check which layer the rule was written into before changing anything else."
    }
   ],
-  "docsToday": "@imports organise instructions but load with the parent file, so they don't save context. /memory lists and opens memory files; /context shows which CLAUDE.md and rules files actually loaded. Exam items keep the guide's /memory wording.",
+  "docsToday": "@imports organise instructions but load together with the parent file, so they don't save context. After compaction, nested CLAUDE.md files reload only when a matching file is touched again. /memory now lists and opens memory files; to see which CLAUDE.md and rules files actually loaded, run /context. Exam items keep the guide's /memory wording.",
   "check": [
    {
     "q": "A developer added 'always use the shared logger, never console.log' to ~/.claude/CLAUDE.md. Two weeks later, teammates' Claude sessions still add console.log calls. What should the team do?",
@@ -3129,7 +3221,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-3.1.mp4",
+   "vtt": "learn/video/ts-3.1.vtt",
+   "poster": "learn/video/ts-3.1.jpg",
+   "seconds": 145.5
+  }
  },
  {
   "ts": [
@@ -3244,15 +3341,15 @@ window.LESSONS = [
     "why": "Files under the repository's .claude/ directory are shared through version control. The home-directory and local files are personal, and CLAUDE.md is for always-on instructions, not invocable workflows."
    },
    {
-    "q": "A /map-dependencies skill reads hundreds of files and prints long intermediate notes. After running it, developers find their main session cluttered and less focused. Which change addresses this directly?",
+    "q": "A team's legacy-billing-context skill explains how an old billing system works so Claude can draw on it when relevant. Engineers keep spotting it in the / menu and running it, expecting an action, and get only a wall of background text. What change fits best?",
     "options": [
-     "Add context: fork to the skill's frontmatter so it runs in an isolated subagent",
-     "Add argument-hint so developers pass a smaller directory",
-     "Move the skill to ~/.claude/skills/ so it runs outside the project",
-     "Copy the skill's instructions into CLAUDE.md so they are always loaded"
+     "Move its content into the root CLAUDE.md",
+     "Set disable-model-invocation: true so only people can run it",
+     "Set context: fork so it runs in a subagent",
+     "Set user-invocable: false so Claude can still load it but it no longer appears in the / menu"
     ],
-    "answer": 0,
-    "why": "context: fork runs the skill in its own context and returns only the result. The other changes do not isolate the noisy output."
+    "answer": 3,
+    "why": "user-invocable: false is meant for background knowledge that is not a useful command. disable-model-invocation does the opposite and would stop Claude from using the skill."
    }
   ],
   "sources": [
@@ -3303,7 +3400,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/skills-notebooks-01-skills-introduction"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-3.2.mp4",
+   "vtt": "learn/video/ts-3.2.vtt",
+   "poster": "learn/video/ts-3.2.jpg",
+   "seconds": 146.4
+  }
  },
  {
   "ts": [
@@ -3401,15 +3503,15 @@ window.LESSONS = [
   "docsToday": "Path-scoped rules drop out at compaction and reload when a matching file is touched again.",
   "check": [
    {
-    "q": "A team keeps database migration files in db/migrations/ in each of 12 services. They want Claude to follow migration conventions only when editing migrations. What should they add?",
+    "q": "A rule holding API schema conventions uses paths: [\"**/*.json\"]. It now loads whenever Claude touches package.json, tsconfig.json or test fixtures, although the schemas live only under api/schemas/. What should the team change?",
     "options": [
-     "A migrations section in the root CLAUDE.md",
-     "A .claude/rules/migrations.md file with paths: [\"**/db/migrations/**\"]",
-     "A CLAUDE.md inside every service's root folder",
-     "A /migrations skill that developers must remember to run first"
+     "Narrow the pattern to api/schemas/**/*.json so the rule loads only for schema files",
+     "Remove the paths field so the rule is always loaded",
+     "Copy the conventions into the root CLAUDE.md as well",
+     "Write a separate rule file for each schema file"
     ],
-    "answer": 1,
-    "why": "A path-scoped rule loads exactly when matching migration files are touched, from one source. The root file loads for every task, and per-service copies drift."
+    "answer": 0,
+    "why": "A paths glob decides when a rule loads. Matching every JSON file pulls the rule into unrelated work, so the pattern should match only where the conventions apply."
    },
    {
     "q": "A rule file has paths: [\"src/*.tsx\"]. Claude ignores it when editing src/components/forms/Login.tsx. Why?",
@@ -3466,7 +3568,12 @@ window.LESSONS = [
     "url": "https://anthropic.skilljar.com/claude-code-in-action"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-3.3.mp4",
+   "vtt": "learn/video/ts-3.3.vtt",
+   "poster": "learn/video/ts-3.3.jpg",
+   "seconds": 135.2
+  }
  },
  {
   "ts": [
@@ -3564,15 +3671,15 @@ window.LESSONS = [
   "docsToday": "The built-in Explore subagent now runs on the main conversation's model and starts without CLAUDE.md.",
   "check": [
    {
-    "q": "A developer asks Claude to replace a hand-rolled retry helper with a shared library across 18 services. Two teams disagree on backoff settings. What is the best way to start?",
+    "q": "In plan mode, Claude has drafted a plan to change how three services share authentication tokens. The security team must sign off, which will take two days, and the developer will work on other things meanwhile. What is the best way to handle the plan?",
     "options": [
-     "Execute directly and let reviewers catch disagreements in the pull request",
-     "Enter plan mode, explore the call sites, and agree an approach before editing",
-     "Ask Claude to change one service now and copy the diff to the rest later",
-     "Use CLAUDE.md to tell Claude to be careful with retry logic"
+     "Approve the plan now so Claude can start, and let security review the pull request",
+     "Keep the session open for two days so the plan stays in context",
+     "Have Claude write the plan to a file or issue for security to review, then execute it from that document once approved",
+     "Discard the plan and ask Claude to plan again after sign-off"
     ],
-    "answer": 1,
-    "why": "Multi-service changes with competing approaches are what plan mode is for. Planning first avoids rework across 18 services."
+    "answer": 2,
+    "why": "A saved plan lets reviewers work asynchronously and gives a clean starting point for execution later. Plan, agree, then carry out the agreed plan."
    },
    {
     "q": "While planning a refactor, Claude reads 60 files and the main session becomes slow and starts forgetting earlier decisions. What should the developer have done?",
@@ -3633,7 +3740,12 @@ window.LESSONS = [
     "url": "https://www.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-3.4.mp4",
+   "vtt": "learn/video/ts-3.4.vtt",
+   "poster": "learn/video/ts-3.4.jpg",
+   "seconds": 139.8
+  }
  },
  {
   "ts": [
@@ -3913,15 +4025,15 @@ window.LESSONS = [
     "why": "Feeding prior findings lets the re-review focus on what changed. Capping or skipping reviews loses real issues, and batching would delay a check developers wait on."
    },
    {
-    "q": "A pipeline must parse Claude's review into a list of findings with file, line and severity. Which invocation fits best?",
+    "q": "A platform team runs claude -p reviews on every pull request and wants to log an estimate of what each run costs next to the PR number, without checking a dashboard. What fits best?",
     "options": [
-     "claude -p with --output-format json and --json-schema describing the findings",
-     "claude in interactive mode with a CLAUDE.md that asks for JSON",
-     "claude -p with plain text output, parsed using regular expressions",
-     "claude --resume on the developer's last session, then copying the output"
+     "Estimate cost from the length of the review comment",
+     "Run with --output-format json and read the total_cost_usd field from the result",
+     "Move the job to the Message Batches API so each request reports its cost",
+     "Add a prompt line asking Claude to state its own cost at the end"
     ],
-    "answer": 0,
-    "why": "-p runs headless, and --json-schema with JSON output gives machine-readable, schema-shaped results. Interactive mode cannot run in CI and regex parsing of prose is fragile."
+    "answer": 1,
+    "why": "JSON output carries run metadata such as total_cost_usd and session_id, so a script can log spend per run. Claude cannot reliably report its own cost in text."
    }
   ],
   "sources": [
@@ -4064,15 +4176,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "A review prompt says 'only flag issues you are confident about'. False positives barely change. Most noise is about naming style, which the linter already enforces. What change will help most?",
+    "q": "A CI reviewer posts many speculative findings such as 'this might fail under some conditions'. Developers waste time chasing ones that cannot happen. What prompt change best raises precision?",
     "options": [
-     "Repeat the confidence instruction in capital letters",
-     "Add an explicit 'do not report' list that includes naming and other linter-enforced checks",
-     "Lower the model temperature so it flags fewer items",
-     "Ask Claude to output fewer than ten findings per review"
+     "Ask the reviewer to use more cautious wording",
+     "Limit the reviewer to five findings per pull request",
+     "Ask the reviewer to rate how worried it is about each finding",
+     "Require each finding to name the concrete input or code path that triggers it, and tell the reviewer to skip any it cannot"
     ],
-    "answer": 1,
-    "why": "Explicit skip criteria remove the noisy category directly. Confidence wording, temperature and count caps do not tell Claude what counts."
+    "answer": 3,
+    "why": "An explicit bar for what counts as a finding filters out speculation. Softer wording, caps and self-rated worry do not define what to report."
    },
    {
     "q": "A code review bot's SQL-injection findings are 95% accurate, but its 'performance concern' findings are 20% accurate. Developers now ignore all bot comments. What should the team do first?",
@@ -4278,6 +4390,7 @@ window.LESSONS = [
    ],
    "expect": "Examples make the format stable and the borderline calls consistent across runs. That is why the exam treats few-shot as the strongest lever for consistency."
   },
+  "docsToday": "Current prompting docs suggest 3 to 5 examples; the exam guide says 2 to 4.",
   "id": "ts-4.2",
   "kind": "ts",
   "stage": "intermediate",
@@ -4405,29 +4518,29 @@ window.LESSONS = [
     "note": "Use a tool with a JSON schema whenever downstream code needs reliable structure. Choose tool choice to match how certain the call must be. Design the schema so Claude can be honest about missing or ambiguous data. Then check the values separately, because a perfect shape can still hold a wrong number."
    }
   ],
-  "docsToday": "Structured outputs are generally available (no beta header) and can't be combined with citations or prefill. On the newest models, tool_choice any and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto / any / forced.",
+  "docsToday": "Structured outputs are generally available (no beta header) and can't be combined with citations or prefill. See 2.3 for forced tool_choice on the newest models.",
   "check": [
    {
-    "q": "An extraction pipeline defines a record_receipt tool with tool_choice set to auto. About 3% of responses contain a prose summary and no tool call, which breaks the loader. What should change?",
+    "q": "A financial-report extractor returns discount_rate as a string, and values arrive as '15%', '0.15' and '15'. Every output is schema-valid, but downstream calculations are off by a factor of 100 on some rows. What should be added?",
     "options": [
-     "Add 'always respond in JSON' to the system prompt",
-     "Set tool_choice to force the record_receipt tool",
-     "Increase max_tokens so the tool call has room",
-     "Remove the tool and parse JSON from the text reply"
+     "A required flag on discount_rate so it is never missing",
+     "A longer system prompt about financial accuracy",
+     "A numeric field with a stated normalisation rule, such as a decimal fraction where 15 percent is 0.15",
+     "A retry whenever the value contains a percent sign"
     ],
-    "answer": 1,
-    "why": "Forcing the tool (or using any) guarantees a tool call; auto allows a text reply. Prompt wording and token limits do not guarantee it."
+    "answer": 2,
+    "why": "A schema guarantees structure, not consistent meaning. A typed field plus an explicit normalisation rule makes every value comparable."
    },
    {
-    "q": "A schema marks purchase_order_number as a required string. Many invoices have no PO number, and auditors find plausible-looking but fake PO numbers in the output. What is the best schema fix?",
+    "q": "An invoice extractor has one field named total. On some invoices Claude returns the amount before tax and on others the amount after tax, and finance cannot tell which it got. Every output is schema-valid. What schema change fits best?",
     "options": [
-     "Add a regex pattern so fake numbers are rejected",
-     "Keep the field required and add 'do not invent values' to the prompt",
-     "Remove the field from the schema entirely",
-     "Make purchase_order_number nullable so Claude can return null when it is absent"
+     "Replace total with separate subtotal_before_tax and total_including_tax fields, each with a description saying exactly what it holds",
+     "Mark total as required so it is always filled",
+     "Lower the temperature so the choice is more consistent",
+     "Retry each invoice until two runs agree on the total"
     ],
-    "answer": 3,
-    "why": "A nullable field gives Claude an honest way to say the value is not in the document. A required non-null field pressures it to fabricate."
+    "answer": 0,
+    "why": "An ambiguous field invites inconsistent answers. Separate, clearly described fields remove the guesswork and keep both values."
    }
   ],
   "sources": [
@@ -4448,6 +4561,7 @@ window.LESSONS = [
    "title": "Extraction through a tool schema",
    "minutes": 12,
    "steps": [
+    "Use a model that accepts forced tool_choice, or on the newest models (which return a 400 for it) use auto with strict: true throughout.",
     "Define a record_receipt tool whose input_schema has merchant, total, and a nullable tip field.",
     "Send three receipt texts, one with no tip, using tool_choice auto, then forced to record_receipt.",
     "Read each tool_use block's input as the result.",
@@ -4743,15 +4857,15 @@ window.LESSONS = [
   "docsToday": "A batch request may carry tool definitions and earlier tool turns, but your code can't run a tool mid-request. Results are kept for 29 days.",
   "check": [
    {
-    "q": "A team runs two jobs: a check that must pass before developers can merge, and a weekly compliance scan of 25,000 files. They want to cut cost. What is the best plan?",
+    "q": "Two hours into a 40,000-request Message Batch, an engineer notices the prompt never asks for the tax amount, a field every result needs. What is the best next step?",
     "options": [
-     "Move both jobs to the Message Batches API",
-     "Move the merge check to batches and keep the weekly scan synchronous",
-     "Keep both synchronous and shorten the prompts instead",
-     "Batch the weekly scan and keep the merge check synchronous"
+     "Let the batch finish, then fill in the tax field afterwards in code",
+     "Cancel the batch, fix the prompt, check it on a small sample, and submit a new batch",
+     "Submit a second batch now with the fixed prompt and let both run",
+     "Wait for the batch to end and resubmit only the errored requests"
     ],
-    "answer": 3,
-    "why": "Batches suit work nobody waits on. A blocking merge check needs predictable latency, which batches do not promise."
+    "answer": 1,
+    "why": "Cancelling stops requests that have not been processed yet, so the team stops paying for results it cannot use. A quick pilot confirms the fix before the large resubmission."
    },
    {
     "q": "A batch of 10,000 extraction requests finishes with 240 errored results caused by documents exceeding the context window. What should the team do?",
@@ -4899,26 +5013,26 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "An agent generates a database migration and the matching application changes, then is prompted to 'review your changes thoroughly' before opening the pull request. Reviewers still find integration bugs it missed. What design change helps most?",
+    "q": "A review pipeline sends each change to a separate Claude instance with the note 'Written by our most senior engineer and already passing all tests.' The reviewer approves nearly everything, and production bugs keep slipping through. What change helps most?",
     "options": [
-     "Give the same session a longer, more detailed review checklist",
-     "Run the review in an independent Claude instance that sees only the diff and the review criteria",
-     "Ask the session to review its changes twice in a row",
-     "Skip automated review and rely on human reviewers only"
+     "Add a second note asking the reviewer to be extra careful",
+     "Run the same reviewer twice and keep findings both runs report",
+     "Give the reviewer a larger context window",
+     "Remove the framing and give the reviewer only the change and neutral review criteria"
     ],
-    "answer": 1,
-    "why": "An independent instance does not share the generator's assumptions, so it catches more than self-review prompts."
+    "answer": 3,
+    "why": "An independent reviewer only helps if it judges the work on its merits. Framing about the author's seniority invites agreement instead of scrutiny."
    },
    {
-    "q": "A single review pass over a 25-file pull request finds obvious issues in the first few files but little in the rest, and misses a mismatch between an API handler and its client. What architecture fits better?",
+    "q": "A team adopted per-file review passes plus a cross-file integration pass for every pull request, including one-line typo fixes. CI cost has tripled and small PRs wait on several passes. What is the best adjustment?",
     "options": [
-     "Per-file review passes followed by a separate cross-file integration pass",
-     "One pass with a larger max_tokens value",
-     "Reviewing only the five largest files",
-     "Asking the reviewer to be more thorough in later files"
+     "Use a single pass for small, single-file changes and keep the multi-pass design for larger pull requests",
+     "Drop the integration pass for every pull request",
+     "Move all reviews to the Message Batches API",
+     "Keep the design and raise the CI budget"
     ],
     "answer": 0,
-    "why": "Per-file passes keep attention focused, and the integration pass catches cross-file contract problems."
+    "why": "Per-file and integration passes counter attention dilution on large, multi-file changes. A one-line fix gains nothing from them."
    }
   ],
   "sources": [
@@ -5096,15 +5210,15 @@ window.LESSONS = [
     "why": "Critical commitments must live outside the summarised history. A persistent facts block keeps them exact no matter how much the chatter is compressed."
    },
    {
-    "q": "A research coordinator receives five subagent reports, each a long narrative of its reasoning. The final synthesis often misses figures buried mid-report. Which change best follows the guide?",
+    "q": "To save context, a team trims each shipment-tracking result down to the status field alone. Context use dropped, but the agent can no longer answer customers who ask when a parcel will arrive or where it is now. What is the right adjustment?",
     "options": [
-     "Ask subagents to return structured findings with key facts first",
-     "Concatenate the reports in alphabetical order",
-     "Ask the coordinator to re-read each report twice",
-     "Have each subagent return its full transcript for completeness"
+     "Remove trimming and pass the full 45-field result again",
+     "Have the agent call the tool twice, once trimmed and once in full",
+     "Keep the fields the agent's tasks actually need, such as delivery estimate and last scan location, and drop the rest",
+     "Ask customers to check the carrier's website for arrival times"
     ],
-    "answer": 0,
-    "why": "Structured findings with key facts up front avoid lost-in-the-middle and keep the coordinator's context focused."
+    "answer": 2,
+    "why": "Trimming should remove noise, not the facts the agent's job depends on. Choose the kept fields from the questions the agent must answer."
    }
   ],
   "sources": [
@@ -5256,15 +5370,15 @@ window.LESSONS = [
   },
   "check": [
    {
-    "q": "A broadband support agent is helping a calm customer reset a router. Midway, the customer writes 'I'd rather speak with a person, please.' The agent believes one more step will fix it. What should it do?",
+    "q": "A streaming service's support agent receives 'cancel my plan'. The account could either stop renewing at the end of the month or end today with a partial refund, and the two have different consequences. What should the agent do?",
     "options": [
-     "Suggest the final step first, then offer a transfer if it fails",
-     "Transfer to a human now, passing along what has been tried",
-     "Ask the customer to rate their frustration before deciding",
-     "Continue troubleshooting since the customer is not upset"
+     "Cancel today with a refund, since that matches the literal request",
+     "Ask which of the two the customer wants, briefly explaining the difference",
+     "Stop the renewal, since it is the safer default",
+     "Escalate to a human, since cancellations are sensitive"
     ],
     "answer": 1,
-    "why": "An explicit request for a human is honoured immediately, regardless of sentiment or how close the agent thinks it is."
+    "why": "When a request maps to different actions with different consequences, a short clarifying question beats a guess. Escalation is not needed when one question resolves it."
    },
    {
     "q": "A pharmacy refill agent searches by patient name and gets three matching profiles with different birth dates. What is the right next step?",
@@ -5765,15 +5879,15 @@ window.LESSONS = [
   },
   "check": [
    {
-    "q": "A shipping company's customs-form extractor reports 96 percent field accuracy overall. Leadership wants to remove human review entirely. What should the team do first?",
+    "q": "A claims extractor auto-accepts fields above confidence 0.9, a threshold calibrated on a labelled set last quarter. The team has since switched to a newer model and rewritten the extraction prompt. What should happen before they keep the threshold?",
     "options": [
-     "Remove review for all forms, since 96 percent beats the human baseline",
-     "Remove review only for outputs the model marks as high confidence",
-     "Double the review team to reach 100 percent",
-     "Measure accuracy per form type and per field on a labelled sample before reducing review anywhere"
+     "Re-run the calibration on the labelled set with the new model and prompt, and set thresholds from the newly measured accuracy",
+     "Keep 0.9, since a newer model is more accurate",
+     "Lower the threshold to 0.8, since a better model needs less review",
+     "Ask the new model to report its confidence more conservatively"
     ],
-    "answer": 3,
-    "why": "An aggregate figure can hide weak form types or fields. Per-slice accuracy shows where review can safely be reduced."
+    "answer": 0,
+    "why": "What a confidence score means depends on the model and prompt that produced it. Changing either means the old calibration no longer holds."
    },
    {
     "q": "A clinic's referral-letter extractor sends only its 100 lowest-confidence outputs each week for human audit. Which weakness does this create?",
@@ -5810,9 +5924,7 @@ window.LESSONS = [
   "drill": {
    "ts": "5.5"
   },
-  "videos": [
-   "VhPfM_aGBVc"
-  ],
+  "videos": [],
   "courses": [
    {
     "title": "Demystifying evals for AI agents (Anthropic Engineering)",
@@ -5948,15 +6060,15 @@ window.LESSONS = [
     "why": "Conflicting credible figures should be shown with attribution. Averaging invents an unsourced number and silently picking one hides the disagreement."
    },
    {
-    "q": "A research pipeline's subagents each return a polished paragraph of findings. The final report reads well, but reviewers cannot trace any statistic to a source. What is the best fix?",
+    "q": "A market report cites one analyst firm putting a sector at $40 billion and another at $65 billion for the same year. On inspection, the first counts hardware only while the second includes services. How should the synthesis present this?",
     "options": [
-     "Add a bibliography of all URLs visited at the end of the report",
-     "Have subagents return structured records of claim, source, date and quote, kept through synthesis",
-     "Ask the synthesizer to add 'according to research' before each statistic",
-     "Have a final agent search the web to re-find sources for each number"
+     "Average the two into a single $52.5 billion estimate",
+     "Keep the larger figure, since it covers more",
+     "Show both figures with their sources and what each one counts, explaining that they measure different things",
+     "Drop both and say the market size is unknown"
     ],
-    "answer": 1,
-    "why": "Claim-to-source links survive only if they are kept structured from the start. A bibliography or hedging phrase does not tie each claim to its source."
+    "answer": 2,
+    "why": "Figures with different scopes are not a real contradiction. Keeping each with its source and definition stops readers treating them as competing claims."
    }
   ],
   "sources": [
@@ -6092,15 +6204,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "Transcripts show the support agent quoting a refund of $47 to a customer whose order was $147.23, twenty turns after the order lookup. What is the best fix?",
+    "q": "A signed-in customer writes 'where is my order?'. The account has exactly one open order, yet the support agent replies by asking for the order number, and customers find this frustrating. What should the agent do?",
     "options": [
-     "Ask the model to double-check numbers before replying",
-     "Keep a persistent case-facts block with order ids and amounts outside the summarised history",
-     "Raise max_tokens so the model can think longer",
-     "Switch the escalation threshold to trigger on long conversations"
+     "Keep asking for the order number, since identifiers should always come from the customer",
+     "Escalate to a human, since the request is vague",
+     "List the customer's last ten orders and ask them to pick one",
+     "Look up the account's orders and, since only one is open, report its status directly"
     ],
-    "answer": 1,
-    "why": "Progressive summaries blur exact values. A case-facts block keeps the numbers verbatim in every turn."
+    "answer": 3,
+    "why": "Ask for more information only when lookups cannot settle the question. With a single open order there is nothing to disambiguate."
    },
    {
     "q": "A customer writes: 'I don't want the bot, put me through to a person.' The issue is a simple address change the agent could finish. What should the agent do?",
@@ -6252,15 +6364,15 @@ window.LESSONS = [
     "why": "A path-scoped rule loads only when matching files are touched, and one glob can cover several directories."
    },
    {
-    "q": "A developer asks Claude Code to rename a misspelled variable in one function. Which approach fits best?",
+    "q": "While Claude Code iterates on a feature, every developer on the team approves npm test dozens of times per session. The team wants those runs to go through without prompts for everyone, without loosening anything else. What is the best change?",
     "options": [
-     "Enter plan mode and review a written plan first",
-     "Spawn an Explore subagent to map the codebase",
-     "Make the change directly",
-     "Write a custom skill for renames"
+     "Start every session with --dangerously-skip-permissions",
+     "Add 'never ask before running tests' to CLAUDE.md",
+     "Add an allow rule for the test command, such as Bash(npm test *), to the project's committed .claude/settings.json",
+     "Have each developer add the rule to their own user settings"
     ],
     "answer": 2,
-    "why": "Small, clear, well-scoped changes do not need a planning phase."
+    "why": "An allow rule in shared project settings pre-approves exactly that command for the whole team. CLAUDE.md text does not change permissions, and skipping all permissions loosens everything."
    }
   ],
   "sources": [
@@ -6700,15 +6812,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "The CI job must fail the build when Claude's review finds a critical issue, so it needs to read a severity field reliably. What should the job use?",
+    "q": "A CI pipeline implements a ticket with claude -p, then reviews the change by resuming that session with --fork-session, believing the fork acts as an independent reviewer. Reviews keep approving flawed changes. What is wrong?",
     "options": [
-     "claude -p with --output-format json and a --json-schema defining the findings",
-     "A regex over the plain-text review comment",
-     "The Message Batches API with a custom_id per file",
-     "An interactive Claude Code session started by the runner"
+     "Forked sessions cannot run in print mode",
+     "A fork copies the implementing session's history and assumptions, so it is not independent of the author",
+     "The review needs --output-format stream-json to see the whole diff",
+     "The fork should resume with a higher --max-turns"
     ],
-    "answer": 0,
-    "why": "Print mode with JSON output and a schema gives the pipeline structured, validated fields to act on."
+    "answer": 1,
+    "why": "Forking copies the conversation so far, including the reasoning that produced the change. An independent review needs a session that has not seen it."
    },
    {
     "q": "After a developer pushes fixes, the re-review repeats the same eight comments it posted last time. What is the best fix?",
@@ -6849,15 +6961,15 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "Extraction accuracy is 97% across 50,000 documents, so the team plans to stop human review entirely. What should they check first?",
+    "q": "A warranty extractor has a boolean field transferable. When a document says nothing about transfers, Claude returns false, and the resale team treats those products as non-transferable. What schema change fits best?",
     "options": [
-     "Whether a larger model gets 98%",
-     "Accuracy broken down by document type and by field",
-     "Whether the schema validates every output",
-     "The average confidence score across all documents"
+     "Allow null, or use an enum such as yes, no and not_stated, so a silent document is not recorded as a no",
+     "Make the field required so it is always filled",
+     "Default the field to true when the document is silent",
+     "Remove the field and let the resale team read each document"
     ],
-    "answer": 1,
-    "why": "Aggregate accuracy can hide a document type or field that fails often. Stratify before reducing review."
+    "answer": 0,
+    "why": "A plain boolean has no way to say the document is silent, so silence becomes false. A null or not_stated option keeps absence distinct from a real no."
    },
    {
     "q": "The model returns a contract_date of '13/45/2024', which fails validation. What is the best next step?",
@@ -7052,7 +7164,7 @@ window.LEARN_RES = {
   {
    "id": "D7_ipDqhtwk",
    "title": "How We Build Effective Agents",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 15,
    "why": "when to use agents vs workflows"
   },
@@ -7066,14 +7178,14 @@ window.LEARN_RES = {
   {
    "id": "TqC1qOfiVcQ",
    "title": "Claude Agent SDK [Full Workshop]",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 112,
    "why": "Agent SDK loop, subagents, hooks, sessions"
   },
   {
    "id": "CEvIs9y1uog",
    "title": "Don't Build Agents, Build Skills Instead",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 16,
    "why": "skills as packaged know-how"
   },
@@ -7094,35 +7206,35 @@ window.LEARN_RES = {
   {
    "id": "aqW68Is_Kj4",
    "title": "Evolving Claude APIs for Agents",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 13,
    "why": "context editing, memory, tool-result clearing"
   },
   {
    "id": "9QebvrrY3KY",
    "title": "Claude for long-horizon tasks",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 25,
    "why": "long-horizon tasks and state"
   },
   {
    "id": "mR-WAvEPRwE",
-   "title": "How to Build Agents That Run for Hours (Without Losing the Plot)",
-   "channel": "AI Engineer",
+   "title": "Anthropic Workshop: Build Agents That Run for Hours",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 76,
    "why": "long-running harnesses and compaction"
   },
   {
    "id": "FGftGOzfohc",
    "title": "Build a Research Agent with Claude Managed Agents (Part 2 of 4)",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 36,
-   "why": "build a research agent with subagents"
+   "why": "research agent with subagents, built on Managed Agents (a different product from the Agent SDK)"
   },
   {
    "id": "kQmXtrmQ5Zg",
    "title": "Building Agents with Model Context Protocol - Full Workshop",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 104,
    "why": "MCP tools, resources and prompts, hands-on"
   },
@@ -7143,14 +7255,14 @@ window.LEARN_RES = {
   {
    "id": "x-8pBqWiTzk",
    "title": "MCP: Origins and Requests For Startups",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 18,
    "why": "why MCP exists"
   },
   {
    "id": "0NHCyq8bBcM",
    "title": "Remote MCPs: What we learned from shipping",
-   "channel": "AI Engineer",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 15,
    "why": "remote MCP servers in production"
   },
@@ -7198,15 +7310,15 @@ window.LEARN_RES = {
   },
   {
    "id": "hkhDdcM5V94",
-   "title": "Building with Anthropic's Claude - The Prompt Doctor is In",
-   "channel": "AI Engineer",
+   "title": "Building with Anthropic Claude: Prompt Workshop with Zack Witten",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 95,
    "why": "live prompt critique: structure, examples, output format"
   },
   {
    "id": "VhPfM_aGBVc",
-   "title": "Anthropic for VPs of AI",
-   "channel": "AI Engineer",
+   "title": "Anthropic in the Enterprise",
+   "channel": "AI Engineer channel · talk by Anthropic engineers",
    "minutes": 21,
    "why": "evals first and human review in deployments"
   }
