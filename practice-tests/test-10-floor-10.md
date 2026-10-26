@@ -18,7 +18,7 @@ D) Run /compact with an instruction to keep the isolated root cause, the affecte
 
 **D)** Compacting at the phase boundary with focus instructions keeps exactly the conclusions the implementation needs and drops the noisy logs. Letting the automatic pass decide may keep the wrong details, and raising the threshold keeps more of the very noise that is crowding the window. Clearing and pasting a few messages back by hand risks losing the specifics the earlier messages held.
 
-*Hint if stuck: Phase boundaries are the moment to choose what a summary keeps.*
+*Hint if stuck: Ask who should decide what carries over when one phase of work ends and the next begins.*
 </details>
 
 ---
@@ -36,7 +36,7 @@ D) Delegate the question to a subagent that explores the services in its own con
 
 **D)** A subagent does the heavy reading in a separate context window and hands back only a summary, so the main session stays free for the actual work. A bigger window or truncated reads still pour raw file content into the main conversation, and a directory list in CLAUDE.md cannot answer how flags are actually evaluated.
 
-*Hint if stuck: Where the reading happens decides whose context pays for it.*
+*Hint if stuck: Ask whether the main session needs the files themselves or only the conclusion drawn from them.*
 </details>
 
 ---
@@ -54,7 +54,7 @@ D) Run /clear before starting the documentation task, because the old conversati
 
 **D)** For unrelated work the docs recommend /clear: the old conversation has no value for the new task and keeps steering it. Compacting still carries a payments summary forward, and a CLAUDE.md rule patches one symptom while the irrelevant history keeps costing tokens on every message. Correcting it turn by turn leaves the root cause in place.
 
-*Hint if stuck: Ask whether anything in the old conversation is useful for the new task.*
+*Hint if stuck: Ask what the documentation work would lose if the payments discussion vanished.*
 </details>
 
 ---
@@ -126,7 +126,7 @@ D) Ask Claude to acknowledge the rule in writing at the start, since acknowledge
 
 **C)** Chat instructions are summarized with the rest of the history, so they can be lost in compaction; the project-root CLAUDE.md is reloaded from disk afterward. Repeating it after each compaction depends on someone noticing, and delaying compaction only postpones the loss. Summaries do not weight acknowledged instructions any more heavily.
 
-*Hint if stuck: Some content is rebuilt from disk after compaction, and some only gets summarized.*
+*Hint if stuck: Ask where a rule should live if it has to outlast the chat message that first stated it.*
 </details>
 
 ---
@@ -240,19 +240,19 @@ D) Turn off compaction for the coordinator so that its conversation history alwa
 ---
 
 ## Question 14
-A Claude Code session navigating a 4,000-file monorepo degrades after an hour: every Grep over the vendored directory returns hundreds of matches, and the team currently runs /compact every 20 minutes, after which Claude re-asks questions it had already answered. The team debates compacting even more aggressively. What is the better approach?
+A team's .claude/rules/money.md has paths: src/payments/** and says amounts must use the Money type, never floats. Early in a long session Claude edits payment files and follows it. After an automatic compaction, Claude works in src/billing/ helpers that call into payments and writes float arithmetic. The team wants this rule in effect for the whole session, whatever files Claude has opened lately. What should they change?
 
-A) Run /compact every 10 minutes instead of 20, before the noisy search results have time to accumulate
-B) Start a fresh session every hour and paste in a manually written summary of the progress so far
-C) Stop the bloat at its source: exclude vendored paths from searches and delegate verbose exploration to subagents
-D) Add a CLAUDE.md note instructing Claude to disregard matches from vendored directories when reasoning
+A) Move the rule into a CLAUDE.md inside src/payments/ so it sits next to the code it governs and loads with it
+B) Add the rule to the focus instructions of one manual /compact, so that summary carries the rule forward
+C) Keep the paths: frontmatter but mark the rule IMPORTANT so it is weighted more heavily whenever it loads
+D) Remove the paths: frontmatter or move the rule into the root CLAUDE.md, which is re-injected after compaction
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Compaction is lossy — re-asking already-answered questions is the evidence — so compacting more often just loses information sooner. The root cause is verbose, low-value output entering context in the first place; scoping searches and pushing exploration into subagents with isolated context means there is little left to compact. The CLAUDE.md note leaves all the tokens in context and merely asks the model to ignore them.
+**D)** Path-scoped rules and nested CLAUDE.md files load into message history when Claude touches a matching file, so compaction summarizes them away and they come back only when such a file is touched again. Unscoped rules and the project-root CLAUDE.md are re-injected from disk after every compaction, which is what a session-wide rule needs. A nested CLAUDE.md in src/payments/ has the same on-demand behaviour. One focused /compact helps that summary only, not later compactions. Emphasis changes weight once loaded, not whether the rule is loaded.
 
-*Hint if stuck: Compare removing tokens before they accumulate with summarizing them after the damage is done.*
+*Hint if stuck: Ask which instruction sources are rebuilt from disk when the conversation is summarized, and which return only when a trigger fires.*
 </details>
 
 ---
@@ -270,25 +270,25 @@ D) The developer's recent prompts have grown too short, leaving the model withou
 
 **B)** Multi-hour sessions accumulate verbose tool output that buries the specifics the model once cited precisely; the telltale symptom is a shift from exact citations to vague generalities and invented details. The remedy is context hygiene (scratchpads, /compact, subagent delegation). Claude Code does not silently swap models mid-session, and prompt-cache eviction affects cost and latency, not what is present in context.
 
-*Hint if stuck: Ask what changes about a session's answer quality as hours of verbose tool output pile up in one context.*
+*Hint if stuck: Think about what keeps accumulating when one conversation runs all day.*
 </details>
 
 ---
 
 ## Question 16
-A media company is running an 8-hour Claude Code session migrating 200 analytics reports to a new SQL dialect. The context keeps filling with thousands of lines of grep output and test logs, and by hour four the agent's answers turn slow and generic. Which working pattern addresses the root cause?
+An engineer spent the first 20 messages of a Claude Code session giving a precise spec for migrating analytics reports. Then came a 90-minute detour fixing a broken local database, with thousands of log lines. The detour is over; she wants the spec kept word for word, a brief record of what the database fix was, and the detour's bulk out of context. What should she do?
 
-A) Raise max_tokens on every request so the model has more room to reason over the long accumulated history of the session
-B) Switch the session over to Claude Opus, since its deeper reasoning capacity handles long accumulated contexts without degrading
-C) Restart the session every hour and paste the previous transcript into the new session as a primer to maintain continuity
-D) Persist findings to scratchpad files, run /compact at phase boundaries, and delegate verbose exploration to subagents
+A) Run /rewind, pick the message where the detour began, and choose Summarize from here
+B) Run /compact, which condenses the whole conversation, spec included, into one structured summary
+C) Run /clear and paste the spec back in, since a restart is the only way to drop the detour's output
+D) Run /rewind to where the detour began and choose Restore conversation, dropping everything after it
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** The root cause is verbose intermediate output bloating the main context: scratchpad files externalize durable facts, /compact condenses at milestones, and subagents keep noisy exploration in isolated contexts so raw logs never enter the main session. max_tokens governs output length rather than input degradation, switching models does not stop context bloat from degrading recall, and pasting an old transcript into a fresh session simply reimports the bloat.
+**A)** Summarize from here compresses the conversation from the selected message forward and leaves earlier messages intact, so the spec stays verbatim while the detour shrinks to a summary that still records the fix. /compact summarizes everything, including the spec she wants kept exactly. /clear throws away the spec and the record of the fix, and relies on her pasting things back. Restore conversation removes the detour entirely, losing what was learned about the database.
 
-*Hint if stuck: The cure is keeping verbose intermediate output out of the main context, not making the context or the model bigger.*
+*Hint if stuck: She wants different treatment for messages before and after one point; look for the tool that works on part of the history.*
 </details>
 
 ---
@@ -306,25 +306,25 @@ D) Wrap every subagent call in retry-with-backoff so transient failures never su
 
 **B)** A manifest recording completed task ids plus their structured findings is the minimal durable state needed to resume: restart logic deterministically skips finished work and re-dispatches only the rest. Replaying full message history restores bloated context and a fragile transcript rather than clean state, prompt caching is a cost optimization that holds no completion state, and retries handle transient tool errors but cannot make process crashes impossible.
 
-*Hint if stuck: Ask what minimal durable state lets a freshly started coordinator know exactly which work is already done.*
+*Hint if stuck: Ask what small record would let a fresh run skip the work that already finished.*
 </details>
 
 ---
 
 ## Question 18
-An e-commerce catalog-enrichment agent processes 3,000 product listings in one long-running session. After a crash at item 1,900, the restarted agent began again at item 1 and double-wrote records into the catalog database. What fixes the recovery problem?
+During a multi-hour Claude Code migration of 140 modules, a script keeps migration-progress.json up to date. After each automatic compaction, Claude loses track of which modules are already done and re-migrates some of them. The team wants the current progress back in Claude's context right after every compaction, with no manual steps. What should they set up?
 
-A) Maintain a structured manifest of item ids, per-item status, and partial results as items complete, so restarts resume from the manifest
-B) Persist the full conversation transcript to disk continuously and on restart replay it through the model so the agent recalls where it stopped
-C) Add a system-prompt instruction telling the agent to keep careful track of which catalog items it has already finished processing
-D) Split the run into 30 separate sessions of 100 items each so that any single crash costs at most 100 items of repeated work
+A) A copy of the progress list in the project CLAUDE.md, which engineers update by hand after each module
+B) A later auto-compact threshold set with /autocompact, so compaction happens later and less often
+C) A SessionStart hook with the compact matcher that prints a summary of migration-progress.json
+D) A path-scoped rule matching the migrated modules that holds the progress list and loads with those files
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Durable progress state belongs in a structured manifest outside the model's context: restart logic reads it deterministically and resumes only pending items, eliminating both rework and double writes. Replaying a transcript is slow and reconstructs bloated context rather than state, a prompt instruction dies with the crashed session, and chunking merely shrinks the blast radius while a crash mid-chunk still double-writes.
+**C)** Claude Code runs SessionStart hooks that match the compact source after compaction and adds their output to the compacted context, and the command can print dynamic state such as a summary of the progress file. CLAUDE.md is re-injected after compaction but suits stable instructions; hand-maintained progress goes stale and needs manual steps. Delaying compaction changes when details are lost, not whether. Path-scoped rules load into message history only when a matching file is touched, so compaction summarizes them away.
 
-*Hint if stuck: Recovery state should live in a deterministic artifact outside the model's context, not in its memory.*
+*Hint if stuck: Look for the mechanism that runs automatically at the moment the context has just been rebuilt.*
 </details>
 
 ---
@@ -360,7 +360,7 @@ D) Calibrate the threshold on labelled data, choosing the score cut-off where ob
 
 **D)** Raw scores are only useful once they are mapped to observed accuracy on labelled data; the right threshold is wherever accuracy really meets the target, per field. Prompting for conservative scores leaves them uncalibrated, and a second uncalibrated scorer gives no ground truth either. Dropping scores throws away a signal that calibration could make usable.
 
-*Hint if stuck: A score means what labelled data says it means.*
+*Hint if stuck: Ask what would have to be true of a score before it can safely gate auto-approval.*
 </details>
 
 ---
@@ -414,7 +414,7 @@ D) Review the claims the synthesis agent rates as least confident, since its sel
 
 **C)** Routing the riskiest claims to people first uses scarce time well, and a random sample of well-supported claims shows whether that confidence is earned. Assuming well-supported claims are correct leaves their error rate unmeasured. Reviewing in report order ignores risk, and the agent's own confidence is not calibrated.
 
-*Hint if stuck: Prioritize risk, but still measure the part you assume is safe.*
+*Hint if stuck: Ask whether skipping a group entirely leaves you any way to know if skipping it was safe.*
 </details>
 
 ---
@@ -432,7 +432,7 @@ D) Six samples cannot support a reliable estimate for the rare type, so stratify
 
 **D)** Uniform sampling gives rare types too few items to estimate anything, so stratified sampling with oversampling of rare strata is needed for a real per-type estimate. Growing the whole sample tenfold is a costly way to get there, and excluding a type because it is rare is how weak segments go unnoticed. Self-reported confidence does not substitute for measurement.
 
-*Hint if stuck: A segment's estimate is only as good as the samples drawn from that segment.*
+*Hint if stuck: Count how many of the rare documents the monthly QA actually examines, then ask what that count can support.*
 </details>
 
 ---
@@ -504,7 +504,7 @@ D) Reduce review for damaged-goods full refunds, keep full review for partial re
 
 **D)** Review should be reduced only in segments that have earned it, and kept where a segment is clearly weaker, with ongoing sampling to catch drift. Stopping all review lets the overall number hide the 78% segment, and a prompt change is unverified until measured. Waiting for 99% everywhere wastes effort on a segment that has already met the bar.
 
-*Hint if stuck: Decide review level per segment, not for the whole.*
+*Hint if stuck: Look at what the 96 percent is made of before deciding anything.*
 </details>
 
 ---
@@ -558,7 +558,7 @@ D) Ask Claude Code to review its own generated tests in the same session and fla
 
 **C)** A stratified sample estimates quality per module and complexity band, so full review can be targeted where defects actually cluster. Passing tests can lock in existing bugs, and the first files alphabetically are not representative. Self-review in the same session tends to repeat the reasoning that produced the tests.
 
-*Hint if stuck: Sample so every kind of file has a chance to be seen.*
+*Hint if stuck: Ask whether the files you check tell you anything about the ones you do not.*
 </details>
 
 ---
@@ -600,19 +600,19 @@ D) Wait for the next quarterly audit and fix whichever error types it finds, sin
 ---
 
 ## Question 34
-A freight-audit pipeline reports a 94 percent first-pass validation rate across all carriers, and the retry-with-feedback loop raises it to 98 percent. A new carrier's invoices make up 6 percent of volume, and complaints from that carrier's account team keep rising. What should the architect check first?
+Claims reviewers can check 400 of the 3,000 extractions the pipeline produces each day, and today they take them in arrival order. Each extraction carries calibrated field confidence and the results of consistency checks, such as line items that do not sum to the total or a loss date before the policy start. How should the review queue be built?
 
-A) Whether the retry limit should be raised to push the overall rate from 98 percent closer to 100 percent
-B) Whether the overall validation threshold should be lowered so fewer invoices are sent to the retry loop
-C) Whether more examples from the largest carriers would raise the aggregate first-pass validation rate further
-D) Pass and retry rates broken out by carrier and document layout, to see whether the new carrier is failing
+A) Keep arrival order so every document has the same chance of review, and add reviewers when budget allows
+B) Send reviewers only the highest-value claims, since dollar amount is the clearest sign of where errors matter
+C) Spread the 400 reviews evenly across document types so each type gets the same number of checks per day
+D) Put items with failed consistency checks or low calibrated confidence first, ordered by the payout at stake
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** An aggregate rate can look healthy while a small segment fails badly; breaking metrics out by carrier and layout shows whether the new carrier's invoices are the problem. Raising the retry limit or lowering thresholds tunes the aggregate without locating the failure, and more examples from large carriers improves the segment that is already fine.
+**D)** Scarce review time should go where errors are most likely and most costly: internal contradictions and low calibrated confidence are the strongest error signals, and the amount at stake breaks ties, the same idea as routing by risk level. Arrival order spends most reviews on items that are probably fine. Value alone sends clean high-value claims to humans while contradictory low-value ones pass. Even spreading across types is a measurement design; a small stratified random sample should run alongside to estimate error rates, but it is not how to triage which risky items get checked.
 
-*Hint if stuck: Averages can hide a small group that is doing badly.*
+*Hint if stuck: Ask which signals say an item is likely wrong, and which say it matters if it is.*
 </details>
 
 ---
@@ -630,7 +630,7 @@ D) The finance team is anchoring on rare anecdotes; at 97% field accuracy some v
 
 **C)** A 4% segment can fail almost completely while the blended average stays above target — near-perfect printed invoices plus badly failing handwritten receipts still averages around 97%. The governing rule is per-segment validation by document type and field; raising the aggregate target is a patch that still cannot localize which segment is broken, and the escalations are a systematic segment failure, not anecdotal noise.
 
-*Hint if stuck: A small segment can fail almost completely without moving a blended average below its target.*
+*Hint if stuck: Work out what 97 percent overall could look like if one small slice of documents were mostly wrong.*
 </details>
 
 ---
@@ -640,7 +640,7 @@ A healthcare patient-intake system extracts 14 fields from 6,000 faxed forms dai
 
 A) Route forms to human review whenever the model's overall document-level confidence score falls below a fixed 0.8 threshold
 B) Route a fixed 20% random sample to review, weighted toward forms received outside business hours when fax quality is at its worst
-C) Route on deterministic field-level signals — null dosage or allergy values, schema failures, or out-of-range dosage units trigger human review
+C) Route on deterministic field-level signals: null dosage or allergy values, schema failures, or out-of-range dosage units trigger review
 D) Re-extract every form a second time with the same model and prompt, and route to human review only the forms where the two passes disagree on any field
 
 <details>
@@ -654,19 +654,19 @@ D) Re-extract every form a second time with the same model and prompt, and route
 ---
 
 ## Question 37
-An insurance claims extraction system has run in production for six months, and the team wants to detect quality drift as claim formats evolve. One engineer proposes dashboarding the model's self-reported confidence over time and alerting when the average drops. What is the better approach?
+To cut human review of insurance-claim extractions, a team adds a second Claude call that grades each extraction 'correct' or 'incorrect' and sends only 'incorrect' ones to people. In a demo the grader looks sensible. What should happen before the team relies on it to decide which extractions humans see?
 
-A) Human-review a stratified random sample of production outputs across claim types on a regular cadence and track per-segment accuracy
-B) Build the confidence dashboard as proposed but alert on the median score rather than the mean to reduce the noise from outlier extractions
-C) Re-run last quarter's evaluation set against the model monthly; if accuracy on it holds steady, the production system has not drifted
-D) Add a second model that grades every extraction and alert whenever the two models disagree with each other more often than usual
+A) Run the grader with the same prompt as the extractor so its judgments match how the fields were first extracted
+B) Check its verdicts against expert human labels, refine the rubric until they agree, then keep spot-checking
+C) Have the grader output a 1–10 score instead of a verdict, and send people only the items scoring under five
+D) Trust the grader once it marks over 95% of extractions correct, since that matches the extraction dashboard
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Self-reported confidence is poorly calibrated — the model can be confidently wrong, and drift often appears precisely where confidence stays high — so ground-truthing a stratified random sample of current traffic is the reliable signal. Re-running a frozen evaluation set fails because production drift comes from the inputs changing: new claim formats never enter a static test set. A second model's disagreement rate is not ground truth either, and shared blind spots pass silently.
+**B)** An LLM grader is only as good as its agreement with expert humans, so it should be calibrated against human labels, with its rubric refined until they agree, and spot-checked over time; giving it a way to answer 'unknown' also reduces confident guesses. Reusing the extractor's prompt copies the extractor's blind spots instead of catching them. Changing the output scale does nothing to validate the judgments. Matching the dashboard's pass rate is circular: a grader that approves everything would match too.
 
-*Hint if stuck: Drift detection needs ground truth on current real traffic, not the model's opinion of its own work.*
+*Hint if stuck: A new reviewer, human or model, earns trust by being measured against something; ask what that should be.*
 </details>
 
 ---
@@ -684,25 +684,25 @@ D) Add the new template to the regression evaluation set and gate future deploym
 
 **A)** Sampling conditioned on the model's own confidence systematically excludes the most dangerous failure mode — high-confidence errors — which is exactly where the new template's failures lived; stratified random sampling reviews every segment regardless of the model's self-assessment. Enlarging a pool that is still confidence-filtered keeps the blind spot, and recalibrating confidence or adding one template to a regression set patches this instance while leaving the next confidently-wrong segment undetectable.
 
-*Hint if stuck: A QA pool filtered by the model's self-assessment can never contain the errors the model does not know it is making.*
+*Hint if stuck: Ask which kinds of mistakes the present QA pool is structurally unable to contain.*
 </details>
 
 ---
 
 ## Question 39
-A document extraction pipeline processes lab reports, referral letters, and insurance cards for a healthcare intake system. The dashboard shows 95% aggregate field accuracy, and the team plans to track the model's self-reported confidence trend as the ongoing quality signal. A clinician then discovers that insurance cards — 9% of volume — extract member IDs correctly only 58% of the time. What should the team do?
+An invoice-extraction pipeline outputs a confidence score for every field, and the team wants to auto-accept fields scoring 0.90 or higher without human review. Before setting that threshold, the architect wants evidence that the scores mean what they say. What check gives that evidence?
 
-A) Keep the aggregate metric but lower the alert threshold to 90%, so any future slide in insurance card accuracy trips the alarm earlier
-B) Add a second extraction pass for any document whose self-reported confidence falls below 0.7, routing those documents to a stronger model
-C) Report accuracy per document type and field, and run ongoing quality checks via stratified random sampling rather than confidence trends
-D) Pull insurance cards out of the automated pipeline for manual entry until the aggregate accuracy number stabilizes above 97%
+A) Check that the average confidence across all fields is close to the dashboard's overall accuracy figure
+B) On a labelled set, bucket each field's scores and compare each bucket's observed accuracy with its score
+C) Ask the model to explain each high-confidence field and accept the threshold if the reasons read as sound
+D) Track the share of fields scoring 0.90 or higher each week and treat a stable share as proof of calibration
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Aggregate accuracy masks per-segment failures — a 9% slice can collapse while the blended number still looks healthy — so measurement must happen per document type and field. Self-reported confidence is poorly calibrated, which makes both confidence-trend monitoring and confidence-threshold routing unreliable foundations; stratified random sampling gives unbiased ongoing coverage of every segment. Lowering an aggregate threshold still blends the failing segment into the same misleading number.
+**B)** Calibration means stated confidence matches observed accuracy, so it has to be measured against labelled ground truth, per field and per confidence band: fields scored 0.9 and above should actually be right at least that often before auto-accepting them. Matching averages can hide bands or fields that are badly over-confident. Plausible-sounding explanations do not measure correctness. A stable share of high scores says nothing about whether those fields are right.
 
-*Hint if stuck: Think about what a blended success metric hides, and which quality signals are actually calibrated.*
+*Hint if stuck: Calibration is a claim about how often something is right; ask what you need in order to count that.*
 </details>
 
 ---
@@ -738,7 +738,7 @@ D) Prefer press releases over news articles whenever both are found, since the o
 
 **B)** Corroboration only counts when sources are independent, so findings need to carry where the information originally came from. Raising the source count still counts echoes, a blanket preference for press releases trusts the party making the claim, and general skepticism of news does not identify which articles are derivative.
 
-*Hint if stuck: Count independent origins, not copies.*
+*Hint if stuck: Ask whether three reports that all repeat one announcement are really three witnesses.*
 </details>
 
 ---
@@ -882,7 +882,7 @@ D) Ask Claude to re-read all the inputs and confirm that the draft is accurate b
 
 **B)** Claim-level references let the lead check each statement directly against the evidence. A sources list at the end does not say which source supports which claim, self-confirmation by the same session does not produce anything a reader can verify, and question marks flag doubt without pointing to evidence.
 
-*Hint if stuck: Verifiable means each claim says where it came from.*
+*Hint if stuck: Ask how the lead could check one sentence without rereading every input.*
 </details>
 
 ---
@@ -972,43 +972,43 @@ D) Capture publication dates as temporal metadata on every claim, so figures fro
 
 **D)** Figures measured at different times are not contradictions — they are data points about a changing quantity, and carrying temporal metadata through synthesis prevents false-conflict detection while preserving trend information. Averaging fabricates a number no source ever reported, authority ranking discards a valid historical data point, and restricting collection to recent sources throws away exactly the history trend analysis needs.
 
-*Hint if stuck: Two correct measurements of a changing quantity can differ for a reason that a piece of metadata captures.*
+*Hint if stuck: Before calling two figures a conflict, ask whether they describe the same moment.*
 </details>
 
 ---
 
 ## Question 55
-You are designing a multi-agent competitive-intelligence system: Haiku scouts gather facts and a Sonnet synthesizer writes the final report. Compliance requires that every claim in the report be traceable to a specific source document. Which design satisfies this requirement?
+A research system passes 40 earnings-call transcripts to Claude as plain-text documents with citations enabled. Analysts complain that citations often cover a single sentence that splits an executive's multi-sentence answer, so the quoted text misses the context they need. They want each citation to point to one complete speaker turn. What should change?
 
-A) Instruct the synthesizer in its system prompt that every claim included in the final report must cite the specific source document from which it came
-B) Log every URL each scout fetches during research and attach the complete list of fetched sources to the report as a reference appendix
-C) Have scouts bind each claim to its source and date in structured findings, and require synthesis to carry those claim-source mappings into its output
-D) Run a post-hoc verification agent that searches the web for a supporting source document for each claim that appears in the finished report
+A) Send each transcript as a custom content document whose content blocks are individual speaker turns
+B) Convert each transcript to PDF so the citations come back as page numbers that analysts can look up
+C) Turn off citations and use structured outputs with a source_quote field that the model fills in per claim
+D) Keep plain text but tell the model in the prompt to cite only whole speaker turns, never single sentences
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Provenance survives only when claim-source mappings are first-class structured data at every stage — scouts emit them and the synthesis stage is required to preserve them through to the final output. A prompt instruction is probabilistic best-effort, a URL appendix cannot tie a specific claim to a specific source, and post-hoc re-sourcing finds a plausible source rather than the one actually used.
+**A)** Plain-text and PDF documents are chunked into sentences, and those chunks are what citations can point to. Custom content documents get no extra chunking: each content block you provide is a citable unit, returned as block indices, so making each block one speaker turn sets the granularity directly. PDFs are still sentence-chunked and only add page numbers. Citations cannot be combined with structured outputs, and a quote the model writes itself is not a verified pointer into the source. A prompt instruction cannot change how the API chunks the document.
 
-*Hint if stuck: Traceability has to be carried through every stage as data, not reconstructed after the fact.*
+*Hint if stuck: Ask what decides the smallest piece of a document a citation can point to.*
 </details>
 
 ---
 
 ## Question 56
-A market-research synthesizer holds three findings on subscriber churn for the same vendor: Source A (2024 annual report) says 12%, Source B (March 2026 analyst note) says 8%, and Source C (April 2026 industry survey) says 15%. The current pipeline averages them and reports "11.7% churn". How should synthesis present this instead?
+A synthesis step deduplicates findings that state the same fact. When two scouts reported 'the plant closed in May 2026', one citing a regulator filing and one a trade-press article, the merged claim kept only the trade-press source. That article was later corrected, and reviewers now cannot tell whether the claim still stands. How should merging work?
 
-A) Flag all three findings as a three-way contradiction and exclude churn from the report entirely until a fourth source can break the tie
-B) Report 8% as the definitive figure because Source B is the most recent analyst-grade source, moving the other two figures into footnotes
-C) Treat A as an earlier dated measurement, and present B and C as a genuine current conflict, both with attribution, dates, and method notes
-D) Drop A as stale, then average B and C to report approximately 11.5% current churn alongside a caveat about the recency of the underlying data
+A) Keep only the most authoritative source on the merged claim and drop the rest to keep records simple
+B) Skip deduplication and publish both claims separately, so readers see that two sources said the same thing
+C) Merge the matching claims into one record that keeps every supporting source with its id and date
+D) Keep the first source that arrived, but add a note to the claim saying it was also reported elsewhere
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Temporal metadata separates the two cases: a 2024 figure differing from 2026 figures is history, not conflict, while two contemporaneous 2026 sources disagreeing is a genuine conflict that must be preserved with attribution so readers see the disagreement. Averaging B and C still fabricates a number no source reported, and crowning the most recent source silently adjudicates a real methodological dispute.
+**C)** Claim-source mappings have to survive every synthesis step, including deduplication: a merged claim should carry all its supporting sources with dates, so it can be re-checked when one source changes and corroboration can be judged. Keeping only the 'best' source is a judgment call that still throws away the trail. Publishing duplicates clutters the report and still does not link the two sources to one claim. A note saying 'reported elsewhere' gives reviewers nothing they can check.
 
-*Hint if stuck: Sort the disagreements by time first — only same-period disagreements are true conflicts, and those must stay visible.*
+*Hint if stuck: Ask what a reviewer needs to re-check a claim after one of its sources changes.*
 </details>
 
 ---
@@ -1026,7 +1026,7 @@ D) Add a final Haiku pass over the narrative that deletes any sentence lacking a
 
 **B)** Provenance dies at the one stage that converts structured data into free prose, so the fix is making synthesis itself produce structured claim records whose source ids can be programmatically validated against the scouts' findings before rendering. A stricter prompt is still probabilistic — the model can bracket fabricated ids — temperature does not prevent fabrication, and a deletion pass removes uncited sentences without catching plausible-but-wrong citations.
 
-*Hint if stuck: Find the stage where structured data turns into free prose — that is where provenance is lost.*
+*Hint if stuck: Ask at which step the link between a sentence and the evidence behind it can first go missing, and whether anything checks it there.*
 </details>
 
 ---
@@ -1044,7 +1044,7 @@ D) Report the figure from the study with the larger sample size as primary and r
 
 **B)** When credible contemporaneous sources genuinely conflict, synthesis must preserve both claims with attribution — averaging manufactures a figure no study reported, and an unattributed range destroys traceability while hiding that experts disagree. Majority voting and sample-size heuristics make the system silently adjudicate a scientific dispute it is not equipped to judge.
 
-*Hint if stuck: When sources genuinely disagree, the disagreement is information the reader needs, not noise to smooth away.*
+*Hint if stuck: Ask whether turning two credible results into one number tells the reader more or less than the studies did.*
 </details>
 
 ---
