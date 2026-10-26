@@ -1,0 +1,138 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.903
+Task statement 4.3.
+
+2
+00:00:01.903 --> 00:00:06.187
+Enforce structured output using tool use and JSON schemas.
+
+3
+00:00:06.187 --> 00:00:15.199
+A downstream system crashes on one malformed JSON reply a day; tool use with a schema removes that whole class of failure.
+
+4
+00:00:16.599 --> 00:00:22.732
+If you ask for JSON in plain words, you will occasionally get a missing bracket or an extra sentence.
+
+5
+00:00:22.732 --> 00:00:29.352
+A more reliable route is to define a tool whose input schema is the shape you want, then have Claude call it.
+
+6
+00:00:29.352 --> 00:00:31.963
+That is like a paper form with fixed boxes.
+
+7
+00:00:31.963 --> 00:00:36.396
+It fixes the shape, but someone can still write the wrong thing in a box.
+
+8
+00:00:37.796 --> 00:00:42.894
+The tool needs a name, a description, and an input schema written in JSON Schema.
+
+9
+00:00:42.894 --> 00:00:48.432
+Required fields must appear, types are checked, and enums limit a field to known values.
+
+10
+00:00:48.432 --> 00:00:54.789
+When Claude responds, you read the input of its tool use block, which already matches your structure.
+
+11
+00:00:54.789 --> 00:00:56.740
+No fragile text parsing needed.
+
+12
+00:00:58.140 --> 00:01:01.194
+Tool choice controls whether a call is guaranteed.
+
+13
+00:01:01.194 --> 00:01:03.881
+With auto, Claude might just answer in text.
+
+14
+00:01:03.881 --> 00:01:06.996
+With any, it must call one of your tools, its pick.
+
+15
+00:01:06.996 --> 00:01:09.989
+With a forced tool, it must call that exact tool.
+
+16
+00:01:09.989 --> 00:01:16.280
+For an extraction step that must always produce structured output, any or forced is the guide's answer.
+
+17
+00:01:16.280 --> 00:01:20.433
+Current docs suggest auto with strict tool use on the newest models.
+
+18
+00:01:21.833 --> 00:01:23.622
+Schema design shapes honesty.
+
+19
+00:01:23.622 --> 00:01:32.074
+If a field is required and cannot be null, Claude is pushed to fill it even when the document says nothing, so make such fields nullable.
+
+20
+00:01:32.074 --> 00:01:36.331
+Give enums an unclear option and an other option with a detail field.
+
+21
+00:01:36.331 --> 00:01:42.932
+And state normalisation rules next to the schema, such as dates in one format and amounts as plain numbers.
+
+22
+00:01:44.332 --> 00:01:47.893
+In the extraction scenario, a pipeline reads contracts.
+
+23
+00:01:47.893 --> 00:01:52.942
+Many have no renewal date, so the field is nullable and null means not stated.
+
+24
+00:01:52.942 --> 00:01:57.668
+Clause types use an enum with unclear and other, plus a free text detail.
+
+25
+00:01:57.668 --> 00:02:04.855
+The extraction tool is forced, so every document produces a structured record that downstream systems can load.
+
+26
+00:02:06.255 --> 00:02:07.546
+Three traps dominate.
+
+27
+00:02:07.546 --> 00:02:10.314
+Believing that valid JSON means correct data.
+
+28
+00:02:10.314 --> 00:02:14.188
+Making every field mandatory, which encourages invented values.
+
+29
+00:02:14.188 --> 00:02:17.693
+And picking auto when the step must always call the tool.
+
+30
+00:02:17.693 --> 00:02:26.180
+Remember the split: the schema guarantees shape, your validation checks meaning, and tool choice controls whether the call happens at all.
+
+31
+00:02:27.580 --> 00:02:32.723
+Use a tool with a JSON schema whenever downstream code needs reliable structure.
+
+32
+00:02:32.723 --> 00:02:36.387
+Choose tool choice to match how certain the call must be.
+
+33
+00:02:36.387 --> 00:02:41.144
+Design the schema so Claude can be honest about missing or ambiguous data.
+
+34
+00:02:41.144 --> 00:02:46.801
+Then check the values separately, because a perfect shape can still hold a wrong number.
+

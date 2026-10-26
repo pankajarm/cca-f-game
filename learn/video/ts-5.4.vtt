@@ -1,0 +1,110 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.850
+Task statement 5.4.
+
+2
+00:00:01.850 --> 00:00:05.902
+Manage context effectively in large codebase exploration.
+
+3
+00:00:05.902 --> 00:00:15.711
+Two hours into mapping a legacy monolith, a long session starts describing 'typical' patterns instead of what this codebase actually does.
+
+4
+00:00:17.111 --> 00:00:20.786
+Exploring a large codebase fills the context window quickly.
+
+5
+00:00:20.786 --> 00:00:27.094
+As it fills, the model's answers slide from what this code actually does toward what code usually does.
+
+6
+00:00:27.094 --> 00:00:31.014
+Early, specific findings get crowded out by later file contents.
+
+7
+00:00:31.014 --> 00:00:36.097
+It is like a notebook so full that you stop checking your notes and start guessing.
+
+8
+00:00:37.497 --> 00:00:39.865
+Move findings out of the conversation.
+
+9
+00:00:39.865 --> 00:00:42.856
+Keep a scratchpad file of what you have learned.
+
+10
+00:00:42.856 --> 00:00:49.211
+Hand focused questions to subagents, which explore in their own context and send back a short summary.
+
+11
+00:00:49.211 --> 00:00:53.261
+And maintain a manifest of what is done, in progress and pending.
+
+12
+00:00:53.261 --> 00:00:58.681
+If the session crashes or compacts, the manifest lets you resume without starting over.
+
+13
+00:01:00.081 --> 00:01:01.828
+Treat exploration in phases.
+
+14
+00:01:01.828 --> 00:01:06.694
+Map the structure, investigate one area, write the summary down, then move on.
+
+15
+00:01:06.694 --> 00:01:13.743
+When discovery output has filled the context, run compact, and give it a focus so the summary keeps what matters.
+
+16
+00:01:13.743 --> 00:01:23.911
+Current docs note that a plan file is re-injected after compaction, while conversation detail is summarised, which is another reason to keep key findings in files.
+
+17
+00:01:25.311 --> 00:01:28.590
+Here is how that looks on a large legacy codebase.
+
+18
+00:01:28.590 --> 00:01:31.804
+First, map the top-level modules into a manifest.
+
+19
+00:01:31.804 --> 00:01:37.379
+Then send one subagent per specific question, such as who writes to the ledger table.
+
+20
+00:01:37.379 --> 00:01:39.872
+Each summary goes into the scratchpad.
+
+21
+00:01:39.872 --> 00:01:43.741
+Between phases, compact with a focus on the open questions.
+
+22
+00:01:43.741 --> 00:01:46.431
+The main session stays light and precise.
+
+23
+00:01:47.831 --> 00:01:53.580
+The exam's wrong answers usually keep everything in one long session or delegate vaguely.
+
+24
+00:01:53.580 --> 00:02:06.305
+The right answers persist findings to files, ask subagents precise questions, keep a manifest for recovery, and compact deliberately with a focus, instead of hoping the automatic pass guesses well.
+
+25
+00:02:07.705 --> 00:02:08.301
+To recap.
+
+26
+00:02:08.301 --> 00:02:14.056
+Large explorations degrade as context fills, so keep findings outside the conversation.
+
+27
+00:02:14.056 --> 00:02:25.433
+Use subagents for specific questions, keep a manifest for recovery, summarise between phases, and use compact deliberately when discovery output starts to crowd the window.
+

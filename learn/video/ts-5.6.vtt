@@ -1,0 +1,106 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.810
+Task statement 5.6.
+
+2
+00:00:01.810 --> 00:00:07.393
+Preserve information provenance and handle uncertainty in multi-source synthesis.
+
+3
+00:00:07.393 --> 00:00:16.905
+When two credible sources give different market sizes, a research report that quietly averages them is wrong in a way no reader can check.
+
+4
+00:00:18.305 --> 00:00:24.177
+When several sources are merged into one answer, the first thing lost is usually who said what.
+
+5
+00:00:24.177 --> 00:00:30.111
+Once a claim loses its source, nobody can check it, weigh it, or spot when two sources disagree.
+
+6
+00:00:30.111 --> 00:00:32.398
+Think of footnotes in a good article.
+
+7
+00:00:32.398 --> 00:00:37.591
+Every claim carries its return address, and its date, all the way to the final page.
+
+8
+00:00:38.991 --> 00:00:40.994
+Make provenance part of the data.
+
+9
+00:00:40.994 --> 00:00:47.852
+Each subagent returns claims as small records with the source, the publication date and a short supporting quote.
+
+10
+00:00:47.852 --> 00:00:55.075
+The synthesis step keeps those records attached to each statement instead of rewriting everything into unsourced prose.
+
+11
+00:00:55.075 --> 00:01:02.116
+If you use the Claude API directly, the citations feature can point each sentence to the exact passage it came from.
+
+12
+00:01:03.516 --> 00:01:08.068
+When credible sources disagree, show both values and say who reported each.
+
+13
+00:01:08.068 --> 00:01:11.103
+Do not average them and do not quietly choose one.
+
+14
+00:01:11.103 --> 00:01:16.687
+Check the dates first, because many apparent contradictions are just different time periods.
+
+15
+00:01:16.687 --> 00:01:25.852
+Then present established findings separately from contested ones, and pick a fitting format, such as a table for figures and prose for the explanation.
+
+16
+00:01:27.252 --> 00:01:32.959
+In the research scenario, one source says heat-pump sales fell and another says installs rose.
+
+17
+00:01:32.959 --> 00:01:38.303
+Check dates and definitions first, since sales and installations are different measures.
+
+18
+00:01:38.303 --> 00:01:40.974
+Put agreed points in an established section.
+
+19
+00:01:40.974 --> 00:01:46.378
+Put the disagreement in a contested section with both figures, each attributed and dated.
+
+20
+00:01:46.378 --> 00:01:50.143
+Use a table for the numbers and a short paragraph for caveats.
+
+21
+00:01:51.543 --> 00:01:55.388
+Distractors here make the report look neat at the cost of truth.
+
+22
+00:01:55.388 --> 00:02:01.877
+Averaging, silently picking the newest number, and flattening everything into prose all destroy information.
+
+23
+00:02:01.877 --> 00:02:10.529
+The exam's answers keep sources attached, show conflicts with attribution and dates, and present each kind of content in a format that suits it.
+
+24
+00:02:11.929 --> 00:02:12.472
+To recap.
+
+25
+00:02:12.472 --> 00:02:18.868
+Provenance survives only if it is structured, so carry claim, source and date together through every step.
+
+26
+00:02:18.868 --> 00:02:30.212
+Present disagreements openly with attribution, use dates to explain apparent conflicts, separate what is settled from what is contested, and choose a format that fits each type of content.
+

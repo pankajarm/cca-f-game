@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.872
+Task statement 1.2.
+
+2
+00:00:01.872 --> 00:00:06.712
+Orchestrate multi-agent systems with coordinator-subagent patterns.
+
+3
+00:00:06.712 --> 00:00:16.031
+A research system that sends every question to every subagent wastes time on simple queries and still misses angles on hard ones.
+
+4
+00:00:17.431 --> 00:00:21.602
+A multi-agent system in this exam is shaped like a hub and spokes.
+
+5
+00:00:21.602 --> 00:00:25.521
+One coordinator sits in the middle and hands out focused jobs.
+
+6
+00:00:25.521 --> 00:00:31.905
+Each subagent does its piece and reports back to the coordinator, never sideways to another subagent.
+
+7
+00:00:31.905 --> 00:00:37.847
+Think of a news editor who assigns stories to reporters and then puts the front page together.
+
+8
+00:00:39.247 --> 00:00:41.146
+The coordinator has three jobs.
+
+9
+00:00:41.146 --> 00:00:50.521
+It routes work to the right subagents, it handles failures when one of them comes back empty or broken, and it combines everything into the final answer.
+
+10
+00:00:50.521 --> 00:00:54.564
+Remember that each subagent starts with a clean, isolated context.
+
+11
+00:00:54.564 --> 00:01:00.324
+It only knows what the coordinator tells it, which is exactly why the hub must stay in charge.
+
+12
+00:01:01.724 --> 00:01:04.742
+Good coordinators size the effort to the question.
+
+13
+00:01:04.742 --> 00:01:10.837
+A single fact needs one agent, a comparison needs a few, and a broad research question may need many.
+
+14
+00:01:10.837 --> 00:01:15.484
+Give each subagent a clearly separate scope so they do not repeat each other.
+
+15
+00:01:15.484 --> 00:01:19.045
+Then, before writing anything, check what is still missing.
+
+16
+00:01:19.045 --> 00:01:22.545
+A split that is too narrow drops topics without any error.
+
+17
+00:01:23.945 --> 00:01:29.815
+In the research scenario, the coordinator splits the housing question into four separate scopes.
+
+18
+00:01:29.815 --> 00:01:37.457
+When the results come back, it notices that rural areas are not covered at all, so it sends one more search before synthesis.
+
+19
+00:01:37.457 --> 00:01:40.208
+Later, a user asks a quick factual follow-up.
+
+20
+00:01:40.208 --> 00:01:45.833
+The coordinator sends that to a single search agent instead of rerunning the whole pipeline.
+
+21
+00:01:47.233 --> 00:01:56.957
+On the exam, be suspicious of any design that runs the full pipeline every time, lets subagents chat directly, or blames the last agent for missing coverage.
+
+22
+00:01:56.957 --> 00:02:01.912
+When a final report has holes, look first at how the coordinator split the work.
+
+23
+00:02:01.912 --> 00:02:08.353
+And if two subagents keep finding the same sources, the fix is clearer scope boundaries in their briefs.
+
+24
+00:02:09.753 --> 00:02:10.342
+To recap.
+
+25
+00:02:10.342 --> 00:02:16.034
+The coordinator is the hub that routes work, handles failures and assembles the answer.
+
+26
+00:02:16.034 --> 00:02:20.287
+Subagents start with isolated context and report only to the hub.
+
+27
+00:02:20.287 --> 00:02:23.231
+Pick the subagents each query actually needs.
+
+28
+00:02:23.231 --> 00:02:29.316
+And split scope cleanly, look for gaps, and fill them before you synthesize the final result.
+

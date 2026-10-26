@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.839
+Task statement 1.4.
+
+2
+00:00:01.839 --> 00:00:06.702
+Implement multi-step workflows with enforcement and handoff patterns.
+
+3
+00:00:06.702 --> 00:00:14.665
+If a support agent can issue a refund before checking who it is talking to, one bad run is a real financial loss.
+
+4
+00:00:16.065 --> 00:00:22.290
+Think about a sign that says please show your ID, versus a turnstile that will not open without it.
+
+5
+00:00:22.290 --> 00:00:23.925
+A prompt rule is the sign.
+
+6
+00:00:23.925 --> 00:00:27.823
+Claude follows it almost every time, but almost is not always.
+
+7
+00:00:27.823 --> 00:00:35.180
+When an order of steps is required, like verifying a customer before touching money, you build the turnstile in code.
+
+8
+00:00:36.580 --> 00:00:37.874
+Here is a small gate.
+
+9
+00:00:37.874 --> 00:00:45.330
+We keep track of sessions where the customer has been verified, for example by marking it after the verify tool succeeds.
+
+10
+00:00:45.330 --> 00:00:48.904
+A pre tool use hook on the refund tool checks that record.
+
+11
+00:00:48.904 --> 00:00:55.929
+If verification has not happened, the call is denied, and the reason tells Claude exactly which step to run first.
+
+12
+00:00:57.329 --> 00:01:00.624
+Customers often ask for several things in one message.
+
+13
+00:01:00.624 --> 00:01:05.810
+Split them into separate items, resolve each one, and check that nothing was dropped.
+
+14
+00:01:05.810 --> 00:01:15.512
+When a case must go to a person, hand off a short structured summary: who the customer is, the root cause, the amounts, what was tried, and what you recommend.
+
+15
+00:01:15.512 --> 00:01:18.257
+Nobody wants to read a forty turn transcript.
+
+16
+00:01:19.657 --> 00:01:24.776
+A customer writes in about a damaged blender, a new address, and their loyalty points.
+
+17
+00:01:24.776 --> 00:01:28.586
+The gate makes sure identity is checked before anything changes.
+
+18
+00:01:28.586 --> 00:01:32.158
+The agent fixes the address and answers the points question.
+
+19
+00:01:32.158 --> 00:01:40.372
+The refund is above the agent's limit, so it escalates with a structured summary, and the human can approve it without rereading the chat.
+
+20
+00:01:41.772 --> 00:01:48.185
+On the exam, stronger wording and more examples are tempting but wrong when an order must always hold.
+
+21
+00:01:48.185 --> 00:01:49.819
+The answer is a code gate.
+
+22
+00:01:49.819 --> 00:01:54.283
+For escalations, prefer the structured summary over the raw transcript.
+
+23
+00:01:54.283 --> 00:02:01.953
+And when a message carries several requests, the right design splits them and confirms each one is resolved before ending.
+
+24
+00:02:03.353 --> 00:02:03.918
+To recap.
+
+25
+00:02:03.918 --> 00:02:07.560
+If an order of steps must always hold, enforce it in code.
+
+26
+00:02:07.560 --> 00:02:11.641
+Block the risky tools until the prerequisite has really happened.
+
+27
+00:02:11.641 --> 00:02:15.157
+Break multi-part requests into items and close each one.
+
+28
+00:02:15.157 --> 00:02:23.193
+And when a person takes over, give them a structured summary with the customer, the cause, the amounts and a recommended action.
+

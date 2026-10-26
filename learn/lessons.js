@@ -1088,7 +1088,7 @@ window.LESSONS = [
    "src": "learn/video/ts-1.1.mp4",
    "vtt": "learn/video/ts-1.1.vtt",
    "poster": "learn/video/ts-1.1.jpg",
-   "seconds": 140.1
+   "seconds": 143.1
   }
  },
  {
@@ -1451,7 +1451,7 @@ window.LESSONS = [
    "src": "learn/video/ts-1.3.mp4",
    "vtt": "learn/video/ts-1.3.vtt",
    "poster": "learn/video/ts-1.3.jpg",
-   "seconds": 148.7
+   "seconds": 152.3
   }
  },
  {
@@ -3911,7 +3911,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-3.5.mp4",
+   "vtt": "learn/video/ts-3.5.vtt",
+   "poster": "learn/video/ts-3.5.jpg",
+   "seconds": 140.5
+  }
  },
  {
   "ts": [
@@ -4079,7 +4084,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-3.6.mp4",
+   "vtt": "learn/video/ts-3.6.vtt",
+   "poster": "learn/video/ts-3.6.jpg",
+   "seconds": 142.4
+  }
  },
  {
   "ts": [
@@ -4245,7 +4255,12 @@ window.LESSONS = [
     "url": "https://github.com/anthropics/courses/tree/master/prompt_evaluations"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-4.1.mp4",
+   "vtt": "learn/video/ts-4.1.vtt",
+   "poster": "learn/video/ts-4.1.jpg",
+   "seconds": 141.9
+  }
  },
  {
   "ts": [
@@ -4413,7 +4428,12 @@ window.LESSONS = [
     "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-4.2.mp4",
+   "vtt": "learn/video/ts-4.2.vtt",
+   "poster": "learn/video/ts-4.2.jpg",
+   "seconds": 139.4
+  }
  },
  {
   "ts": [
@@ -4591,7 +4611,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-use-tool-choice"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-4.3.mp4",
+   "vtt": "learn/video/ts-4.3.vtt",
+   "poster": "learn/video/ts-4.3.jpg",
+   "seconds": 167.7
+  }
  },
  {
   "ts": [
@@ -4754,7 +4779,12 @@ window.LESSONS = [
     "url": "https://github.com/anthropics/courses/tree/master/prompt_evaluations"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-4.4.mp4",
+   "vtt": "learn/video/ts-4.4.vtt",
+   "poster": "learn/video/ts-4.4.jpg",
+   "seconds": 144.0
+  }
  },
  {
   "ts": [
@@ -4916,7 +4946,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/misc-batch-processing"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-4.5.mp4",
+   "vtt": "learn/video/ts-4.5.vtt",
+   "poster": "learn/video/ts-4.5.jpg",
+   "seconds": 147.8
+  }
  },
  {
   "ts": [
@@ -5082,7 +5117,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/patterns-agents-evaluator-optimizer"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-4.6.mp4",
+   "vtt": "learn/video/ts-4.6.vtt",
+   "poster": "learn/video/ts-4.6.jpg",
+   "seconds": 145.4
+  }
  },
  {
   "ts": [
@@ -5257,7 +5297,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-use-automatic-context-compaction"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-5.1.mp4",
+   "vtt": "learn/video/ts-5.1.vtt",
+   "poster": "learn/video/ts-5.1.jpg",
+   "seconds": 150.3
+  }
  },
  {
   "ts": [
@@ -5422,7 +5467,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-5.2.mp4",
+   "vtt": "learn/video/ts-5.2.vtt",
+   "poster": "learn/video/ts-5.2.jpg",
+   "seconds": 144.9
+  }
  },
  {
   "ts": [
@@ -5590,7 +5640,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/multi-agent-research-system"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-5.3.mp4",
+   "vtt": "learn/video/ts-5.3.vtt",
+   "poster": "learn/video/ts-5.3.jpg",
+   "seconds": 142.8
+  }
  },
  {
   "ts": [
@@ -5763,7 +5818,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-5.4.mp4",
+   "vtt": "learn/video/ts-5.4.vtt",
+   "poster": "learn/video/ts-5.4.jpg",
+   "seconds": 146.3
+  }
  },
  {
   "ts": [
@@ -5935,7 +5995,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/misc-building-evals"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-5.5.mp4",
+   "vtt": "learn/video/ts-5.5.vtt",
+   "poster": "learn/video/ts-5.5.jpg",
+   "seconds": 148.6
+  }
  },
  {
   "ts": [
@@ -6105,7 +6170,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/multi-agent-research-system"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/ts-5.6.mp4",
+   "vtt": "learn/video/ts-5.6.vtt",
+   "poster": "learn/video/ts-5.6.jpg",
+   "seconds": 151.1
+  }
  },
  {
   "id": "scn-1",
@@ -6254,7 +6324,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/scn-1.mp4",
+   "vtt": "learn/video/scn-1.vtt",
+   "poster": "learn/video/scn-1.jpg",
+   "seconds": 147.6
+  }
  },
  {
   "id": "scn-2",
@@ -6407,7 +6482,12 @@ window.LESSONS = [
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/scn-2.mp4",
+   "vtt": "learn/video/scn-2.vtt",
+   "poster": "learn/video/scn-2.jpg",
+   "seconds": 151.9
+  }
  },
  {
   "id": "scn-3",
@@ -6560,7 +6640,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/patterns-agents-orchestrator-workers"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/scn-3.mp4",
+   "vtt": "learn/video/scn-3.vtt",
+   "poster": "learn/video/scn-3.jpg",
+   "seconds": 148.1
+  }
  },
  {
   "id": "scn-4",
@@ -6713,7 +6798,12 @@ window.LESSONS = [
     "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/scn-4.mp4",
+   "vtt": "learn/video/scn-4.vtt",
+   "poster": "learn/video/scn-4.jpg",
+   "seconds": 142.4
+  }
  },
  {
   "id": "scn-5",
@@ -6862,7 +6952,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/scn-5.mp4",
+   "vtt": "learn/video/scn-5.vtt",
+   "poster": "learn/video/scn-5.jpg",
+   "seconds": 149.4
+  }
  },
  {
   "id": "scn-6",
@@ -7015,7 +7110,12 @@ window.LESSONS = [
     "url": "https://platform.claude.com/cookbook/misc-batch-processing"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/scn-6.mp4",
+   "vtt": "learn/video/scn-6.vtt",
+   "poster": "learn/video/scn-6.jpg",
+   "seconds": 150.6
+  }
  },
  {
   "id": "exam-day",
@@ -7156,7 +7256,12 @@ window.LESSONS = [
     "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
    }
   ],
-  "video": null
+  "video": {
+   "src": "learn/video/exam-day.mp4",
+   "vtt": "learn/video/exam-day.vtt",
+   "poster": "learn/video/exam-day.jpg",
+   "seconds": 138.4
+  }
  }
 ];
 window.LEARN_RES = {

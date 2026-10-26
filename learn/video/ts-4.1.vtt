@@ -1,0 +1,102 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.940
+Task statement 4.1.
+
+2
+00:00:01.940 --> 00:00:08.458
+Design prompts with explicit criteria to improve precision and reduce false positives.
+
+3
+00:00:08.458 --> 00:00:16.265
+A CI reviewer that flags 40 'possible issues' per PR gets ignored, including the one real security bug.
+
+4
+00:00:17.665 --> 00:00:24.614
+When a review bot is too noisy, the tempting fix is to say be conservative or only flag high confidence issues.
+
+5
+00:00:24.614 --> 00:00:29.685
+That rarely helps, because Claude still does not know what you consider an issue.
+
+6
+00:00:29.685 --> 00:00:36.759
+Explicit criteria work like a referee's rulebook: they spell out exactly what counts as a foul and what does not.
+
+7
+00:00:38.159 --> 00:00:40.103
+Good criteria have four parts.
+
+8
+00:00:40.103 --> 00:00:43.344
+What to report, with an example for each category.
+
+9
+00:00:43.344 --> 00:00:46.650
+What to skip, such as formatting or generated code.
+
+10
+00:00:46.650 --> 00:00:52.483
+What each severity level means, illustrated with real cases instead of words like serious.
+
+11
+00:00:52.483 --> 00:00:58.447
+And what evidence each finding must include, which cuts down on guesses dressed up as facts.
+
+12
+00:00:59.847 --> 00:01:02.449
+Developers judge a review bot as a whole.
+
+13
+00:01:02.449 --> 00:01:11.652
+If one category, say possible null issues, is wrong most of the time, people stop reading all the comments, including the accurate security ones.
+
+14
+00:01:11.652 --> 00:01:13.620
+So track accuracy per category.
+
+15
+00:01:13.620 --> 00:01:20.348
+Switch off the noisy category while you rewrite its criteria, and keep the trustworthy categories running.
+
+16
+00:01:21.748 --> 00:01:27.486
+In the continuous integration scenario, the review prompt says to look for potential problems.
+
+17
+00:01:27.486 --> 00:01:32.309
+Most comments are about possible nulls that the type checker already rules out.
+
+18
+00:01:32.309 --> 00:01:35.361
+Developers have learned to scroll past everything.
+
+19
+00:01:35.361 --> 00:01:43.359
+The fix is to pause the noisy category, keep the accurate ones, and write precise criteria with examples before turning it back on.
+
+20
+00:01:44.759 --> 00:01:50.275
+On the exam, any answer that relies on general caution words is usually a distractor.
+
+21
+00:01:50.275 --> 00:01:55.598
+Look for the option that defines categories, exclusions and severities concretely.
+
+22
+00:01:55.598 --> 00:02:04.684
+And if one category is ruining trust, the strong answer pauses that category rather than tolerating the noise or turning off the whole tool.
+
+23
+00:02:06.084 --> 00:02:08.024
+Precision comes from specifics.
+
+24
+00:02:08.024 --> 00:02:15.156
+Tell Claude exactly what counts and what does not, define severity with examples, and watch accuracy per category.
+
+25
+00:02:15.156 --> 00:02:20.975
+When a category is noisy, pause it while you fix it, so the rest of the review stays trusted.
+

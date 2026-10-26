@@ -1,0 +1,122 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.871
+Task statement 2.2.
+
+2
+00:00:01.871 --> 00:00:05.552
+Implement structured error responses for MCP tools.
+
+3
+00:00:05.552 --> 00:00:15.007
+When a billing lookup fails mid-conversation, the error message decides whether the agent retries, asks the customer, or escalates.
+
+4
+00:00:16.407 --> 00:00:18.125
+Start with a mindset shift.
+
+5
+00:00:18.125 --> 00:00:20.988
+A failed tool call is not the end of the run.
+
+6
+00:00:20.988 --> 00:00:25.697
+It is a message back to Claude, and Claude reads it like any other result.
+
+7
+00:00:25.697 --> 00:00:28.115
+The isError flag says the call failed.
+
+8
+00:00:28.115 --> 00:00:34.924
+The text you put next to it decides whether Claude retries, changes its input, asks the user, or hands off.
+
+9
+00:00:36.324 --> 00:00:39.714
+Four kinds of failure need four different reactions.
+
+10
+00:00:39.714 --> 00:00:41.343
+A timeout can be retried.
+
+11
+00:00:41.343 --> 00:00:43.690
+Bad input needs corrected arguments.
+
+12
+00:00:43.690 --> 00:00:47.927
+A policy refusal or a permission problem should never be retried.
+
+13
+00:00:47.927 --> 00:00:53.924
+So return a small structured payload with a category, a retryable flag, and a plain message.
+
+14
+00:00:53.924 --> 00:01:02.137
+Note that the MCP spec only defines the isError flag; the category and retry fields are your own convention inside the result.
+
+15
+00:01:03.537 --> 00:01:06.990
+A very common bug is treating no results as a failure.
+
+16
+00:01:06.990 --> 00:01:11.784
+If the database answered and found nothing, that is a valid, useful answer.
+
+17
+00:01:11.784 --> 00:01:15.045
+If the database was unreachable, that is a failure.
+
+18
+00:01:15.045 --> 00:01:23.420
+Keep the two apart, or the agent will either retry forever or tell a customer they have no orders when really the lookup never ran.
+
+19
+00:01:24.820 --> 00:01:28.154
+In the research system, a subagent's search times out.
+
+20
+00:01:28.154 --> 00:01:32.290
+Because the error is transient, the subagent retries locally first.
+
+21
+00:01:32.290 --> 00:01:36.796
+If it still fails, it should not hide the problem or throw away its work.
+
+22
+00:01:36.796 --> 00:01:42.785
+It returns the partial results together with a clear error: what was tried, what failed, and why.
+
+23
+00:01:42.785 --> 00:01:45.748
+Now the coordinator can make an informed choice.
+
+24
+00:01:47.148 --> 00:01:48.776
+Watch for these patterns.
+
+25
+00:01:48.776 --> 00:01:56.914
+Generic messages, blanket retries, empty results flagged as errors, and failures that kill the whole run are all distractors.
+
+26
+00:01:56.914 --> 00:02:07.265
+The exam's answer gives the agent enough structure to choose a sensible recovery: retry what is transient, explain what is final, and keep any partial results.
+
+27
+00:02:08.665 --> 00:02:09.223
+To recap.
+
+28
+00:02:09.223 --> 00:02:14.735
+Mark failures with isError, classify them, and say plainly what happened and what to try.
+
+29
+00:02:14.735 --> 00:02:17.212
+Never confuse no results with a failure.
+
+30
+00:02:17.212 --> 00:02:27.183
+Recover from transient problems close to where they happen, and pass everything else upward with the partial results attached, so the agent above you can decide.
+

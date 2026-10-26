@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.852
+Task statement 4.5.
+
+2
+00:00:01.852 --> 00:00:05.053
+Design efficient batch processing strategies.
+
+3
+00:00:05.053 --> 00:00:14.303
+A nightly audit of 40,000 documents costs half as much as a batch; a pre-merge check that blocks developers must not wait for one.
+
+4
+00:00:15.703 --> 00:00:21.211
+The Message Batches API lets you send a large set of requests and collect the results later.
+
+5
+00:00:21.211 --> 00:00:29.353
+It costs half the normal price, and results arrive within twenty four hours, often much sooner, but with no promise for any single item.
+
+6
+00:00:29.353 --> 00:00:36.119
+It is like an overnight laundry service: cheaper, but you would not use it for the shirt you need in ten minutes.
+
+7
+00:00:37.519 --> 00:00:42.710
+Every request in a batch has a custom ID that you set, such as the document ID.
+
+8
+00:00:42.710 --> 00:00:47.179
+Results can come back in any order, so always match them by that ID.
+
+9
+00:00:47.179 --> 00:00:55.460
+Each request is a single model turn, so an agent that needs to call tools and continue cannot run its loop inside one request.
+
+10
+00:00:55.460 --> 00:00:59.535
+Each result is marked succeeded, errored, canceled or expired.
+
+11
+00:01:00.935 --> 00:01:05.917
+Batch work that nobody is waiting on, such as overnight audits or weekly reports.
+
+12
+00:01:05.917 --> 00:01:08.807
+Keep anything that blocks a person synchronous.
+
+13
+00:01:08.807 --> 00:01:16.434
+Before sending thousands of requests, test the prompt on a small sample, because a bad prompt in a batch wastes a whole run.
+
+14
+00:01:16.434 --> 00:01:23.015
+When some requests fail, fix the cause, such as splitting oversized documents, and resubmit only those IDs.
+
+15
+00:01:24.415 --> 00:01:31.037
+The extraction team pilots fifty documents first and fixes two prompt problems before spending money at scale.
+
+16
+00:01:31.037 --> 00:01:35.252
+The full set goes overnight, each request tagged with its document ID.
+
+17
+00:01:35.252 --> 00:01:41.694
+A few hundred fail because they are too long, so the team splits those into chunks and resubmits only them.
+
+18
+00:01:41.694 --> 00:01:46.089
+Meanwhile, the check developers wait on before merging stays synchronous.
+
+19
+00:01:47.489 --> 00:01:49.661
+Batch questions usually test fit.
+
+20
+00:01:49.661 --> 00:01:54.135
+If a person is waiting, do not batch, however tempting the discount.
+
+21
+00:01:54.135 --> 00:01:57.425
+If a few requests fail, fix and resend just those.
+
+22
+00:01:57.425 --> 00:01:59.202
+Never rely on result order.
+
+23
+00:01:59.202 --> 00:02:06.967
+And remember that a batch request is one turn, so an agent loop that needs to execute tools does not belong inside it.
+
+24
+00:02:08.367 --> 00:02:11.384
+The Message Batches API trades speed for cost.
+
+25
+00:02:11.384 --> 00:02:17.680
+Use it for work that can wait, tag every request with a custom ID, and match results on that ID.
+
+26
+00:02:17.680 --> 00:02:19.910
+Test the prompt on a sample first.
+
+27
+00:02:19.910 --> 00:02:23.911
+When some requests fail, fix the cause and resend just those.
+
+28
+00:02:23.911 --> 00:02:26.863
+Anything blocking a person stays synchronous.
+

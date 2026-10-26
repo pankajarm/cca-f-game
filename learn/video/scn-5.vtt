@@ -1,0 +1,110 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:04.600
+Scenario 5 walkthrough: Claude Code for Continuous Integration.
+
+2
+00:00:04.600 --> 00:00:15.988
+A CI reviewer that cries wolf gets ignored, so this scenario is about running Claude Code headless and writing review prompts that flag real problems with few false positives.
+
+3
+00:00:17.388 --> 00:00:21.795
+Scenario five puts Claude Code into a continuous integration pipeline.
+
+4
+00:00:21.795 --> 00:00:26.831
+On each pull request it reviews the code, may generate tests and posts comments.
+
+5
+00:00:26.831 --> 00:00:33.440
+The pipeline needs machine readable output, and the team needs feedback that is accurate enough to trust.
+
+6
+00:00:33.440 --> 00:00:36.588
+Questions come mainly from domains three and four.
+
+7
+00:00:37.988 --> 00:00:44.300
+You need the headless flags for running Claude Code non interactively and getting structured output.
+
+8
+00:00:44.300 --> 00:00:51.243
+Then prompt design: explicit criteria for what to report, independent review instances and multi pass reviews.
+
+9
+00:00:51.243 --> 00:00:57.807
+Message Batches appear as a distractor, because they suit overnight jobs, not checks that block a merge.
+
+10
+00:00:59.207 --> 00:01:00.908
+Here is the typical problem.
+
+11
+00:01:00.908 --> 00:01:11.175
+Developers have started ignoring the review bot because its style comments are mostly false positives, and that noise drags down trust in its accurate security findings.
+
+12
+00:01:11.175 --> 00:01:14.092
+Asking it to be conservative does not help much.
+
+13
+00:01:14.092 --> 00:01:20.775
+Spell out what to report and what to skip, with examples, and switch off the noisy category until it is fixed.
+
+14
+00:01:22.175 --> 00:01:23.106
+Now a contrast.
+
+15
+00:01:23.106 --> 00:01:28.508
+Asking the session that wrote the code to review its own work inherits its assumptions.
+
+16
+00:01:28.508 --> 00:01:31.861
+A separate instance with a fresh context catches more.
+
+17
+00:01:31.861 --> 00:01:37.822
+For big pull requests, review file by file and then run a separate pass for cross file problems.
+
+18
+00:01:37.822 --> 00:01:43.721
+And when re-reviewing after fixes, give it the earlier findings so it reports only what is new.
+
+19
+00:01:45.121 --> 00:01:53.312
+Distractors here include invented flags such as a headless environment variable, when print mode with dash p is the real mechanism.
+
+20
+00:01:53.312 --> 00:01:57.627
+Scraping free text where JSON output with a schema would be reliable.
+
+21
+00:01:57.627 --> 00:02:00.378
+Using batches for checks that block a merge.
+
+22
+00:02:00.378 --> 00:02:05.943
+And generating tests without showing Claude the existing ones, which leads to duplicates.
+
+23
+00:02:07.343 --> 00:02:08.541
+For scenario five.
+
+24
+00:02:08.541 --> 00:02:14.863
+Use dash p for headless runs and JSON output with a schema when a pipeline consumes the result.
+
+25
+00:02:14.863 --> 00:02:18.523
+Write explicit criteria rather than asking for caution.
+
+26
+00:02:18.523 --> 00:02:23.314
+Review with an independent instance, file by file and then across files.
+
+27
+00:02:23.314 --> 00:02:28.505
+And keep the Message Batches API for work that can wait, like a nightly audit.
+

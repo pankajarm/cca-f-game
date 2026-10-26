@@ -1,0 +1,142 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.847
+Task statement 2.5.
+
+2
+00:00:01.847 --> 00:00:07.660
+Select and apply built-in tools (Read, Write, Edit, Bash, Grep, Glob) effectively.
+
+3
+00:00:07.660 --> 00:00:16.735
+Exploring an unfamiliar codebase is mostly choosing the right built-in tool for each step, and the wrong one burns context fast.
+
+4
+00:00:18.135 --> 00:00:20.783
+Claude Code ships with a small toolbox.
+
+5
+00:00:20.783 --> 00:00:22.006
+Read opens a file.
+
+6
+00:00:22.006 --> 00:00:24.791
+Write creates or overwrites a whole file.
+
+7
+00:00:24.791 --> 00:00:27.168
+Edit swaps one exact piece of text.
+
+8
+00:00:27.168 --> 00:00:28.458
+Bash runs commands.
+
+9
+00:00:28.458 --> 00:00:33.960
+Grep searches what is inside files, while Glob finds files by their path or name.
+
+10
+00:00:33.960 --> 00:00:38.103
+Most exploration mistakes come from mixing up those last two.
+
+11
+00:00:39.503 --> 00:00:42.511
+Glob answers which files exist, by name pattern.
+
+12
+00:00:42.511 --> 00:00:45.206
+Grep answers which files mention something.
+
+13
+00:00:45.206 --> 00:00:53.102
+Edit works by exact text match, and the old text must appear only once, so include a line or two of context to make it unique.
+
+14
+00:00:53.102 --> 00:00:56.549
+If that fails, read the file and write it back in full.
+
+15
+00:00:56.549 --> 00:01:01.625
+Current docs note that on Mac and Linux, search now runs through Bash by default.
+
+16
+00:01:03.025 --> 00:01:05.178
+A good exploration is narrow first.
+
+17
+00:01:05.178 --> 00:01:09.977
+Grep for the entry point, read just those files, and follow the calls outward.
+
+18
+00:01:09.977 --> 00:01:18.712
+When a function is wrapped or re-exported under another name, find the exported names first, then grep for each one, or you will miss callers.
+
+19
+00:01:18.712 --> 00:01:22.588
+Reading every file in a folder is the slow, context-hungry way.
+
+20
+00:01:23.988 --> 00:01:25.526
+Here is a realistic flow.
+
+21
+00:01:25.526 --> 00:01:27.863
+Glob shows the billing folder's shape.
+
+22
+00:01:27.863 --> 00:01:31.861
+Grep for the function name finds where it lives and who calls it.
+
+23
+00:01:31.861 --> 00:01:33.091
+Read the definition.
+
+24
+00:01:33.091 --> 00:01:37.212
+If it is wrapped and exported under a new name, grep that name too.
+
+25
+00:01:37.212 --> 00:01:42.932
+Then make the change with Edit using a unique anchor, and run the tests with Bash to confirm.
+
+26
+00:01:44.332 --> 00:01:47.134
+Exam distractors here swap the tools around.
+
+27
+00:01:47.134 --> 00:01:48.535
+Glob cannot find text.
+
+28
+00:01:48.535 --> 00:01:50.891
+Reading everything is not a strategy.
+
+29
+00:01:50.891 --> 00:01:55.284
+Edit will keep failing on a repeated anchor until you make it unique.
+
+30
+00:01:55.284 --> 00:02:01.143
+And tracing through wrappers means searching every exported name, not just the original one.
+
+31
+00:02:02.543 --> 00:02:03.115
+To recap.
+
+32
+00:02:03.115 --> 00:02:05.596
+Know which tool answers which question.
+
+33
+00:02:05.596 --> 00:02:07.823
+Grep for text, Glob for file names.
+
+34
+00:02:07.823 --> 00:02:11.894
+Make Edit anchors unique, and when that fails, read and rewrite.
+
+35
+00:02:11.894 --> 00:02:20.164
+Explore by finding entry points first and reading outward, and chase wrapped functions through every name they are exported under.
+

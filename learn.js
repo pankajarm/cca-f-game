@@ -318,7 +318,7 @@ const Learn = {
         btns.forEach((x, j) => { x.classList.add('disabled'); if (order[j] === c.answer) x.classList.add('correct'); else if (x === b) x.classList.add('wrong'); else x.classList.add('dim'); });
         document.getElementById('lcw-' + qi).innerHTML = `<div class="ls-why${ok ? '' : ' bad'}">${ok ? '✅ Right.' : '❌ Not quite.'} ${this.rich(c.why)}</div>`;
         if (typeof Sound !== 'undefined') ok ? Sound.good() : Sound.bad();
-        if (Object.keys(this.answered).length === this.cur.check.length) this.markDone(this.cur.id);
+        if (Object.keys(this.answered).length === this.cur.check.length) { this.markDone(this.cur.id); this.dropMarkDone(); }
       };
       box.appendChild(b);
       return b;
@@ -332,11 +332,12 @@ const Learn = {
     box.innerHTML = this.slideHTML(l, this.slide);
     this.fit(box.firstElementChild);
     document.getElementById('ls-count').textContent = `${this.slide + 1} / ${d.length}`;
-    document.getElementById('ls-dots').innerHTML = d.map((_, i) => `<i class="${i === this.slide ? 'on' : ''}" onclick="Learn.goto(${i})"></i>`).join('');
+    document.getElementById('ls-dots').innerHTML = d.map((_, i) => `<button class="${i === this.slide ? 'on' : ''}" onclick="Learn.goto(${i})" aria-label="Slide ${i + 1}"${i === this.slide ? ' aria-current="step"' : ''}></button>`).join('');
     document.getElementById('ls-note').innerHTML = '🗒️ ' + this.rich(d[this.slide].note || '');
     this.state().slide[l.id] = this.slide; this.save();
-    if (this.slide === d.length - 1 && !(l.check || []).length) this.markDone(l.id);
+    if (this.slide === d.length - 1 && !(l.check || []).length) { this.markDone(l.id); this.dropMarkDone(); }
   },
+  dropMarkDone() { const b = document.getElementById('ls-markdone'); if (b) b.remove(); },
   go(step) { this.goto(this.slide + step); },
   goto(i) {
     const n = this.deck(this.cur).length;
@@ -387,10 +388,11 @@ const Learn = {
   },
 
   renderSources(l) {
-    const src = l.sources || [];
-    const more = l.kind === 'ts' ? ((GUIDE.docs || {})[l.ts[0]] || []).filter(x => !src.some(s => s.url === x.url)) : [];
-    const all = src.concat(more);
-    const courses = l.courses || [];
+    const key = u => u.replace(/[#?].*$/, '').replace(/\/+$/, ''), seen = new Set();
+    const uniq = x => !seen.has(key(x.url)) && seen.add(key(x.url));
+    const more = l.kind === 'ts' ? ((GUIDE.docs || {})[l.ts[0]] || []) : [];
+    const all = (l.sources || []).concat(more).filter(uniq);
+    const courses = (l.courses || []).filter(uniq);
     if (!all.length && !courses.length) return '';
     return `<div class="ls-section"><h3>📚 Go deeper</h3><ul class="ls-src">${all.map(x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a></li>`).join('')}
       ${courses.map(x => `<li>🎓 <a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a>${x.note ? ` <span class="muted small">· ${this.esc(x.note)}</span>` : ''}</li>`).join('')}</ul></div>`;
@@ -404,7 +406,7 @@ const Learn = {
     if (dr.domain) b.push(`<button class="btn primary" onclick="Learn.drill('domain','${dr.domain}')">🎯 Drill ${dr.domain}: ${count(q => Bank.domainOf(q) === dr.domain)} questions</button>`);
     if (dr.scenario) b.push(`<button class="btn primary" onclick="Learn.drill('scenario',${dr.scenario})">🎯 Drill this scenario: ${count(q => q.scenario === dr.scenario)} questions</button>`);
     if (dr.exam) b.push(`<button class="btn primary" onclick="UI.go('examintro')">📋 Sit the mock exam</button>`);
-    if (!this.isDone(l.id)) b.push(`<button class="btn ghost" onclick="Learn.markDone('${l.id}');Learn.renderLesson()">Mark as done</button>`);
+    if (!this.isDone(l.id)) b.push(`<button class="btn ghost" id="ls-markdone" onclick="Learn.markDone('${l.id}');Learn.dropMarkDone()">Mark as done</button>`);
     const i = this.all().indexOf(l), nx = this.all()[i + 1];
     if (nx) b.push(`<button class="btn ghost" onclick="Learn.open('${nx.id}')">Next lesson: ${this.esc(nx.short || nx.title)} →</button>`);
     return b.join('');
@@ -417,6 +419,12 @@ const Learn = {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') { this.go(1); e.preventDefault(); }
       if (e.key === 'ArrowLeft' || e.key === 'PageUp') { this.go(-1); e.preventDefault(); }
       if (e.key === 'n') this.toggleNotes();
+    }
+    if (this.tab === 'check' && /^[1-4]$/.test(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      // answer the first unanswered question, like 1-4 in the rest of the game
+      const qi = (this.cur.check || []).findIndex((_, i) => this.answered[i] === undefined);
+      const b = qi < 0 ? null : document.querySelectorAll(`#lc-${qi} .answer`)[+e.key - 1];
+      if (b) { b.click(); e.preventDefault(); }
     }
   },
 };

@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.775
+Task statement 2.3.
+
+2
+00:00:01.775 --> 00:00:06.540
+Distribute tools appropriately across agents and configure tool choice.
+
+3
+00:00:06.540 --> 00:00:16.137
+A research synthesis agent that also holds web search tools will start searching instead of writing, and selection gets worse as tools pile up.
+
+4
+00:00:17.537 --> 00:00:20.320
+Tool selection gets harder as the list grows.
+
+5
+00:00:20.320 --> 00:00:25.576
+An agent with eighteen tools picks worse than one with four or five well chosen ones.
+
+6
+00:00:25.576 --> 00:00:30.771
+And an agent that holds tools outside its job will use them, because they are there.
+
+7
+00:00:30.771 --> 00:00:36.460
+So treat each agent like a kitchen station, stocked only for the dish it is responsible for.
+
+8
+00:00:37.860 --> 00:00:39.095
+Scope tools by role.
+
+9
+00:00:39.095 --> 00:00:47.429
+In the Agent SDK each subagent definition carries its own tools list, and anything you leave out simply is not available to that agent.
+
+10
+00:00:47.429 --> 00:00:57.060
+When a role frequently needs a little of another role's power, give it a small purpose-built tool, like a claim checker, instead of the full search toolkit.
+
+11
+00:00:58.460 --> 00:01:01.811
+Tool choice controls whether a tool call is optional.
+
+12
+00:01:01.811 --> 00:01:05.161
+Auto lets Claude decide and may answer in plain text.
+
+13
+00:01:05.161 --> 00:01:07.374
+Any guarantees some tool is called.
+
+14
+00:01:07.374 --> 00:01:09.713
+Naming a tool forces that exact tool.
+
+15
+00:01:09.713 --> 00:01:14.138
+A common pattern is to force the first step, then switch back to auto.
+
+16
+00:01:14.138 --> 00:01:19.196
+The newest models reject any and forced, but the exam keeps the guide's options.
+
+17
+00:01:20.596 --> 00:01:24.455
+In the research system, the synthesizer drifts into searching.
+
+18
+00:01:24.455 --> 00:01:29.869
+Take the search tools away and give it one narrow verify tool for the occasional check.
+
+19
+00:01:29.869 --> 00:01:38.272
+In an extraction step that must always produce structured data, use any, or force the extraction tool, so Claude cannot reply in prose.
+
+20
+00:01:38.272 --> 00:01:41.695
+Then relax to auto once the required step has happened.
+
+21
+00:01:43.095 --> 00:01:45.309
+The exam rewards structural fixes.
+
+22
+00:01:45.309 --> 00:01:50.975
+If an agent misuses a tool, take the tool away rather than asking nicely in the prompt.
+
+23
+00:01:50.975 --> 00:01:54.231
+If a call is mandatory, auto is the wrong setting.
+
+24
+00:01:54.231 --> 00:02:00.417
+And forcing should usually be temporary, just long enough to guarantee the critical first step.
+
+25
+00:02:01.817 --> 00:02:02.395
+To recap.
+
+26
+00:02:02.395 --> 00:02:08.882
+Give each agent a small, role-shaped set of tools, with narrow helpers for frequent cross-role needs.
+
+27
+00:02:08.882 --> 00:02:11.259
+Remove tools an agent should not use.
+
+28
+00:02:11.259 --> 00:02:19.993
+Know the three tool choice settings cold, and remember the pattern of forcing only the first required step before relaxing back to auto.
+

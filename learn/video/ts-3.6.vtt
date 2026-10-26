@@ -1,0 +1,106 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.890
+Task statement 3.6.
+
+2
+00:00:01.890 --> 00:00:05.036
+Integrate Claude Code into CI/CD pipelines.
+
+3
+00:00:05.036 --> 00:00:13.449
+In CI nobody can answer a prompt, so Claude must run headless, return machine-readable results, and stay low-noise.
+
+4
+00:00:14.849 --> 00:00:18.264
+In continuous integration nobody sits at the keyboard.
+
+5
+00:00:18.264 --> 00:00:24.840
+Claude has to run once, produce output a script can read, and exit, just like a linter or a test runner.
+
+6
+00:00:24.840 --> 00:00:32.364
+Your pipeline then decides what to do with the result, such as posting comments on the pull request or failing a check.
+
+7
+00:00:33.764 --> 00:00:38.702
+The dash p flag, also spelled dash dash print, is the non interactive mode.
+
+8
+00:00:38.702 --> 00:00:43.969
+Add output format json to get a JSON object with the result and session details.
+
+9
+00:00:43.969 --> 00:00:50.815
+Add a JSON schema flag to make the answer follow your own structure, which your script can parse safely.
+
+10
+00:00:50.815 --> 00:00:55.951
+In current docs the schema result appears in a field called structured output.
+
+11
+00:00:57.351 --> 00:00:59.387
+Quality in CI comes from context.
+
+12
+00:00:59.387 --> 00:01:03.337
+A fresh session reviews better than the one that wrote the code.
+
+13
+00:01:03.337 --> 00:01:13.828
+When a pull request gets new commits, give Claude the earlier findings and ask only for what is new or still unresolved, so developers do not see the same comments again.
+
+14
+00:01:13.828 --> 00:01:19.815
+When generating tests, point Claude at existing tests and the testing standards in CLAUDE dot md.
+
+15
+00:01:21.215 --> 00:01:29.412
+In the continuous integration scenario, a pull request opens and the pipeline runs Claude in print mode with a findings schema.
+
+16
+00:01:29.412 --> 00:01:31.671
+A script posts each finding inline.
+
+17
+00:01:31.671 --> 00:01:37.738
+On the next push, the pipeline passes the previous findings so Claude reports only new issues.
+
+18
+00:01:37.738 --> 00:01:43.999
+A separate job generates tests, guided by the existing suite and the team's documented standards.
+
+19
+00:01:45.399 --> 00:01:47.013
+Beware of invented flags.
+
+20
+00:01:47.013 --> 00:01:49.724
+The real non interactive switch is dash p.
+
+21
+00:01:49.724 --> 00:01:52.887
+Beware of letting the author review its own work.
+
+22
+00:01:52.887 --> 00:02:02.700
+And watch for noise: re-reviewing everything on every push, or generating tests that duplicate what exists, makes developers stop trusting the pipeline.
+
+23
+00:02:04.100 --> 00:02:11.029
+In CI, run Claude with the print flag, ask for JSON, and shape it with a schema so your scripts can act on it.
+
+24
+00:02:11.029 --> 00:02:12.667
+Review in a fresh session.
+
+25
+00:02:12.667 --> 00:02:18.778
+Give re-reviews the previous findings, and give test generation the existing tests and standards.
+
+26
+00:02:18.778 --> 00:02:21.487
+That keeps the pipeline accurate and quiet.
+

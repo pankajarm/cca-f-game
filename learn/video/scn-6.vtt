@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:03.769
+Scenario 6 walkthrough: Structured Data Extraction.
+
+2
+00:00:03.769 --> 00:00:14.217
+An extraction pipeline that invents values is worse than one that leaves blanks, so this scenario tests schemas, validation loops and when to send work to a human.
+
+3
+00:00:15.617 --> 00:00:19.156
+Scenario six is a structured data extraction pipeline.
+
+4
+00:00:19.156 --> 00:00:29.247
+It reads unstructured documents such as invoices or contracts, pulls out fields, validates them against a JSON schema and passes them on to other systems.
+
+5
+00:00:29.247 --> 00:00:34.817
+The hard parts are edge cases, missing data and knowing how much to trust the output.
+
+6
+00:00:34.817 --> 00:00:37.569
+Questions come from domains four and five.
+
+7
+00:00:38.969 --> 00:00:52.166
+Here you need structured output through tool use and JSON schemas, few shot examples for documents that look different from each other, validation with targeted retries, and human review with calibrated confidence.
+
+8
+00:00:52.166 --> 00:00:57.593
+Message Batches also appear, since large extraction backlogs are a natural fit for them.
+
+9
+00:00:58.993 --> 00:01:00.120
+A common question.
+
+10
+00:01:00.120 --> 00:01:05.628
+Some invoices have no purchase order number, but the extracted data always contains one.
+
+11
+00:01:05.628 --> 00:01:10.761
+The schema makes the field required, so the model invents something to satisfy it.
+
+12
+00:01:10.761 --> 00:01:14.078
+Make the field nullable so a blank is a valid answer.
+
+13
+00:01:14.078 --> 00:01:21.777
+For categories, use an enum with an other option and a detail field, so unusual cases are not forced into the wrong bucket.
+
+14
+00:01:23.177 --> 00:01:24.641
+Now the retry decision.
+
+15
+00:01:24.641 --> 00:01:30.242
+A format error is worth a retry, as long as you send back the specific validation error.
+
+16
+00:01:30.242 --> 00:01:36.415
+But if the information is simply not in the document, retries will not create it, so return null.
+
+17
+00:01:36.415 --> 00:01:41.952
+For totals, extract both the stated total and your calculated one, and flag a conflict.
+
+18
+00:01:41.952 --> 00:01:45.897
+Low confidence and conflicting items go to human review first.
+
+19
+00:01:47.297 --> 00:01:48.294
+Watch for these.
+
+20
+00:01:48.294 --> 00:01:53.278
+Believing a schema guarantees correct values, when it only guarantees the shape.
+
+21
+00:01:53.278 --> 00:01:55.832
+Generic retries without the actual error.
+
+22
+00:01:55.832 --> 00:02:02.560
+Cutting human review because the overall accuracy looks good, when one document type might be failing badly.
+
+23
+00:02:02.560 --> 00:02:07.607
+And trusting confidence scores that were never checked against labelled examples.
+
+24
+00:02:09.007 --> 00:02:10.107
+For scenario six.
+
+25
+00:02:10.107 --> 00:02:15.286
+Nullable fields stop the model inventing values, and enums need an escape hatch.
+
+26
+00:02:15.286 --> 00:02:21.177
+Retry format problems with the specific error, but do not retry when the data is not there.
+
+27
+00:02:21.177 --> 00:02:26.226
+Look at accuracy per document type and per field before reducing human review.
+
+28
+00:02:26.226 --> 00:02:29.657
+And only trust confidence scores you have calibrated.
+

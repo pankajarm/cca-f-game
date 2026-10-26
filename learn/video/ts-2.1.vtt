@@ -1,0 +1,114 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.855
+Task statement 2.1.
+
+2
+00:00:01.855 --> 00:00:06.990
+Design effective tool interfaces with clear descriptions and boundaries.
+
+3
+00:00:06.990 --> 00:00:15.263
+In a support agent with a dozen MCP tools, one vague description can send refund requests to the wrong tool all day.
+
+4
+00:00:16.663 --> 00:00:17.996
+Here is the core idea.
+
+5
+00:00:17.996 --> 00:00:23.331
+Claude never sees your code, only the tool's name, its description and its input schema.
+
+6
+00:00:23.331 --> 00:00:25.938
+The schema tells Claude how to call a tool.
+
+7
+00:00:25.938 --> 00:00:28.666
+The description tells Claude when to call it.
+
+8
+00:00:28.666 --> 00:00:35.820
+So if two drawers in the workshop carry almost the same label, expect the wrong one to be opened, and expect it often.
+
+9
+00:00:37.220 --> 00:00:41.568
+A strong description reads like the note you would leave for a new teammate.
+
+10
+00:00:41.568 --> 00:00:48.605
+Say what the tool does, what each input means, show a tricky format, name the limits, and say when to use a different tool.
+
+11
+00:00:48.605 --> 00:00:57.529
+Anthropic's tool docs call description quality the most important factor in tool performance, and suggest three or four sentences as a floor, not a ceiling.
+
+12
+00:00:58.929 --> 00:01:01.796
+When two tools sound alike, Claude has to guess.
+
+13
+00:01:01.796 --> 00:01:09.500
+The fix is to make each tool's job distinct, by renaming, splitting, or rewriting the descriptions so their boundaries are clear.
+
+14
+00:01:09.500 --> 00:01:11.232
+Also read your system prompt.
+
+15
+00:01:11.232 --> 00:01:19.473
+A line like always check the order first can pull Claude toward the order tool even when the customer asked about something else entirely.
+
+16
+00:01:20.873 --> 00:01:22.665
+Picture the support scenario.
+
+17
+00:01:22.665 --> 00:01:27.114
+Two tools both say gets customer data, and the agent flips between them.
+
+18
+00:01:27.114 --> 00:01:29.400
+Do not reach for a routing layer yet.
+
+19
+00:01:29.400 --> 00:01:37.988
+First decide what each tool really does, then rewrite the descriptions so each one says what it covers and where the other tool takes over.
+
+20
+00:01:37.988 --> 00:01:42.313
+Then replay real conversations and measure whether selection improved.
+
+21
+00:01:43.713 --> 00:01:46.999
+The exam loves the tempting fix that adds machinery.
+
+22
+00:01:46.999 --> 00:01:53.318
+If tools are misrouted, the right first move is almost always to improve the descriptions and names.
+
+23
+00:01:53.318 --> 00:01:58.878
+Extra classifiers, louder system prompt rules and catch-all tools all treat the symptom.
+
+24
+00:01:58.878 --> 00:02:03.617
+A clear, bounded description treats the cause, and it costs almost nothing.
+
+25
+00:02:05.017 --> 00:02:05.582
+To recap.
+
+26
+00:02:05.582 --> 00:02:10.411
+Descriptions are how Claude picks tools, so write them like onboarding notes.
+
+27
+00:02:10.411 --> 00:02:19.002
+Make every tool's boundary clear, rename or split anything that overlaps, and keep an eye on system prompt wording that tilts the choice.
+
+28
+00:02:19.002 --> 00:02:23.705
+When selection goes wrong, fix the description before you add anything new.
+

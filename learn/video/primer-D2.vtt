@@ -1,0 +1,106 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:03.627
+Domain 2 primer: Tool Design & MCP Integration.
+
+2
+00:00:03.627 --> 00:00:12.276
+Agents act through tools, so how you name, describe, scope and connect those tools decides whether the agent does the right thing.
+
+3
+00:00:13.676 --> 00:00:15.727
+Welcome to tool design and MCP.
+
+4
+00:00:15.727 --> 00:00:21.749
+A tool is a function that Claude can ask your application to run, like looking up an order.
+
+5
+00:00:21.749 --> 00:00:23.602
+Claude never sees your code.
+
+6
+00:00:23.602 --> 00:00:28.102
+It sees the tool's name, a description, and a schema for its inputs.
+
+7
+00:00:28.102 --> 00:00:34.455
+MCP, the Model Context Protocol, is a standard way to connect servers full of tools to an agent.
+
+8
+00:00:35.855 --> 00:00:37.798
+Here is the loop in plain terms.
+
+9
+00:00:37.798 --> 00:00:39.741
+You give Claude a list of tools.
+
+10
+00:00:39.741 --> 00:00:44.721
+Claude reads the descriptions and decides which one to call, and with what inputs.
+
+11
+00:00:44.721 --> 00:00:49.215
+Your code runs it and sends back a result, or an error marked as an error.
+
+12
+00:00:49.215 --> 00:00:52.008
+Claude reads that and decides what to do next.
+
+13
+00:00:52.008 --> 00:00:56.441
+A setting called tool choice controls whether calling a tool is optional.
+
+14
+00:00:57.841 --> 00:01:00.916
+The five task statements follow a natural order.
+
+15
+00:01:00.916 --> 00:01:04.695
+First, describe tools clearly so the right one gets picked.
+
+16
+00:01:04.695 --> 00:01:07.898
+Second, return errors that help the agent recover.
+
+17
+00:01:07.898 --> 00:01:12.190
+Third, distribute tools so each agent has a small, role-shaped set.
+
+18
+00:01:12.190 --> 00:01:16.738
+Fourth, connect MCP servers with the right scope and no leaked secrets.
+
+19
+00:01:16.738 --> 00:01:22.119
+Fifth, use Claude Code's own built-in tools for reading, editing and searching code.
+
+20
+00:01:23.519 --> 00:01:25.824
+Here are the words this domain uses most.
+
+21
+00:01:25.824 --> 00:01:28.916
+Pause the video and read through them, then keep going.
+
+22
+00:01:30.316 --> 00:01:32.492
+Carry four ideas into the lessons.
+
+23
+00:01:32.492 --> 00:01:38.124
+Descriptions steer which tool gets picked, so improve them before adding routing layers.
+
+24
+00:01:38.124 --> 00:01:41.708
+Errors are messages to the agent, so make them specific.
+
+25
+00:01:41.708 --> 00:01:44.972
+Smaller tool sets per agent produce better choices.
+
+26
+00:01:44.972 --> 00:01:51.244
+And shared configuration lives in the repository, while secrets live in each person's environment.
+

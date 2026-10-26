@@ -1,0 +1,102 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.907
+Task statement 4.2.
+
+2
+00:00:01.907 --> 00:00:06.868
+Apply few-shot prompting to improve output consistency and quality.
+
+3
+00:00:06.868 --> 00:00:15.753
+Your extractor formats dates three different ways and invents tax IDs on unusual invoices; a few good examples fix both.
+
+4
+00:00:17.153 --> 00:00:24.706
+Few shot prompting means putting a handful of worked examples in the prompt: an input, and the exact output you want for it.
+
+5
+00:00:24.706 --> 00:00:28.177
+It is the most reliable way to get consistent formatting.
+
+6
+00:00:28.177 --> 00:00:33.294
+It is like handing a new colleague three completed forms instead of a page of rules.
+
+7
+00:00:33.294 --> 00:00:37.313
+They pick up both the format and how you handle the awkward cases.
+
+8
+00:00:38.713 --> 00:00:43.956
+Choose a small number of examples, two to four in the guide's terms, and make them count.
+
+9
+00:00:43.956 --> 00:00:52.379
+Pick the cases where a careless reader would get it wrong, and include a short reason explaining why the chosen answer beats the other options.
+
+10
+00:00:52.379 --> 00:00:57.209
+Wrap each one in example tags so Claude can tell them apart from the instructions.
+
+11
+00:00:58.609 --> 00:01:01.959
+For data extraction, variety matters more than volume.
+
+12
+00:01:01.959 --> 00:01:06.798
+Show a table layout, a prose layout and one with details tucked in a footnote.
+
+13
+00:01:06.798 --> 00:01:11.885
+Include an example where a field simply is not there and the right answer is null.
+
+14
+00:01:11.885 --> 00:01:18.833
+That teaches Claude to look carefully and to admit absence, instead of leaving fields empty or making values up.
+
+15
+00:01:20.233 --> 00:01:25.231
+In the structured extraction scenario, invoices come from hundreds of vendors.
+
+16
+00:01:25.231 --> 00:01:30.421
+The tax ID sits in a header on some, a footer on others, and is missing on a few.
+
+17
+00:01:30.421 --> 00:01:38.879
+Three examples covering exactly those cases, each with a one line reason, do more than another paragraph of instructions ever could.
+
+18
+00:01:40.279 --> 00:01:47.831
+When the problem is inconsistent format or shaky judgment on ambiguous inputs, the answer is usually few shot examples.
+
+19
+00:01:47.831 --> 00:01:49.544
+But quality beats quantity.
+
+20
+00:01:49.544 --> 00:02:00.460
+Look for options with a small number of varied examples that include reasoning, and be suspicious of answers that pile on more instructions or many near identical examples.
+
+21
+00:02:01.860 --> 00:02:05.175
+Examples teach format and judgment at the same time.
+
+22
+00:02:05.175 --> 00:02:08.490
+Keep them few, varied and pointed at the hard cases.
+
+23
+00:02:08.490 --> 00:02:10.212
+Add a short reason to each.
+
+24
+00:02:10.212 --> 00:02:15.567
+For extraction, cover different layouts and show what to do when a field is missing.
+
+25
+00:02:15.567 --> 00:02:18.500
+That is how you get consistent, honest output.
+

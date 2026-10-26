@@ -1,0 +1,134 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.897
+Task statement 3.2.
+
+2
+00:00:01.897 --> 00:00:05.869
+Create and configure custom slash commands and skills.
+
+3
+00:00:05.869 --> 00:00:13.812
+Your team types the same 20-line PR review prompt every day; a shared skill turns it into one slash command.
+
+4
+00:00:15.212 --> 00:00:20.433
+A custom command is a prompt you saved so you can run it with a slash and a name.
+
+5
+00:00:20.433 --> 00:00:26.428
+A skill goes a step further: a folder with a SKILL dot md file and any helper files it needs.
+
+6
+00:00:26.428 --> 00:00:29.522
+The key difference from CLAUDE dot md is timing.
+
+7
+00:00:29.522 --> 00:00:36.097
+CLAUDE dot md is always loaded, while a skill loads only when someone calls it or it becomes relevant.
+
+8
+00:00:37.497 --> 00:00:39.323
+Location decides who gets it.
+
+9
+00:00:39.323 --> 00:00:45.306
+Anything inside the repository's dot claude folder is committed and every teammate receives it.
+
+10
+00:00:45.306 --> 00:00:48.076
+Anything in your home folder is yours alone.
+
+11
+00:00:48.076 --> 00:00:54.625
+Inside the prompt, the arguments placeholder is replaced with whatever was typed after the command name.
+
+12
+00:00:54.625 --> 00:00:59.663
+Current docs treat commands and skills as one system, and both forms still work.
+
+13
+00:01:01.063 --> 00:01:03.931
+Three frontmatter fields show up on the exam.
+
+14
+00:01:03.931 --> 00:01:11.325
+Context fork runs the skill in a separate subagent, so a long, noisy analysis does not flood your main conversation.
+
+15
+00:01:11.325 --> 00:01:14.576
+Allowed tools names the tools the skill works with.
+
+16
+00:01:14.576 --> 00:01:17.253
+Argument hint shows the user what to type.
+
+17
+00:01:17.253 --> 00:01:22.225
+In current docs, allowed tools pre-approves tools rather than blocking others.
+
+18
+00:01:23.625 --> 00:01:25.722
+Picture the code generation team.
+
+19
+00:01:25.722 --> 00:01:31.061
+They want one shared review workflow, so it goes in the repository and is committed.
+
+20
+00:01:31.061 --> 00:01:34.429
+Someone's personal helper stays in their home folder.
+
+21
+00:01:34.429 --> 00:01:39.894
+A skill that scans hundreds of files gets context fork so only its summary comes back.
+
+22
+00:01:39.894 --> 00:01:44.724
+And the style rules everyone must follow all the time stay in CLAUDE dot md.
+
+23
+00:01:46.124 --> 00:01:48.292
+The exam likes three confusions.
+
+24
+00:01:48.292 --> 00:01:50.460
+Personal versus shared location.
+
+25
+00:01:50.460 --> 00:01:53.577
+Inline versus forked execution for noisy work.
+
+26
+00:01:53.577 --> 00:01:56.220
+And on-demand versus always-on content.
+
+27
+00:01:56.220 --> 00:02:00.692
+When a question says the whole team, look for the repository path.
+
+28
+00:02:00.692 --> 00:02:05.367
+When it says output is cluttering the session, look for context fork.
+
+29
+00:02:06.767 --> 00:02:08.343
+Keep four things in mind.
+
+30
+00:02:08.343 --> 00:02:10.929
+Where the file lives decides who gets it.
+
+31
+00:02:10.929 --> 00:02:14.398
+Context fork keeps noisy work out of your main session.
+
+32
+00:02:14.398 --> 00:02:19.317
+Allowed tools and argument hint shape how a skill runs and how people call it.
+
+33
+00:02:19.317 --> 00:02:25.497
+And use skills for workflows you call on demand, while CLAUDE dot md holds what must always apply.
+

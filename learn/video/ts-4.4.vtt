@@ -1,0 +1,118 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.982
+Task statement 4.4.
+
+2
+00:00:01.982 --> 00:00:07.519
+Implement validation, retry, and feedback loops for extraction quality.
+
+3
+00:00:07.519 --> 00:00:17.033
+An invoice's line items add up to 410 but Claude extracted a total of 401; your loop must catch it and fix it, or flag it.
+
+4
+00:00:18.433 --> 00:00:22.038
+A record can match the schema perfectly and still be wrong.
+
+5
+00:00:22.038 --> 00:00:27.475
+The line items might not add up to the total, or a date might fall before the order date.
+
+6
+00:00:27.475 --> 00:00:29.735
+So validate in code after extraction.
+
+7
+00:00:29.735 --> 00:00:37.249
+When something fails, send Claude the exact problem, like a teacher's margin note, rather than a bare request to try again.
+
+8
+00:00:38.649 --> 00:00:41.718
+A good retry tells Claude what failed and where.
+
+9
+00:00:41.718 --> 00:00:46.321
+Line items sum to four hundred ten, but the total says four hundred one.
+
+10
+00:00:46.321 --> 00:00:48.495
+Please re-read the totals section.
+
+11
+00:00:48.495 --> 00:00:51.052
+That fixes misreadings and format slips.
+
+12
+00:00:51.052 --> 00:00:56.486
+But if the value is simply not in the document, no number of retries will produce it.
+
+13
+00:00:56.486 --> 00:00:58.660
+Return null, flag it, and move on.
+
+14
+00:01:00.060 --> 00:01:02.672
+Some fields exist to make problems visible.
+
+15
+00:01:02.672 --> 00:01:10.266
+Capture the total printed on the document and the total calculated from line items, and set a conflict flag when they differ.
+
+16
+00:01:10.266 --> 00:01:14.518
+For review style outputs, record which pattern triggered each finding.
+
+17
+00:01:14.518 --> 00:01:21.991
+Later, when people dismiss findings, you can group them by pattern and see exactly which rule is producing false positives.
+
+18
+00:01:23.391 --> 00:01:29.181
+In the extraction pipeline, the validator catches a total that does not match its line items.
+
+19
+00:01:29.181 --> 00:01:33.912
+The retry includes the precise numbers, and Claude corrects a misread digit.
+
+20
+00:01:33.912 --> 00:01:39.453
+Another document has no due date at all, so the pipeline stops retrying and records null.
+
+21
+00:01:39.453 --> 00:01:44.745
+When the source itself is inconsistent, both totals are kept and flagged for a human.
+
+22
+00:01:46.145 --> 00:01:48.511
+Retry questions hinge on two ideas.
+
+23
+00:01:48.511 --> 00:01:53.107
+A good retry carries the specific error, never a blind resubmission.
+
+24
+00:01:53.107 --> 00:01:57.569
+And retries only help when the answer is actually in the document.
+
+25
+00:01:57.569 --> 00:02:00.205
+For missing data, stop and return null.
+
+26
+00:02:00.205 --> 00:02:05.409
+For genuine conflicts, keep both values and flag them so a person can decide.
+
+27
+00:02:06.809 --> 00:02:10.905
+Build a loop: extract, validate, and retry with the exact error.
+
+28
+00:02:10.905 --> 00:02:15.577
+Know when to stop, because missing data cannot be retried into existence.
+
+29
+00:02:15.577 --> 00:02:23.129
+Design fields that expose conflicts and patterns, so you can measure and fix the prompt over time instead of guessing.
+

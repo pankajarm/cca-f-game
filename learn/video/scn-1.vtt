@@ -1,0 +1,118 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:04.311
+Scenario 1 walkthrough: Customer Support Resolution Agent.
+
+2
+00:00:04.311 --> 00:00:15.284
+A support agent that can issue refunds is where prompt-only rules fail in production, so this scenario keeps asking whether a rule belongs in a prompt, a hook or code.
+
+3
+00:00:16.684 --> 00:00:20.946
+Scenario one is a customer support agent built on the Agent SDK.
+
+4
+00:00:20.946 --> 00:00:32.867
+It talks to customers about returns, billing disputes and account problems, and it acts through MCP tools such as get customer, lookup order, process refund and escalate to human.
+
+5
+00:00:32.867 --> 00:00:39.127
+The business wants most issues solved in one contact, without the agent doing anything unsafe.
+
+6
+00:00:40.527 --> 00:00:43.436
+Expect questions from several task statements.
+
+7
+00:00:43.436 --> 00:00:46.788
+The loop and enforced workflow steps from domain one.
+
+8
+00:00:46.788 --> 00:00:48.812
+Hooks that intercept tool calls.
+
+9
+00:00:48.812 --> 00:00:52.923
+Tool descriptions and structured error responses from domain two.
+
+10
+00:00:52.923 --> 00:01:00.260
+And from domain five, keeping exact case facts across a long conversation, and knowing when to hand over to a human.
+
+11
+00:01:01.660 --> 00:01:02.897
+A classic decision.
+
+12
+00:01:02.897 --> 00:01:08.303
+The agent occasionally issues a refund before it has verified who it is talking to.
+
+13
+00:01:08.303 --> 00:01:12.602
+Making the prompt more emphatic lowers the rate but never to zero.
+
+14
+00:01:12.602 --> 00:01:21.329
+The exam wants a deterministic gate, so the refund tool is blocked by code or a pre tool use hook until verification has actually run.
+
+15
+00:01:22.729 --> 00:01:25.262
+Now a contrast where the answer changes.
+
+16
+00:01:25.262 --> 00:01:28.808
+If the customer asks for a human, honour it immediately.
+
+17
+00:01:28.808 --> 00:01:30.708
+If policy has a gap, escalate.
+
+18
+00:01:30.708 --> 00:01:38.117
+But frustration alone is not a reason when the agent can fix the problem, and self-rated confidence is a poor signal.
+
+19
+00:01:38.117 --> 00:01:42.676
+When you do hand off, send a structured summary, not the raw transcript.
+
+20
+00:01:44.076 --> 00:01:45.860
+Watch for these distractors.
+
+21
+00:01:45.860 --> 00:01:50.129
+Prompt-only limits on refunds, where a hook should enforce the cap.
+
+22
+00:01:50.129 --> 00:01:53.314
+Escalating on sentiment instead of clear criteria.
+
+23
+00:01:53.314 --> 00:01:57.137
+Vague error messages that leave the agent unable to recover.
+
+24
+00:01:57.137 --> 00:02:02.871
+And guessing between several matching customers rather than asking for another identifier.
+
+25
+00:02:04.271 --> 00:02:06.833
+For scenario one, remember four things.
+
+26
+00:02:06.833 --> 00:02:11.102
+Required ordering and money limits are enforced in code or hooks.
+
+27
+00:02:11.102 --> 00:02:15.898
+Escalation follows explicit criteria and comes with a structured handoff.
+
+28
+00:02:15.898 --> 00:02:20.890
+Tool errors say what kind of failure it was and whether a retry makes sense.
+
+29
+00:02:20.890 --> 00:02:26.671
+And exact amounts and identifiers live in a case facts block that summaries cannot blur.
+

@@ -1,0 +1,122 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:01.995
+Task statement 5.1.
+
+2
+00:00:01.995 --> 00:00:08.762
+Manage conversation context to preserve critical information across long interactions.
+
+3
+00:00:08.762 --> 00:00:19.935
+By turn twenty of a billing dispute, a summarised history can turn a promised 147 dollar 23 refund into 'about 150', and the customer notices.
+
+4
+00:00:21.335 --> 00:00:24.104
+Long interactions lose detail in quiet ways.
+
+5
+00:00:24.104 --> 00:00:29.391
+Each round of summarising keeps the gist but rounds off amounts, dates and promises.
+
+6
+00:00:29.391 --> 00:00:35.495
+Content in the middle of a long context gets less attention than content at the start or the end.
+
+7
+00:00:35.495 --> 00:00:39.397
+And bulky tool output pushes the important facts further away.
+
+8
+00:00:39.397 --> 00:00:42.796
+It is a game of telephone, played with your own notes.
+
+9
+00:00:44.196 --> 00:00:47.304
+The fix is to stop trusting the summary for facts.
+
+10
+00:00:47.304 --> 00:00:54.078
+Keep a small structured block of case facts, outside the history you summarise, and include it on every turn.
+
+11
+00:00:54.078 --> 00:00:58.801
+Amounts, dates, identifiers, promises, and the list of open issues go there.
+
+12
+00:00:58.801 --> 00:01:04.271
+The conversation can be compressed as much as you like, but the facts block stays exact.
+
+13
+00:01:05.671 --> 00:01:09.106
+Next, control what enters the context and where it sits.
+
+14
+00:01:09.106 --> 00:01:13.646
+A forty field lookup result should be trimmed to the five fields you need.
+
+15
+00:01:13.646 --> 00:01:17.633
+Put the key findings first with headers so they are easy to find.
+
+16
+00:01:17.633 --> 00:01:21.376
+Ask subagents for structured facts instead of long reasoning.
+
+17
+00:01:21.376 --> 00:01:28.369
+Anthropic's docs call the decline context rot, and suggest long documents at the top with the question at the end.
+
+18
+00:01:29.769 --> 00:01:34.949
+In the support scenario a customer raises three separate problems over thirty turns.
+
+19
+00:01:34.949 --> 00:01:38.957
+Track each one as a line in the open issues list with its status.
+
+20
+00:01:38.957 --> 00:01:42.410
+Trim order lookups to the handful of fields that matter.
+
+21
+00:01:42.410 --> 00:01:45.925
+Build every reply from the facts block plus recent turns.
+
+22
+00:01:45.925 --> 00:01:51.721
+When the call ends, the closing summary comes from the block, so no issue silently disappears.
+
+23
+00:01:53.121 --> 00:01:59.434
+The exam's distractors usually trust summaries, pass everything through, or reach for a bigger window.
+
+24
+00:01:59.434 --> 00:02:00.981
+The right answers curate.
+
+25
+00:02:00.981 --> 00:02:10.636
+Keep exact facts outside the summary, trim tool output, put important content where the model reads best, and ask other agents for facts rather than essays.
+
+26
+00:02:12.036 --> 00:02:12.604
+To recap.
+
+27
+00:02:12.604 --> 00:02:18.351
+Assume summaries will lose precision, so keep critical facts in their own persistent block.
+
+28
+00:02:18.351 --> 00:02:21.508
+Feed the model less noise by trimming tool output.
+
+29
+00:02:21.508 --> 00:02:24.476
+Place key information first with clear headers.
+
+30
+00:02:24.476 --> 00:02:29.401
+And ask every upstream agent for structured facts that are easy to keep exact.
+

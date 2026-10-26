@@ -1,0 +1,134 @@
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:04.036
+Start here: how the exam works and how to use this track.
+
+2
+00:00:04.036 --> 00:00:15.327
+The exam tests judgment on realistic systems, not trivia, so the fastest way to pass is to study the guide's task statements, build a little, and practise picking the root-cause fix.
+
+3
+00:00:16.727 --> 00:00:17.234
+Welcome.
+
+4
+00:00:17.234 --> 00:00:22.054
+This track prepares you for the Claude Certified Architect Foundations exam.
+
+5
+00:00:22.054 --> 00:00:25.162
+It has sixty questions in two hours, closed book.
+
+6
+00:00:25.162 --> 00:00:30.869
+Scores run from one hundred to one thousand and the pass line is seven hundred and twenty.
+
+7
+00:00:30.869 --> 00:00:37.719
+Each question is framed by a realistic scenario, and you get four of the six published scenarios on the day.
+
+8
+00:00:39.119 --> 00:00:42.581
+The exam guide splits the material into five domains.
+
+9
+00:00:42.581 --> 00:00:47.285
+Agentic architecture is the biggest at about a quarter of the questions.
+
+10
+00:00:47.285 --> 00:00:50.683
+Claude Code and prompt engineering are a fifth each.
+
+11
+00:00:50.683 --> 00:00:57.085
+Tool design and MCP is just under a fifth, and context management and reliability is the smallest.
+
+12
+00:00:57.085 --> 00:01:00.025
+Spend your time in roughly those proportions.
+
+13
+00:01:01.425 --> 00:01:03.178
+The track has three stages.
+
+14
+00:01:03.178 --> 00:01:08.500
+Stage one gives you a short primer for each domain, so the vocabulary is familiar.
+
+15
+00:01:08.500 --> 00:01:12.589
+Stage two has one lesson for every task statement in the guide.
+
+16
+00:01:12.589 --> 00:01:16.938
+Stage three walks through the six scenarios and ends with exam day.
+
+17
+00:01:16.938 --> 00:01:22.844
+Every lesson has slides, a narrated video, a small hands-on lab, a quick check and a drill.
+
+18
+00:01:24.244 --> 00:01:25.793
+Here is a loop that works.
+
+19
+00:01:25.793 --> 00:01:29.487
+Start with the placement check so you know where you are weak.
+
+20
+00:01:29.487 --> 00:01:34.908
+For each weak task statement, take the lesson and do the lab, because hands-on time sticks.
+
+21
+00:01:34.908 --> 00:01:35.742
+Then drill it.
+
+22
+00:01:35.742 --> 00:01:39.614
+Every miss lands in the Mistake Clinic, so clear those regularly.
+
+23
+00:01:39.614 --> 00:01:43.487
+Once a week, sit a full mock exam and watch the domain bars move.
+
+24
+00:01:44.887 --> 00:01:47.716
+Most questions have several plausible answers.
+
+25
+00:01:47.716 --> 00:01:48.823
+Three habits help.
+
+26
+00:01:48.823 --> 00:01:57.556
+Prefer the option that fixes the root cause over one that patches the symptom, especially a stronger prompt where code could enforce the rule.
+
+27
+00:01:57.556 --> 00:02:00.447
+Prefer the simplest design that meets the need.
+
+28
+00:02:00.447 --> 00:02:04.321
+And use the out-of-scope list in the guide to rule options out.
+
+29
+00:02:05.721 --> 00:02:06.346
+To sum up.
+
+30
+00:02:06.346 --> 00:02:14.532
+The official exam guide is the authority, and this track is unofficial study help built from it and from Anthropic's documentation.
+
+31
+00:02:14.532 --> 00:02:19.282
+Study task statement by task statement, in proportion to the domain weights.
+
+32
+00:02:19.282 --> 00:02:21.219
+Build a little in every domain.
+
+33
+00:02:21.219 --> 00:02:26.031
+And on the day, choose the root-cause fix and the simplest design that works.
+
