@@ -32,7 +32,8 @@ Pass at 720. The real exam works the same way. That is the point.
 
 ## Combat rules (in the game)
 
-- **10 questions** per battle, drawn from the floor's bank of 15. **3 hearts.**
+- **10 questions** per battle, drawn from every question on the floor's task
+  statements, unseen first. **3 hearts.**
   A fourth miss ends the run. Clear at **7/10**; a perfect 10 earns a ★.
 - **Combos:** consecutive correct answers. At ×3 your hits become critical.
   Every third combo step forges a random power-up.
@@ -48,9 +49,9 @@ Pass at 720. The real exam works the same way. That is the point.
 |---|---|
 | Correct answer | 15 (+8 critical, +5 under 15s) |
 | Floor cleared | +150 (perfect: +400 more) |
-| Hunt vignette named | +25 |
+| Monster captured (6/8 in a hunt) | +100 |
 | Clinic discharge progress | +10 per correct |
-| Lightning Round | 8 × final score |
+| Recall Sprint | 8 × final score |
 | The Proctor | 5/correct, +600 pass, +600 at 900+ |
 
 **Titles:** Apprentice → 1,500 Loop Warden → 4,000 Hook Smith → 8,000 Config
@@ -72,7 +73,7 @@ Architect.**
 | 👤 Generic Error Ghost | "Operation failed. That's all." | `errorCategory`, `isRetryable`, partials |
 | 🏜️ The Accuracy Mirage | "97% overall!" | Per-type, per-field validation |
 | 🦑 The Scope Creep | "I decomposed it! …wrongly." | Partition scope to match full coverage |
-| 🦇 Cache Vampire | "Timestamp first in the prompt!" | Stable prefix first — protect the cache |
+| 🦎 Schema Shapeshifter | "Just ask for JSON nicely!" | Enforce structure with tool use and a JSON schema |
 
 ## Playing with Claude Code as dungeon master
 
@@ -83,8 +84,8 @@ Open this repo in Claude Code and say any of:
 - **"Quiz me on D3"** / **"flash round"** — five quick questions, any domain.
 - **"Run the full exam"** — 60 questions at real weights; Claude times you and
   produces a domain-by-domain score report at the end.
-- **"Anti-pattern hunt"** — Claude improvises *new* war-story vignettes in the
-  style of `practice-tests/anti-pattern-hunt.md` and you name the monster.
+- **"Anti-pattern hunt"** — Claude improvises *new* war-story vignettes and
+  you name the monster from the bestiary table above.
 - **"Explain like I missed it"** — paste any question you got wrong; Claude
   explains the governing rule, then generates two fresh variations to confirm
   you actually got it.

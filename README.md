@@ -10,7 +10,7 @@
 &nbsp;
 ![No install](https://img.shields.io/badge/no_install-runs_in_browser-4E8F83?style=for-the-badge)
 &nbsp;
-![Questions](https://img.shields.io/badge/213_questions-fact_checked-5B7FA6?style=for-the-badge)
+![Questions](https://img.shields.io/badge/745_questions-reviewed-5B7FA6?style=for-the-badge)
 
 <br>
 
@@ -30,7 +30,7 @@ PDF of flashcards, you climb a ten-floor tower, fight a boss made of each way
 real agent systems break, and finish against **The Proctor** — a mock exam in the
 real format: 60 questions, 120 minutes, 4 of the 6 official scenarios. **The
 Blueprint** maps the question bank to the official exam guide's 30 task statements
-so you can study the guide line by line. All **213 questions** were written to the
+so you can study the guide line by line. All **745 questions** were written to the
 exam blueprint and checked by an adversarial reviewer.
 
 It's one folder of static files. Nothing to build, nothing to install.
@@ -82,15 +82,17 @@ answer after each one.
 
 </div>
 
-## 🎮 Seven ways to study
+## 🎮 A study path built around the real exam
+
+The home screen opens on **Exam readiness**: for each domain, how much you've covered and your first-try accuracy against the 72% line, your latest mock estimate, and one **Next best step** button. Below it the modes are grouped the way you should use them: **Learn**, **Practice**, **Test**. Every question in every mode maps to an exam-guide task statement.
 
 | Mode | What it is |
 |---|---|
-| 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Clear at 7/10 to ascend; ★ for a perfect 10. |
+| 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Each floor covers a group of task statements and serves 10 questions you haven't seen yet. Clear at 7/10 to ascend; ★ for a perfect 10. |
 | 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a drill of up to 10 questions for each. Also by scenario. |
-| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled score) or Practice exam (2 min per question, instant feedback). |
-| ⚡ **Lightning Round** | 90 seconds, unlimited questions, combos multiply your score. For people who read the question before the options load. |
-| 🔦 **Anti-Pattern Hunt** | Twelve production war stories, each hiding one monster. Name it to capture it. |
+| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled score) or Practice exam (2 min per question, instant feedback). Each new exam prefers questions you haven't had in an earlier one: the bank holds a dozen fully separate mocks. |
+| ⚡ **Recall Sprint** | 90 seconds over questions you've already studied; combos multiply your score. Builds recall, doesn't count toward readiness. |
+| 🔦 **Anti-Pattern Hunt** | Twelve monsters, each an anti-pattern the exam's wrong answers are built from. Hunt one through the task statements it haunts: 6 of 8 right captures it. |
 | 🩹 **Mistake Clinic** | Every question you miss checks in here. Get it right twice in a row to discharge it — spaced repetition aimed at your weak spots. |
 | 🏆 **Trophy Hall** | 14 achievements, 7 titles from *Apprentice* to *Certified Architect*, daily streaks. |
 
@@ -105,17 +107,23 @@ answer after each one.
 
 ## 🧠 The question bank is the point
 
-`questions.js` holds **213 scenario questions**: 150 across the ten floors, 30
-cross-domain exam-pool questions, 21 written to fill gaps in the exam guide's task
-statements, and 12 hunt vignettes. Every question has a stable `id`; non-hunt
-questions also carry the guide task statement (`ts`) and scenario they test
-(`scripts/guide_tags.py`, checked by `scripts/check_bank.py`). They were authored
+`questions.js` holds **745 scenario questions**, split by the exam's weights
+(D1 203 · D2 135 · D3 147 · D4 146 · D5 114) with at least 18 on every one of the
+30 task statements. Every question has a stable `id`, the task statement (`ts`) and
+scenario it tests, and new ones carry the official doc page (`src`) that backs the
+answer. `scripts/check_bank.py` keeps the bank honest: valid tags, no retired ids,
+answer positions balanced, and the correct option is the longest one only about as
+often as chance (so "pick the longest answer" doesn't work). The first 197 were authored
 against a June-2026 brief of the real exam — `stop_reason` loop mechanics, hooks
 vs prompts, MCP config scopes, the `CLAUDE.md` hierarchy, skills frontmatter,
 `claude -p` CI patterns, batch API economics, schema design, context management,
 escalation policy — then **every question was audited by an adversarial reviewer
 agent** that argued for each distractor like a grumpy test-taker filing an appeal.
-Anything defensible got rewritten.
+Anything defensible got rewritten. The 548 added in October 2026 were written
+from the exam guide and current Anthropic docs, one batch per task-statement group,
+and each batch went through an independent reviewer that re-checked every answer
+key against the docs before it was merged (`scripts/check_batch.py`,
+`scripts/add_questions.py`). None are real or reconstructed exam items.
 
 > **The principle baked into every answer:** the correct option fixes the **root
 > cause**; the distractors are patches on a flawed design. (Better tool
@@ -167,9 +175,8 @@ history, mistake deck) saves automatically to your browser's localStorage.
 `questions.js` is the single source of truth; the printable study materials are
 generated from it with `python3 scripts/build_tests.py`:
 
-- `practice-tests/test-01…10-*.md` — 15 questions per floor, answers in collapsible spoilers
-- `practice-tests/full-exam-01.md` — a fixed 60-question paper exam with answer key
-- `practice-tests/anti-pattern-hunt.md` — the twelve war stories, printable
+- `practice-tests/test-01…10-*.md` — every question for each floor's task statements, answers in collapsible spoilers
+- `practice-tests/full-exam-01…03.md` — three 60-question paper exams at exact domain weights, no question shared, with answer keys
 - `GAME.md` — quest log, XP rules, and how to run boss battles with Claude Code as your dungeon master
 - `STUDY_GUIDE.md` — a 12-week, 1-hour-a-day syllabus mapped to the tower
 
