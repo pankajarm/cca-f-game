@@ -8,13 +8,13 @@ import json, re, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bankio
-from check_bank import guide_ts_ids, POSITION_RX, near_dupes, longest_is_correct
+from check_bank import guide_ts_ids, guide_scenario_domains, POSITION_RX, near_dupes, longest_is_correct
 
 KEYS = {'q', 'options', 'correct', 'explanation', 'hint', 'difficulty', 'tags', 'ts', 'scenario', 'src'}
 
 
 def check(items, existing):
-    errs, valid_ts = [], guide_ts_ids()
+    errs, valid_ts, scen = [], guide_ts_ids(), guide_scenario_domains()
     for i, q in enumerate(items):
         w = f'item {i} ({q.get("ts")})'
         miss = KEYS - set(q)
@@ -23,6 +23,8 @@ def check(items, existing):
         if not (isinstance(q.get('correct'), int) and 0 <= q['correct'] < 4): errs.append(f'{w}: bad correct')
         if q.get('ts') not in valid_ts: errs.append(f'{w}: bad ts')
         if q.get('scenario') not in range(0, 7): errs.append(f'{w}: bad scenario')
+        if q.get('scenario') and 'D' + str(q.get('ts', '0'))[0] not in scen.get(q['scenario'], ()):
+            errs.append(f'{w}: scenario {q["scenario"]} does not cover this domain')
         if q.get('difficulty') not in ('core', 'hard'): errs.append(f'{w}: difficulty must be core or hard')
         if POSITION_RX.search(q.get('explanation', '') + ' ' + q.get('hint', '')):
             errs.append(f'{w}: explanation/hint refers to an option by position or letter (options are shuffled)')
