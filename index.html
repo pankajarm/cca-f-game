@@ -584,6 +584,10 @@ button { font-family: var(--font-body); cursor: pointer; color: inherit; }
 .er-actions .btn[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
 .focus-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; text-align: left; }
 .focus-row .btn { flex: none; }
+.focus-row > span:first-child { flex: 1; min-width: 0; }
+/* phones: the text gets the full width and its buttons sit underneath */
+@media (max-width: 640px) { .focus-row { flex-wrap: wrap; } .focus-row > span:first-child { flex-basis: 100%; } }
+a.btn { text-decoration: none; }
 .rev-item .tsline { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
