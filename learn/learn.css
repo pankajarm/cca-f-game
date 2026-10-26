@@ -1,0 +1,128 @@
+/* ARCHITECT'S ASCENT — Learn track (path, lesson page, slide decks).
+ * Shared by index.html and the standalone learn/deck.html. Uses the site tokens
+ * (--card, --ink, --d1..--d5, ...); deck.html defines the same tokens. */
+
+/* ---------- learning path ---------- */
+.ln-summary { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 22px; }
+.ln-summary .ln-prog { flex: 1; min-width: 200px; }
+.ln-summary .ln-prog b { font-family: var(--font-display); font-size: 18px; }
+.ln-bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.ln-bar > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--gold)); border-radius: 99px; }
+.ln-stage { margin: 26px 0 8px; }
+.ln-stage h3 { font-family: var(--font-display); font-size: 23px; font-weight: 800; letter-spacing: -.02em; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.ln-stage h3 .lvl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #fff; background: var(--accent); padding: 3px 10px; border-radius: 99px; }
+.ln-stage h3 .lvl.l2 { background: var(--d4); }
+.ln-stage h3 .lvl.l3 { background: var(--d5); }
+.ln-stage > p { color: var(--muted); font-size: 14.5px; margin: 4px 0 12px; max-width: 760px; }
+.ln-domain { margin: 14px 0 6px; font-weight: 700; font-size: 14px; color: var(--ink-soft); display: flex; gap: 8px; align-items: center; }
+.ln-domain .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dc); }
+.ln-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.ln-card { position: relative; text-align: left; background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--dc, var(--accent)); border-radius: 13px; padding: 12px 14px 11px; box-shadow: var(--shadow); color: var(--ink); transition: transform .15s, box-shadow .15s; }
+.ln-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-big); }
+.ln-card .id { font-family: var(--font-display); font-weight: 800; font-size: 13px; color: var(--dc, var(--accent-deep)); }
+.ln-card .nm { display: block; font-weight: 600; font-size: 14.5px; line-height: 1.35; margin: 2px 0 6px; }
+.ln-card .meta { font-size: 12.5px; color: var(--muted); }
+.ln-card .done { position: absolute; top: 9px; right: 11px; font-size: 15px; }
+.ln-card.is-done { background: var(--card-2); }
+.ln-card.is-next { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ln-res { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.ln-res .box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
+.ln-res .box h4 { font-family: var(--font-display); font-size: 16px; margin-bottom: 6px; }
+.ln-res ul { padding-left: 18px; font-size: 14px; }
+.ln-res li { margin: 4px 0; }
+.ln-res li .muted { font-size: 12.5px; }
+
+/* ---------- lesson page ---------- */
+.ls-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: -8px 0 14px; }
+.ls-chip { font-size: 12.5px; font-weight: 700; padding: 3px 11px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--ink-soft); }
+.ls-chip.dom { background: var(--dc); border-color: transparent; color: #fff; }
+.ls-hook { font-size: 17px; color: var(--ink-soft); margin-bottom: 16px; max-width: 820px; }
+.ls-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.ls-tabs button { font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); }
+.ls-tabs button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ls-player { background: #000; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-big); }
+.ls-player video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+.ls-deckbar { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; flex-wrap: wrap; }
+.ls-deckbar .count { font-weight: 700; font-size: 14px; color: var(--muted); min-width: 64px; text-align: center; }
+.ls-deckbar .grow { flex: 1; }
+.ls-dots { display: flex; gap: 5px; }
+.ls-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); cursor: pointer; }
+.ls-dots i.on { background: var(--accent); }
+.ls-note { margin-top: 10px; background: var(--card-2); border: 1px dashed var(--line-strong); border-radius: 12px; padding: 10px 14px; font-size: 14.5px; color: var(--ink-soft); }
+.ls-section { margin-top: 26px; }
+.ls-section h4 { font-family: var(--font-display); font-size: 19px; font-weight: 800; margin-bottom: 8px; }
+.ls-delta { background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; font-size: 14.5px; margin-top: 14px; }
+.ls-check { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.ls-check .q-text { font-size: 16px; margin-bottom: 10px; }
+.ls-why { margin-top: 10px; font-size: 14.5px; padding: 9px 12px; border-radius: 10px; background: var(--good-soft); }
+.ls-why.bad { background: var(--bad-soft); }
+.ls-vids { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ls-vid { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+.ls-vid .frame { position: relative; aspect-ratio: 16 / 9; background: #111 center / cover no-repeat; display: grid; place-items: center; cursor: pointer; border: 0; width: 100%; }
+.ls-vid .frame span { background: rgba(0,0,0,.65); color: #fff; font-weight: 700; font-size: 13px; padding: 7px 12px; border-radius: 99px; }
+.ls-vid iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; display: block; }
+.ls-vid .cap { padding: 9px 12px 11px; font-size: 13.5px; }
+.ls-vid .cap b { display: block; line-height: 1.35; }
+.ls-vid .cap .muted { font-size: 12.5px; }
+.ls-src { padding-left: 18px; font-size: 14.5px; }
+.ls-src li { margin: 4px 0; }
+.ls-foot { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
+.ls-gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.ls-gloss div { background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px; font-size: 14px; }
+.ls-gloss b { display: block; font-size: 14px; }
+
+/* ---------- slide (16:9, scales with its container) ---------- */
+.ldeck { container-type: inline-size; width: 100%; }
+.lslide {
+  --dc: var(--accent);
+  position: relative; aspect-ratio: 16 / 9; width: 100%; overflow: hidden;
+  background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-big); padding: 5.2cqw 6cqw 4.6cqw; display: flex; flex-direction: column;
+  font-family: var(--font-body); font-size: 2.15cqw; line-height: 1.45;
+}
+.lslide::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.1cqw; background: var(--dc); }
+.lslide .kick { font-size: .67em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dc); margin-bottom: .8cqw; }
+.lslide h2 { font-family: var(--font-display); font-weight: 800; font-size: 1.72em; line-height: 1.12; letter-spacing: -.02em; margin-bottom: 2.2cqw; }
+.lslide ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.25cqw; align-content: start; }
+.lslide li { position: relative; padding-left: 2.6cqw; }
+.lslide li::before { content: ''; position: absolute; left: .3cqw; top: .62em; width: 1cqw; height: 1cqw; border-radius: 50%; background: var(--dc); }
+.lslide code { font-size: .88em; white-space: normal; }
+.lslide .body { flex: 1; display: flex; gap: 3cqw; min-height: 0; }
+.lslide .body > * { flex: 1; min-width: 0; }
+.lslide pre { font-family: var(--font-code); font-size: .72em; line-height: 1.5; background: #24201B; color: #F0EADD; border-radius: 1.4cqw; padding: 1.8cqw 2cqw; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; align-self: flex-start; max-height: 100%; }
+.lslide .body > pre { flex: 1.25; }
+.lslide pre .lang { display: block; font-family: var(--font-body); font-size: .78em; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #A89C88; margin-bottom: .6cqw; }
+.lslide .foot { position: absolute; left: 6cqw; right: 6cqw; bottom: 2cqw; display: flex; justify-content: space-between; font-size: 1.25cqw; color: var(--muted); }
+.lslide .delta { margin-top: auto; font-size: .74em; background: var(--accent-soft); border-radius: 1cqw; padding: .9cqw 1.4cqw; }
+/* title slide */
+.lslide.k-title { justify-content: center; background: linear-gradient(135deg, var(--card) 50%, color-mix(in srgb, var(--dc) 18%, var(--card))); }
+.lslide.k-title h2 { font-size: 2.33em; max-width: 80%; }
+.lslide.k-title .hook { font-size: 1.12em; color: var(--ink-soft); max-width: 80%; }
+.lslide.k-title .badge { display: inline-block; font-family: var(--font-display); font-weight: 800; font-size: .93em; color: #fff; background: var(--dc); padding: .5cqw 1.6cqw; border-radius: 99px; margin-bottom: 2cqw; align-self: flex-start; }
+/* traps */
+.lslide .traps { display: grid; gap: 1.3cqw; }
+.lslide .trap { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2cqw; font-size: .81em; line-height: 1.38; }
+.lslide .trap > div { border-radius: 1.1cqw; padding: 1cqw 1.4cqw; }
+.lslide .trap .w { background: var(--bad-soft); }
+.lslide .trap .r { background: var(--good-soft); }
+.lslide .trap b { display: block; font-size: .69em; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .2cqw; }
+.lslide .trap .w b { color: var(--bad); }
+.lslide .trap .r b { color: var(--good); }
+.lslide .trap .why { display: block; margin-top: .3cqw; color: var(--ink-soft); font-size: .86em; }
+/* recap */
+.lslide.k-recap { background: linear-gradient(160deg, var(--card) 60%, color-mix(in srgb, var(--dc) 14%, var(--card))); }
+.lslide.k-recap li { font-weight: 600; }
+/* glossary slide */
+.lslide .gl { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqw 2.4cqw; font-size: .79em; }
+.lslide .gl b { color: var(--dc); }
+
+@media (max-width: 640px) {
+  .ls-deckbar .ls-dots { display: none; }
+}
+@media print {
+  body.deck-print .lslide { break-after: page; box-shadow: none; border: 0; border-radius: 0; }
+}
+.ls-lab { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--gold); border-radius: 14px; padding: 14px 18px; box-shadow: var(--shadow); font-size: 15px; }
+.ls-lab ol { padding-left: 20px; margin: 8px 0; }
+.ls-lab li { margin: 5px 0; }
+.ls-lab p { font-size: 14.5px; color: var(--ink-soft); }

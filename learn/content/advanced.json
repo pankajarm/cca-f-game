@@ -1,0 +1,370 @@
+[
+ {
+  "id": "start-here",
+  "kind": "guide",
+  "stage": "beginner",
+  "title": "Start here: how the exam works and how to use this track",
+  "short": "Start here",
+  "minutes": 6,
+  "hook": "The exam tests judgment on realistic systems, not trivia, so the fastest way to pass is to study the guide's task statements, build a little, and practise picking the root-cause fix.",
+  "slides": [
+   {"kind": "idea", "title": "What the exam is",
+    "bullets": ["Claude Certified Architect, Foundations. Exam code CCAR-F.", "60 questions in 120 minutes, closed book.", "Scored 100 to 1000; you pass at 720.", "Every question sits inside one of 4 scenarios, drawn from 6."],
+    "note": "Welcome. This track prepares you for the Claude Certified Architect Foundations exam. It has sixty questions in two hours, closed book. Scores run from one hundred to one thousand and the pass line is seven hundred and twenty. Each question is framed by a realistic scenario, and you get four of the six published scenarios on the day."},
+   {"kind": "how", "title": "Five domains, weighted",
+    "bullets": ["D1 Agentic architecture and orchestration: 27 percent.", "D2 Tool design and MCP integration: 18 percent.", "D3 Claude Code configuration and workflows: 20 percent.", "D4 Prompt engineering and structured output: 20 percent.", "D5 Context management and reliability: 15 percent."],
+    "note": "The exam guide splits the material into five domains. Agentic architecture is the biggest at about a quarter of the questions. Claude Code and prompt engineering are a fifth each. Tool design and MCP is just under a fifth, and context management and reliability is the smallest. Spend your time in roughly those proportions."},
+   {"kind": "how", "title": "How this track is built",
+    "bullets": ["Stage 1: a short primer for each domain.", "Stage 2: one lesson per task statement, 30 in all.", "Stage 3: the six scenarios, then exam day.", "Each lesson: slides, video, a lab, a quick check, a drill.", "Stages are a suggestion. Jump to any lesson."],
+    "note": "The track has three stages. Stage one gives you a short primer for each domain, so the vocabulary is familiar. Stage two has one lesson for every task statement in the guide. Stage three walks through the six scenarios and ends with exam day. Every lesson has slides, a narrated video, a small hands-on lab, a quick check and a drill."},
+   {"kind": "practice", "title": "A study loop that works",
+    "bullets": ["Take the placement check to find weak task statements.", "Watch or read the lesson, then do its lab.", "Drill that task statement until you pass 75 percent.", "Missed questions go to the Mistake Clinic. Clear them.", "Sit a mock exam weekly and watch the domain bars."],
+    "note": "Here is a loop that works. Start with the placement check so you know where you are weak. For each weak task statement, take the lesson and do the lab, because hands-on time sticks. Then drill it. Every miss lands in the Mistake Clinic, so clear those regularly. Once a week, sit a full mock exam and watch the domain bars move."},
+   {"kind": "traps", "title": "How the questions are built",
+    "pairs": [
+     {"wrong": "A patch that hides the symptom, like a stronger prompt.", "right": "The fix for the root cause, often in code or config.", "why": "Deterministic controls beat hoping the model complies."},
+     {"wrong": "The most powerful or complicated option.", "right": "The simplest design that meets the requirement.", "why": "The guide rewards proportionate architecture."},
+     {"wrong": "An option about a topic on the out-of-scope list.", "right": "Rule it out and choose among the rest.", "why": "The guide lists what it will not test, such as fine-tuning."}
+    ],
+    "note": "Most questions have several plausible answers. Three habits help. Prefer the option that fixes the root cause over one that patches the symptom, especially a stronger prompt where code could enforce the rule. Prefer the simplest design that meets the need. And use the out-of-scope list in the guide to rule options out."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["The official exam guide defines scope. This is unofficial help.", "Study by task statement, weighted by domain.", "Build something small in every domain.", "Root cause beats patch. Simple beats clever."],
+    "note": "To sum up. The official exam guide is the authority, and this track is unofficial study help built from it and from Anthropic's documentation. Study task statement by task statement, in proportion to the domain weights. Build a little in every domain. And on the day, choose the root-cause fix and the simplest design that works."}
+  ],
+  "check": [
+   {"q": "You have three weeks left and your mock results show 85% in D3 and 55% in D1. Where should most of your remaining study time go?",
+    "options": ["D1, because it is the largest domain and your weakest", "D3, to push a strong domain to 100%", "Split evenly across all five domains", "D5, because it is the smallest and quickest to finish"],
+    "answer": 0, "why": "D1 is about 27 percent of the exam and your weakest area, so gains there move the score the most."},
+   {"q": "A question offers four fixes for an agent that sometimes skips a required verification step. Which kind of option does the exam usually reward?",
+    "options": ["Rewording the system prompt so the step sounds mandatory", "A code-level gate that blocks later tools until verification has run", "Switching to a larger model", "Adding a reminder at the end of every user message"],
+    "answer": 1, "why": "Prompts have a non-zero failure rate. When a step must always happen, the guide favours deterministic enforcement in code."}
+  ],
+  "sources": [
+   {"title": "CCA-F certification page (Partner Academy)", "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"},
+   {"title": "Certification FAQ", "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"},
+   {"title": "Official prep course list", "url": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses"}
+  ],
+  "drill": {}
+ },
+
+ {
+  "id": "scn-1", "kind": "scenario", "stage": "advanced", "scenarios": [1],
+  "title": "Scenario 1 walkthrough: Customer Support Resolution Agent",
+  "short": "Support agent", "minutes": 8,
+  "hook": "A support agent that can issue refunds is where prompt-only rules fail in production, so this scenario keeps asking whether a rule belongs in a prompt, a hook or code.",
+  "slides": [
+   {"kind": "idea", "title": "The setting",
+    "bullets": ["An Agent SDK agent handles returns, billing and account issues.", "It works through MCP tools: customer, order, refund, escalate.", "Goal: high first-contact resolution, with safe escalation.", "Domains in play: D1, D2 and D5."],
+    "note": "Scenario one is a customer support agent built on the Agent SDK. It talks to customers about returns, billing disputes and account problems, and it acts through MCP tools such as get customer, lookup order, process refund and escalate to human. The business wants most issues solved in one contact, without the agent doing anything unsafe."},
+   {"kind": "how", "title": "Task statements it pulls in",
+    "bullets": ["1.1 the loop and 1.4 enforced steps and handoffs.", "1.5 hooks that block or normalise tool calls.", "2.1 tool descriptions and 2.2 structured MCP errors.", "5.1 keeping case facts and 5.2 escalation rules."],
+    "note": "Expect questions from several task statements. The loop and enforced workflow steps from domain one. Hooks that intercept tool calls. Tool descriptions and structured error responses from domain two. And from domain five, keeping exact case facts across a long conversation, and knowing when to hand over to a human."},
+   {"kind": "practice", "title": "Worked decision: verify before refund",
+    "bullets": ["Problem: the agent sometimes refunds before verifying identity.", "Prompt fix: louder instructions. Still fails some of the time.", "Exam answer: block process_refund until get_customer has succeeded.", "Put the gate in code or a PreToolUse hook, not the prompt."],
+    "note": "A classic decision. The agent occasionally issues a refund before it has verified who it is talking to. Making the prompt more emphatic lowers the rate but never to zero. The exam wants a deterministic gate, so the refund tool is blocked by code or a pre tool use hook until verification has actually run."},
+   {"kind": "practice", "title": "Contrast: when to escalate",
+    "bullets": ["Customer says: just get me a human. Escalate now.", "Policy does not cover the case. Escalate with a summary.", "Customer sounds angry but the issue is simple. Resolve it.", "Hand off with id, issue, amounts, what was tried, next step."],
+    "note": "Now a contrast where the answer changes. If the customer asks for a human, honour it immediately. If policy has a gap, escalate. But frustration alone is not a reason when the agent can fix the problem, and self-rated confidence is a poor signal. When you do hand off, send a structured summary, not the raw transcript."},
+   {"kind": "traps", "title": "Exam traps",
+    "pairs": [
+     {"wrong": "Tell the model in the prompt never to refund over the limit.", "right": "A hook blocks refunds over the cap and routes to escalation.", "why": "Policy that must hold every time goes in code."},
+     {"wrong": "Escalate whenever sentiment analysis says the customer is upset.", "right": "Escalate on explicit request, policy gaps or no progress.", "why": "Sentiment does not measure whether the agent can help."},
+     {"wrong": "Return Operation failed when the order service times out.", "right": "Return isError with a category and whether it is retryable.", "why": "The agent needs to know whether to retry or explain."},
+     {"wrong": "Several customers match, so pick the most recent one.", "right": "Ask for another identifier, like an email or order number.", "why": "Guessing an identity risks acting on the wrong account."}
+    ],
+    "note": "Watch for these distractors. Prompt-only limits on refunds, where a hook should enforce the cap. Escalating on sentiment instead of clear criteria. Vague error messages that leave the agent unable to recover. And guessing between several matching customers rather than asking for another identifier."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["Required order and money limits live in code or hooks.", "Escalate on clear criteria, with a structured handoff.", "Errors carry a category and a retry signal.", "Keep amounts and ids in a case-facts block."],
+    "note": "For scenario one, remember four things. Required ordering and money limits are enforced in code or hooks. Escalation follows explicit criteria and comes with a structured handoff. Tool errors say what kind of failure it was and whether a retry makes sense. And exact amounts and identifiers live in a case facts block that summaries cannot blur."}
+  ],
+  "check": [
+   {"q": "Transcripts show the support agent quoting a refund of $47 to a customer whose order was $147.23, twenty turns after the order lookup. What is the best fix?",
+    "options": ["Ask the model to double-check numbers before replying", "Keep a persistent case-facts block with order ids and amounts outside the summarised history", "Raise max_tokens so the model can think longer", "Switch the escalation threshold to trigger on long conversations"],
+    "answer": 1, "why": "Progressive summaries blur exact values. A case-facts block keeps the numbers verbatim in every turn."},
+   {"q": "A customer writes: 'I don't want the bot, put me through to a person.' The issue is a simple address change the agent could finish. What should the agent do?",
+    "options": ["Finish the address change first, then offer a human", "Explain that it can solve this faster than a human", "Escalate to a human right away with a short structured summary", "Ask the customer to rate their frustration before deciding"],
+    "answer": 2, "why": "An explicit request for a human is an escalation trigger on its own. Honour it immediately and pass the context along."}
+  ],
+  "sources": [
+   {"title": "Intercept and control agent behavior with hooks (Agent SDK)", "url": "https://code.claude.com/docs/en/agent-sdk/hooks"},
+   {"title": "Handle tool calls", "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"},
+   {"title": "Cookbook: customer service agent with client-side tools", "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"}
+  ],
+  "drill": {"scenario": 1}
+ },
+
+ {
+  "id": "scn-2", "kind": "scenario", "stage": "advanced", "scenarios": [2],
+  "title": "Scenario 2 walkthrough: Code Generation with Claude Code",
+  "short": "Code generation", "minutes": 8,
+  "hook": "A team that shares Claude Code needs shared configuration, so this scenario asks where each instruction should live and when to plan before editing.",
+  "slides": [
+   {"kind": "idea", "title": "The setting",
+    "bullets": ["A team uses Claude Code to write, refactor, debug and document.", "They share custom commands, skills and CLAUDE.md files.", "They choose between plan mode and direct execution.", "Domains in play: D3 and D5."],
+    "note": "Scenario two is a development team using Claude Code every day for generating code, refactoring, debugging and writing documentation. They have custom slash commands and skills, CLAUDE.md files at several levels, and they have to decide when to plan first and when to just make the change. Most questions come from domain three, with some context management."},
+   {"kind": "how", "title": "Task statements it pulls in",
+    "bullets": ["3.1 CLAUDE.md hierarchy and 3.3 path-specific rules.", "3.2 commands and skills, with forked context.", "3.4 plan mode versus direct execution.", "3.5 iterative refinement and 5.4 context in big codebases."],
+    "note": "This scenario leans on the CLAUDE.md hierarchy and path-scoped rules, custom commands and skills, the choice between plan mode and direct execution, and iterative refinement with examples and tests. From domain five, it adds managing context while exploring a large codebase, for example with subagents and compaction."},
+   {"kind": "practice", "title": "Worked decision: the missing rules",
+    "bullets": ["A new teammate's Claude ignores the team's testing rules.", "The rules sit in the lead's ~/.claude/CLAUDE.md.", "User-level memory is personal and never shared.", "Exam answer: move them to the project CLAUDE.md or .claude/rules/."],
+    "note": "A typical question. A new engineer joins and their Claude Code ignores the testing conventions everyone else gets. The cause is that the conventions were written in the lead's user level CLAUDE dot md, which is personal and not in the repository. The fix is to move them into the project file or the project rules folder so everyone loads them."},
+   {"kind": "practice", "title": "Contrast: plan or just do it",
+    "bullets": ["Migrate auth across 40 files with two possible designs: plan mode.", "Fix a typo in one error message: direct execution.", "Exploring an unknown module: send an Explore subagent.", "Plan first, then execute the agreed plan directly."],
+    "note": "Now the plan mode decision. A change that spans many files, affects architecture or has more than one reasonable approach deserves plan mode first. A small, clear, well scoped change does not. When the work is mostly discovery, an Explore subagent keeps the noisy output out of your main context. Then you execute the plan you agreed."},
+   {"kind": "traps", "title": "Exam traps",
+    "pairs": [
+     {"wrong": "Put the React test conventions in every directory's CLAUDE.md.", "right": "One .claude/rules/ file with paths: **/*.test.tsx.", "why": "Path-scoped rules suit conventions spread across folders."},
+     {"wrong": "A noisy codebase-audit skill runs in the main session.", "right": "Set context: fork in the skill's frontmatter.", "why": "Forked context keeps verbose output out of the session."},
+     {"wrong": "Use plan mode for every change, to be safe.", "right": "Plan for large or ambiguous work, act directly on small fixes.", "why": "The guide matches the mode to the size and clarity of the task."},
+     {"wrong": "Describe the expected output in a long paragraph.", "right": "Give concrete input and output examples, or a failing test.", "why": "Examples and tests steer fixes more precisely than prose."}
+    ],
+    "note": "Common traps here. Copying the same rule into many directory files when one path scoped rule would do. Running a noisy skill in the main session rather than forking its context. Using plan mode for everything. And describing desired behaviour in prose when a concrete example or a failing test would steer Claude far better."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["Team rules go in project files, not user files.", "Path rules for cross-cutting conventions.", "Skills for on-demand workflows; fork noisy ones.", "Plan big and ambiguous work; act on small clear fixes."],
+    "note": "For scenario two, remember this. Shared rules belong in project level files, not in anyone's personal settings. Use path scoped rules for conventions that span directories. Use skills for workflows you call on demand, and fork the noisy ones. And plan before large or ambiguous changes, while small clear fixes go straight to execution."}
+  ],
+  "check": [
+   {"q": "Your API handlers in src/api/ and services/*/api/ must all use the same error format, but no other code should load that rule. What is the best place for it?",
+    "options": ["The project root CLAUDE.md, so everyone sees it", "A .claude/rules/ file with a paths glob matching the API handler files", "Each developer's ~/.claude/CLAUDE.md", "A slash command developers run before editing handlers"],
+    "answer": 1, "why": "A path-scoped rule loads only when matching files are touched, and one glob can cover several directories."},
+   {"q": "A developer asks Claude Code to rename a misspelled variable in one function. Which approach fits best?",
+    "options": ["Enter plan mode and review a written plan first", "Spawn an Explore subagent to map the codebase", "Make the change directly", "Write a custom skill for renames"],
+    "answer": 2, "why": "Small, clear, well-scoped changes do not need a planning phase."}
+  ],
+  "sources": [
+   {"title": "How Claude remembers your project (memory and rules)", "url": "https://code.claude.com/docs/en/memory"},
+   {"title": "Best practices for Claude Code", "url": "https://code.claude.com/docs/en/best-practices"},
+   {"title": "Extend Claude with skills", "url": "https://code.claude.com/docs/en/skills"}
+  ],
+  "drill": {"scenario": 2}
+ },
+
+ {
+  "id": "scn-3", "kind": "scenario", "stage": "advanced", "scenarios": [3],
+  "title": "Scenario 3 walkthrough: Multi-Agent Research System",
+  "short": "Research system", "minutes": 8,
+  "hook": "Research systems fail quietly when a coordinator splits the work badly or a subagent hides an error, so this scenario tests how you delegate, pass context and keep sources attached.",
+  "slides": [
+   {"kind": "idea", "title": "The setting",
+    "bullets": ["A coordinator delegates to search, analysis and synthesis subagents.", "A report subagent writes the final cited research report.", "Every claim must trace back to a source.", "Domains in play: D1, D2 and D5."],
+    "note": "Scenario three is a multi agent research system. A coordinator agent takes a research question and hands parts of it to specialised subagents for web search, document analysis, synthesis and report writing. The output is a research report with citations, so every claim has to stay linked to where it came from."},
+   {"kind": "how", "title": "Task statements it pulls in",
+    "bullets": ["1.2 coordinator patterns and 1.3 passing context to subagents.", "1.6 decomposition and 2.3 tools per agent.", "5.3 error propagation across agents.", "5.6 provenance and conflicting sources."],
+    "note": "You will see coordinator and subagent patterns, how to pass context when spawning subagents, how to split the work, and which tools each agent should get. Domain five adds two important ideas: how errors travel back to the coordinator, and how to keep claims linked to their sources when findings conflict."},
+   {"kind": "practice", "title": "Worked decision: the missing half",
+    "bullets": ["Question: impact of AI on creative industries.", "Report covers only visual art. Music and film are missing.", "Subagents worked fine; the coordinator split the topic too narrowly.", "Fix the decomposition, then check coverage before synthesis."],
+    "note": "Here is a classic. The final report on AI in creative industries only talks about visual art. Each subagent did its own job well. The root cause is the coordinator's decomposition, which never assigned music, writing or film. The fix is broader, non overlapping partitions, plus a coverage check before the final synthesis."},
+   {"kind": "practice", "title": "Contrast: a subagent fails",
+    "bullets": ["Search subagent times out on one source.", "Bad: return an empty list as if nothing was found.", "Bad: abort the whole research run.", "Good: return the failure type, what was tried and partial results."],
+    "note": "Now a failure case. A search subagent times out. Returning an empty result hides the failure and looks like a real finding of nothing. Killing the whole workflow throws away good work. The right move is a structured error with the failure type, the query tried and any partial results, so the coordinator can retry or note the gap."},
+   {"kind": "traps", "title": "Exam traps",
+    "pairs": [
+     {"wrong": "Assume the subagent can see the coordinator's earlier findings.", "right": "Pass the findings explicitly in the subagent's prompt.", "why": "Subagents start with isolated context and inherit nothing."},
+     {"wrong": "Give every subagent all eighteen tools, just in case.", "right": "Scope each agent to the few tools its role needs.", "why": "Tool selection gets worse as the number of choices grows."},
+     {"wrong": "Average two conflicting market figures into one number.", "right": "Report both with their sources and dates.", "why": "Synthesis should keep attribution and show disagreement."},
+     {"wrong": "Spawn subagents one at a time, waiting on each.", "right": "Emit several Task calls in one response to run them in parallel.", "why": "Independent work should run concurrently."}
+    ],
+    "note": "Distractors to watch for. Assuming subagents share the coordinator's memory, when you must pass context explicitly. Handing every agent every tool. Blending conflicting figures into one number instead of showing both with their sources and dates. And running independent subagents one by one rather than in parallel from a single response."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["Coverage gaps usually come from the coordinator's split.", "Pass context explicitly; nothing is inherited.", "Errors carry type, attempt and partial results.", "Keep claim-to-source links through synthesis."],
+    "note": "For scenario three, remember that missing coverage usually traces back to how the coordinator split the work. Subagents inherit nothing, so pass what they need. Errors should travel with their type, what was tried and partial results. And the synthesis must keep every claim tied to its source, showing disagreements rather than hiding them."}
+  ],
+  "check": [
+   {"q": "The analysis subagent keeps re-searching for sources the search subagent already found, wasting time. What is the most likely cause?",
+    "options": ["The analysis subagent has too few tools", "The coordinator is not passing the search results into the analysis subagent's prompt", "The model needs a higher temperature", "The subagents need a shared database"],
+    "answer": 1, "why": "Subagents start with isolated context. If the coordinator does not pass the findings explicitly, the subagent cannot know about them."},
+   {"q": "Two credible sources give different 2025 market sizes for the same sector. How should the report subagent handle it?",
+    "options": ["Use the larger figure, since it is more recent", "Average the two figures", "Drop both figures to avoid confusion", "Show both figures with their sources and publication dates"],
+    "answer": 3, "why": "Conflicting credible figures should be presented with attribution, and dates help readers see whether the difference is about timing."}
+  ],
+  "sources": [
+   {"title": "How we built our multi-agent research system (Anthropic Engineering)", "url": "https://www.anthropic.com/engineering/multi-agent-research-system"},
+   {"title": "Subagents in the SDK", "url": "https://code.claude.com/docs/en/agent-sdk/subagents"},
+   {"title": "Cookbook: orchestrator-workers pattern", "url": "https://platform.claude.com/cookbook/patterns-agents-orchestrator-workers"}
+  ],
+  "drill": {"scenario": 3}
+ },
+
+ {
+  "id": "scn-4", "kind": "scenario", "stage": "advanced", "scenarios": [4],
+  "title": "Scenario 4 walkthrough: Developer Productivity with Claude",
+  "short": "Developer productivity", "minutes": 8,
+  "hook": "Helping engineers explore unfamiliar code is mostly about choosing the right tool for each lookup and keeping discovery from flooding the context.",
+  "slides": [
+   {"kind": "idea", "title": "The setting",
+    "bullets": ["An agent helps engineers explore unfamiliar and legacy code.", "It writes boilerplate and automates repetitive chores.", "It uses built-in tools and MCP servers.", "Domains in play: D2, D3 and D1."],
+    "note": "Scenario four is an agent for developer productivity. Engineers use it to find their way around unfamiliar or legacy code, generate boilerplate and automate chores. It works with the built in tools such as Read, Grep, Glob and Edit, plus MCP servers for things like the issue tracker. Questions come mostly from domains two and three."},
+   {"kind": "how", "title": "Task statements it pulls in",
+    "bullets": ["2.5 built-in tools: Grep, Glob, Read, Edit, Bash.", "2.4 MCP servers in Claude Code, and their scopes.", "3.4 plan mode and the Explore subagent.", "5.4 context in long codebase explorations."],
+    "note": "Expect questions on picking the right built in tool, connecting MCP servers at the right scope, using plan mode and the Explore subagent, and managing context during long explorations. A little of domain one appears too, for example delegating focused questions to subagents."},
+   {"kind": "practice", "title": "Worked decision: where is it called?",
+    "bullets": ["Task: find every caller of calculateTax across a big repo.", "Glob matches file names, so it cannot find calls.", "Grep searches file contents: start there.", "Then Read the hits to follow the flow."],
+    "note": "A common question. You need every place that calls a function named calculate tax. Glob matches file paths, so it cannot see inside files. Grep searches file contents, so it is the right first step. Then you Read the matching files to follow the call flow. If the function is re-exported under another name, search for that name too."},
+   {"kind": "practice", "title": "Contrast: sharing an MCP server",
+    "bullets": ["You want the whole team to get the Jira MCP server.", "User scope in ~/.claude.json: only you get it.", "Project scope in .mcp.json: committed and shared.", "Secrets stay out of git with ${JIRA_TOKEN} expansion."],
+    "note": "Now a contrast. If only you need a server, user scope is fine. If the whole team should get it, configure it at project scope in the dot mcp dot json file, which is committed to the repository. Keep the token out of git by referencing an environment variable that each developer sets locally."},
+   {"kind": "traps", "title": "Exam traps",
+    "pairs": [
+     {"wrong": "Use Glob to find where a function is called.", "right": "Use Grep for contents, Glob for file paths.", "why": "Glob never looks inside files."},
+     {"wrong": "Edit keeps failing on a non-unique anchor, so retry it.", "right": "Use a longer unique anchor, or Read then Write the file.", "why": "Edit needs text that appears exactly once."},
+     {"wrong": "Put the team MCP server and its token in each user's config.", "right": "Project .mcp.json with ${ENV_VAR} for the secret.", "why": "Shared, versioned, and no secrets in git."},
+     {"wrong": "Build a custom MCP server for GitHub from scratch.", "right": "Use an existing community or vendor server.", "why": "Build custom only when no standard server fits."}
+    ],
+    "note": "Classic traps. Using Glob to search file contents. Retrying an Edit whose anchor is not unique instead of choosing a unique one or falling back to Read and Write. Scattering a team server across personal configs. And building a custom server for a standard integration when a maintained one already exists."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["Grep for contents, Glob for paths, Read to follow.", "Edit needs a unique anchor.", "Team MCP servers: project scope, env vars for secrets.", "Delegate noisy discovery to an Explore subagent."],
+    "note": "For scenario four. Grep finds contents, Glob finds paths, and Read follows the flow. Edit needs an anchor that appears exactly once. Team MCP servers belong in the project config with secrets in environment variables. And long, noisy discovery is best delegated to a subagent so your main context stays clean."}
+  ],
+  "check": [
+   {"q": "You need a list of every TypeScript test file under packages/ so you can count them. Which built-in tool fits best?",
+    "options": ["Grep for the word test", "Glob with a pattern such as packages/**/*.test.ts", "Read each directory listing manually", "Bash running the full test suite"],
+    "answer": 1, "why": "Glob matches file paths by pattern, which is exactly what this needs."},
+   {"q": "The agent prefers Grep over your new internal-docs MCP tool even when the docs tool would answer better. What is the best first fix?",
+    "options": ["Remove Grep from the agent", "Write a richer MCP tool description saying what it covers and when to use it", "Add 'always use MCP' to every user prompt", "Move the server to user scope"],
+    "answer": 1, "why": "The model picks tools from their descriptions. A clear, specific description is the first lever."}
+  ],
+  "sources": [
+   {"title": "Tools reference (Claude Code)", "url": "https://code.claude.com/docs/en/tools-reference"},
+   {"title": "Connect Claude Code to tools via MCP", "url": "https://code.claude.com/docs/en/mcp"},
+   {"title": "Create custom subagents (Explore and Plan)", "url": "https://code.claude.com/docs/en/sub-agents"}
+  ],
+  "drill": {"scenario": 4}
+ },
+
+ {
+  "id": "scn-5", "kind": "scenario", "stage": "advanced", "scenarios": [5],
+  "title": "Scenario 5 walkthrough: Claude Code for Continuous Integration",
+  "short": "CI/CD reviews", "minutes": 8,
+  "hook": "A CI reviewer that cries wolf gets ignored, so this scenario is about running Claude Code headless and writing review prompts that flag real problems with few false positives.",
+  "slides": [
+   {"kind": "idea", "title": "The setting",
+    "bullets": ["Claude Code runs inside the CI/CD pipeline.", "It reviews pull requests and generates tests.", "It posts feedback developers should act on.", "Domains in play: D3 and D4."],
+    "note": "Scenario five puts Claude Code into a continuous integration pipeline. On each pull request it reviews the code, may generate tests and posts comments. The pipeline needs machine readable output, and the team needs feedback that is accurate enough to trust. Questions come mainly from domains three and four."},
+   {"kind": "how", "title": "Task statements it pulls in",
+    "bullets": ["3.6 headless runs: -p, --output-format json, --json-schema.", "4.1 explicit review criteria to cut false positives.", "4.6 independent and multi-pass review.", "4.5 batch only for non-blocking, overnight work."],
+    "note": "You need the headless flags for running Claude Code non interactively and getting structured output. Then prompt design: explicit criteria for what to report, independent review instances and multi pass reviews. Message Batches appear as a distractor, because they suit overnight jobs, not checks that block a merge."},
+   {"kind": "practice", "title": "Worked decision: too much noise",
+    "bullets": ["Developers ignore the bot: most style comments are wrong.", "Bad: add 'be conservative' to the prompt.", "Good: list exactly what to report and what to skip.", "Turn off the noisy category while you fix it."],
+    "note": "Here is the typical problem. Developers have started ignoring the review bot because its style comments are mostly false positives, and that noise drags down trust in its accurate security findings. Asking it to be conservative does not help much. Spell out what to report and what to skip, with examples, and switch off the noisy category until it is fixed."},
+   {"kind": "practice", "title": "Contrast: who reviews the code?",
+    "bullets": ["Same session that wrote the code reviews it: blind spots.", "A fresh, independent instance reviews better.", "Large PRs: per-file passes plus a cross-file pass.", "On re-review, pass prior findings so only new issues appear."],
+    "note": "Now a contrast. Asking the session that wrote the code to review its own work inherits its assumptions. A separate instance with a fresh context catches more. For big pull requests, review file by file and then run a separate pass for cross file problems. And when re-reviewing after fixes, give it the earlier findings so it reports only what is new."},
+   {"kind": "traps", "title": "Exam traps",
+    "pairs": [
+     {"wrong": "Set a CLAUDE_HEADLESS environment variable or pass --batch.", "right": "Use -p (print mode) for non-interactive runs.", "why": "Those flags do not exist; -p is the documented way."},
+     {"wrong": "Parse the review out of free text in the CI log.", "right": "Use --output-format json with --json-schema.", "why": "The pipeline gets validated, machine-readable output."},
+     {"wrong": "Send blocking PR checks through the Message Batches API.", "right": "Run blocking checks synchronously; batch the nightly audit.", "why": "Batches can take up to 24 hours with no latency promise."},
+     {"wrong": "Generate tests without telling Claude what exists.", "right": "Give it the existing tests and the test standards.", "why": "Otherwise it duplicates coverage."}
+    ],
+    "note": "Distractors here include invented flags such as a headless environment variable, when print mode with dash p is the real mechanism. Scraping free text where JSON output with a schema would be reliable. Using batches for checks that block a merge. And generating tests without showing Claude the existing ones, which leads to duplicates."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["-p for headless; JSON output plus a schema for pipelines.", "Explicit criteria beat 'be careful'.", "Independent reviewers, per-file then cross-file.", "Batches for overnight work only."],
+    "note": "For scenario five. Use dash p for headless runs and JSON output with a schema when a pipeline consumes the result. Write explicit criteria rather than asking for caution. Review with an independent instance, file by file and then across files. And keep the Message Batches API for work that can wait, like a nightly audit."}
+  ],
+  "check": [
+   {"q": "The CI job must fail the build when Claude's review finds a critical issue, so it needs to read a severity field reliably. What should the job use?",
+    "options": ["claude -p with --output-format json and a --json-schema defining the findings", "A regex over the plain-text review comment", "The Message Batches API with a custom_id per file", "An interactive Claude Code session started by the runner"],
+    "answer": 0, "why": "Print mode with JSON output and a schema gives the pipeline structured, validated fields to act on."},
+   {"q": "After a developer pushes fixes, the re-review repeats the same eight comments it posted last time. What is the best fix?",
+    "options": ["Ask the model to be more concise", "Lower the temperature", "Include the previous findings in the prompt and ask only for new or unresolved issues", "Review only the first file of the diff"],
+    "answer": 2, "why": "Feeding prior findings lets the reviewer report only what is new or still open."}
+  ],
+  "sources": [
+   {"title": "Run Claude Code programmatically (headless)", "url": "https://code.claude.com/docs/en/headless"},
+   {"title": "Claude Code GitHub Actions", "url": "https://code.claude.com/docs/en/github-actions"},
+   {"title": "Prompting best practices", "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"}
+  ],
+  "drill": {"scenario": 5}
+ },
+
+ {
+  "id": "scn-6", "kind": "scenario", "stage": "advanced", "scenarios": [6],
+  "title": "Scenario 6 walkthrough: Structured Data Extraction",
+  "short": "Data extraction", "minutes": 8,
+  "hook": "An extraction pipeline that invents values is worse than one that leaves blanks, so this scenario tests schemas, validation loops and when to send work to a human.",
+  "slides": [
+   {"kind": "idea", "title": "The setting",
+    "bullets": ["A pipeline extracts fields from unstructured documents.", "Output is validated against JSON schemas.", "It handles edge cases and feeds downstream systems.", "Domains in play: D4 and D5."],
+    "note": "Scenario six is a structured data extraction pipeline. It reads unstructured documents such as invoices or contracts, pulls out fields, validates them against a JSON schema and passes them on to other systems. The hard parts are edge cases, missing data and knowing how much to trust the output. Questions come from domains four and five."},
+   {"kind": "how", "title": "Task statements it pulls in",
+    "bullets": ["4.3 tool use with JSON schemas, and tool_choice.", "4.2 few-shot examples for varied layouts.", "4.4 validation, retry and feedback loops.", "5.5 human review and confidence calibration."],
+    "note": "Here you need structured output through tool use and JSON schemas, few shot examples for documents that look different from each other, validation with targeted retries, and human review with calibrated confidence. Message Batches also appear, since large extraction backlogs are a natural fit for them."},
+   {"kind": "practice", "title": "Worked decision: invented values",
+    "bullets": ["Some invoices have no PO number, yet the output always has one.", "The schema marks po_number as required, so the model fills it.", "Fix: make it nullable, so absence is a valid answer.", "Use enums with 'other' plus a detail field for odd cases."],
+    "note": "A common question. Some invoices have no purchase order number, but the extracted data always contains one. The schema makes the field required, so the model invents something to satisfy it. Make the field nullable so a blank is a valid answer. For categories, use an enum with an other option and a detail field, so unusual cases are not forced into the wrong bucket."},
+   {"kind": "practice", "title": "Contrast: retry or stop?",
+    "bullets": ["Date came back in the wrong format: retry with the exact error.", "The total is not in the document at all: retrying cannot help.", "Extract stated and calculated totals; flag a mismatch.", "Route low-confidence or conflicting items to a person."],
+    "note": "Now the retry decision. A format error is worth a retry, as long as you send back the specific validation error. But if the information is simply not in the document, retries will not create it, so return null. For totals, extract both the stated total and your calculated one, and flag a conflict. Low confidence and conflicting items go to human review first."},
+   {"kind": "traps", "title": "Exam traps",
+    "pairs": [
+     {"wrong": "A JSON schema means the values are correct.", "right": "Schemas fix syntax, so still validate meaning.", "why": "A well-formed total can still be the wrong number."},
+     {"wrong": "Retry with 'please try again' after a validation failure.", "right": "Retry with the specific validation error appended.", "why": "Targeted feedback tells the model what to fix."},
+     {"wrong": "95% overall accuracy, so cut human review everywhere.", "right": "Check accuracy per document type and field first.", "why": "Aggregates can hide a weak type or field."},
+     {"wrong": "Trust the model's self-reported confidence as is.", "right": "Calibrate confidence against labelled data.", "why": "Uncalibrated scores do not predict errors well."}
+    ],
+    "note": "Watch for these. Believing a schema guarantees correct values, when it only guarantees the shape. Generic retries without the actual error. Cutting human review because the overall accuracy looks good, when one document type might be failing badly. And trusting confidence scores that were never checked against labelled examples."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["Nullable fields stop fabrication; enums need 'other'.", "Retry format errors with specifics; never retry missing data.", "Check accuracy by type and field before reducing review.", "Calibrate confidence on labelled data."],
+    "note": "For scenario six. Nullable fields stop the model inventing values, and enums need an escape hatch. Retry format problems with the specific error, but do not retry when the data is not there. Look at accuracy per document type and per field before reducing human review. And only trust confidence scores you have calibrated."}
+  ],
+  "check": [
+   {"q": "Extraction accuracy is 97% across 50,000 documents, so the team plans to stop human review entirely. What should they check first?",
+    "options": ["Whether a larger model gets 98%", "Accuracy broken down by document type and by field", "Whether the schema validates every output", "The average confidence score across all documents"],
+    "answer": 1, "why": "Aggregate accuracy can hide a document type or field that fails often. Stratify before reducing review."},
+   {"q": "The model returns a contract_date of '13/45/2024', which fails validation. What is the best next step?",
+    "options": ["Drop the document from the batch", "Retry with the same prompt", "Retry and include the specific validation error about the date format", "Accept it and let downstream systems fix it"],
+    "answer": 2, "why": "Format errors are worth retrying, and appending the exact validation error tells the model what to correct."}
+  ],
+  "sources": [
+   {"title": "Structured outputs", "url": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"},
+   {"title": "Cookbook: extracting structured JSON with tool use", "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"},
+   {"title": "Increase output consistency", "url": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/increase-consistency"}
+  ],
+  "drill": {"scenario": 6}
+ },
+
+ {
+  "id": "exam-day", "kind": "guide", "stage": "advanced",
+  "title": "Exam day: pacing, elimination and the last week",
+  "short": "Exam day", "minutes": 6,
+  "hook": "Most people who fall short run out of time or second-guess good answers, so a pacing plan and an elimination habit are worth real points.",
+  "slides": [
+   {"kind": "idea", "title": "The day itself",
+    "bullets": ["Pearson VUE: online with OnVUE, or at a test centre.", "120 minutes of answering, about 135 minutes of seat time.", "Closed book, no AI tools. A digital whiteboard online.", "Your score shows on screen at the end."],
+    "note": "On the day, you sit the exam through Pearson VUE, either online with OnVUE or at a test centre. You get one hundred and twenty minutes to answer, with some extra seat time for check in. It is closed book with no AI tools, though online you get a digital whiteboard. Your score appears on screen when you finish."},
+   {"kind": "how", "title": "A pacing plan",
+    "bullets": ["60 questions in 120 minutes: 2 minutes each, at most.", "Read the question before the long scenario text.", "Commit in about 90 seconds, flag and move on.", "Bank 15 minutes for flagged questions.", "Never leave a blank: blanks score as wrong."],
+    "note": "Here is a pacing plan. You have two minutes per question at most, so aim to commit in about ninety seconds. Read the actual question first, then the scenario details you need. If you are stuck, pick your best answer, flag it and move on. Keep about fifteen minutes at the end for flagged items. And never leave anything blank."},
+   {"kind": "how", "title": "An elimination routine",
+    "bullets": ["Cross out anything on the out-of-scope list.", "Cross out prompt-only fixes for must-always rules.", "Cross out options that hide errors or guess.", "Of what is left, pick the simplest root-cause fix."],
+    "note": "When several answers look plausible, eliminate. Remove options about topics the guide says are out of scope. Remove prompt only fixes when a rule must hold every time. Remove options that swallow errors or guess at missing data. Then, among what remains, choose the simplest option that fixes the root cause."},
+   {"kind": "practice", "title": "The last week",
+    "bullets": ["Two full mock exams, timed, a few days apart.", "Read the domain bars and drill the two weakest.", "Clear the Mistake Clinic.", "Re-watch lessons for any task statement under 75%.", "Check your ID, room and system test for OnVUE."],
+    "note": "In the final week, sit two full timed mock exams a few days apart. Use the domain breakdown to pick your two weakest domains and drill them. Clear the Mistake Clinic. Revisit the lesson for any task statement still under seventy five percent. And if you are testing online, run the system check and prepare your room and ID ahead of time."},
+   {"kind": "traps", "title": "Exam-day traps",
+    "pairs": [
+     {"wrong": "Spend five minutes on one hard question.", "right": "Answer, flag and come back if time allows.", "why": "Every question is worth the same."},
+     {"wrong": "Change answers on a hunch during review.", "right": "Change only when you spot a concrete reason.", "why": "First answers based on reasoning are usually sound."},
+     {"wrong": "Pick the option with the newest feature name.", "right": "Answer in the exam guide's terms.", "why": "The exam follows the guide, even where docs moved on."}
+    ],
+    "note": "Three last traps. Do not sink five minutes into one question, because they all count the same. During review, only change an answer when you can name a concrete reason. And remember that the exam follows the guide's terminology, even where the documentation has since renamed something, like the Task tool now called Agent."},
+   {"kind": "recap", "title": "Remember",
+    "bullets": ["90 seconds, commit, flag, move on.", "No blanks.", "Eliminate out-of-scope and prompt-only options first.", "Answer in the guide's terms."],
+    "note": "To wrap up. Commit in about ninety seconds, flag and move on. Never leave a blank. Eliminate out of scope and prompt only options first, then choose the simplest root cause fix. Answer in the exam guide's terms. When you are ready, sit the mock exam in the game under real conditions. Good luck."}
+  ],
+  "check": [
+   {"q": "With 10 minutes left you have 6 unanswered questions and 4 flagged ones. What is the best use of the time?",
+    "options": ["Re-check the 4 flagged questions carefully first", "Give a best answer to all 6 unanswered questions, then revisit flags", "Leave the 6 blank and perfect the flagged ones", "Start again from question 1"],
+    "answer": 1, "why": "Blanks score as wrong. Answer everything first, then use any remaining time on flags."},
+   {"q": "Two options remain. One adds an emphatic rule to the system prompt; the other blocks the action in a hook unless a condition is met. The rule must hold every time. Which do you pick?",
+    "options": ["The emphatic prompt rule, because it is simpler", "The hook that blocks the action", "Either, they are equivalent", "Neither, escalate to a human every time"],
+    "answer": 1, "why": "When compliance must be guaranteed, deterministic enforcement beats a probabilistic prompt."}
+  ],
+  "sources": [
+   {"title": "Pearson VUE: Anthropic exams", "url": "https://www.pearsonvue.com/us/en/anthropic.html"},
+   {"title": "Pearson OnVUE: online exam rules", "url": "https://www.pearsonvue.com/us/en/anthropic/onvue.html"},
+   {"title": "Certification FAQ", "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"}
+  ],
+  "drill": {"exam": true}
+ }
+]

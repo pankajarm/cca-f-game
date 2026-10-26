@@ -579,6 +579,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
   .ready-row .track { grid-column: 2 / -1; grid-row: 2; }
 }
 </style>
+<link rel="stylesheet" href="learn/learn.css">
 </head>
 <body>
 <div id="app">
@@ -830,6 +831,28 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
       </div>
     </section>
 
+    <!-- LEARN (path) -->
+    <section class="screen" id="screen-learn">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('home')">← Hall</button>
+        <h2>🎓 Learn</h2>
+        <span class="sub">The exam guide in three stages · slides, video, labs</span>
+      </div>
+      <div class="ln-summary" id="ln-summary"></div>
+      <div id="ln-focus"></div>
+      <div id="ln-body"></div>
+      <p class="muted small mt">Unofficial study material written from the official exam guide (v1.0, July 2026) and Anthropic's documentation. Narrated videos use an open-source text-to-speech voice. Stages are a suggested order, not locks: jump to any lesson.</p>
+    </section>
+
+    <!-- LESSON -->
+    <section class="screen" id="screen-lesson">
+      <div class="screen-head">
+        <button class="back-link" onclick="UI.go('learn')">← Learn</button>
+        <h2 id="ls-title">Lesson</h2>
+      </div>
+      <div id="ls-body"></div>
+    </section>
+
     <!-- BLUEPRINT -->
     <section class="screen" id="screen-blueprint">
       <div class="screen-head">
@@ -935,5 +958,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
 <script src="questions.js"></script>
 <script src="guide.js"></script>
 <script src="game.js"></script>
+<script src="learn/lessons.js"></script>
+<script src="learn.js"></script>
 </body>
 </html>
