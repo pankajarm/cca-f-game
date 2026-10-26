@@ -136,7 +136,14 @@ The home screen opens on **Exam readiness**: for each domain, how much you've co
 scenario it tests, and new ones carry the official doc page (`src`) that backs the
 answer. `scripts/check_bank.py` keeps the bank honest: valid tags, no retired ids,
 answer positions balanced, and the correct option is the longest one only about as
-often as chance (so "pick the longest answer" doesn't work). The first 197 were authored
+often as chance (so "pick the longest answer" doesn't work). It validates both item
+types: single-answer (4 options, one key) and multiple-response (`type: 'mr'`, 5 options,
+two keys, each option index a key in 25–55% of MR items, the two keys being the two
+longest options in at most 20%). `scripts/check_cues.py` is a separate gate: it
+scores test-taking strategies (follow or avoid the hint, absolute words, the longest
+or shortest option) by how far they beat chance, separately for single-answer
+(max +2 points) and multiple-response (max +3 points), and `--list` names the items
+that leak. `scripts/test_tooling.py` self-tests the checkers on fixtures. The first 197 were authored
 against a June-2026 brief of the real exam — `stop_reason` loop mechanics, hooks
 vs prompts, MCP config scopes, the `CLAUDE.md` hierarchy, skills frontmatter,
 `claude -p` CI patterns, batch API economics, schema design, context management,
