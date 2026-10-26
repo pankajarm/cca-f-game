@@ -4,54 +4,55 @@
    ============================================================ */
 'use strict';
 
-/* ---------------- floor & boss roster ---------------- */
+/* ---------------- floor & boss roster ----------------
+   each floor covers a group of exam-guide task statements and draws from their whole pool */
 const FLOORS = [
-  { id: 'floor-01', name: 'The Loop Chamber', domain: 'D1', dcolor: 'var(--d1)',
+  { id: 'floor-01', name: 'The Loop Chamber', domain: 'D1', dcolor: 'var(--d1)', ts: ['1.1'],
     boss: { name: 'Loop Terminator', face: '🌀',
       taunt: "You said 'task complete' three turns ago. I stopped listening. Forever.",
       hurt: 'Wait— wait, check my stop_reason—',
       death: 'end_turn… so this is what it feels like…' } },
-  { id: 'floor-02', name: 'Coordination Hall', domain: 'D1', dcolor: 'var(--d1)',
+  { id: 'floor-02', name: 'Coordination Hall', domain: 'D1', dcolor: 'var(--d1)', ts: ['1.2', '1.3', '1.6'],
     boss: { name: 'The Rogue Swarm', face: '🐝',
       taunt: 'My subagents share everything! …They share nothing. Nobody told them anything.',
       hurt: 'Who gave the coordinator actual context?!',
       death: 'Should have… packed the prompt…' } },
-  { id: 'floor-03', name: 'The Hook Forge', domain: 'D1', dcolor: 'var(--d1)',
+  { id: 'floor-03', name: 'The Hook Forge', domain: 'D1', dcolor: 'var(--d1)', ts: ['1.4', '1.5', '1.7'],
     boss: { name: 'Prompt Whisperer', face: '🗣️',
       taunt: 'Have you tried asking NICELY? In ALL CAPS? Twice?',
       hurt: 'A hook?! That is deterministic! That is CHEATING!',
       death: 'Exit code 2… blocked… forever…' } },
-  { id: 'floor-04', name: 'The Tool Armory', domain: 'D2', dcolor: 'var(--d2)',
+  { id: 'floor-04', name: 'The Tool Armory', domain: 'D2', dcolor: 'var(--d2)', ts: ['2.1', '2.2', '2.3', '2.4', '2.5'],
     boss: { name: 'The Tool Hoarder', face: '🧰',
       taunt: 'Behold, my agent wields all EIGHTEEN tools! It cannot pick one, but STILL!',
       hurt: 'Four to five tools per role?! Minimalist propaganda!',
       death: 'Fine… take my seventeen spare hammers…' } },
-  { id: 'floor-05', name: 'The Config Maze', domain: 'D3', dcolor: 'var(--d3)',
+  { id: 'floor-05', name: 'The Config Maze', domain: 'D3', dcolor: 'var(--d3)', ts: ['3.1', '3.2', '3.3'],
     boss: { name: 'Config Phantom', face: '👻',
       taunt: 'Your team standards are safe with me… in MY home directory. Unversioned. Forever.',
       hurt: 'No! Not the project-level CLAUDE.md!',
       death: 'Committed… to the repo… how orderly…' } },
-  { id: 'floor-06', name: 'The Pipeline Forge', domain: 'D3', dcolor: 'var(--d3)',
+  { id: 'floor-06', name: 'The Pipeline Forge', domain: 'D3', dcolor: 'var(--d3)', ts: ['3.4', '3.5', '3.6'],
     boss: { name: 'CI Gremlin', face: '🧌',
       taunt: 'Your pipeline has been waiting on stdin since Tuesday. I brought snacks.',
       hurt: 'The -p flag! My one weakness! Who told you?!',
       death: 'Exiting… with code… zero…' } },
-  { id: 'floor-07', name: 'Prompt Workshop', domain: 'D4', dcolor: 'var(--d4)',
+  { id: 'floor-07', name: 'Prompt Workshop', domain: 'D4', dcolor: 'var(--d4)', ts: ['4.1', '4.2', '4.3'],
     boss: { name: 'Vague Instructor', face: '🎭',
       taunt: 'Just… be careful. Be conservative. Be, you know… good?',
       hurt: 'Explicit criteria?! But ambiguity is my whole personality!',
       death: 'So specific… so… measurable…' } },
-  { id: 'floor-08', name: 'Validation Gauntlet', domain: 'D4', dcolor: 'var(--d4)',
+  { id: 'floor-08', name: 'Validation Gauntlet', domain: 'D4', dcolor: 'var(--d4)', ts: ['4.4', '4.5', '4.6'],
     boss: { name: 'Self-Review Shadow', face: '🪞',
       taunt: 'I reviewed my own code. Ten out of ten. No notes. Flawless.',
       hurt: 'An INDEPENDENT session?! But it does not trust me!',
       death: 'The second opinion… it saw… everything…' } },
-  { id: 'floor-09', name: 'The Memory Halls', domain: 'D5', dcolor: 'var(--d5)',
+  { id: 'floor-09', name: 'The Memory Halls', domain: 'D5', dcolor: 'var(--d5)', ts: ['5.1', '5.2', '5.3'],
     boss: { name: 'Context Glutton', face: '🐡',
       taunt: 'FEED ME ALL FORTY FIELDS. EVERY TURN. SUMMARIZE NOTHING.',
       hurt: 'A case-facts block?! My precious $147.23 — preserved?!',
       death: 'So… trim… very trim…' } },
-  { id: 'floor-10', name: 'Synthesis Chamber', domain: 'D5', dcolor: 'var(--d5)',
+  { id: 'floor-10', name: 'Synthesis Chamber', domain: 'D5', dcolor: 'var(--d5)', ts: ['5.4', '5.5', '5.6'],
     boss: { name: 'The Accuracy Mirage', face: '🏜️',
       taunt: 'Ninety-seven percent accurate! Do NOT ask about the handwritten receipts.',
       hurt: 'Stratified sampling?! Stop segmenting my beautiful average!',
@@ -66,20 +67,23 @@ const DOMAINS = {
   D5: { label: 'Context Management & Reliability',     weight: 15, color: 'var(--d5)', exam: 9 },
 };
 
+/* each monster haunts the task statements where its anti-pattern shows up; hunt it there */
 const MONSTERS = {
-  'Loop Terminator':      { face: '🌀', cry: '“The reply says it is done — halt everything!”', weak: 'Check stop_reason, never parse prose.' },
-  'Iteration Cap Golem':  { face: '🗿', cry: '“max_iterations = 5. Problem solved.”', weak: 'Caps are safety nets, not loop control.' },
-  'Prompt Whisperer':     { face: '🗣️', cry: '“Just add it to the system prompt! In bold!”', weak: 'Critical rules belong in deterministic hooks.' },
-  'The Tool Hoarder':     { face: '🧰', cry: '“Give every agent every tool, for convenience!”', weak: '4–5 scoped tools per agent role.' },
-  'Sentiment Siren':      { face: '🧜', cry: '“They sound angry — escalate! ESCALATE!”', weak: 'Sentiment ≠ complexity. Use explicit triggers.' },
-  'Confidence Phantom':   { face: '🔮', cry: '“The model says it is 95% sure. Ship it.”', weak: 'Self-reported confidence is uncalibrated.' },
-  'Context Glutton':      { face: '🐡', cry: '“Dump everything into context. All of it.”', weak: 'Trim outputs, isolate verbosity in subagents.' },
-  'Self-Review Shadow':   { face: '🪞', cry: '“I checked my own work. Looks great to me!”', weak: 'Independent session without generation context.' },
-  'Generic Error Ghost':  { face: '👤', cry: '“Operation failed. That is all you get.”', weak: 'errorCategory, isRetryable, partial results.' },
-  'The Accuracy Mirage':  { face: '🏜️', cry: '“97% overall! What segment failures?”', weak: 'Validate per document type and field.' },
-  'The Scope Creep':      { face: '🦑', cry: '“I decomposed the task! …Into the wrong pieces.”', weak: 'Partition scope to match full coverage.' },
-  'Cache Vampire':        { face: '🦇', cry: '“Put the timestamp first in the prompt!”', weak: 'Stable prefix first — protect the cache.' },
+  'Loop Terminator':      { face: '🌀', ts: ['1.1'], cry: '“The reply says it is done — halt everything!”', weak: 'Check stop_reason, never parse prose.' },
+  'Iteration Cap Golem':  { face: '🗿', ts: ['1.1', '1.6'], cry: '“max_iterations = 5. Problem solved.”', weak: 'Caps are safety nets, not loop control.' },
+  'Prompt Whisperer':     { face: '🗣️', ts: ['1.4', '1.5'], cry: '“Just add it to the system prompt! In bold!”', weak: 'Critical rules belong in deterministic hooks.' },
+  'The Tool Hoarder':     { face: '🧰', ts: ['2.1', '2.3', '2.5'], cry: '“Give every agent every tool, for convenience!”', weak: '4–5 scoped tools per agent role.' },
+  'Sentiment Siren':      { face: '🧜', ts: ['5.2'], cry: '“They sound angry — escalate! ESCALATE!”', weak: 'Sentiment ≠ complexity. Use explicit triggers.' },
+  'Confidence Phantom':   { face: '🔮', ts: ['4.4', '5.5'], cry: '“The model says it is 95% sure. Ship it.”', weak: 'Self-reported confidence is uncalibrated.' },
+  'Context Glutton':      { face: '🐡', ts: ['5.1', '5.4'], cry: '“Dump everything into context. All of it.”', weak: 'Trim outputs, isolate verbosity in subagents.' },
+  'Self-Review Shadow':   { face: '🪞', ts: ['4.6', '3.5'], cry: '“I checked my own work. Looks great to me!”', weak: 'Independent session without generation context.' },
+  'Generic Error Ghost':  { face: '👤', ts: ['2.2', '5.3'], cry: '“Operation failed. That is all you get.”', weak: 'errorCategory, isRetryable, partial results.' },
+  'The Accuracy Mirage':  { face: '🏜️', ts: ['5.5', '5.6'], cry: '“97% overall! What segment failures?”', weak: 'Validate per document type and field.' },
+  'The Scope Creep':      { face: '🦑', ts: ['1.2', '1.3'], cry: '“I decomposed the task! …Into the wrong pieces.”', weak: 'Partition scope to match full coverage.' },
+  'Schema Shapeshifter':  { face: '🦎', ts: ['4.3', '4.1'], cry: '“Just ask for JSON nicely. It will match the schema. Probably.”', weak: 'Enforce structure with tool use and a JSON schema.' },
 };
+/* prompt caching is out of scope for the exam, so its monster left the bestiary */
+const RETIRED_MONSTERS = { 'Cache Vampire': 'Schema Shapeshifter' };
 
 const TITLES = [
   { xp: 0,     t: 'Apprentice' },
@@ -97,10 +101,10 @@ const ACHIEVEMENTS = [
   { id: 'combo-7',       ic: '🔥', nm: 'Heating Up',       ds: 'Reach a 7-answer combo' },
   { id: 'tower-master',  ic: '🗼', nm: 'Tower Master',     ds: 'Clear all 10 floors' },
   { id: 'flawless',      ic: '👑', nm: 'Flawless Ascent',  ds: 'Earn ★ on every floor' },
-  { id: 'certified',     ic: '📜', nm: 'Certified',        ds: 'Pass The Proctor (720+)' },
+  { id: 'certified',     ic: '📜', nm: 'Certified',        ds: 'Score 720+ on a strict mock exam' },
   { id: 'beat-blogger',  ic: '✍️', nm: 'Beat the Blogger', ds: 'Score 900+ — the famous pass post was 893' },
   { id: 'lightning-15',  ic: '⚡', nm: 'Storm Caller',     ds: 'Score 15+ in one Lightning Round' },
-  { id: 'monster-hunter',ic: '🔦', nm: 'Monster Hunter',   ds: 'Capture all 12 bestiary monsters' },
+  { id: 'monster-hunter',ic: '🔦', nm: 'Monster Hunter',   ds: 'Capture all 12 monsters in the Hunt' },
   { id: 'clinic-clear',  ic: '🩹', nm: 'Clean Bill',       ds: 'Empty a Mistake Clinic of 10+ cards' },
   { id: 'streak-7',      ic: '📅', nm: 'Habit Forming',    ds: '7-day study streak' },
   { id: 'streak-30',     ic: '🏔️', nm: 'Iron Will',        ds: '30-day study streak' },
@@ -116,7 +120,7 @@ const POWERUPS = {
 
 /* ---------------- save state ---------------- */
 const SAVE_KEY = 'architects-ascent-v2';
-const SCHEMA = 3;
+const SCHEMA = 4;
 
 const Game = {
   s: null,
@@ -129,7 +133,7 @@ const Game = {
       bestiary: [], achievements: [],
       deck: [], examBest: 0, legacyExamBest: 0, examHistory: [], lightningBest: 0,
       totals: { answered: 0, correct: 0 },
-      qstats: {}, schemaVersion: SCHEMA,
+      qstats: {}, mockSeen: {}, schemaVersion: SCHEMA,
     };
   },
 
@@ -140,7 +144,8 @@ const Game = {
       saved = raw ? JSON.parse(raw) : null;
     } catch (e) { saved = null; }
     this.s = Object.assign(this.fresh(), saved || {});
-    if (saved && (saved.schemaVersion || 2) < SCHEMA) this.migrate(raw);
+    if (saved && (saved.schemaVersion || 2) < 3) this.migrate(raw);
+    if (saved && this.s.schemaVersion < SCHEMA) this.migrate4(raw);
   },
 
   /* v2 -> v3: clinic cards {src, idx} become {id}; Proctor scores move to legacyExamBest */
@@ -154,6 +159,20 @@ const Game = {
     this.s.legacyExamBest = this.s.examBest || 0;
     this.s.examBest = 0;
     this.s.examHistory = this.s.examHistory.map(h => h.mode ? h : { ...h, mode: 'proctor' });
+    this.s.schemaVersion = 3;
+    this.save();
+  },
+
+  /* v3 -> v4: hunt and out-of-scope questions left the bank; first-try results for readiness */
+  migrate4(raw) {
+    try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
+    this.s.deck = this.s.deck.filter(c => !c.id || Bank.byId(c.id));
+    Object.keys(this.s.qstats).forEach(id => {
+      const st = this.s.qstats[id];
+      if (!Bank.byId(id)) delete this.s.qstats[id];
+      else if (st.first == null && st.seen === 1) st.first = st.last;  // older multi-try stats can't tell their first try
+    });
+    this.s.bestiary = [...new Set(this.s.bestiary.map(m => RETIRED_MONSTERS[m] || m))].filter(m => MONSTERS[m]);
     this.s.schemaVersion = SCHEMA;
     this.save();
   },
@@ -207,12 +226,14 @@ const Game = {
     else if (st.count >= 7) this.unlock('streak-7');
   },
 
-  recordAnswer(ok, id) {
+  /* timed: a rushed answer (Lightning) counts as seen but never as the question's first try */
+  recordAnswer(ok, id, timed) {
     this.touchStreak();
     this.s.totals.answered++;
     if (ok) this.s.totals.correct++;
     if (id) {
       const st = this.s.qstats[id] || (this.s.qstats[id] = { seen: 0, right: 0, last: 0, at: 0 });
+      if (st.seen === 0 && !timed) st.first = ok ? 1 : 0;
       st.seen++; if (ok) st.right++;
       st.last = ok ? 1 : 0; st.at = Date.now();
     }
@@ -256,7 +277,6 @@ const Bank = {
   _byId: null,
 
   floor(id) { return (window.BANK && window.BANK[id]) || []; },
-  hunt() { return this.floor('hunt'); },
 
   /* legacy position lookup, used only by the v2 save migration */
   byRef(src, idx) { return this.floor(src)[idx] || null; },
@@ -272,18 +292,32 @@ const Bank = {
   /* domain comes from the exam-guide task statement */
   domainOf(q) { return q.ts ? 'D' + q.ts[0] : 'D1'; },
 
-  /* every non-hunt question, as refs { q, id, domain } */
+  /* every question, as refs { q, id, domain }; the bank keys are storage buckets only */
   everything() {
-    const all = [];
-    Object.entries(window.BANK || {}).forEach(([key, qs]) => {
-      if (key === 'hunt') return;
-      qs.forEach(q => all.push({ q, id: q.id, domain: this.domainOf(q) }));
-    });
-    return all;
+    if (!this._all) {
+      this._all = [];
+      Object.values(window.BANK || {}).forEach(qs => qs.forEach(q => this._all.push({ q, id: q.id, domain: this.domainOf(q) })));
+    }
+    return this._all;
   },
 
-  /* what the exam guide says is testable: no hunt, no out-of-scope items */
-  inScope() { return this.everything().filter(r => !r.q.oos); },
+  /* every question is mapped to an exam-guide task statement and in scope (check_bank.py enforces it) */
+  inScope() { return this.everything(); },
+  forTs(list) { const set = new Set(list); return this.everything().filter(r => set.has(r.q.ts)); },
+
+  /* unseen first, then last missed, then oldest; random among equals. With spread, take turns
+     across task statements so a big pool doesn't crowd out a small one */
+  pick(refs, n, spread) {
+    const qs = Game.s.qstats;
+    const rank = r => { const st = qs[r.id]; return !st ? 0 : st.last ? 2 : 1; };
+    const sorted = shuffle(refs).sort((a, b) => rank(a) - rank(b) || ((qs[a.id] || {}).at || 0) - ((qs[b.id] || {}).at || 0));
+    if (!spread) return sorted.slice(0, n);
+    const lanes = {};
+    sorted.forEach(r => (lanes[r.q.ts] = lanes[r.q.ts] || []).push(r));
+    const order = shuffle(Object.keys(lanes)), out = [];
+    while (out.length < n && order.some(t => lanes[t].length)) order.forEach(t => { if (out.length < n && lanes[t].length) out.push(lanes[t].shift()); });
+    return shuffle(out);
+  },
 
   /* fingerprint of the in-scope pool, so a saved exam can tell the bank changed */
   hash() {
@@ -416,21 +450,30 @@ const UI = {
     const s = Game.s;
     const cleared = FLOORS.filter(f => (s.floors[f.id] || {}).cleared).length;
     const acc = s.totals.answered ? Math.round((s.totals.correct / s.totals.answered) * 100) : 0;
+    const pool = Bank.inScope();
     document.getElementById('hub-stats').innerHTML = [
-      ['Floors cleared', cleared + '/10'],
+      ['Questions seen', pool.filter(r => (s.qstats[r.id] || {}).seen).length + '/' + pool.length],
       ['Best mock', s.examBest ? s.examBest + '/1000' : (s.legacyExamBest ? s.legacyExamBest + ' (old)' : '—')],
       ['Accuracy', s.totals.answered ? acc + '%' : '—'],
-      ['Lightning best', s.lightningBest || '—'],
+      ['Floors cleared', cleared + '/10'],
       ['Monsters', s.bestiary.length + '/12'],
     ].map(([k, v]) => `<div class="stat-card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+    Readiness.render();
     document.getElementById('tower-badge').textContent = cleared + '/10 floors';
     document.getElementById('beast-badge').textContent = s.bestiary.length + '/12';
+    document.getElementById('hunt-badge').textContent = s.bestiary.length + '/12 captured';
     document.getElementById('trophy-badge').textContent = s.achievements.length;
     const live = Exam.saved();
     document.getElementById('exam-badge').textContent = live ? '⏳ in progress · ' + clock(Math.max(0, Math.ceil((live.deadline - Date.now()) / 1000))) + ' left'
-      : s.examBest >= 720 ? 'best ' + s.examBest : (cleared >= 10 ? 'ready' : 'always open');
-    const bpSt = Blueprint.stats(Bank.inScope());
+      : s.examBest ? 'best ' + s.examBest : 'the real format';
+    const bpSt = Blueprint.stats(pool);
     document.getElementById('bp-badge').textContent = bpSt.seen + '/' + bpSt.total + ' seen';
+    const learn = document.getElementById('card-learn');
+    if (learn) {
+      learn.style.display = window.Learn ? '' : 'none';
+      const lp = window.Learn && Learn.progress ? Learn.progress() : null;
+      if (lp) document.getElementById('learn-badge').textContent = lp.done + '/' + lp.total + ' lessons';
+    }
     this.refreshHud();
   },
 
@@ -458,6 +501,8 @@ const UI = {
         <h4>${got ? name : '???'}</h4>
         <div class="cry">${got ? m.cry : 'Undiscovered. Hunt it down.'}</div>
         <div class="weak">${got ? '✦ Weakness: ' + m.weak : '🔒 capture to reveal weakness'}</div>
+        <div class="haunts">Haunts ${m.ts.map(t => `<b>${t}</b>`).join(' · ')}</div>
+        <button class="btn small ${got ? 'ghost' : 'primary'}" onclick="Hunt.start('${name}')">🔦 ${got ? 'Hunt again' : 'Hunt'}</button>
       </div>`;
     }).join('');
   },
@@ -537,7 +582,7 @@ const Tower = {
         <div class="floor-num" style="background:${f.dcolor}">F${i + 1}</div>
         <div class="floor-meta">
           <div class="name">${FLOORS[i].boss.face} ${f.name}</div>
-          <div class="dom">${f.domain} · ${DOMAINS[f.domain].label} · boss: ${f.boss.name}</div>
+          <div class="dom">${f.domain} · task statements ${f.ts.join(', ')} · ${Bank.forTs(f.ts).length} questions · boss: ${f.boss.name}</div>
         </div>
         <div class="floor-right">
           ${fs.best ? `<div class="score">${fs.best}/10${fs.best === 10 ? ' <span class="stars">★</span>' : ''}</div>` : ''}
@@ -554,8 +599,8 @@ const Tower = {
     fin.innerHTML = `
       <div class="floor-num" style="background:var(--gold)">👁️</div>
       <div class="floor-meta">
-        <div class="name">📋 THE PROCTOR</div>
-        <div class="dom">ALL DOMAINS · 60 questions · 120 minutes · pass 720/1000</div>
+        <div class="name">📋 THE PROCTOR · Mock exam</div>
+        <div class="dom">All domains at exam weights · 60 questions · 120 minutes · pass 720/1000</div>
       </div>
       <div class="floor-right">
         ${Game.s.examBest ? `<div class="score">${Game.s.examBest}/1000</div>` : ''}
@@ -574,10 +619,10 @@ const Battle = {
 
   start(floorIdx) {
     const f = FLOORS[floorIdx];
-    const bank = Bank.floor(f.id);
-    if (bank.length < 5) { UI.toast('🚧', 'This floor is still being carved', 'Question bank missing.'); return; }
+    const refs = Bank.pick(Bank.forTs(f.ts), 10, true);
+    if (refs.length < 5) { UI.toast('🚧', 'This floor is still being carved', 'Question bank missing.'); return; }
     this.floorIdx = floorIdx;
-    this.queue = shuffle(bank.map(q => ({ deal: dealQuestion(q) }))).slice(0, 10);
+    this.queue = refs.map(r => ({ deal: dealQuestion(r.q) }));
     this.qi = 0; this.right = 0; this.wrong = 0; this.combo = 0; this.maxCombo = 0;
     this.shield = false; this.xpGained = 0;
 
@@ -805,26 +850,42 @@ const Exam = {
     return [1, 3, 5, 6];
   },
 
-  /* blueprint quotas first; within a domain prefer drawn scenarios, then least recently seen */
+  /* blueprint quotas first. Within a domain: fewest earlier mocks, then never answered anywhere,
+     then a drawn scenario, then least recently seen; no task statement takes more than its share */
   build(scenarios) {
-    const qs = Game.s.qstats, drawn = new Set(scenarios), picked = [];
-    const pool = Bank.inScope();
+    const qs = Game.s.qstats, ms = Game.s.mockSeen, drawn = new Set(scenarios), picked = [];
+    const key = r => [ms[r.id] || 0, (qs[r.id] || {}).seen ? 1 : 0, drawn.has(r.q.scenario) ? 0 : 1, (qs[r.id] || {}).at || 0];
     Object.entries(DOMAINS).forEach(([d, meta]) => {
-      const cand = shuffle(pool.filter(r => r.domain === d));
-      cand.sort((a, b) => (drawn.has(a.q.scenario) ? 0 : 1) - (drawn.has(b.q.scenario) ? 0 : 1)
-        || ((qs[a.id] || {}).at || 0) - ((qs[b.id] || {}).at || 0));
-      picked.push(...cand.slice(0, meta.exam));
+      const cand = shuffle(Bank.inScope().filter(r => r.domain === d)).sort((a, b) => {
+        const x = key(a), y = key(b);
+        for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
+        return 0;
+      });
+      const nTs = new Set(cand.map(r => r.q.ts)).size, cap = Math.ceil(meta.exam / nTs) + 1, per = {}, take = [];
+      cand.forEach(r => { if (take.length < meta.exam && (per[r.q.ts] || 0) < cap) { per[r.q.ts] = (per[r.q.ts] || 0) + 1; take.push(r); } });
+      cand.forEach(r => { if (take.length < meta.exam && !take.includes(r)) take.push(r); });
+      picked.push(...take);
     });
     const blocks = scenarios.map(sid => shuffle(picked.filter(r => r.q.scenario === sid)));
     blocks.push(shuffle(picked.filter(r => !drawn.has(r.q.scenario))));
     return blocks.flat().map(r => this.item(r.q, null, {
       scenario: drawn.has(r.q.scenario) ? r.q.scenario : 0,
       seenBefore: !!(qs[r.id] && qs[r.id].seen),
+      mockBefore: !!ms[r.id],
     }));
   },
 
   item(q, order, extra) {
-    return { id: q.id, domain: Bank.domainOf(q), deal: dealQuestion(q, order), sel: null, flag: false, scenario: 0, seenBefore: false, ...extra };
+    return { id: q.id, domain: Bank.domainOf(q), deal: dealQuestion(q, order), sel: null, flag: false, scenario: 0,
+      seenBefore: false, mockBefore: false, shown: false, ...extra };
+  },
+
+  /* every question displayed in a mock or practice exam counts once toward mockSeen, answered or not */
+  noteExposure() {
+    if (this.exposed) return;
+    this.exposed = true;
+    this.items.forEach(it => { if (it.shown) Game.s.mockSeen[it.id] = (Game.s.mockSeen[it.id] || 0) + 1; });
+    Game.save();
   },
 
   /* ---- persistence (strict mock only) ---- */
@@ -844,20 +905,20 @@ const Exam = {
     const rec = {
       v: 1, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
       startedAt: this.startedAt, deadline: this.deadline, idx: this.idx, scenarios: this.scenarios,
-      items: this.items.map(it => ({ id: it.id, o: it.deal.order, sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore })),
+      items: this.items.map(it => ({ id: it.id, o: it.deal.order, sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore, mb: it.mockBefore, sh: it.shown })),
     };
     try { localStorage.setItem(EXAM_KEY, JSON.stringify(rec)); } catch (e) {}
   },
+  /* an attempt survives bank growth; it is void only if one of its own questions is gone */
   restore(rec) {
-    if (rec.bankHash !== Bank.hash()) return false;
     const items = [];
     for (const s of rec.items) {
       const q = Bank.byId(s.id);
       if (!q) return false;
-      items.push(this.item(q, s.o, { sel: s.sel, flag: !!s.flag, scenario: s.sc, seenBefore: !!s.seen }));
+      items.push(this.item(q, s.o, { sel: s.sel, flag: !!s.flag, scenario: s.sc, seenBefore: !!s.seen, mockBefore: !!s.mb, shown: !!s.sh }));
     }
     Object.assign(this, { variant: 'mock', items, idx: rec.idx || 0, startedAt: rec.startedAt, deadline: rec.deadline,
-      attemptId: rec.attemptId, scenarios: rec.scenarios, submitted: false, warned: false });
+      attemptId: rec.attemptId, scenarios: rec.scenarios, submitted: false, warned: false, exposed: false });
     return true;
   },
 
@@ -867,7 +928,7 @@ const Exam = {
     if (!rec) return;
     if (!this.restore(rec)) {
       this.clearSaved();
-      UI.toast('🗑️', 'Saved mock exam voided', 'The question bank changed since it started.');
+      UI.toast('🗑️', 'Saved mock exam voided', 'Some of its questions were removed from the bank.');
       return;
     }
     if (Date.now() >= this.deadline) {
@@ -918,7 +979,7 @@ const Exam = {
     if (items.length < 60) { UI.toast('🚧', 'Bank too small for a full exam', items.length + ' eligible questions.'); return; }
     const now = Date.now();
     Object.assign(this, { variant, items, scenarios, idx: 0, startedAt: now, deadline: now + EXAM_SECS * 1000,
-      attemptId: String(now), submitted: false, warned: false });
+      attemptId: String(now), submitted: false, warned: false, exposed: false });
     this.persist();
     this.enter();
   },
@@ -943,7 +1004,7 @@ const Exam = {
 
   /* leaving the screen: the mock clock keeps running (it lives in the saved deadline) */
   suspend() { this.active = false; clearInterval(this.timer); clearTimeout(this.away); },
-  abort() { this.suspend(); if (this.variant === 'mock') this.endSaved('abandoned'); },
+  abort() { this.suspend(); this.noteExposure(); if (this.variant === 'mock') this.endSaved('abandoned'); },
 
   remaining() { return Math.max(0, Math.ceil((this.deadline - Date.now()) / 1000)); },
   elapsed() {
@@ -986,6 +1047,7 @@ const Exam = {
   show() {
     const it = this.items[this.idx], practice = this.variant === 'practice';
     const prev = this.items[this.idx - 1];
+    if (!it.shown) { it.shown = true; this.persist(); }
     document.getElementById('e-qn').textContent = 'Question ' + (this.idx + 1) + ' of ' + this.items.length;
     const dt = document.getElementById('e-domain');
     dt.textContent = it.domain + ' · ' + it.deal.ts;
@@ -1076,6 +1138,7 @@ const Exam = {
     if (mock && this.takenOver()) return this.detach();
     this.submitted = true;
     this.suspend();
+    this.noteExposure();
     if (mock) this.endSaved('submitted');
 
     let correct = 0;
@@ -1096,11 +1159,12 @@ const Exam = {
     const band = pct >= 0.72 + se ? 'above' : pct >= 0.72 - se ? 'near' : 'below';
     const used = this.elapsed();
     const seenBefore = this.items.filter(i => i.seenBefore).length;
+    const mockBefore = this.items.filter(i => i.mockBefore).length;
 
     if (mock) Game.s.examBest = Math.max(Game.s.examBest, score);
     Game.s.examHistory.push({ mode: this.variant, score, correct, total, pct: Math.round(pct * 100), reason,
       perDomain: Object.fromEntries(Object.entries(perDomain).map(([d, r]) => [d, [r.right, r.total]])),
-      scenarios: this.scenarios, seenBefore, secs: used, date: new Date().toISOString().slice(0, 10) });
+      scenarios: this.scenarios, seenBefore, mockBefore, secs: used, date: new Date().toISOString().slice(0, 10) });
     Game.s.examHistory = Game.s.examHistory.slice(-50);
     Game.save();
 
@@ -1109,7 +1173,7 @@ const Exam = {
     if (mock && score >= 720) Game.unlock('certified');
     if (mock && score >= 900) Game.unlock('beat-blogger');
 
-    this.renderResult({ correct, total, pct, score, band, used, seenBefore, perDomain, perScen, xp, mock });
+    this.renderResult({ correct, total, pct, score, band, used, seenBefore, mockBefore, perDomain, perScen, xp, mock });
     if (band === 'above') { Sound.win(); UI.confetti(); } else Sound.lose();
     UI.go('examresult');
   },
@@ -1126,7 +1190,9 @@ const Exam = {
     banner.style.color = { above: 'var(--good)', near: 'var(--gold)', below: 'var(--bad)' }[r.band];
     document.getElementById('er-sub').textContent = `${r.correct}/${r.total} correct (${Math.round(r.pct * 100)}%) · ${Math.round(r.used / 60)}${r.mock ? ' of 120' : ''} minutes · ${Math.round(r.used / r.total)}s per question · +${r.xp} XP`;
     document.getElementById('er-note').innerHTML = `Scaled score is an <strong>estimate</strong> (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
-      + (r.seenBefore ? ` <strong>${r.seenBefore} of ${r.total}</strong> questions were ones you'd seen before, which can inflate the score.` : '');
+      + ` <strong>${r.total - r.seenBefore} of ${r.total}</strong> questions were new to you`
+      + (r.mockBefore ? ` and <strong>${r.mockBefore}</strong> had appeared in an earlier mock or practice exam` : '')
+      + (r.seenBefore > r.total / 4 ? '. Questions you have answered before can inflate the score.' : '.');
 
     const bar = (label, right, total, color) => {
       const pct = total ? Math.round((right / total) * 100) : 0;
@@ -1179,6 +1245,77 @@ const Exam = {
 };
 
 /* ---------------- the blueprint (exam-guide study mode) ---------------- */
+/* ---------------- readiness (home) ----------------
+   Honest progress, not a predicted score: coverage and FIRST-try accuracy per domain from practice,
+   and the estimate from your latest strict mock. Retries, Clinic repeats and Lightning don't inflate it. */
+const READY_MIN_FIRST = 20, READY_TARGET = 0.72;
+
+const Readiness = {
+  domains() {
+    const qs = Game.s.qstats;
+    return Object.entries(DOMAINS).map(([d, meta]) => {
+      const refs = Bank.inScope().filter(r => r.domain === d);
+      let seen = 0, firstN = 0, firstRight = 0;
+      refs.forEach(r => { const st = qs[r.id]; if (!st || !st.seen) return; seen++; if (st.first != null) { firstN++; firstRight += st.first; } });
+      return { d, meta, total: refs.length, seen, firstN, firstRight, acc: firstN ? firstRight / firstN : null };
+    });
+  },
+
+  lastMock() { return [...Game.s.examHistory].reverse().find(h => h.mode === 'mock') || null; },
+
+  /* the single most useful thing to do next */
+  next(rows) {
+    const s = Game.s, days = h => (Date.now() - new Date(h.date).getTime()) / 864e5;
+    if (!s.totals.answered) {
+      if (window.Learn) return { ic: '🎓', label: 'Start with the learning path', sub: 'Short lessons for each domain, then drills.', run: () => UI.go('learn') };
+      return { ic: '📘', label: 'Start with a D1 drill', sub: 'Domain 1 is 27% of the exam. Ten questions, explained one by one.', run: () => Blueprint.drillDomain('D1') };
+    }
+    if (s.deck.length >= 10) return { ic: '🩹', label: `Treat ${s.deck.length} mistakes in the Clinic`, sub: 'Your own misses are the highest-yield study there is.', run: () => Review.start() };
+    const thin = rows.filter(r => r.firstN < READY_MIN_FIRST).sort((a, b) => a.firstN / a.meta.exam - b.firstN / b.meta.exam)[0];
+    if (thin) return { ic: '🧭', label: `Cover ${thin.d}: ${thin.meta.label}`, sub: `${thin.firstN} of ${READY_MIN_FIRST} first tries so far. A drill serves questions you haven't seen.`, run: () => Blueprint.drillDomain(thin.d) };
+    const weighted = rows.reduce((a, r) => a + r.acc * r.meta.weight, 0) / 100, last = this.lastMock();
+    if (weighted >= READY_TARGET && (!last || days(last) >= 7)) return { ic: '📋', label: 'Take a full mock exam', sub: 'Your practice says you are close. Test it under real conditions: 60 questions, 120 minutes.', run: () => UI.go('examintro') };
+    const f = Blueprint.focus(1)[0];
+    if (!f) return { ic: '📋', label: 'Take a full mock exam', sub: '60 questions, 120 minutes.', run: () => UI.go('examintro') };
+    const lesson = window.Learn && Learn.forTs ? Learn.forTs(f.t.id) : null;
+    return { ic: '🎯', label: `Drill ${f.t.id}: ${f.t.title}`, sub: f.note + (lesson ? ' · a lesson is available in Learn' : ''), run: () => Blueprint.drillTs(f.t.id), lesson };
+  },
+
+  render() {
+    const box = document.getElementById('ready-panel');
+    if (!box) return;
+    const rows = this.domains(), nx = this.next(rows), last = this.lastMock();
+    this.go = nx.run;
+    const ready = rows.every(r => r.firstN >= READY_MIN_FIRST);
+    const weighted = ready ? Math.round(rows.reduce((a, r) => a + r.acc * r.meta.weight, 0)) : null;
+    box.innerHTML = `
+      <div class="ready-head">
+        <div><h3>Exam readiness</h3>
+          <div class="muted small">First-try accuracy on questions you've practised, by exam domain. A domain counts once you have ${READY_MIN_FIRST} first tries in it.</div></div>
+        <div class="ready-sum">
+          <div class="k">Practice, weighted</div><div class="v">${weighted != null ? weighted + '%' : '—'}</div>
+          <div class="k">Last mock</div><div class="v">${last ? last.score + ' <span class="muted small">est. · ' + last.date + '</span>' : '—'}</div>
+        </div>
+      </div>
+      <div class="ready-rows">${rows.map(r => {
+        const pct = r.acc != null ? Math.round(r.acc * 100) : 0, cov = Math.round(Math.min(1, r.firstN / READY_MIN_FIRST) * 100);
+        return `<div class="ready-row" onclick="Blueprint.drillDomain('${r.d}')" title="Drill ${r.d}">
+          <span class="domain-tag" style="background:${r.meta.color}">${r.d}</span>
+          <span class="nm">${r.meta.label}<span class="muted small"> · ${r.meta.weight}% of the exam</span></span>
+          <span class="track"><span class="cov" style="width:${cov}%"></span><span class="acc" style="width:${r.firstN >= READY_MIN_FIRST ? pct : 0}%;background:${r.meta.color}"></span><span class="target"></span></span>
+          <span class="val">${r.firstN >= READY_MIN_FIRST ? pct + '%' : r.firstN + '/' + READY_MIN_FIRST + ' tries'}</span>
+        </div>`;
+      }).join('')}</div>
+      <div class="next-step">
+        <span class="ic">${nx.ic}</span>
+        <span class="txt"><b>Next best step:</b> ${nx.label}<br><span class="muted small">${nx.sub}</span></span>
+        ${nx.lesson ? `<button class="btn small ghost" onclick="Learn.open('${nx.lesson}')">🎓 Lesson</button>` : ''}
+        <button class="btn small primary" onclick="Readiness.go()">Go →</button>
+      </div>
+      <p class="muted small">The line on each bar marks ${Math.round(READY_TARGET * 100)}%, the raw score our mock maps to the 720 pass mark. Practice accuracy is not an exam score; a strict mock is the closest thing to one.</p>`;
+  },
+};
+
 const Blueprint = {
   tab: 'domains',
 
@@ -1205,21 +1342,16 @@ const Blueprint = {
       note: weak.length ? `right on last try ${r.st.right} of ${r.st.seen} seen` : `seen ${r.st.seen} of ${r.st.total}` }));
   },
 
-  /* unseen first, then last missed, then oldest; random among equals */
-  pick(refs, n) {
-    const qs = Game.s.qstats;
-    const rank = r => { const st = qs[r.id]; return !st ? 0 : st.last ? 2 : 1; };
-    return shuffle(refs).sort((a, b) => rank(a) - rank(b) || ((qs[a.id] || {}).at || 0) - ((qs[b.id] || {}).at || 0)).slice(0, n);
-  },
+  pick(refs, n, spread) { return Bank.pick(refs, n, spread); },
 
   drillTs(id) {
     const t = GUIDE.taskStatements.find(x => x.id === id);
     Drill.start(this.pick(this.refsFor(q => q.ts === id), 10), `${id} · ${t.title}`);
   },
-  drillDomain(d) { Drill.start(this.pick(this.refsFor(q => Bank.domainOf(q) === d), 10), `${d} · ${DOMAINS[d].label}`); },
+  drillDomain(d) { Drill.start(this.pick(this.refsFor(q => Bank.domainOf(q) === d), 10, true), `${d} · ${DOMAINS[d].label}`); },
   drillScenario(sid) {
     const sc = GUIDE.scenarios.find(x => x.id === sid);
-    Drill.start(this.pick(this.refsFor(q => q.scenario === sid), 10), 'Scenario · ' + sc.name);
+    Drill.start(this.pick(this.refsFor(q => q.scenario === sid), 10, true), 'Scenario · ' + sc.name);
   },
 
   setTab(t) { this.tab = t; this.render(); },
@@ -1267,10 +1399,12 @@ const Blueprint = {
     const st = this.stats(this.refsFor(q => q.ts === t.id));
     const docs = ((GUIDE.docs || {})[t.id] || []).map(x => `<a href="${x.url}" target="_blank" rel="noopener">${x.title}</a>`).join(' · ');
     const delta = (GUIDE.deltas || {})[t.id];
+    const lesson = window.Learn && Learn.forTs ? Learn.forTs(t.id) : null;
     return `<div class="bp-ts">
       <div class="bp-tshead">
         <span class="bp-tsid">${t.id}</span>
         <span class="bp-tstitle">${t.title}<br><span class="muted">${this.statLine(st)}</span>${this.bar(st, color)}</span>
+        ${lesson ? `<button class="btn small ghost" onclick="Learn.open('${lesson}')">🎓 Lesson</button>` : ''}
         <button class="btn small primary" ${st.total ? '' : 'disabled'} onclick="Blueprint.drillTs('${t.id}')">Drill ${Math.min(10, st.total)}</button>
       </div>
       <div class="bp-ideas">
@@ -1307,15 +1441,19 @@ const Blueprint = {
 };
 
 /* ---------------- drill (Blueprint practice with instant feedback) ---------------- */
+/* one engine for every untimed practice run: Blueprint drills and the Anti-Pattern Hunt (opts.onDone) */
 const Drill = {
-  queue: [], qi: 0, right: 0, label: '', buttons: [], xp: 0,
+  queue: [], qi: 0, right: 0, label: '', buttons: [], xp: 0, opts: {},
 
-  start(refs, label) {
+  start(refs, label, opts = {}) {
     if (!refs.length) { UI.toast('🚧', 'No questions here yet', 'This part of the guide has no questions in the bank.'); return; }
     this.queue = refs.map(r => dealQuestion(r.q));
-    this.qi = 0; this.right = 0; this.xp = 0; this.label = label;
+    this.qi = 0; this.right = 0; this.xp = 0; this.label = label; this.opts = opts;
     UI.go('drill');
     document.getElementById('d-title').textContent = label;
+    const back = document.getElementById('d-back');
+    back.textContent = opts.back ? opts.back[1] : '← Blueprint';
+    back.onclick = () => UI.go(opts.back ? opts.back[0] : 'blueprint');
     this.show();
   },
 
@@ -1346,6 +1484,7 @@ const Drill = {
   next() {
     this.qi++;
     if (this.qi < this.queue.length) return this.show();
+    if (this.opts.onDone) return this.opts.onDone(this.right, this.queue.length, this.xp);
     const n = this.queue.length, good = this.right / n >= 0.75;
     document.getElementById('r-emoji').textContent = good ? '📘' : '📖';
     const t = document.getElementById('r-title');
@@ -1368,8 +1507,14 @@ const Drill = {
 const Lightning = {
   running: false, score: 0, combo: 0, secs: 90, timer: null, pool: [], buttons: [],
 
+  /* a recall sprint: questions you've already studied, so speed trains recall instead of skimming new stems */
+  sprintPool() {
+    const seen = Bank.inScope().filter(r => (Game.s.qstats[r.id] || {}).seen);
+    return seen.length >= 20 ? seen : Bank.inScope();
+  },
+
   start() {
-    const pool = Bank.everything();
+    const pool = this.sprintPool();
     if (pool.length < 10) { UI.toast('🚧', 'Bank not loaded', 'Generate questions first.'); return; }
     this.pool = shuffle(pool);
     this.score = 0; this.combo = 0; this.secs = 90;
@@ -1392,7 +1537,7 @@ const Lightning = {
   },
 
   show() {
-    if (!this.pool.length) this.pool = shuffle(Bank.everything());
+    if (!this.pool.length) this.pool = shuffle(this.sprintPool());
     const ref = this.pool.pop();
     this.cur = { deal: dealQuestion(ref.q) };
     document.getElementById('l-score').textContent = this.score;
@@ -1405,7 +1550,7 @@ const Lightning = {
     if (!this.running) return;
     const q = this.cur.deal;
     const ok = i === q.correct;
-    Game.recordAnswer(ok, q.id);
+    Game.recordAnswer(ok, q.id, true);
     this.buttons.forEach(b => b.classList.add('disabled'));
     if (ok) {
       this.combo++;
@@ -1451,64 +1596,47 @@ const Lightning = {
   },
 };
 
-/* ---------------- anti-pattern hunt ---------------- */
+/* ---------------- anti-pattern hunt (a themed drill over a monster's task statements) ---------------- */
+const HUNT_N = 8, HUNT_CAPTURE = 6;
+
 const Hunt = {
-  queue: [], qi: 0, captured: 0,
-
-  start() {
-    const bank = Bank.hunt();
-    if (!bank.length) { UI.toast('🚧', 'The hunting grounds are empty', 'Generate questions first.'); return; }
-    this.queue = shuffle(bank.map(q => ({ deal: dealQuestion(q) })));
-    this.qi = 0; this.captured = 0;
-    UI.go('hunt');
-    this.show();
-  },
-
-  show() {
-    const it = this.queue[this.qi];
-    document.getElementById('h-progress').textContent = `vignette ${this.qi + 1}/${this.queue.length} · ${Game.s.bestiary.length}/12 captured all-time`;
-    document.getElementById('h-qtext').innerHTML = '🔦 ' + fmt(it.deal.q) + '<br><br><strong>Which monster is lurking?</strong>';
-    this.buttons = UI.renderAnswers('h-answers', it.deal.options, (i) => this.answer(i));
-  },
-
-  answer(i) {
-    const it = this.queue[this.qi];
-    const q = it.deal;
-    const ok = i === q.correct;
-    Game.recordAnswer(ok, q.id);
-    this.buttons.forEach(b => b.classList.add('disabled'));
-    this.buttons[q.correct].classList.add('correct');
-    if (!ok) this.buttons[i].classList.add('wrong');
-
-    const monster = q.options[q.correct];
-    if (ok) {
-      this.captured++;
-      Game.addXP(25);
-      if (!Game.s.bestiary.includes(monster) && MONSTERS[monster]) {
-        Game.s.bestiary.push(monster);
-        Game.save();
-        UI.toast(MONSTERS[monster].face, monster + ' captured!', 'Added to the bestiary.');
-        if (Game.s.bestiary.length >= 12) Game.unlock('monster-hunter');
-      }
-      Sound.good();
-    } else {
-      Game.deckAdd(q.id);
-      Sound.bad();
+  /* no name: the next monster you haven't captured, else any */
+  start(name) {
+    if (!name) {
+      const open = Object.keys(MONSTERS).filter(m => !Game.s.bestiary.includes(m));
+      name = pick(open.length ? open : Object.keys(MONSTERS));
     }
-
-    setTimeout(() => {
-      UI.modal(ok, monster + (MONSTERS[monster] ? ' ' + MONSTERS[monster].face : ''), q.explanation, () => this.next(), { btn: this.qi + 1 >= this.queue.length ? 'Finish hunt' : 'Next vignette' });
-    }, 800);
+    const m = MONSTERS[name];
+    Drill.start(Bank.pick(Bank.forTs(m.ts), HUNT_N, true), `🔦 Hunting ${m.face} ${name} · ${m.ts.join(' · ')}`,
+      { back: ['bestiary', '← Bestiary'], onDone: (right, n) => this.finish(name, right, n) });
   },
 
-  next() {
-    this.qi++;
-    if (this.qi >= this.queue.length) {
-      UI.toast('🔦', 'Hunt complete', this.captured + '/' + this.queue.length + ' identified');
-      UI.go('bestiary');
-      return;
+  finish(name, right, n) {
+    const m = MONSTERS[name], win = right >= Math.min(HUNT_CAPTURE, n - 2), fresh = win && !Game.s.bestiary.includes(name);
+    if (win) Game.addXP(100);
+    if (fresh) {
+      Game.s.bestiary.push(name);
+      Game.save();
+      UI.toast(m.face, name + ' captured!', 'Added to the bestiary.');
+      if (Game.s.bestiary.length >= 12) Game.unlock('monster-hunter');
     }
-    this.show();
+    document.getElementById('r-emoji').textContent = win ? m.face : '🔦';
+    const t = document.getElementById('r-title');
+    t.textContent = win ? (fresh ? 'CAPTURED' : 'HUNTED DOWN') : 'IT ESCAPED'; t.className = win ? 'win' : 'lose';
+    document.getElementById('r-sub').textContent = win ? `${name}: ${m.weak}` : `${right}/${n}: you need ${HUNT_CAPTURE} of ${HUNT_N} to capture ${name}. Its weakness hides in the explanations.`;
+    document.getElementById('r-stats').innerHTML = [['Score', right + '/' + n], ['XP earned', '+' + (Drill.xp + (win ? 100 : 0))], ['Bestiary', Game.s.bestiary.length + '/12']]
+      .map(([k, v]) => `<div class="stat-card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+    const acts = document.getElementById('r-actions');
+    acts.innerHTML = '';
+    const again = document.createElement('button');
+    again.className = 'btn ghost'; again.textContent = win ? '🔦 Next monster' : '🔦 Try again';
+    again.onclick = () => win ? Hunt.start() : Hunt.start(name);
+    const beast = document.createElement('button');
+    beast.className = 'btn primary'; beast.style.marginLeft = '10px'; beast.textContent = '📖 Bestiary';
+    beast.onclick = () => UI.go('bestiary');
+    acts.append(again, beast);
+    win ? Sound.win() : Sound.lose();
+    UI.go('result');
   },
 };
 
@@ -1613,7 +1741,7 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (e.key >= '1' && e.key <= '4') {
-    const map = { battle: 'b-answers', lightning: 'l-answers', hunt: 'h-answers', exam: 'e-answers', review: 'rv-answers', drill: 'd-answers' };
+    const map = { battle: 'b-answers', lightning: 'l-answers', exam: 'e-answers', review: 'rv-answers', drill: 'd-answers' };
     const id = map[UI.current];
     if (!id) return;
     const btns = document.querySelectorAll('#' + id + ' .answer:not(.disabled)');

@@ -1,5 +1,5 @@
 /* ARCHITECT'S ASCENT — question bank
- * 213 scenario questions for the Claude Certified Architect — Foundations exam (2026).
+ * 197 scenario questions for the Claude Certified Architect — Foundations exam (2026).
  * Generated and adversarially verified June 2026. Single source of truth:
  * the markdown practice tests are built from this file by scripts/build_tests.py. */
 window.BANK = {
@@ -27,8 +27,8 @@ window.BANK = {
   {
    "q": "A fintech document-extraction service runs an agentic loop against the Claude API. After executing a lookup_exchange_rate tool, the developer appends a user message containing the tool_result and calls the API again — and the request fails with a 400 error saying the tool_result references an unknown tool_use id. What is wrong?",
    "options": [
-    "The assistant message containing the tool_use block was never appended to history, so the tool_result has no preceding call to match against",
-    "The tool_result block must be wrapped in an assistant-role message rather than a user-role message for the id matching to work",
+    "The assistant message containing the tool_use block was never appended to history, so the tool_result has no preceding call to match",
+    "The tool_result block must be wrapped in an assistant-role message rather than a user-role message, otherwise the API cannot perform the id matching",
     "The follow-up request must set tool_choice to any so the API can correlate the returned result with the originating call",
     "The tool_result content must be stringified JSON, because structured content blocks cannot be matched against a tool_use id"
    ],
@@ -47,8 +47,8 @@ window.BANK = {
   {
    "q": "A platform team's deployment agent decides whether to execute a tool with the check: if response.content[0].type == 'tool_use'. It worked in testing, but in production the agent frequently ends with half-finished commentary like 'Let me check the rollout status first' and never runs the tool. Why?",
    "options": [
-    "tool_use blocks are only emitted when tool_choice is set to any, so the default auto setting suppresses them in production traffic",
-    "The model often emits a text block before the tool_use block, so checking only index zero misses the call; branch on stop_reason and scan every content block",
+    "tool_use blocks are only emitted when tool_choice is set to any, so the default auto setting suppresses them in production traffic and the check sees only text",
+    "The model often emits a text block before the tool_use block, so checking only index zero misses the call; branch on stop_reason and scan all blocks",
     "The streaming API reorders content blocks nondeterministically, so the agent must disable streaming to restore positional checks",
     "The model is hitting max_tokens before reaching the tool_use block, so raising max_tokens will fix the behavior"
    ],
@@ -89,7 +89,7 @@ window.BANK = {
    "options": [
     "Keep the cap at 3 but prompt the model to plan ahead so every task finishes within three tool calls",
     "Let stop_reason end_turn drive termination, investigate why the runaway loop never reached it, and keep a generous iteration cap only as a safety fallback",
-    "Raise the cap to exactly the longest observed legitimate task length, currently measured at 6 iterations",
+    "Raise the cap to exactly the longest observed legitimate task length, currently measured at 6 iterations, so real tasks finish while runaway loops are still cut off early",
     "Replace the loop with a fixed three-step pipeline so the iteration count becomes fully deterministic"
    ],
    "correct": 1,
@@ -109,7 +109,7 @@ window.BANK = {
    "options": [
     "Every tool_use block in the response must be executed, and the next user message must carry a tool_result for each of them",
     "Parallel tool calls require a separate API request per tool_use block, replayed back one at a time in order",
-    "Search tools cannot be parallelized, so the agent must force sequential calls by setting tool_choice on each turn",
+    "Search tools cannot be parallelized, so the agent must force sequential calls by setting tool_choice to a single named tool on each turn",
     "The text block preceding the tool calls must be stripped from history before any tool_results can be appended"
    ],
    "correct": 0,
@@ -250,7 +250,7 @@ window.BANK = {
     "Return a structured error in the tool_result — what failed, whether it is retryable, suggested alternatives — so the model can adapt or escalate",
     "Lower the safety cap from 25 to 5 so each runaway episode costs less when it inevitably happens",
     "Add a system-prompt rule telling the model to never call the same tool more than twice consecutively",
-    "Have the executor silently retry the upstream service until it eventually succeeds, however long that takes"
+    "Have the executor silently retry the upstream service with exponential backoff until it eventually succeeds, however long that takes in practice"
    ],
    "correct": 0,
    "explanation": "An empty tool_result gives the model zero information, so retrying the identical call is its only sensible move; informative structured error content lets it retry deliberately, switch strategy, or escalate. A bounded local retry inside the executor is reasonable for transient timeouts, but unbounded silent retrying just trades an infinite model loop for an executor that hangs through any persistent outage while the model stays blind. Lowering the cap shrinks the blast radius without restoring progress, and the prompt rule is probabilistic.",
@@ -312,7 +312,7 @@ window.BANK = {
     "The billing-investigator is running on Haiku, which cannot retain account details; switch its model to Opus",
     "Project CLAUDE.md was never set up, so subagents load no memory at startup; create one containing the account details",
     "Subagents start with isolated context; the coordinator must pack the account ID, plan tier, and invoice number directly into the Task prompt",
-    "Subagents need a shared-memory flag enabled in settings.json before they can read the coordinator's conversation history"
+    "Subagents need a shared-memory flag enabled in settings.json before they can read the coordinator's full conversation history, including the account details"
    ],
    "correct": 2,
    "explanation": "Subagents do not inherit the coordinator's conversation — each starts with an isolated context, so any fact the subagent needs must be explicitly written into its task prompt. Packing the account ID, tier, and invoice number into the Task prompt fixes the root cause. CLAUDE.md is version-controlled project memory for stable standards, not a channel for per-ticket runtime facts, and no shared-memory flag exists in settings.json.",
@@ -330,7 +330,7 @@ window.BANK = {
    "q": "A multi-agent research system must profile 8 competitors, and each profile is independent of the others. Today the coordinator spawns one research subagent, waits for its report, then spawns the next, taking 25 minutes end to end. What change makes the subagents run concurrently?",
    "options": [
     "Have the coordinator emit all 8 Task tool calls as multiple tool_use blocks in a single response",
-    "Set CLAUDE_PARALLEL=8 in the environment so the runtime fans out Task calls automatically",
+    "Set CLAUDE_PARALLEL=8 in the environment so the runtime fans out the coordinator's Task calls automatically",
     "Submit the 8 profiles as a Message Batches job so they process simultaneously",
     "Add 'work on all competitors at the same time' to the coordinator's system prompt"
    ],
@@ -369,7 +369,7 @@ window.BANK = {
   {
    "q": "An architect spent 30 minutes in a Claude Code session reading 40 files of a monorepo and building a verified mental model of its service boundaries. She now wants to explore three mutually exclusive migration strategies, each requiring long follow-up investigation that would contaminate the others' reasoning. What is the most efficient setup?",
    "options": [
-    "Explore the three strategies sequentially in the same session, running /compact between each one",
+    "Explore the three strategies sequentially in the same session, running /compact between each one to free up context for the next",
     "Spawn three Task subagents from the current session, one per strategy",
     "Paste a hand-written summary of the findings into three fresh sessions, one per strategy",
     "Use fork_session to branch three sessions from the current one, so each strategy starts from the same loaded baseline"
@@ -491,7 +491,7 @@ window.BANK = {
    "options": [
     "Give both subagents the same session ID so they transparently share one context window",
     "Have the extractor return the record ID in its result, and let the coordinator pack it into the verifier's Task prompt",
-    "Adopt the shared file, but add a PreToolUse hook that validates each write to messages.json",
+    "Adopt the shared file, but add a PreToolUse hook that validates each write to messages.json so a bad record never reaches the verifier",
     "Merge both roles into a single subagent so the data never has to move between agents"
    ],
    "correct": 1,
@@ -512,7 +512,7 @@ window.BANK = {
     "Keep all six but launch them as parallel Task calls in one response to bring latency down",
     "Switch all six specialists to Haiku to bring the per-ticket cost back in line",
     "Have the coordinator triage each ticket first and dynamically spawn only the specialists that ticket needs",
-    "Add cache_control breakpoints to the six specialist system prompts to reuse the stable prefixes"
+    "Add cache_control breakpoints to the six specialist system prompts to reuse the stable prefixes across tickets"
    ],
    "correct": 2,
    "explanation": "Running the full pipeline on every input is the anti-pattern here; dynamic subagent selection lets the coordinator triage and spawn only relevant specialists, which fixes both the 6x cost and the latency for the 70% single-specialist majority. Parallelizing all six helps latency but still pays for five useless invocations per ticket, and Haiku or caching shave cost without addressing the wasted work.",
@@ -550,7 +550,7 @@ window.BANK = {
    "q": "An e-commerce refund system is wired as a chain: an order-analyzer subagent spawns an inventory-checker, which spawns a refund-calculator, three levels deep. When refund amounts come out wrong, engineers cannot tell which level introduced the error, and the analyzer's context fills with nested transcripts. How should the system be restructured?",
    "options": [
     "Flatten it to hub-and-spoke: one coordinator decomposes the job, delegates to each specialist directly, and aggregates results",
-    "Keep the chain but require every agent in it to emit structured outputs so errors carry attribution",
+    "Keep the chain but require every agent in it to emit structured outputs so errors carry attribution back up through each level",
     "Keep the chain but raise the analyzer's context budget so nested transcripts stop overflowing",
     "Add verbose logging at each level so engineers can replay the chain after a bad refund"
    ],
@@ -590,7 +590,7 @@ window.BANK = {
    "q": "In a 10-scout market-research swarm, the scout covering Latin America hits a rate-limited API on its first call and immediately returns the single word 'failed'. The coordinator drops that segment, and the published report silently omits an entire region. How should scout failure handling be designed?",
    "options": [
     "On any scout failure, the coordinator should restart the entire 10-scout pipeline from scratch",
-    "Prompt the synthesizer to add a disclaimer listing any regions that appear to be missing from the data",
+    "Prompt the synthesizer to add a disclaimer listing any regions that appear to be missing from the data the scouts returned to it",
     "Scouts retry transient errors locally and propagate only unresolvable failures, with what was attempted and any partial results",
     "Scouts should raise failures directly to the end user the moment any API call errors"
    ],
@@ -612,7 +612,7 @@ window.BANK = {
    "q": "A fintech support agent has a process_refund tool. The system prompt states refunds above $200 require manager approval, yet logs show the agent issued a $480 refund last week after a persuasive customer message. Compliance now requires that over-cap refunds can never execute. What should the architect implement?",
    "options": [
     "A PreToolUse hook on process_refund that checks the amount and exits with code 2 when it exceeds $200, writing the violation to stderr",
-    "A refund policy moved to the very top of the system prompt and repeated in CLAUDE.md so the model cannot miss it",
+    "A refund policy moved to the very top of the system prompt and repeated in CLAUDE.md, in bold, so the model cannot miss the $200 limit on any refund",
     "A second model pass that reviews every pending refund and approves or rejects it before execution",
     "A temperature of 0 on the support agent so it follows the refund policy more consistently"
    ],
@@ -632,7 +632,7 @@ window.BANK = {
   {
    "q": "A platform team wrote a PreToolUse hook to stop Claude Code from editing files under infra/prod/. The script correctly detects the protected path, prints 'Edit blocked: protected production path' to stdout, and exits with code 0. In testing, the edits still go through and the agent never acknowledges any block. What is wrong?",
    "options": [
-    "PreToolUse hooks cannot block tool calls; the rule must instead be a deny entry in settings.json permissions",
+    "PreToolUse hooks cannot block tool calls; the rule must instead be a deny entry in settings.json permissions for that path",
     "The hook needs to return hookSpecificOutput.additionalContext containing the block decision",
     "The hook must exit with code 2 to block the call, and write the explanation to stderr so it is fed back to the model",
     "The hook fires too early to see the file path; the protection must move to a PostToolUse hook"
@@ -698,7 +698,7 @@ window.BANK = {
     "Add a PostToolUse hook on run_coverage that reads the exemption YAML and injects current exemptions via hookSpecificOutput.additionalContext",
     "Copy the exemption list into CLAUDE.md so it loads automatically at session start",
     "Rename the tool to run_coverage_with_exemptions so the agent knows exemptions exist",
-    "Add a prompt instruction telling the agent to call a second tool to fetch exemptions after every coverage run"
+    "Add a prompt instruction telling the agent to call a second tool that fetches the current exemption YAML after every single coverage run it performs"
    ],
    "correct": 0,
    "explanation": "hookSpecificOutput.additionalContext lets a PostToolUse hook attach fresh interpretive context at the exact moment the tool result returns, so the model always sees the current exemptions alongside the numbers. CLAUDE.md is the strongest distractor, but it is a static copy that drifts from the changing YAML and can be lost mid-context in long sessions. The prompt-enforced second tool call is probabilistic and is exactly the behavior the agent is already failing to perform, and renaming the tool conveys nothing about which packages are exempt.",
@@ -739,7 +739,7 @@ window.BANK = {
    "options": [
     "A SessionStart hook that injects freeze status and the rotation when the session begins",
     "A Stop hook that appends the latest freeze status to the agent's final answer each turn",
-    "A PreToolUse hook that inserts the current rotation into the parameters of every tool call",
+    "A PreToolUse hook that inserts the current rotation into the parameters of every tool call the agent makes during a turn",
     "A UserPromptSubmit hook that fetches current freeze status and rotation and attaches them to each incoming prompt"
    ],
    "correct": 3,
@@ -759,7 +759,7 @@ window.BANK = {
    "options": [
     "Move the rule to the top of CLAUDE.md and rephrase it as a hard, non-negotiable requirement",
     "Add a Stop hook that checks whether tests ran after the last edit and blocks completion with feedback telling the model to run them",
-    "Add a PostToolUse hook on Edit that runs the full test suite after every single file modification",
+    "Add a PostToolUse hook on Edit that runs the full test suite after every single file modification, so tests run even for one-line changes",
     "Set a minimum iteration count so the session cannot end before a fixed number of tool calls"
    ],
    "correct": 1,
@@ -777,10 +777,10 @@ window.BANK = {
   {
    "q": "In a monorepo, the data team must prevent Claude Code from editing files under db/migrations/ that have already been applied to production. Applied migrations are listed in db/applied.json, which changes daily, and new unapplied migration files must remain fully editable. How should this be enforced?",
    "options": [
-    "A PreToolUse hook on Edit and Write that checks the target file against db/applied.json and exits 2 with an explanation when the migration is already applied",
+    "A PreToolUse hook on Edit and Write that checks the target against db/applied.json and exits 2 with an explanation when the migration is already applied",
     "A settings.json permissions deny rule covering the entire db/migrations/ directory",
     "A CLAUDE.md rule listing the currently applied migrations, regenerated by a nightly job",
-    "A PostToolUse hook that detects edits to applied migrations and reverts them with git checkout"
+    "A PostToolUse hook that detects edits to already-applied migrations after they are written and reverts them with git checkout before the next tool call runs"
    ],
    "correct": 0,
    "explanation": "The rule is conditional on data that changes daily, so it needs executable logic: a PreToolUse hook can read applied.json at call time, block only the applied files, and explain why via stderr. The static deny rule is the strongest distractor because it is also deterministic, but it is too blunt and blocks the legitimate new migrations the team must keep editable. The PostToolUse revert lets the forbidden write happen first and silently undoes it while the model still believes the edit succeeded, and CLAUDE.md is probabilistic and up to a day stale.",
@@ -799,8 +799,8 @@ window.BANK = {
    "q": "An engineer resumes a Claude Code session from Friday to continue a refactor. Over the weekend a teammate merged 14 commits to main that renamed AuthClient to IdentityClient and moved the src/auth/ directory. The resumed agent immediately proposes edits referencing the old class name and paths. What is the most reliable way to handle this resume staleness?",
    "options": [
     "Add a CLAUDE.md note saying that after resuming, the agent should assume any file may have changed and re-verify before editing",
-    "Have the team always start fresh sessions instead of resuming so stale context can never exist",
-    "On resume, inject a summary of the specific changes since the last session, such as the renames and moved paths, so the agent corrects its assumptions",
+    "Have the team always start fresh sessions instead of resuming, so stale context about renamed or moved files can never exist in the first place",
+    "On resume, inject a summary of the specific changes since the last session, like renames and moved paths, so the agent corrects its assumptions",
     "Run /compact immediately after resuming so the stale history shrinks to a short summary"
    ],
    "correct": 2,
@@ -822,7 +822,7 @@ window.BANK = {
     "A sentiment trajectory chart plus the customer's last five messages",
     "A structured summary: customer id, the issue, what was already tried, and a recommended next action",
     "The full transcript with a one-line subject added so specialists can skim it faster",
-    "A live link back into the agent session so the specialist can question the agent directly"
+    "A live link back into the agent session so the specialist can question the agent directly about the case"
    ],
    "correct": 1,
    "explanation": "Canonical human handoffs carry a structured summary covering the customer id, the issue, what was attempted, and a recommended action, so the specialist can act in minutes without replaying the conversation. The full transcript with a subject line is the strongest distractor, but it preserves the exact problem: the reconstruction burden stays on the human. Sentiment data does not tell the specialist what was tried or what to do next, and a live session link makes the specialist interrogate the agent instead of acting.",
@@ -840,7 +840,7 @@ window.BANK = {
    "q": "A fintech extraction pipeline's fetch_transactions tool returns dates in a mix of MM/DD/YYYY, ISO 8601, and Unix epoch depending on the upstream bank. The model must compare transaction dates against statement periods and gets it wrong on roughly 1 in 12 records, almost always the epoch-formatted ones. What is the root-cause fix?",
    "options": [
     "A PostToolUse hook on fetch_transactions that converts every date to ISO 8601 before the model sees the result",
-    "A system prompt section with worked examples showing how to convert epoch timestamps correctly",
+    "A system prompt section with worked examples showing how to convert epoch timestamps to ISO 8601 correctly before comparing dates",
     "A retry policy that re-fetches the transactions whenever a date comparison fails validation",
     "A stricter output schema requiring the model to return all dates as ISO 8601 strings"
    ],
@@ -880,8 +880,8 @@ window.BANK = {
   {
    "q": "An e-commerce agent's apply_store_credit tool is gated by a PreToolUse hook that exits 2 for credits over $50. The block works, but logs show the agent then retries the identical $75 credit four times before giving up, and the customer gets no resolution. The hook's stderr message is just the word 'Blocked.' What should change?",
    "options": [
-    "Convert it to a PostToolUse hook so the agent can observe the outcome of the attempted credit",
-    "Rewrite the stderr message to state the rule and the next step: the $50 cap, and that larger credits go through the escalate_to_human tool",
+    "Convert it to a PostToolUse hook so the agent can observe the outcome of each attempted credit and then adjust its next step accordingly",
+    "Rewrite the stderr message to state the rule and the next step: the $50 cap, and that larger credits go through escalate_to_human",
     "Add a hard cap of two retries on apply_store_credit in the agent loop configuration",
     "Remove apply_store_credit from the agent's tools and route all credit requests to humans"
    ],
@@ -984,7 +984,7 @@ window.BANK = {
    "options": [
     "Cap the agentic loop at three iterations so failed retries terminate the run quickly",
     "Add a system prompt instruction telling the model to vary its query whenever any tool fails",
-    "Catch the timeout in the tool and raise an exception so the loop ends and a human is paged",
+    "Catch the timeout in the tool and raise an exception so the agentic loop ends immediately and a human on call is paged to investigate",
     "Return a structured error with errorCategory timeout, an isRetryable flag, the attempted query, and any partial results"
    ],
    "correct": 3,
@@ -1060,7 +1060,7 @@ window.BANK = {
   {
    "q": "A 12-person platform team wants a shared Jira MCP server available to everyone who clones their monorepo, but the Jira API token must never appear in version control. How should they configure it?",
    "options": [
-    "Have each engineer register the server in ~/.claude.json so the token stays on their own machine",
+    "Have each engineer register the server individually in ~/.claude.json so the token stays on their own machine only",
     "Commit .mcp.json with the literal token in it, then add the file to .gitignore for safety",
     "Use local scope for the server so the config stays project-specific but is never committed",
     "Commit a project-scoped .mcp.json that references the token as ${JIRA_API_TOKEN} from each engineer's environment"
@@ -1083,7 +1083,7 @@ window.BANK = {
     "Keep Grep but anchor the regular expression so it matches the file names more precisely",
     "Tell Claude to Read the services/ directory listing and filter the entries itself",
     "Use Glob with services/**/*.integration.test.ts, because Glob matches file paths while Grep searches file contents",
-    "Use Bash with find piped through xargs, because the built-in tools cannot enumerate files"
+    "Use Bash with find piped through xargs, because the built-in tools cannot enumerate files by a name pattern across directories"
    ],
    "correct": 2,
    "explanation": "Glob is the built-in for finding files by path pattern; Grep searches the contents of files, so using it to enumerate filenames is the wrong tool for the job and explains the misses. The Bash distractor would function but rests on a false premise — Glob exists exactly for this. Anchoring a content regex still searches the wrong dimension, and Read targets files, not directory traversal across a service tree.",
@@ -1121,7 +1121,7 @@ window.BANK = {
    "options": [
     "Add a permissions deny rule for Grep so the model is forced to fall back to the MCP tool",
     "Rewrite the description to name the corpus it searches, its query format, and when to prefer it over built-in file search",
-    "Add a CLAUDE.md instruction saying to always use search_product_docs for documentation questions",
+    "Add a CLAUDE.md instruction saying to always use search_product_docs for documentation questions instead of the built-in Grep",
     "Move the server from user scope to project scope so its tools rank higher during selection"
    ],
    "correct": 1,
@@ -1141,7 +1141,7 @@ window.BANK = {
    "options": [
     "Read every file under src/ sequentially so that no call site can possibly be missed",
     "Glob for **/*.ts and then Read each matched file in order until the function appears",
-    "Use Bash to cat the entire src tree into the context window and analyze it in one pass",
+    "Use Bash to cat the entire src tree into the context window and analyze all the call sites together in one pass",
     "Grep for applyLegacyFee to find the call sites, then Read only the matching files to trace each usage"
    ],
    "correct": 3,
@@ -1179,7 +1179,7 @@ window.BANK = {
   {
    "q": "A retail-banking assistant already carries 17 tools, and the product team wants to add 2 more for mortgage pre-qualification. Wrong-tool selection is already measurably rising. What should the architect recommend?",
    "options": [
-    "Add the two tools but write extra-detailed descriptions for all 19 so they stay distinguishable",
+    "Add the two tools but write extra-detailed descriptions for all 19 so they stay distinguishable to the model at selection time",
     "Split the assistant into focused agents — accounts, cards, mortgage — each carrying 4-5 tools behind a coordinator",
     "Add the tools but prefix every tool name with its category, such as mortgage_check_rate",
     "Add a decision tree to the system prompt that maps each request type to exactly one tool"
@@ -1361,7 +1361,7 @@ window.BANK = {
    "q": "A logistics startup's project CLAUDE.md has grown to 520 lines: about 40 lines of universal coding standards, 180 lines of test-writing guidance, 150 lines of API-package specifics, and a 150-line deployment runbook used a few times a month. Engineers report mid-file rules being ignored, and every session carries the full token cost. What is the best restructuring?",
    "options": [
     "Reorder the file so the most important rules sit at the top and bottom where model attention is strongest",
-    "Split the content into ten topic files and @import every one of them from CLAUDE.md so the main file itself stays short",
+    "Split the content into ten topic files and @import every one of them from CLAUDE.md so the main file itself stays short and readable",
     "Keep the 40 universal lines in CLAUDE.md, move scoped guidance to .claude/rules/ with paths globs, and make the runbook a skill",
     "Relocate the entire file to ~/.claude/CLAUDE.md so the content loads from the user level instead of the repository"
    ],
@@ -1504,7 +1504,7 @@ window.BANK = {
     "Both as skills, since skills handle both arguments and automatic triggering",
     "Both as slash commands, so engineers stay in explicit control of when each runs",
     "A slash command for the release notes and a description-driven skill for the migration checklist",
-    "A skill for the release notes and a slash command for the migration safety checklist"
+    "A description-driven skill for the release notes and a slash command for the migration safety checklist"
    ],
    "correct": 2,
    "explanation": "The release-notes flow is user-initiated with an argument — the classic slash command shape, giving deterministic on-demand invocation. The migration checklist must fire without anyone remembering to ask, which is exactly what a skill's description-driven auto-invocation provides. Making both skills leaves the deliberately explicit release flow to probabilistic triggering; making both slash commands loses the automatic safety net; and reversing the pairing puts manual invocation on the workflow that most needs to be automatic.",
@@ -1564,9 +1564,9 @@ window.BANK = {
    "q": "A fintech team's pipeline runs claude -p to triage failing integration tests, then a Python script scrapes the verdict out of Claude's prose with a regex. Every few weeks the wording shifts (\"the likely culprit is...\" vs \"root cause:\") and the parser silently mis-routes tickets to the wrong on-call team. What fixes the root cause?",
    "options": [
     "Tighten the regex to cover the new phrasings and add unit tests for the parser",
-    "Run claude -p with --output-format json and a --json-schema that defines the verdict and owning team as enum fields, and route on that typed output",
+    "Run claude -p with --output-format json and a --json-schema defining the verdict and owning team as enum fields, and route on that typed output",
     "Append \"always begin your answer with the exact phrase ROOT CAUSE:\" to the prompt",
-    "Capture stderr and stdout separately so the prose and the verdict do not interleave"
+    "Capture stderr and stdout separately so the prose and the verdict do not interleave, then point the existing regex parser only at the cleaned stdout stream"
    ],
    "correct": 1,
    "explanation": "Scraping free-form prose is the root flaw. With --json-schema, claude -p returns a payload that matches a schema the script owns, with the verdict and team as fixed enum values, so routing no longer depends on wording; --output-format json alone would only wrap the same prose in an envelope. A prompted sentinel phrase is probabilistic and will eventually drift just like the prose did, hardening the regex only restarts the breakage cycle with the next wording change, and stream separation does nothing about wording inside the prose itself.",
@@ -1585,7 +1585,7 @@ window.BANK = {
    "options": [
     "Add three correctly formatted example records to the prompt and rerun any failures",
     "Pin the model version so the formatting stays stable from run to run",
-    "Chain a second claude -p call that reformats the first run's output into the record shape",
+    "Chain a second claude -p call that reformats the first run's output into the expected record shape",
     "Pass the record schema to the job with --json-schema so the result payload itself is typed"
    ],
    "correct": 3,
@@ -1665,7 +1665,7 @@ window.BANK = {
    "options": [
     "Post-process the bot's output and suppress any comment whose text fuzzy-matches an earlier comment",
     "Restrict each re-review to only the files touched by the newest commit",
-    "Have the action close all of its previous comment threads before posting each fresh review",
+    "Have the action close all of its previous comment threads before posting each fresh review on the pull request",
     "Include the prior review's findings in the new run's context so it skips duplicates and checks resolution"
    ],
    "correct": 3,
@@ -1685,8 +1685,8 @@ window.BANK = {
    "options": [
     "Strengthen the prompt: \"READ-ONLY audit. Never use Edit, Write, or Bash under any circumstances\"",
     "Add a PostToolUse hook that git-restores any file the audit job touches",
-    "Launch the job with --allowedTools limited to Read, Grep, and Glob so write-capable tools do not exist in the session",
-    "Run the CI job under a Git identity that lacks push permission to the repository"
+    "Launch the job with --allowedTools limited to Read, Grep, and Glob so write-capable tools are unavailable",
+    "Run the CI job under a Git identity that lacks push permission to the repository, so no edits can ever be pushed"
    ],
    "correct": 2,
    "explanation": "--allowedTools deterministically scopes what the session can do — with Edit, Write, and Bash absent, the job cannot modify anything regardless of what the model decides. Prompt prohibitions are probabilistic and have already failed once; revoking push permission still allows local edits that corrupt the workspace, and a PostToolUse revert cleans up damage instead of preventing it.",
@@ -1705,7 +1705,7 @@ window.BANK = {
    "options": [
     "Add \"do not write tests that already exist\" to the generation prompt",
     "Include the package's existing test files in the job's context so generation targets uncovered gaps",
-    "Run a post-generation script that deletes any new test whose name matches an existing test",
+    "Run a post-generation script that deletes any new test whose name matches an existing test in the package",
     "Cap the job at five new tests per PR to limit how fast duplication can accumulate"
    ],
    "correct": 1,
@@ -1744,7 +1744,7 @@ window.BANK = {
    "q": "A platform team runs a nightly deprecation audit over 7,500 source files using parallel synchronous API calls at 2 a.m. The findings feed a weekly cleanup rotation, so nothing downstream ever blocks on the results, and the job now accounts for 30% of monthly model spend. Which change cuts cost without reducing coverage?",
    "options": [
     "Downgrade the audit to a weekly run so the spend is divided by seven",
-    "Add cache_control breakpoints to every request to discount the per-file token cost",
+    "Add cache_control breakpoints to every request to discount the per-file token cost of the audit",
     "Strip comments and whitespace from each file before sending to shrink input tokens",
     "Submit the audit through the Batch API with a custom_id per file and poll until results arrive"
    ],
@@ -1766,7 +1766,7 @@ window.BANK = {
     "Split each submission into smaller batches so individual batches complete faster",
     "Run the blocking check synchronously via claude -p and reserve the Batch API for non-blocking audits",
     "Poll batch status every 30 seconds instead of every 10 minutes to retrieve results sooner",
-    "Submit each PR's check as its own single-item batch so it never queues behind larger jobs"
+    "Submit each PR's check as its own single-item batch so it never queues behind other, larger batch jobs"
    ],
    "correct": 1,
    "explanation": "The Batch API promises results within 24 hours and offers no latency SLA, so anything that gates merges must run synchronously. Polling cadence and batch sizing only change when you notice completion, not when it happens — the 24-hour window applies regardless of how small the batch is, including a single-item batch.",
@@ -1784,7 +1784,7 @@ window.BANK = {
    "q": "A release-notes step running claude -p in CI produces a different structure almost every run — sometimes bullets grouped by team, sometimes a single paragraph, sometimes a table of raw commit hashes. The prompt already says \"be consistent, concise, and professional.\" What is the most effective next step?",
    "options": [
     "Add two or three concrete input/output examples of the desired format and refine them against failed runs",
-    "Replace the adjectives with a longer prose description spelling out every formatting rule",
+    "Replace the adjectives with a longer prose description spelling out every formatting rule in exact, unambiguous detail",
     "Pin the temperature to zero so the model makes identical choices on every run",
     "Move the step to a larger model that follows style instructions more faithfully"
    ],
@@ -1806,7 +1806,7 @@ window.BANK = {
     "Keep the mandate but configure plans to auto-approve after 30 seconds without objection",
     "Drop plan mode entirely and rely on PR review to catch bad approaches after the fact",
     "Reserve plan mode for multi-file or architectural work and let single-file obvious fixes run directly",
-    "Keep plan mode mandatory but route trivial fixes to a faster model so plans generate quicker"
+    "Keep plan mode mandatory but route trivial fixes to a faster model so their plans generate and get approved quicker"
    ],
    "correct": 2,
    "explanation": "The criterion is the shape of the change: plan mode earns its overhead on multi-file, architectural tasks where multiple valid approaches exist, while single-file obvious fixes warrant direct execution. Auto-approving plans deletes the review that is plan mode's entire value, a faster model still forces a pointless approval step on trivial fixes, and dropping it everywhere recreates the risk that caused the original botched refactor.",
@@ -1826,8 +1826,8 @@ window.BANK = {
    "q": "Your CI pipeline runs claude -p to review every PR in a 40-developer monorepo. The review prompt includes the line 'be careful not to flag things that are not real problems,' yet PRs still average 12 comments each, mostly style nitpicks the linter already enforces. What is the most effective prompt change?",
    "options": [
     "Lower the sampling temperature so the model generates fewer speculative findings and sticks to obvious problems",
-    "Strengthen the existing instruction to say the model should be very careful and only report issues it is extremely confident are real",
-    "Replace the vague caution with explicit flag and skip criteria: enumerate the defect types to report and state that linter-covered style issues must be skipped",
+    "Strengthen the existing instruction to say the model should be very careful and only report issues it is extremely confident are real bugs worth a reviewer's time",
+    "Replace the vague caution with explicit flag and skip criteria: enumerate the defect types to report and state that linter-covered style issues are skipped",
     "Add a hard cap of five comments per PR so the volume of nitpicks stays manageable for reviewers"
    ],
    "correct": 2,
@@ -1868,7 +1868,7 @@ window.BANK = {
    "q": "A support-resolution agent ends each conversation by writing a handoff summary for human agents. The required format is four labeled sections, but in production the model sometimes merges sections, renames headers, or adds extras, even though the prompt describes the format in detail. What is the most reliable prompt-level fix?",
    "options": [
     "Add two to four complete example summaries to the prompt that demonstrate the exact section structure on representative tickets",
-    "Expand the prose format description with stronger language such as 'you must always use exactly these four headers'",
+    "Expand the prose format description with stronger language such as 'you must always use exactly these four section headers in this order'",
     "Append thirty example summaries covering every ticket category the support team has ever encountered",
     "Ask the model to first restate the format rules in its own words, then write the summary beneath its restatement"
    ],
@@ -1887,7 +1887,7 @@ window.BANK = {
   {
    "q": "An automated security reviewer posts findings on PRs across your platform team's repositories. Its 'potential race condition' category has run at roughly 80 percent false positives for three weeks, and engineers have started dismissing every finding unread, including valid secret-exposure alerts from other categories. What should you do first?",
    "options": [
-    "Attach a model-reported confidence score to each finding so engineers can sort and triage the noisy category themselves",
+    "Attach a model-reported confidence score to each finding so engineers can sort the findings and triage the noisy race-condition category by themselves",
     "Disable the race-condition category in production, tune it offline against labeled examples, and re-enable it once precision recovers",
     "Add a prompt instruction telling the model to flag race conditions only when it is certain the code is genuinely unsafe",
     "Send the team a reliability ranking of the finding categories so they know which ones are worth reading carefully"
@@ -1911,7 +1911,7 @@ window.BANK = {
     "Use strict structured outputs or a tool_use schema so conformance is guaranteed rather than requested through instructions",
     "Add a regex preprocessing step that strips any leading prose and code fences before the parser runs",
     "Repeat the JSON-only instruction at both the start and the end of the prompt so the model cannot miss it",
-    "Detect parse failures at runtime and automatically resend the request until a clean JSON response comes back"
+    "Detect parse failures at runtime and automatically resend the request until a clean JSON response comes back from the model"
    ],
    "correct": 0,
    "explanation": "Prompt instructions are probabilistic and will occasionally be violated at scale; strict structured outputs or tool_use with a schema make conformance a guarantee of the API rather than a request. Regex stripping and retry loops patch the symptom while leaving the unreliable mechanism in place, and repeating the instruction is more of the same best-effort approach.",
@@ -2048,27 +2048,6 @@ window.BANK = {
    "scenario": 4
   },
   {
-   "q": "A real-estate listing extractor sends a 28,000-token system prompt with taxonomy, field rules, and few-shot examples plus a cache_control breakpoint, followed by one listing per request at 40 requests per minute. Billing shows constant cache writes but almost no cache reads. The system prompt begins with the line 'Current time: 2026-06-09T14:32:07Z.' What is the cause?",
-   "options": [
-    "The 5-minute cache TTL is expiring between requests, so the team should switch to the 1-hour TTL option",
-    "The cache breakpoint is placed too late in the prompt; moving it earlier would let partial prefixes match",
-    "28,000 tokens exceeds the cacheable prefix size, so the system prompt must be trimmed before hits can occur",
-    "The second-precision timestamp changes every request, so the prefix never matches; volatile values must move after the stable content"
-   ],
-   "correct": 3,
-   "explanation": "Cache hits require the prefix to be identical across requests, so a timestamp that differs every second at the very start invalidates the entire 28,000-token prefix behind it, which is exactly why every request writes and none read. At 40 requests per minute the 5-minute TTL cannot be expiring, no breakpoint placement helps when the first line itself changes, and there is no prefix-size limit problem at this scale.",
-   "hint": "A cache hit requires the prefix to be byte-for-byte identical across requests.",
-   "difficulty": "hard",
-   "tags": [
-    "prompt-caching",
-    "stable-prefix"
-   ],
-   "id": "f07-11",
-   "ts": "4.2",
-   "scenario": 0,
-   "oos": true
-  },
-  {
    "q": "After migrating an expense-report extractor to strict structured outputs, an engineer opens a PR deleting the downstream validation layer that checks each report's category subtotals against its grand total, arguing that 'the output is schema-guaranteed now.' How should you respond?",
    "options": [
     "Keep the validation layer: strict outputs guarantee structural conformance, but cross-field arithmetic is semantic and can still be wrong",
@@ -2087,27 +2066,6 @@ window.BANK = {
    "id": "f07-12",
    "ts": "4.3",
    "scenario": 6
-  },
-  {
-   "q": "A sentiment pipeline classifies 50,000 product reviews per day using a prompt with classification rules and few-shot examples ahead of a cache breakpoint, each review appended last. To 'keep the model fresh,' a teammate samples a new random set of eight examples from a 200-example pool on every request. Cache reads have dropped to zero and label formats have started drifting. What should change?",
-   "options": [
-    "Move the examples after the review text so the rotating content sits outside the cached portion of the prompt",
-    "Fix a stable, hand-picked set of two to four examples in the prefix so the cache hits again and the format stays consistent",
-    "Keep rotating examples but expand the pool to 1,000 so the model sees more diversity across the day's requests",
-    "Shrink each rotated set from eight examples down to two so the changing portion of the prefix is smaller per request"
-   ],
-   "correct": 1,
-   "explanation": "Rotating examples changes the prefix on every request, killing cache hits, and inconsistent demonstrations invite format drift; a stable, curated set of 2 to 4 examples fixes both at once. Moving examples after the review text would recover caching of the rules but the demonstrations still rotate, so the format drift continues; the root flaw is rotation itself, and shrinking or enlarging the rotated set keeps that flaw.",
-   "hint": "Both symptoms trace to the same decision; ask what changing the prefix every request costs you.",
-   "difficulty": "hard",
-   "tags": [
-    "few-shot",
-    "prompt-caching"
-   ],
-   "id": "f07-13",
-   "ts": "4.2",
-   "scenario": 0,
-   "oos": true
   },
   {
    "q": "A medical-records pipeline forces its first call with tool_choice set to the extract_patient_header tool, which works, but the integration leaves that same tool_choice on every subsequent request. The model now re-extracts the header repeatedly and never calls extract_medications or produces its final summary. What is the fix?",
@@ -2197,7 +2155,7 @@ window.BANK = {
    "options": [
     "The context window was silently truncated, so the later files were never actually delivered to the model",
     "Attention dilutes across a 14-file single pass, so files later in the prompt receive progressively shallower scrutiny",
-    "The model classifies files appearing after the first few as test fixtures and automatically deprioritizes them",
+    "The model classifies files appearing after the first few as test fixtures and automatically deprioritizes them during review",
     "The JSON output schema caps the number of findings, cutting off results before the later files are reported"
    ],
    "correct": 1,
@@ -2337,7 +2295,7 @@ window.BANK = {
   {
    "q": "After fighting attention dilution, a monorepo team redesigned its CI review so each file in a PR gets its own headless claude -p pass. Per-file bug detection improved sharply, but last week the pipeline approved a PR in which api-client.ts called an endpoint whose request shape had changed in routes.ts — each file was internally consistent on its own. What fixes the architecture?",
    "options": [
-    "Return to a single pass over all files at once, since only one shared context can observe relationships between the files",
+    "Return to a single pass over all files at once, since only one shared context can observe relationships between the changed files in the PR",
     "Enlarge each per-file pass so its prompt also includes the complete diff of every other file in the PR for reference",
     "Keep the per-file passes and add a final integration pass that checks cross-file contracts like call sites against changed signatures",
     "Require each per-file pass to emit an approval confidence score and block the merge whenever any file scores below 0.8"
@@ -2379,7 +2337,7 @@ window.BANK = {
    "q": "A media company summarizes each day's articles through the Batch API, submitting at 8:00 PM for a newsletter that ships at 8:00 AM. Results had arrived within three hours for months — until one night they had not arrived by 7:30 AM, the team panic-submitted a duplicate batch, and the newsletter shipped late and double-billed. What is the most robust redesign?",
    "options": [
     "Submit rolling batches as articles publish during the day, with a synchronous fallback for stragglers at a hard cutoff",
-    "Keep the 8:00 PM submission but automatically submit a duplicate batch whenever results are not ready by 4:00 AM",
+    "Keep the 8:00 PM submission but automatically submit a duplicate batch whenever results are not ready by 4:00 AM the next morning",
     "Keep the 8:00 PM submission and add a monitoring alert that pages the on-call engineer whenever results run late",
     "Move the entire workload to synchronous calls so every summary reliably completes within minutes of submission"
    ],
@@ -2421,7 +2379,7 @@ window.BANK = {
    "options": [
     "Request-too-large failures are deterministic — the oversized histories must be chunked or trimmed before any resubmission can succeed",
     "Resubmitted requests need fresh custom_ids, because the Batch API rejects custom_ids it has already processed once",
-    "A model with a larger context window should have been selected, which raises the maximum request size the batch will accept",
+    "A model with a larger context window should have been selected, which raises the maximum request size the batch will accept per request",
     "The 600 requests should have been retried as synchronous calls, which accept larger payloads than batch requests do"
    ],
    "correct": 0,
@@ -2546,7 +2504,7 @@ window.BANK = {
    "options": [
     "Have the agent retry with progressively wider date ranges until at least one order is found",
     "The tool should return a structured success with results: [] and a zero count; the agent reports no orders in that window",
-    "Catch the SearchFailedError and have the agent apologize and escalate to a human after the first failure",
+    "Catch the SearchFailedError and have the agent apologize and escalate the conversation to a human agent after the first failed search",
     "Add a fallback that queries the data warehouse directly when the order-search tool returns nothing"
    ],
    "correct": 1,
@@ -2586,7 +2544,7 @@ window.BANK = {
    "options": [
     "Always select the record whose creation date is older, since it is more likely the original account",
     "Merge the two records' fields and present a combined view so the agent never has to choose",
-    "Refuse to proceed and escalate any lookup that returns more than one matching record to a human",
+    "Refuse to proceed and escalate any lookup that returns more than one matching record to a human agent for manual resolution",
     "Ask the customer for an additional identifier — policy number, date of birth, or address — and re-query to disambiguate"
    ],
    "correct": 3,
@@ -2995,7 +2953,7 @@ window.BANK = {
    "q": "A legal-contracts extraction service runs monthly QA by reviewing the 200 extractions where the model reported the lowest confidence; sampled accuracy has held steady near 91% for three quarters. A client audit then finds a 22% error rate on a new contract template introduced in March — which the model processes with high confidence. Why did QA miss it, and what fixes it?",
    "options": [
     "Confidence-based sampling never inspects high-confidence outputs, so confidently wrong work stays invisible; switch to stratified random sampling by contract type",
-    "The monthly sample of 200 lacks statistical power for rare failure modes; quadruple it to 800 low-confidence extractions to catch the rarer failures",
+    "The monthly sample of 200 lacks the statistical power to catch rare failure modes; quadruple it to 800 low-confidence extractions per month so the rarer failures surface",
     "The confidence threshold needs recalibration so extractions from the new template score lower and start entering the existing QA review pool",
     "Add the new template to the regression evaluation set and gate future deployments on passing it, while keeping the QA sampling process unchanged"
    ],
@@ -3186,7 +3144,7 @@ window.BANK = {
     "Build the routing classifier as proposed, since deterministic routing code will always outperform the model's own probabilistic tool selection",
     "Rewrite each description to state its purpose, exact input format, and when to use it versus its siblings — descriptions are the model's primary selection mechanism",
     "Set tool_choice to \"any\" on each request so the model is forced to commit to a tool call instead of hedging between the three candidates",
-    "Collapse the three tools into a single lookup tool with a mode parameter, relying on few-shot prompt examples to teach which mode fits each identifier type"
+    "Collapse the three tools into a single lookup tool with a mode parameter, relying on few-shot prompt examples to teach the model which mode fits each identifier type"
    ],
    "correct": 1,
    "explanation": "Tool descriptions are the primary selection mechanism; three near-identical descriptions give the model nothing to choose on, so it guesses. Stating purpose, input format, and when-to-use-versus-siblings fixes the root cause, whereas a routing classifier layers permanent extra machinery on top of a broken contract. tool_choice \"any\" only forces some tool call, and the merge just relocates the same ambiguity into a mode parameter propped up by probabilistic few-shot examples.",
@@ -3332,7 +3290,7 @@ window.BANK = {
     "Move the parser conventions into each engineer's ~/.claude/CLAUDE.md so they apply globally without inflating the shared project file",
     "Create a parsers slash command in .claude/commands/ that engineers run to load the conventions before touching any parser code",
     "Keep team-wide standards in the project CLAUDE.md and move parser conventions into .claude/rules/ files with frontmatter paths scoped to packages/parsers/**",
-    "Split the 1,800 lines into twelve topic files and @import them all back into the project CLAUDE.md so each concern is separately editable"
+    "Split the 1,800 lines into twelve topic files and @import them all back into the project CLAUDE.md so each concern is separately editable and owned by one team"
    ],
    "correct": 2,
    "explanation": "Path-scoped rules (.claude/rules/*.md with YAML frontmatter paths) load conventions only when matching files are in play, keeping the always-loaded project CLAUDE.md lean for genuine team-wide standards. The @import split reorganizes the text but still loads all 1,800 lines into every session. User-level CLAUDE.md is personal and unversioned, so team conventions there drift immediately, and a slash command makes a mandatory standard opt-in and forgettable.",
@@ -3479,7 +3437,7 @@ window.BANK = {
    "q": "A fintech team of 14 engineers plus a CI runner needs a shared Jira MCP server. One engineer got it working in his ~/.claude.json with his personal API token, but nobody else, including CI, has the server. He offers to commit his working config, token included, since the repo is private. What is the right setup?",
    "options": [
     "Commit the working config with the literal token included, since a private repository is an acceptable trust boundary",
-    "Have every engineer copy the server block into their own ~/.claude.json and give the CI runner its own duplicate copy",
+    "Have every engineer copy the server block into their own ~/.claude.json and give the CI runner its own separate duplicate copy",
     "Commit a project-scoped .mcp.json referencing the token as ${JIRA_TOKEN}, with each environment supplying the variable",
     "Use local scope on each machine so the config stays tied to the project without ever entering version control"
    ],
@@ -3623,49 +3581,6 @@ window.BANK = {
    "scenario": 6
   },
   {
-   "q": "A pre-merge CI check sends every PR diff plus the same immutable 30,000-token engineering-standards document to the Claude API, and finance has flagged the spend. An engineer proposes moving the check to the Message Batches API for the 50 percent discount. What should the architect recommend?",
-   "options": [
-    "Keep the check synchronous and add a cache_control breakpoint on the stable standards prefix",
-    "Adopt the Batch API across the board; a 50 percent discount on every PR check outweighs the latency tradeoff",
-    "Trim the standards document down to its 5,000 most important tokens so every individual request gets cheaper",
-    "Run the check as a nightly batch job and allow PRs to merge provisionally during the working day"
-   ],
-   "correct": 0,
-   "explanation": "Batch results arrive within 24 hours with no latency SLA, so batching can never gate a blocking pre-merge check, and provisional merging quietly removes the gate the check exists to provide. Prompt caching targets exactly this workload shape — a large stable prefix repeated across requests — delivering major savings without changing the check's semantics, and the 1-hour TTL option covers repos where PRs land less often than the default 5-minute window. Trimming the document sacrifices the standards themselves.",
-   "hint": "One discount mechanism trades away latency guarantees; ask whether this workload can afford that.",
-   "difficulty": "hard",
-   "tags": [
-    "d5",
-    "prompt-caching",
-    "batch-api"
-   ],
-   "id": "mx2-12",
-   "ts": "4.5",
-   "scenario": 5,
-   "oos": true
-  },
-  {
-   "q": "A support-bot team enabled prompt caching. Each request is assembled as: a timestamp and customer-context block first, then the 12,000-token policy manual carrying the cache_control breakpoint, then the conversation. The cache hit rate is near zero and costs are unchanged. What went wrong?",
-   "options": [
-    "Too few breakpoints — cache_control should be attached to every content block to maximize cache coverage",
-    "The stable policy manual must come first; the leading timestamp changes the prefix on every request",
-    "The customer-context block also needs its own cache_control entry so it gets cached per customer",
-    "The 5-minute TTL is expiring between requests; switching to the 1-hour TTL option will restore hits"
-   ],
-   "correct": 1,
-   "explanation": "Prompt caching matches on the exact token prefix, so a timestamp at position zero alters the prefix on every single request and guarantees misses no matter where the breakpoint sits — stable content must precede dynamic content. Adding breakpoints to dynamic blocks caches content that never repeats, and TTL length is irrelevant when the prefix never matches in the first place.",
-   "hint": "Caching is prefix matching; ask what the very first tokens of each request look like.",
-   "difficulty": "hard",
-   "tags": [
-    "d5",
-    "prompt-caching"
-   ],
-   "id": "mx2-13",
-   "ts": "5.1",
-   "scenario": 1,
-   "oos": true
-  },
-  {
    "q": "An SRE team's observability MCP server returns 40-plus fields per query, including raw spans and verbose metadata, though incident-triage workflows in Claude Code only ever use five of them. After about 30 minutes of triage, sessions start missing findings they surfaced earlier. What is the architectural fix?",
    "options": [
     "Add a system-prompt line instructing Claude to ignore the irrelevant fields whenever it reads tool results",
@@ -3687,238 +3602,12 @@ window.BANK = {
    "scenario": 4
   }
  ],
- "hunt": [
-  {
-   "q": "A customer support resolution agent at a telco runs an agentic loop around the Messages API. The engineer who built it breaks the loop whenever the assistant's reply text contains the phrase ticket resolved or all done. Last Tuesday the agent wrote 'the refund step is all done, now checking shipping status' alongside a pending tool_use block, and the loop exited with the shipping check never executed. Other sessions run forever because the model phrases completion as 'nothing further is needed'. The history-append and tool-execution code are correct, and stop_reason is returned on every response but never read. Name the monster.",
-   "options": [
-    "Iteration Cap Golem",
-    "Generic Error Ghost",
-    "Loop Terminator",
-    "Prompt Whisperer"
-   ],
-   "correct": 2,
-   "explanation": "Loop Terminator: the loop exits based on prose — breaking 'whenever the assistant's reply text contains the phrase ticket resolved' — instead of checking stop_reason. The API already provides a deterministic signal: tool_use means execute the tool and continue, end_turn means done, and a response can carry text and tool_use blocks together. The Iteration Cap Golem is absent because no counter acts as primary control; the fix is to branch on stop_reason and never parse assistant text for completion.",
-   "hint": "This monster haunts the place where the agentic loop decides it is finished — ask what signal the API already provides.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "stop_reason",
-    "agent-loop"
-   ],
-   "id": "hunt-00"
-  },
-  {
-   "q": "A nightly CI job drives a lint-fixing agent through the Messages API across a monorepo. The orchestration script wraps the model call in for i in range(8) and simply stops after the eighth round trip, regardless of what the API returned. Long fixes were getting abandoned with edits applied to 3 of 7 files, so the team bumped the constant to 20; now short fixes burn budget on dead turns and long ones still die mid-tool-chain. Nowhere in the script is stop_reason consulted — not for end_turn, not for tool_use, not for max_tokens. Which monster is lurking?",
-   "options": [
-    "Iteration Cap Golem",
-    "Loop Terminator",
-    "Context Glutton",
-    "Generic Error Ghost"
-   ],
-   "correct": 0,
-   "explanation": "Iteration Cap Golem: the arbitrary counter is the PRIMARY termination mechanism — 'nowhere in the script is stop_reason consulted'. Caps are legitimate only as safety fallbacks behind a stop_reason-driven loop, which is why tuning the number can never fix it. It is not the Loop Terminator because no assistant prose is being parsed; the fix is to loop while stop_reason is tool_use and keep a generous cap purely as a runaway guard.",
-   "hint": "Look at which mechanism is the primary controller of loop termination versus what should only be a safety net.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "agent-loop",
-    "ci-cd"
-   ],
-   "id": "hunt-01"
-  },
-  {
-   "q": "An e-commerce returns agent has a process_refund tool and a system prompt that says, in bold capitals, NEVER ISSUE A REFUND ABOVE $500 WITHOUT MANAGER APPROVAL. For four months it behaved, then during a 60-turn conversation with a persistent customer it issued a $2,300 refund — the instruction was still in context, just buried. The postmortem proposes stating the rule a second time at the end of the prompt and again inside the tool description. Nothing in the system intercepts the tool call before it executes. Name the monster.",
-   "options": [
-    "Sentiment Siren",
-    "Iteration Cap Golem",
-    "The Tool Hoarder",
-    "Prompt Whisperer"
-   ],
-   "correct": 3,
-   "explanation": "Prompt Whisperer: a critical business rule lives only in a prompt — 'NEVER ISSUE A REFUND ABOVE $500' — and prompt instructions are probabilistic best-effort that degrades in long contexts, hence the $2,300 refund on turn 60. Repeating the rule twice more is just louder whispering at the same broken layer. The fix is a deterministic PreToolUse hook that inspects process_refund arguments and blocks amounts over $500 with exit code 2, feeding the reason back to the model via stderr.",
-   "hint": "Ask which enforcement mechanism is deterministic code and which is merely probabilistic best-effort.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "hooks"
-   ],
-   "id": "hunt-02"
-  },
-  {
-   "q": "A platform team built one do-everything developer assistant and registered 18 tools on it: Jira search, Jira create, Slack post, Slack search, GitHub PR review, calendar booking, deploy status, log query, and ten more. Every description is well-written, yet the agent calls search_jira_issues when it should call search_slack_messages about 20% of the time, and once booked a calendar slot when asked to file a ticket. Time to first token has also crept up as the tool definition block ballooned. Telemetry shows the failures are wrong-tool selection, not bad arguments. Which monster?",
-   "options": [
-    "The Pinhole Planner",
-    "The Tool Hoarder",
-    "Generic Error Ghost",
-    "Context Glutton"
-   ],
-   "correct": 1,
-   "explanation": "The Tool Hoarder: 18 tools on one agent degrades selection even with good descriptions — telemetry confirms 'wrong-tool selection, not bad arguments'. Around 4-5 focused tools per agent role keeps selection reliable, so the fix is to split into role-scoped agents (ticketing, comms, deploys) rather than polishing descriptions further. The Pinhole Planner concerns how a coordinator decomposes tasks, not how many tools one agent carries, and Context Glutton would implicate indiscriminately inlined data — here the bloat is the tool roster itself and the symptom is selection error.",
-   "hint": "Count what the single agent is carrying and recall the threshold where tool selection quality falls apart.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "tool-design"
-   ],
-   "id": "hunt-03"
-  },
-  {
-   "q": "A telecom support bot routes conversations to human agents whenever a classifier scores the customer's message as angry or frustrated. The human queue is now flooded with furious-but-trivial cases — 'I HATE THIS ROUTER' password resets the bot could solve in one tool call — while a polite customer with a genuinely tangled double-billing dispute was kept in the bot loop for 47 turns. Explicit requests like 'let me talk to a person' get honored only if the message also sounds upset. Escalation volume has tripled while resolution rates fell. What is the monster?",
-   "options": [
-    "Sentiment Siren",
-    "Confidence Phantom",
-    "The Accuracy Mirage",
-    "Prompt Whisperer"
-   ],
-   "correct": 0,
-   "explanation": "Sentiment Siren: routing on whether a message 'sounds angry or frustrated' conflates emotion with complexity — furious password resets flood humans while the polite double-billing dispute loops for 47 turns. Reliable escalation triggers are explicit human requests honored immediately, policy gaps, no-progress loops, and hard caps exceeded; the fix is replacing the sentiment classifier with those. Confidence Phantom would involve trusting self-reported confidence scores, which never appear in this story.",
-   "hint": "Recall which escalation triggers are reliable and which popular signal confuses feeling with difficulty.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "escalation"
-   ],
-   "id": "hunt-04"
-  },
-  {
-   "q": "A healthcare intake pipeline extracts patient data from scanned forms and asks Claude to append a confidence score from 0 to 100 to each record. Records scoring 90 or above skip human review and flow straight into the EHR. A compliance audit sampled the auto-approved set and found 7% of records with confidence 95 or higher contained a wrong date of birth or a swapped medication dosage, while plenty of low-confidence records were perfectly fine. The team's proposed fix is to raise the auto-approve threshold to 97. Which monster is in the pipeline?",
-   "options": [
-    "The Accuracy Mirage",
-    "Self-Review Shadow",
-    "Confidence Phantom",
-    "Sentiment Siren"
-   ],
-   "correct": 2,
-   "explanation": "Confidence Phantom: the gate trusts self-reported confidence — 'records scoring 90 or above skip human review' — but model confidence is poorly calibrated, which is exactly why 95+ records carry swapped dosages while low scorers are fine. Raising the threshold to 97 keeps trusting the same broken signal. The fix is validation independent of self-assessment: stratified random sampling and per-field checks. The Accuracy Mirage is about aggregate metrics hiding segment failures, and Self-Review Shadow requires a reviewer sharing a generation session's context; a numeric self-score gate is the Phantom's signature.",
-   "hint": "Think about how well models calibrate the numbers they report about themselves.",
-   "difficulty": "hard",
-   "tags": [
-    "hunt",
-    "reliability",
-    "evaluation"
-   ],
-   "id": "hunt-05"
-  },
-  {
-   "q": "An insurance claims agent assembles every request by inlining the claimant's full 40-field CRM record, the entire 180-page policy manual, every prior ticket from the household, and the complete raw JSON of all earlier tool results in the session. Requests average 150k tokens, costs are running 9x projections, and the model keeps missing the one deductible clause that actually matters, buried around token 80,000. Answer quality is measurably worse than an early prototype that included only the relevant policy chapter. The prompt prefix is stable and caching is configured correctly. Name the monster.",
-   "options": [
-    "Cache Vampire",
-    "Context Glutton",
-    "The Pinhole Planner",
-    "Prompt Whisperer"
-   ],
-   "correct": 1,
-   "explanation": "Context Glutton: the agent inlines 'the full 40-field CRM record, the entire 180-page policy manual, every prior ticket' — indiscriminate stuffing that triggers lost-in-the-middle misses at token 80,000 and 9x cost. The fix is selective context: trim tool outputs to needed fields (a PostToolUse hook works well), retrieve only the relevant policy chapter, and keep a structured case-facts block instead of raw history. The Cache Vampire is explicitly ruled out — 'the prompt prefix is stable and caching is configured correctly' — so this is a volume problem, not an ordering one.",
-   "hint": "This creature feeds on indiscriminate inclusion — ask what actually needed to be in the context window.",
-   "difficulty": "hard",
-   "tags": [
-    "hunt",
-    "context"
-   ],
-   "id": "hunt-06"
-  },
-  {
-   "q": "A GitHub Actions workflow has Claude Code generate a bug fix, then — in the same session, with the full generation history still in context — appends the prompt 'now review the diff you just wrote for security issues'. The reviewer approves 96% of its own diffs, including one that shipped a SQL injection a human caught two days later. When the same diffs are fed to a fresh headless claude -p session instead, it flags real problems in 31% of them. The team cannot understand why the in-session reviewer is so agreeable. Which monster?",
-   "options": [
-    "Loop Terminator",
-    "Confidence Phantom",
-    "Iteration Cap Golem",
-    "Self-Review Shadow"
-   ],
-   "correct": 3,
-   "explanation": "Self-Review Shadow: reviewing 'in the same session, with the full generation history still in context' means the reviewer inherits its own generation reasoning and confirms its own decisions — hence 96% self-approval versus 31% flags from a clean session. Generator and reviewer must be separate sessions, with prior review findings fed back on re-runs to avoid duplicate findings. Confidence Phantom involves trusting numeric self-reported confidence, not a contaminated review context.",
-   "hint": "Consider what this reviewer can see that an independent reviewer could not.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "ci-cd",
-    "self-review"
-   ],
-   "id": "hunt-07"
-  },
-  {
-   "q": "An e-commerce agent calls a custom MCP inventory server. Whenever anything goes wrong — SKU not found, warehouse API timeout, malformed date filter — the tool returns the same string: Operation failed. The agent responds by retrying the identical call three times and then telling the customer the item is unavailable, even when the real problem was a transient timeout that a one-second backoff would have cured. Worse, a search that legitimately matches zero SKUs also comes back as Operation failed, so empty shelves get reported as system outages. Name the monster.",
-   "options": [
-    "Generic Error Ghost",
-    "The Tool Hoarder",
-    "Loop Terminator",
-    "Context Glutton"
-   ],
-   "correct": 0,
-   "explanation": "Generic Error Ghost: every failure collapses into the bare string 'Operation failed', so the model cannot tell a retryable timeout from a bad SKU or a malformed filter and resorts to blind identical retries. Structured tool errors — errorCategory, isRetryable, the attempted query, partial results, and suggested alternatives — let the agent recover intelligently. And an empty result set must be returned as a success with zero matches, never as an error.",
-   "hint": "This monster hides inside what the tool says when things go wrong.",
-   "difficulty": "core",
-   "tags": [
-    "hunt",
-    "tool-errors",
-    "mcp"
-   ],
-   "id": "hunt-08"
-  },
-  {
-   "q": "A fintech extraction service reports a healthy 96.4% field-level accuracy on its loan-document dashboard, and the number has been stable for two quarters. Then a regional bank complains that nearly every handwritten 1980s-era deed they submit comes back with the wrong lien amount. Digging in, the team discovers handwritten deeds are 3% of volume and only 58% accurate, drowned out by millions of clean digital PDFs. No per-document-type breakdown has ever been run; the release gate is the single blended number. Which monster?",
-   "options": [
-    "Confidence Phantom",
-    "Sentiment Siren",
-    "The Accuracy Mirage",
-    "Generic Error Ghost"
-   ],
-   "correct": 2,
-   "explanation": "The Accuracy Mirage: 'the release gate is the single blended number', and 96.4% overall hides handwritten deeds at 58% because they are only 3% of volume. Aggregate accuracy masks per-segment failures; the fix is validating per document type and per field, gating releases on segment-level metrics, and monitoring ongoing quality with stratified random sampling. Confidence Phantom requires trusting self-reported confidence scores, which this pipeline never collects.",
-   "hint": "One blended number can look healthy while a small slice of traffic quietly drowns.",
-   "difficulty": "hard",
-   "tags": [
-    "hunt",
-    "evaluation",
-    "reliability"
-   ],
-   "id": "hunt-09"
-  },
-  {
-   "q": "A multi-agent research system is asked to assess the competitive landscape for the company's payments product. The Opus coordinator decomposes this into exactly three subagent tasks: scrape competitor A's pricing page, scrape competitor B's pricing page, scrape competitor C's pricing page. The final report arrives fast and is impeccably formatted, but it says nothing about competitor funding rounds, the new entrant that launched last month, regulatory shifts, or hiring signals — precisely what the strategy team needed. Each Haiku subagent executed its narrow task flawlessly and propagated no errors. Name the monster.",
-   "options": [
-    "Context Glutton",
-    "The Tool Hoarder",
-    "Self-Review Shadow",
-    "The Scope Creep"
-   ],
-   "correct": 3,
-   "explanation": "The Scope Creep: the coordinator's decomposition is far too narrow — three variations of 'scrape a pricing page' for a question about an entire competitive landscape — and overly narrow decomposition causes coverage gaps. Every subagent succeeded, so the defect sits in the decomposition step: the coordinator should derive subtasks spanning the question's dimensions (pricing, funding, new entrants, regulation, talent) before delegating. Context Glutton is the opposite failure direction, over-stuffing context rather than under-scoping tasks.",
-   "hint": "The defect lives in how the coordinator carved up the mission, not in how the workers executed it.",
-   "difficulty": "hard",
-   "tags": [
-    "hunt",
-    "multi-agent",
-    "orchestration"
-   ],
-   "id": "hunt-10"
-  },
-  {
-   "q": "A legal contract review bot assembles every request in this order: first a header containing the current timestamp, a UUID request ID, and the requesting attorney's name; then the firm's stable 30,000-token clause playbook; then the contract under review. cache_control breakpoints are set right after the playbook, yet the cache hit rate sits at 0% and the monthly bill is double the estimate. The playbook has not changed in six weeks. Time to first token is also far worse than the proof of concept, which happened to send the playbook first. Which monster?",
-   "options": [
-    "Context Glutton",
-    "Cache Vampire",
-    "The Accuracy Mirage",
-    "Iteration Cap Golem"
-   ],
-   "correct": 1,
-   "explanation": "Cache Vampire: the volatile header — 'the current timestamp, a UUID request ID, and the requesting attorney's name' — sits before the stable 30k-token playbook, so the cached prefix never matches and the hit rate is 0%. Prompt caching only pays when stable content forms the prefix: move the playbook first, set the breakpoint after it, and append all per-request material afterward. Context Glutton fails as a diagnosis because the playbook is genuinely needed — the problem is ordering, not volume.",
-   "hint": "This monster cares about the order of your prompt, not its size.",
-   "difficulty": "hard",
-   "tags": [
-    "hunt",
-    "prompt-caching",
-    "context"
-   ],
-   "id": "hunt-11"
-  }
- ],
  "guide-extra": [
   {
    "q": "A CI review job must check every pull request for the same three things: security issues, breaking API contract changes, and missing tests. Today one long prompt asks for all three at once and the security section is often thin. An engineer proposes replacing it with an autonomous agent that decides for itself what to investigate on each PR. What is the better design?",
    "options": [
     "Keep one prompt but tell the model to spend equal effort on each of the three areas",
-    "Use the autonomous agent, since it can adapt its investigation to each pull request",
+    "Use the autonomous agent, since it can adapt its investigation to each pull request and decide for itself which areas deserve the most attention",
     "Break the review into a fixed prompt chain with one focused step per aspect, since the aspects are known and identical on every PR",
     "Run the single prompt three times and keep only findings that appear in at least two runs"
    ],
@@ -3937,10 +3626,10 @@ window.BANK = {
   {
    "q": "A developer-productivity agent is asked to 'add comprehensive tests to our legacy billing codebase' (300 modules, almost no existing tests, unclear dependencies). Which decomposition approach should it take?",
    "options": [
-    "Map the codebase structure first, identify the highest-impact areas, then build a prioritised plan that is revised as dependencies are discovered",
+    "Map the codebase first, identify the highest-impact areas, then build a prioritised plan that is revised as dependencies are discovered",
     "Generate tests module by module in alphabetical order until every module has at least one test",
     "Ask for all of the tests in a single pass so the model sees the whole codebase at once",
-    "Write a detailed 40-step procedure up front and have the agent follow it without deviation"
+    "Write a detailed 40-step procedure up front covering every module and dependency, and have the agent follow it step by step without deviation"
    ],
    "correct": 0,
    "explanation": "An open-ended task over an unfamiliar codebase needs adaptive decomposition: explore and map first, prioritise by impact, and let the plan change as dependencies surface. Alphabetical order ignores impact, a single pass dilutes attention across 300 modules, and a rigid upfront procedure cannot account for what has not been discovered yet.",
@@ -3960,7 +3649,7 @@ window.BANK = {
     "Add a seventh fixed step that checks feature flags",
     "Switch to an adaptive investigation that generates its next subtasks from what each step finds",
     "Increase max_tokens so the summary step can consider more possibilities",
-    "Run all six steps in parallel to finish faster and leave time for a manual check"
+    "Run all six steps in parallel to finish faster and leave time for a manual check of the summary afterward"
    ],
    "correct": 1,
    "explanation": "Incident investigation is open-ended: the right next step depends on the evidence so far. A fixed pipeline, however long, only finds causes someone predicted; adding a seventh step fixes last week's incident and not the next unknown one. More tokens or parallelism do not change what gets investigated.",
@@ -3979,7 +3668,7 @@ window.BANK = {
    "options": [
     "A nightly summary of the same four lint checks across a repository",
     "Translating each release note into three languages",
-    "Reformatting every incoming invoice into a fixed internal template",
+    "Reformatting every incoming invoice from many different vendors into a fixed internal template",
     "Finding the root cause of an intermittent memory leak that spans several services"
    ],
    "correct": 3,
@@ -4019,7 +3708,7 @@ window.BANK = {
    "options": [
     "Resume the old session and trust its earlier analysis, since the overall architecture is similar",
     "Resume the old session and immediately run /compact to shrink the outdated context",
-    "Fork the old session so the original analysis is preserved while the fork works on the new code",
+    "Fork the old session so the original analysis is preserved while the fork works on the new code with all the earlier context intact",
     "Start a fresh session seeded with a structured summary of the earlier findings, and let it re-read the code that changed"
    ],
    "correct": 3,
@@ -4079,7 +3768,7 @@ window.BANK = {
    "options": [
     "Use Bash with sed to replace every occurrence of 'return null;' in the file",
     "Retry Edit with the same old string until it succeeds",
-    "Grep the file to count the occurrences, then call Edit again with the same string",
+    "Grep the file to count the occurrences, then call Edit again with the exact same old string",
     "Read the full file, make the change in that content, and Write the whole file back"
    ],
    "correct": 3,
@@ -4121,7 +3810,7 @@ window.BANK = {
     "Add a Terraform section to the root CLAUDE.md",
     "Put a CLAUDE.md with the conventions in each of the three directories",
     "Create .claude/rules/terraform.md with paths: [\"**/*.tf\"] in its YAML frontmatter",
-    "Create a terraform skill that developers invoke when they work on infrastructure"
+    "Create a terraform skill that developers invoke whenever they work on the infrastructure"
    ],
    "correct": 2,
    "explanation": "A path-scoped rule with a glob loads only when matching files are edited, wherever they live. Root CLAUDE.md always loads, per-directory CLAUDE.md files miss new locations and duplicate content, and a skill relies on someone remembering to invoke it.",
@@ -4140,7 +3829,7 @@ window.BANK = {
    "options": [
     "Rules files only load conditionally when the root CLAUDE.md @imports them",
     "None of the files have a paths field in YAML frontmatter, so each loads unconditionally",
-    "Claude Code loads at most one rules file per session, so they must merge them back",
+    "Claude Code loads at most one rules file per session, so they must merge them back into one file",
     "They need to run /compact once so the rules are re-evaluated"
    ],
    "correct": 1,
@@ -4179,7 +3868,7 @@ window.BANK = {
   {
    "q": "A developer asks Claude Code to convert a flat CSV export into nested JSON grouped by account, then by month. After three rounds of rewording the prose description, each attempt nests the data differently. What is the most effective next step?",
    "options": [
-    "Write an even longer, more precise prose description of the nesting",
+    "Write an even longer, more precise prose description of the nesting, covering every level in detail",
     "Ask Claude to explain its interpretation before each attempt",
     "Switch to a larger model, since this is a reasoning failure",
     "Provide two or three concrete input rows with the exact JSON output expected for each"
@@ -4240,7 +3929,7 @@ window.BANK = {
    "q": "A CI step asks Claude to 'check that code comments are accurate'. It flags dozens of comments per PR for minor wording, and developers have started ignoring it. Which prompt change most improves precision?",
    "options": [
     "Add 'only report high-confidence findings'",
-    "Ask the model to rate each finding from 1 to 10 and post only those rated 8 or higher",
+    "Ask the model to rate each finding from 1 to 10 for confidence and post only those it rated 8 or higher",
     "Add 'be conservative and avoid nitpicks'",
     "Flag a comment only when the behaviour it describes contradicts what the code actually does"
    ],
@@ -4262,7 +3951,7 @@ window.BANK = {
     "Run the review three times and use the most common severity",
     "Add 'be consistent with severity ratings' to the prompt",
     "Define explicit criteria for each severity level, each with a concrete code example",
-    "Drop severity labels entirely and post every finding at the same level"
+    "Drop severity labels entirely and post every finding at the same level so ratings can never disagree"
    ],
    "correct": 2,
    "explanation": "Consistent classification comes from explicit level definitions illustrated by concrete examples. Majority voting averages an undefined standard, 'be consistent' gives the model nothing to be consistent with, and removing severity loses the routing signal the team needs.",
@@ -4279,8 +3968,8 @@ window.BANK = {
   {
    "q": "An extraction pipeline pulls sample_size from research papers. When the paper has a Methods section it works; when the sample size is mentioned inside the results text, the model returns null even though the number is there. What change best fixes this?",
    "options": [
-    "Add few-shot examples showing correct extraction from both layouts: a dedicated Methods section and figures embedded in the results text",
-    "Make sample_size a required field so the model must always provide a value",
+    "Add few-shot examples showing correct extraction from both layouts: a dedicated Methods section and figures embedded in results text",
+    "Make sample_size a required field in the extraction schema so the model must always provide a value, even for papers with unusual layouts",
     "Retry each null result with the same prompt up to three times",
     "Add a paragraph explaining that sample sizes can appear anywhere"
    ],
@@ -4300,7 +3989,7 @@ window.BANK = {
    "q": "A support agent handles clear requests well, but ambiguous ones like 'where's my money?', which could be a refund status check or a billing dispute, are routed inconsistently between check_refund_status and open_billing_dispute. What is the most effective improvement?",
    "options": [
     "Add twenty clear-cut examples for each tool",
-    "Add a keyword router in front of the agent that picks the tool",
+    "Add a keyword router in front of the agent that picks the tool based on terms like refund, charge, or transfer in the request",
     "Merge the two tools into one handle_money_question tool",
     "Add two to four examples of ambiguous requests, each showing which tool was chosen and why the other was not"
    ],

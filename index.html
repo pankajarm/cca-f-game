@@ -548,6 +548,36 @@ button { font-family: var(--font-body); cursor: pointer; }
 .mt { margin-top: 22px; }
 .kbd-tip { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 14px; }
 kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px; background: var(--card-2); }
+
+/* home: readiness + study bands */
+.ready-panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; margin-bottom: 8px; box-shadow: var(--shadow); }
+.ready-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.ready-head h3 { font-family: var(--font-display); font-size: 21px; letter-spacing: -.02em; }
+.ready-sum { display: grid; grid-template-columns: auto auto; gap: 2px 14px; align-items: baseline; font-size: 14px; }
+.ready-sum .k { color: var(--muted); font-size: 12.5px; }
+.ready-sum .v { font-weight: 700; }
+.ready-rows { display: grid; gap: 6px; }
+.ready-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(90px, 32%) 78px; gap: 10px; align-items: center; cursor: pointer; padding: 4px 6px; border-radius: 10px; }
+.ready-row:hover { background: var(--accent-soft); }
+.ready-row .nm { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ready-row .track { position: relative; height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; }
+.ready-row .cov { position: absolute; inset: 0 auto 0 0; background: var(--line-strong); }
+.ready-row .acc { position: absolute; inset: 0 auto 0 0; }
+.ready-row .target { position: absolute; top: 0; bottom: 0; left: 72%; width: 2px; background: var(--ink, currentColor); opacity: .55; }
+.ready-row .val { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+.next-step { display: flex; align-items: center; gap: 12px; margin: 14px 0 6px; padding: 12px 14px; border-radius: 14px; background: var(--accent-soft); flex-wrap: wrap; }
+.next-step .ic { font-size: 26px; }
+.next-step .txt { flex: 1 1 220px; }
+.band-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-family: var(--font-display); font-size: 19px; margin: 26px 0 10px; letter-spacing: -.01em; }
+.band-title span { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 14px; }
+.band-title em { font-style: normal; font-family: inherit; font-size: 13.5px; color: var(--muted); font-weight: 400; }
+.small-cards .mode-card { padding: 14px 18px; }
+.small-cards .mode-card .emoji { font-size: 26px; margin-bottom: 6px; }
+.beast-card .haunts { font-size: 12.5px; color: var(--muted); margin: 6px 0 8px; }
+@media (max-width: 560px) {
+  .ready-row { grid-template-columns: auto minmax(0, 1fr) 70px; }
+  .ready-row .track { grid-column: 2 / -1; grid-row: 2; }
+}
 </style>
 </head>
 <body>
@@ -580,37 +610,39 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
       <p class="kbd-tip">Answer with <kbd>1</kbd>–<kbd>4</kbd> · advance with <kbd>Enter</kbd> · your progress saves automatically</p>
     </section>
 
-    <!-- HOME -->
+    <!-- HOME: a study path built around the real exam -->
     <section class="screen" id="screen-home">
-      <div class="hub-stats" id="hub-stats"></div>
+      <div class="ready-panel" id="ready-panel"></div>
+
+      <h3 class="band-title"><span>1</span> Learn <em>understand each domain before you test it</em></h3>
       <div class="mode-grid">
-        <div class="mode-card hero" onclick="UI.go('tower')">
-          <span class="badge" id="tower-badge">0/10 floors</span>
-          <span class="emoji">🗼</span>
-          <h3>The Tower</h3>
-          <p>The campaign. Ten floors, ten bosses, five exam domains. Clear a floor with 7/10 or better to ascend. Combos earn power-ups; perfection earns legend status.</p>
+        <div class="mode-card" id="card-learn" onclick="UI.go('learn')" style="display:none">
+          <span class="badge" id="learn-badge">lessons</span>
+          <span class="emoji">🎓</span>
+          <h3>Learning Path</h3>
+          <p>Staged lessons from beginner to advanced for every domain, task statement and scenario, with slides and short videos. Each ends with a drill.</p>
         </div>
         <div class="mode-card" id="card-blueprint" onclick="UI.go('blueprint')">
           <span class="badge" id="bp-badge">exam guide</span>
           <span class="emoji">📘</span>
           <h3>The Blueprint</h3>
-          <p>Study by the official exam guide: 5 domains, 30 task statements, 6 scenarios. Key ideas, your coverage, and a drill of up to 10 questions for each.</p>
+          <p>The official exam guide as a map: 5 domains, 30 task statements, 6 scenarios. Key ideas, official docs, your coverage, and a drill for each.</p>
         </div>
-        <div class="mode-card" id="card-exam" onclick="UI.go('examintro')">
-          <span class="badge" id="exam-badge">final boss</span>
-          <span class="emoji">📋</span>
-          <h3>The Proctor · Mock Exam</h3>
-          <p>The real format: 60 questions, 120 minutes, 4 of 6 scenarios, blueprint weights, results by domain. Or a practice run with feedback after every question.</p>
-        </div>
-        <div class="mode-card" onclick="Lightning.start()">
-          <span class="emoji">⚡</span>
-          <h3>Lightning Round</h3>
-          <p>90 seconds. Unlimited questions. Combos multiply your score. For people who read the question before the options load.</p>
+      </div>
+
+      <h3 class="band-title"><span>2</span> Practice <em>every question maps to an exam task statement</em></h3>
+      <div class="mode-grid">
+        <div class="mode-card hero" onclick="UI.go('tower')">
+          <span class="badge" id="tower-badge">0/10 floors</span>
+          <span class="emoji">🗼</span>
+          <h3>The Tower</h3>
+          <p>The campaign through all five domains. Each floor covers a group of task statements and serves 10 questions you haven't seen yet. Clear it with 7/10; combos earn power-ups.</p>
         </div>
         <div class="mode-card" onclick="Hunt.start()">
+          <span class="badge" id="hunt-badge">0/12 captured</span>
           <span class="emoji">🔦</span>
           <h3>Anti-Pattern Hunt</h3>
-          <p>Production war stories with one monster hiding inside. Name the anti-pattern, capture it for your bestiary.</p>
+          <p>Each monster is an anti-pattern the exam's wrong answers are built from. Hunt it through its task statements: 6 of 8 right captures it.</p>
         </div>
         <div class="mode-card" onclick="Review.start()">
           <span class="badge" id="deck-badge">0 cards</span>
@@ -618,17 +650,37 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
           <h3>Mistake Clinic</h3>
           <p>Every question you miss checks in here. Answer it right twice in a row to discharge it. The exam loves your weaknesses.</p>
         </div>
+        <div class="mode-card" onclick="Lightning.start()">
+          <span class="emoji">⚡</span>
+          <h3>Recall Sprint</h3>
+          <p>90 seconds over questions you've already studied. Speed builds recall; it doesn't count toward readiness.</p>
+        </div>
+      </div>
+
+      <h3 class="band-title"><span>3</span> Test <em>the real format, scored like the real thing</em></h3>
+      <div class="mode-grid">
+        <div class="mode-card hero" id="card-exam" onclick="UI.go('examintro')">
+          <span class="badge" id="exam-badge">the real format</span>
+          <span class="emoji">📋</span>
+          <h3>The Proctor · Mock Exam</h3>
+          <p>60 questions, 120 minutes, 4 of 6 scenarios, exact domain weights, results by domain. Each mock serves questions you haven't had in an earlier one. Or take a practice run with feedback after every question.</p>
+        </div>
+      </div>
+
+      <h3 class="band-title"><span>✦</span> Your record</h3>
+      <div class="hub-stats" id="hub-stats"></div>
+      <div class="mode-grid small-cards">
         <div class="mode-card" onclick="UI.go('bestiary')">
           <span class="badge" id="beast-badge">0/12</span>
           <span class="emoji">📖</span>
           <h3>Bestiary</h3>
-          <p>The collected monsters of bad architecture. Know their cries. Know their weaknesses. They are all on the exam.</p>
+          <p>The anti-patterns you've captured, and their weaknesses.</p>
         </div>
         <div class="mode-card" onclick="UI.go('trophies')">
           <span class="badge" id="trophy-badge">0</span>
           <span class="emoji">🏆</span>
           <h3>Trophy Hall</h3>
-          <p>Achievements, titles, and bragging rights. Someone scored 893 on the real thing — beat them here first.</p>
+          <p>Achievements, titles, and bragging rights.</p>
         </div>
       </div>
     </section>
@@ -803,7 +855,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
     <!-- DRILL -->
     <section class="screen" id="screen-drill">
       <div class="screen-head">
-        <button class="back-link" onclick="UI.go('blueprint')">← Blueprint</button>
+        <button class="back-link" id="d-back" onclick="UI.go('blueprint')">← Blueprint</button>
         <h2 id="d-title">Drill</h2>
       </div>
       <div class="battle-stage">
@@ -818,7 +870,7 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
 
     <!-- LIGHTNING -->
     <section class="screen" id="screen-lightning">
-      <div class="screen-head"><h2>⚡ Lightning Round</h2><span class="sub" id="l-best"></span></div>
+      <div class="screen-head"><h2>⚡ Recall Sprint</h2><span class="sub" id="l-best"></span></div>
       <div class="lightning-head">
         <div class="time-track"><div class="time-fill" id="l-time" style="width:100%"></div></div>
         <div class="lightning-score" id="l-score">0</div>
@@ -832,27 +884,12 @@ kbd { font-family: var(--font-code); font-size: 11px; border: 1px solid var(--li
       </div>
     </section>
 
-    <!-- HUNT -->
-    <section class="screen" id="screen-hunt">
-      <div class="screen-head">
-        <button class="back-link" onclick="UI.go('home')">← Hall</button>
-        <h2>🔦 Anti-Pattern Hunt</h2>
-        <span class="sub" id="h-progress"></span>
-      </div>
-      <div class="battle-stage">
-        <div class="q-zone">
-          <div class="q-text" id="h-qtext"></div>
-          <div class="answers" id="h-answers"></div>
-        </div>
-      </div>
-    </section>
-
     <!-- BESTIARY -->
     <section class="screen" id="screen-bestiary">
       <div class="screen-head">
         <button class="back-link" onclick="UI.go('home')">← Hall</button>
         <h2>📖 Bestiary</h2>
-        <span class="sub">capture monsters in the Anti-Pattern Hunt</span>
+        <span class="sub">hunt each monster through the task statements it haunts</span>
       </div>
       <div class="beast-grid" id="beast-grid"></div>
     </section>
