@@ -541,7 +541,7 @@ window.GUIDE.docs = {
 window.GUIDE.deltas = {
  "1.1": "The API has newer stop reasons (pause_turn, refusal, model_context_window_exceeded). The core rule the exam tests still holds: continue on tool_use, stop on end_turn.",
  "1.3": "Claude Code v2.1.63 renamed the Task tool to Agent (Task still works as an alias). allowedTools auto-approves tools; restricting them uses tools / disallowedTools. Subagents now run in the background and can nest. Answer exam items in the guide's terms.",
- "1.4": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides.",
+ "1.4": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides (headless -p runs only, one tool call per turn; the calling app resumes the session).",
  "1.5": "PostToolUse hooks can replace any tool's result with updatedToolOutput (updatedMCPToolOutput is the older, MCP-only field).",
  "2.2": "The MCP spec has no standard retryable field: errorCategory / isRetryable are an application convention inside the result. Since spec 2025-11-25, input validation errors come back as isError results.",
  "2.3": "On the newest models (Opus 5.5, Sonnet 5.5, Fable 5.1, Mythos 5.1) tool_choice \"any\" and forced tool return a 400; the docs suggest auto with strict tool use. The guide still tests auto / any / forced.",
