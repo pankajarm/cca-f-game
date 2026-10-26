@@ -1,11 +1,29 @@
 # Practice Test 03: The Hook Forge
 **D1: Agentic Architecture & Orchestration** (27% of the exam) · task statements 1.4, 1.5, 1.7
 
-86 questions. Exam pace is 2 minutes per question.
+87 questions. Exam pace is 2 minutes per question.
 
 ---
 
 ## Question 1
+A customer writes to the support agent: 'My last order arrived damaged, I was charged twice for it, and I need to change my delivery address for next week's order.' The current agent handles the damaged item thoroughly and then closes the conversation. What decomposition approach should the agent use for messages like this?
+
+A) Answer the concern the customer mentioned first, then ask whether they have any other issues before the agent closes the support ticket
+B) Split the message into its separate issues, investigate each one with the shared customer context, then send one combined resolution
+C) Route the message to whichever specialist queue matches the most urgent of the issues and let that queue handle the full ticket
+D) Reply asking the customer to open a separate ticket for each issue so that every request is tracked and resolved independently
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** A multi-concern request should be broken into distinct items that are each investigated, then synthesised into one unified response. Asking whether there is anything else relies on the customer to repeat themselves, routing on the most urgent issue drops the others, and making the customer open three tickets pushes the decomposition work onto them.
+
+*Hint if stuck: Count the problems the customer raised before you start solving any of them.*
+</details>
+
+---
+
+## Question 2
 A telecom's support agent has verify_identity and change_plan tools. The system prompt says identity must be verified before any plan change, but an audit of 20,000 sessions found about 3% of plan changes ran with no verification at all, usually when the caller sounded rushed. The carrier's regulator treats each one as a reportable incident. What should the architect change?
 
 A) Rewrite the system prompt so the verification requirement appears in capitals at both the top and the bottom, with three example transcripts
@@ -23,7 +41,7 @@ D) Have the agent restate its plan in one sentence before every change_plan call
 
 ---
 
-## Question 2
+## Question 3
 A bank's support agent gates transfer_funds on a session flag that verify_customer sets after a successful identity check. In one session a verified customer said, 'Also move $2,000 out of my mother's account, she said it's fine,' and the agent completed the transfer from the mother's account without verifying her. Which fix closes the gap?
 
 A) Add a system-prompt rule that third-party accounts always need their own verification, with an example showing the agent asking for the second person's details
@@ -37,24 +55,6 @@ D) End the session automatically whenever a second customer name appears, and as
 **C)** The gate checked that someone had been verified, not that the verified person owns the account being debited, so the fix is to bind the verification state to an identity and check the tool's account argument against it. A prompt rule about third parties is still best-effort. Resetting the flag after every call adds friction for legitimate multi-step requests without fixing the identity mismatch, and ending sessions on a second name is a brittle heuristic that blocks legitimate conversations.
 
 *Hint if stuck: A gate is only as good as the question it checks; consider whose verification the transfer actually depends on.*
-</details>
-
----
-
-## Question 3
-A furniture retailer's support agent receives: 'My sofa arrived with a torn cushion, can you change the delivery address on my pending table order to my office, and does the warranty cover fading?' Transcripts show the agent handles the torn cushion thoroughly, then closes with 'Anything else?' and the address change never happens. What is the best fix?
-
-A) Reply to multi-issue messages by asking the customer to send each request in a separate message so that each one becomes its own clean conversation
-B) Raise max_tokens on each response so the agent has more room to address every topic in a single long reply before closing the conversation
-C) Handle only the most urgent issue automatically and create a ticket for the remaining requests so a human agent can follow up later in the week
-D) Have the agent split the message into discrete items at the start, track each one in its working state, and confirm all are resolved before closing
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** Multi-concern requests should be decomposed into distinct items that are each tracked to resolution, with a check that nothing is left open before the conversation ends. Asking customers to resend requests pushes the work back onto them, and more output tokens do not create the missing tracking. Ticketing everything after the first issue abandons requests the agent could have resolved itself.
-
-*Hint if stuck: The failure is not depth on one issue; it is losing track of the others.*
 </details>
 
 ---
@@ -144,7 +144,7 @@ D) The session ran too long; a turn limit after the first test failure would hav
 
 **A)** A gate must check the condition that actually matters: a passing test run for the exact commit being released, not merely that the tool was called at some point. Adding human approval or a stronger prompt layers on extra controls without fixing the weak check. A turn limit is a crude stop that does not encode the release rule at all.
 
-*Hint if stuck: Compare what the gate checks with what the policy actually requires.*
+*Hint if stuck: The assistant really did run the tests. What did the release rule depend on that the gate never looked at?*
 </details>
 
 ---
@@ -351,7 +351,7 @@ D) Have the gate return a message naming the unmet prerequisite and the next ste
 A team reports that its agent follows a prompt-instructed rule, 'always run the fraud check before issuing a payout', in 99.2% of runs, and proposes calling the problem solved. The agent issues about 40,000 payouts a month, and an unchecked payout can cost thousands of dollars. How should the architect respond?
 
 A) Agree, since 99.2% compliance is well above what human agents achieve and further work on this would bring little additional value
-B) Enforce the fraud check in code before the payout tool can run, because about 320 unchecked payouts a month is a real loss
+B) Enforce the fraud check in code before the payout tool can run, since a prompt rule will keep missing some payouts at this volume
 C) Leave the prompt as is and add a dashboard that alerts the team each time a payout is detected without a fraud check after the fact
 D) Keep improving the prompt with more examples until compliance reaches 99.9%, then leave the rule in the prompt as the main control
 
@@ -360,7 +360,7 @@ D) Keep improving the prompt with more examples until compliance reaches 99.9%, 
 
 **B)** Prompt instructions have a non-zero failure rate, and at 40,000 payouts a month 0.8% is about 320 unchecked payouts, so a required step with this cost must be gated in code. Pushing compliance to 99.9% still leaves around 40 a month, and a dashboard detects losses after the money is gone. Comparing to human error rates does not change what the failures cost.
 
-*Hint if stuck: Turn the percentage into a monthly count before deciding whether it is good enough.*
+*Hint if stuck: Work out what 0.8% means at 40,000 a month, then ask whether better wording could ever close that gap.*
 </details>
 
 ---
@@ -378,7 +378,7 @@ D) Add a system-prompt rule telling the agent never to repeat a step it has alre
 
 **C)** A multi-step workflow needs durable, code-held state for each step so it can resume where it stopped and so a human handoff can say exactly what is done and what is not. Having the model re-check all systems each run is slower and depends on its inference. A single all-or-nothing call is rarely possible across four independent systems, and a prompt rule cannot stop duplicates the model does not know about.
 
-*Hint if stuck: Both symptoms come from the same missing piece of information.*
+*Hint if stuck: After a timeout, ask what the system itself can tell you about how far the onboarding got.*
 </details>
 
 ---
@@ -396,7 +396,7 @@ D) Move the check into the rotate_db_credentials service itself, so every caller
 
 **D)** Enforcement belongs at the point every path must pass through, which is the tool or service itself, so new or forgotten callers cannot bypass it. Copying the code into each loop works until the next assistant is added, a prompt rule is not enforcement, and rerouting chat requests to the CLI helper changes the product to work around a misplaced check.
 
-*Hint if stuck: Ask where a gate must live so that a new caller cannot skip it.*
+*Hint if stuck: Picture a third assistant being added next quarter. Which fix would still hold without anyone having to remember anything?*
 </details>
 
 ---
@@ -442,8 +442,8 @@ A bank's account-onboarding agent must always run a KYC sanctions screen before 
 
 A) Strengthen the system prompt with few-shot examples that show the sanctions screen running first every time
 B) Replace the whole flow with a hard-coded decision tree that enumerates every possible onboarding path
-C) Use a hybrid: invoke the sanctions screen and audit write programmatically in code, and let the model-driven loop handle the variable conversation between them
-D) Set tool_choice to force the sanctions-screen tool on every single API call inside the loop
+C) Run the sanctions screen and audit write in code around a model-driven loop that handles the variable conversation
+D) Set tool_choice to force the sanctions-screen tool on every single API call made inside the agent loop
 
 <details>
 <summary>Answer & explanation</summary>
@@ -478,38 +478,74 @@ An insurance support agent receives one message: 'I was double-billed in May, my
 
 A) Increase max_tokens so the agent has enough room to address everything in a single reply
 B) Add a prompt instruction saying the agent must be thorough and never ignore parts of a message
-C) Route each incoming message to three specialized subagents selected by keyword matching
-D) Have the agent first decompose the message into distinct concerns and track each one to completion before ending the turn
+C) Route each incoming message to three specialized subagents, chosen by keyword matching on the message text
+D) Have the agent list each distinct concern first and track every one to resolution before it ends the turn
 
 <details>
 <summary>Answer & explanation</summary>
 
 **D)** Multi-concern requests fail when the agent treats the message as one task, so the fix is explicit decomposition: enumerate the distinct concerns up front and verify each is resolved before finishing. Keyword-routed subagents are the strongest distractor, but the concern count varies per message and keyword matching creates coverage gaps on unexpected phrasing. A vague instruction to be thorough is probabilistic, and the dropped concerns were never a token-budget problem, since the agent finished its reply normally rather than hitting max_tokens.
 
-*Hint if stuck: When one message carries several requests, the fix is explicit enumeration and tracking of each one.*
+*Hint if stuck: The agent did one job well; ask what would have stopped the other two from being forgotten.*
 </details>
 
 ---
 
 ## Question 28
-When a payments support agent escalates a suspected-fraud case, it forwards the entire 28k-token conversation transcript to the human fraud queue. Analysts report spending 8-10 minutes reconstructing each case before they can act, and sometimes miss that the agent already froze the card. What should the handoff contain?
+A healthcare intake assistant opens with a patient who reports three concerns: a billing question, a prescription refill, and a referral request. By turn 15 the assistant has resolved the billing question and closes the conversation, never addressing concerns #2 and #3. What design change fixes this reliably?
 
-A) A structured summary: customer ID, the issue, what was already tried (card frozen), and a recommended action
-B) A model-generated narrative paragraph summarizing the conversation, replacing the transcript entirely in the queue
-C) Only the last ten turns of the transcript, since the most recent exchanges are most relevant to the analyst
-D) The full raw transcript plus an urgency score so analysts can triage which cases to read and act on first
+A) Track the concerns in a structured issue list with per-item status, updated as each one closes
+B) Add a system prompt line: 'Always address every concern the patient raises before ending the conversation'
+C) Have the assistant ask the patient whether anything was missed before it closes the conversation
+D) Shorten the flow so all three concerns are handled within the first ten turns of the conversation
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Escalation handoffs should carry a structured summary — customer ID, issue, actions already taken, recommended next action — so the human can act immediately without reconstruction; missing the card freeze is a direct symptom of an unstructured handoff. A freeform narrative loses guaranteed fields, and the last ten turns can omit early actions like the freeze entirely.
+**A)** Multi-issue conversations need an explicit issue list with status tracking that persists across turns, so open items are checked before the conversation closes. A prompt admonition is probabilistic and degrades exactly when the context grows long, and asking the patient to re-list their concerns shifts the burden onto the user while leaving the drift unfixed.
 
-*Hint if stuck: The analyst needs specific fields guaranteed present, not more or fewer raw tokens.*
+*Hint if stuck: Ask what the assistant can check, at the moment it wants to close, to know which of the patient's requests are still open.*
 </details>
 
 ---
 
 ## Question 29
+A billing-support service runs Claude through the Agent SDK with nobody watching a terminal. Goodwill credits above $150 need sign-off from a team lead, which can take hours. The team wants Claude to stop at the issue_credit call, show the request in the service's own approvals queue, and carry on from that exact call once the lead decides. Which mechanism fits?
+
+A) A PreToolUse hook that returns permissionDecision "defer" for large credits, then resuming the session once the lead has decided
+B) A PreToolUse hook that returns "ask" for large credits, so that the approval prompt is shown to the lead in the terminal running the service
+C) A PreToolUse hook that sleeps and polls the approvals queue until the lead answers, holding the tool call open for as long as it takes
+D) A system-prompt rule telling Claude to end its turn and wait for the lead whenever a credit above $150 comes up in a conversation
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Returning defer ends the turn with stop_reason tool_deferred and leaves the pending call in the transcript; the app reads deferred_tool_use, shows it in its own queue, and resumes the session, when the hook fires again and returns allow or deny. (It applies when Claude makes a single tool call in that turn.) ask needs someone to answer an in-process permission prompt, which a headless service lacks. A hook that blocks for hours ties up the run, and a prompt rule cannot hold a tool call open.
+
+*Hint if stuck: No one is around to respond to a prompt inside this process; think about stopping cleanly and coming back later to the same pending call.*
+</details>
+
+---
+
+## Question 30
+A support agent's refund-cap check is a PreToolUse shell hook defined in the repository's .claude/settings.json, and it worked in every test run. To stop the production Agent SDK service from picking up stray settings files, an engineer set settingSources to an empty list. Since that release, over-cap refunds have gone through and the hook's log is empty. What should the team do?
+
+A) Move the check into a PostToolUse hook in the same settings file, since PostToolUse hooks still load when setting sources are restricted
+B) Register the refund check as a PreToolUse callback in the query's hooks option, which runs no matter which settings files load
+C) Put the cap in the system prompt as a hard rule, since an SDK service cannot run hooks of any kind once settings files are skipped
+D) Set permissionMode to bypassPermissions, so that hooks are evaluated before every tool call no matter which settings were loaded
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** The SDK runs callback hooks passed in options plus shell hooks from settings files only when the matching settingSources entry is enabled; with an empty list, .claude/settings.json and its hooks are never read. A callback registered in code keeps the deterministic check without reopening the settings files the engineer wanted to ignore. A PostToolUse hook in the same file would not load either and would fire after the refund. The prompt fallback rests on a false premise and is probabilistic, and bypassPermissions loosens approval rather than loading any hooks.
+
+*Hint if stuck: Ask where this check was defined, and what has to happen for the SDK to read that file at all.*
+</details>
+
+---
+
+## Question 31
 A support agent queries two order systems after a merger. The legacy system returns statuses like 'SHP', 'BKO' and 'CXL'; the new one returns 'shipped', 'backordered' and 'cancelled'. The agent sometimes tells customers a cancelled order 'is on its way'. Both systems are owned by other teams with year-long change queues. What should the architect implement?
 
 A) A mapping table of legacy codes in the system prompt with instructions to translate every status before replying to a customer about an order
@@ -522,12 +558,12 @@ D) A request to both owning teams to align on a shared status vocabulary, with t
 
 **C)** When tools return inconsistent formats, a PostToolUse hook can normalise every result deterministically before the model reasons over it, without touching upstream systems. A prompt mapping table and an extra tool both depend on the model remembering to translate on each call. Waiting on upstream teams leaves customers misinformed for a year.
 
-*Hint if stuck: Look for the point where every tool result passes through code you control.*
+*Hint if stuck: Upstream can't change and the model keeps misreading. Where could the inconsistency be removed without relying on the model to remember?*
 </details>
 
 ---
 
-## Question 30
+## Question 32
 A team protects .env files in Claude Code with a PreToolUse hook whose matcher is 'Write|Edit'; the callback denies any call whose file_path ends in .env. In a review they find Claude updated .env anyway by running `echo 'API_URL=...' >> .env` in the terminal. What should they do to close the gap?
 
 A) Change the matcher to '*.env' so the hook fires for every tool call that touches a file with that extension, whichever tool is used
@@ -545,7 +581,7 @@ D) Also cover the Bash tool, with the callback inspecting tool_input.command for
 
 ---
 
-## Question 31
+## Question 33
 In a multi-agent research system, web-research subagents call a fetch_page tool that returns raw page text including navigation menus, cookie banners and footers. About 70% of each result is boilerplate, subagents run out of context after a dozen pages, and the publication date is often lost. What is the best fix?
 
 A) Add a PostToolUse hook on fetch_page that strips boilerplate and returns the main text with URL and date as separate fields
@@ -563,7 +599,7 @@ D) Tell each subagent in its prompt to skip navigation and footer text and to no
 
 ---
 
-## Question 32
+## Question 34
 An internal Agent SDK assistant provisions cloud machines through create_instance. Policy lets engineers self-serve instances up to $500 a month; anything larger needs a FinOps request, which the assistant can open with file_finops_request. The prompt states the policy, yet each month a few $3,000 GPU instances get created after engineers insist. What should the architect implement?
 
 A) A PostToolUse hook on create_instance that checks the new instance's monthly cost and shuts the instance down straight away whenever it is over $500
@@ -581,7 +617,7 @@ D) A PreToolUse hook that sends every create_instance call, whatever its size, t
 
 ---
 
-## Question 33
+## Question 35
 A support agent has two PreToolUse hooks on issue_credit: an enrichment hook that looks up the customer's tier and stores it in shared state, and a policy hook that reads that tier to decide whether the credit exceeds the tier's limit. Most of the time it works, but occasionally a gold-tier customer's valid credit is denied. What is the likely cause and fix?
 
 A) The deny from the policy hook is overriding an allow from the enrichment hook; the enrichment hook should return allow with a higher priority
@@ -599,7 +635,7 @@ D) The policy check belongs in a PostToolUse hook, which always runs after every
 
 ---
 
-## Question 34
+## Question 36
 A CI job uses Claude Code to triage test failures across three services that use pytest, Jest and Go's test runner. Each call to the team's run_tests MCP tool returns a different raw format, and Claude sometimes counts skipped tests as failures or misses the failing test name in Go output. What change makes triage most reliable?
 
 A) Add each runner's output format to CLAUDE.md with examples of passed, failed and skipped results for Claude to follow
@@ -617,25 +653,25 @@ D) Use a PostToolUse hook on run_tests that converts each runner's output into o
 
 ---
 
-## Question 35
-A receipts-extraction pipeline reads amounts through an ocr_receipt tool. Receipts from different countries come back as '1.234,56 EUR', '$1,234.56' and '1 234,56 kr', and the model mis-reads about 4% of amounts by a factor of 100 or 1,000. Downstream accounting needs a decimal value with an ISO currency code. What should the architect do?
+## Question 37
+An extraction pipeline built on the Agent SDK has Claude open supplier contracts with the built-in Read tool. The text exports carry page headers, footers and repeated legal boilerplate that confuse the extraction. A PostToolUse hook on Read already builds a cleaned version, but it returns that version as additionalContext, so Claude still sees the noisy original beside it. How should the hook return the cleaned text?
 
-A) Add a PostToolUse hook on ocr_receipt that parses each amount by locale into a decimal value and an ISO currency code
-B) Add few-shot examples of each locale's number format to the extraction prompt so the model learns how to read them
-C) Tighten the output JSON schema so the amount field must be a number and the currency must be a three-letter code
-D) Run each receipt through extraction twice and send any receipt whose two amounts disagree to the manual review queue for a person to check
+A) Return it in updatedMCPToolOutput, which is the field that replaces results for built-in tools such as Read as well as for MCP tools
+B) Return it in updatedInput, so that the Read call runs again on the cleaned text and Claude only ever receives the cleaned version
+C) Return it in updatedToolOutput, which replaces the result of any tool before Claude sees it, keeping the tool's output shape
+D) Return decision "block" with the cleaned text as the reason, since a block on PostToolUse discards the original output Claude sees
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Locale-dependent number formats are a deterministic parsing problem, so a PostToolUse hook should convert them before the model sees them. Few-shot examples lower the error rate but keep it non-zero. A stricter schema guarantees the output is a number, not that it is the right number, and double runs catch only cases where the two runs disagree.
+**C)** updatedToolOutput replaces a tool's output before Claude sees it and works for any tool in both SDKs, as long as the value matches the tool's output shape. updatedMCPToolOutput is the older field and applies to MCP tools only, so it does nothing for Read. updatedInput belongs to PreToolUse and changes a call before it runs, and a PostToolUse block only adds the reason next to the result while Claude still sees the original.
 
-*Hint if stuck: Ask whether this is a judgment the model must make or a conversion code can make every time.*
+*Hint if stuck: Classify each field by when it acts and on what, then check how broadly each one applies.*
 </details>
 
 ---
 
-## Question 36
+## Question 38
 A telecom support agent's get_billing_profile tool returns full payment card numbers along with the rest of the profile. The agent never needs them, but they appear in logs and once were read back to a caller. Security wants card numbers kept out of the model's context entirely while the billing API is unchanged. What should the architect implement?
 
 A) A system-prompt rule telling the agent never to repeat card numbers and to refer only to the last four digits when needed
@@ -653,7 +689,7 @@ D) An output filter on the agent's replies that removes any 16-digit card number
 
 ---
 
-## Question 37
+## Question 39
 A developer-productivity assistant has a run_sql tool that takes a connection name and a query. Developers should be able to explore data freely, but every query must run against the read replica, never the primary. Developers sometimes ask for 'the primary, it's fresher', and the model passes 'primary' as the connection. The data team wants such requests simply served from the replica, which lags by under a second, rather than refused. What is the best design?
 
 A) A PreToolUse hook that denies every run_sql call whose connection is not the replica, so the model must retry with the correct connection
@@ -671,7 +707,7 @@ D) A PostToolUse hook that checks which connection served each query and warns t
 
 ---
 
-## Question 38
+## Question 40
 A team wants to make sure Claude Code never runs `npm publish` from developer machines. They wrote a PostToolUse hook on Bash that detects publish commands and alerts the security channel. In the first week, two internal packages were accidentally published to the public registry, and the alerts fired after both. What should they change?
 
 A) Make the PostToolUse hook also run `npm unpublish` right after it detects a publish, so the package is withdrawn within seconds
@@ -684,12 +720,12 @@ D) Use a PreToolUse hook on Bash that denies publish commands with a reason, so 
 
 **D)** PostToolUse runs after the tool has executed, so it can only react; blocking an action requires a PreToolUse hook that denies the call before it runs. Auto-unpublishing still exposes the package and may not be allowed by the registry. A CLAUDE.md rule is best-effort, and faster alerts do not prevent anything.
 
-*Hint if stuck: Ask when each hook event fires relative to the command itself.*
+*Hint if stuck: The alerts fired every time, yet the harm still happened. What does that say about timing?*
 </details>
 
 ---
 
-## Question 39
+## Question 41
 A research system's subagents may only cite sources from an approved list of journals and government sites. Despite a clear prompt, about one in ten reports includes material fetched from content farms. The team wants unapproved domains never fetched, while subagents should still be able to choose which approved pages to read. What should they implement?
 
 A) Add a PreToolUse hook on the fetch tool that checks the URL's host against the allowlist and denies others with a reason listing approved sources
@@ -707,7 +743,7 @@ D) Add the full approved list to each subagent's prompt and ask the synthesis st
 
 ---
 
-## Question 40
+## Question 42
 A PreToolUse hook blocks close_account for accounts with an open balance. It returns permissionDecision 'deny' with an empty permissionDecisionReason, plus a systemMessage: 'Account has balance: escalate to billing.' Customers now hear 'something went wrong on our end' and the agent never escalates. What is the fix?
 
 A) Change the decision from deny to ask so that the agent stops and asks the customer whether they want to escalate to billing
@@ -725,7 +761,7 @@ D) Add a system-prompt line telling the agent that any blocked close_account cal
 
 ---
 
-## Question 41
+## Question 43
 A contracts-extraction pipeline has a PostToolUse hook that converts parties' names and dates from the parse_contract tool into a canonical format. To speed up the pipeline, an engineer made every hook return async output. Throughput improved, but the model is again seeing raw, unnormalised dates. What should the team do?
 
 A) Keep the hooks async but raise asyncTimeout so the normalisation has enough time to finish before the model reads the result
@@ -743,7 +779,7 @@ D) Remove the normalisation hook and ask the model to normalise dates itself as 
 
 ---
 
-## Question 42
+## Question 44
 A company's compliance team needs an audit trail of every tool call its internal Agent SDK assistants complete: tool name, inputs, result and timestamp. The first design adds a log_action tool and instructs the assistant to call it after each action, but spot checks show gaps in about 8% of sessions. What should replace it?
 
 A) A stronger instruction with examples making log_action the last step of every turn so that no session finishes without logging
@@ -761,7 +797,7 @@ D) A PostToolUse hook with no matcher that writes each call's tool name, input, 
 
 ---
 
-## Question 43
+## Question 45
 A CI pipeline runs Claude Code to review pull requests and post findings through a post_review_comment tool. Some diffs contain hard-coded API keys, and twice the review quoted a key verbatim in a public comment. The review prompt already says never to repeat secrets. The team wants such comments never posted, while reviews should still flag the problem. What should they implement?
 
 A) A PreToolUse hook on post_review_comment that scans the comment body for credential patterns and denies it, saying to cite the file and line instead
@@ -774,12 +810,12 @@ D) A PostToolUse hook on post_review_comment that deletes any posted comment con
 
 **A)** Inspecting the tool input before the call runs blocks the leak deterministically, and the deny reason tells Claude how to still report the problem. Deleting after posting leaves the key exposed in notifications and history, routing everything through a maintainer gives up the automated review, and a stronger prompt keeps the non-zero failure rate that already leaked keys twice.
 
-*Hint if stuck: The comment must never exist, so look at what can act before the post happens.*
+*Hint if stuck: Ask at what moment the damage happens, and which controls are able to act ahead of that moment.*
 </details>
 
 ---
 
-## Question 44
+## Question 46
 A platform team requires that new npm dependencies come only from an approved list maintained in deps-allowlist.json, which changes weekly. Claude Code sessions in the monorepo keep running `npm install` for unapproved packages when solving tasks, and reviewers catch them late. What is the most effective control?
 
 A) A permissions deny rule for every package name not on the list, regenerated by hand each week when the allowlist file changes
@@ -797,7 +833,7 @@ D) A PostToolUse hook on Bash that runs `npm uninstall` for any unlisted package
 
 ---
 
-## Question 45
+## Question 47
 An architect is reviewing four rules for a support agent and must decide which belong in a PreToolUse hook rather than the system prompt: (1) keep a warm, concise tone; (2) never issue a refund to an account flagged for fraud; (3) prefer self-service links when they fully answer the question; (4) suggest a callback when the customer seems frustrated. Which choice is right?
 
 A) Rules 2 and 4 in hooks, since both protect the company and both involve a clear trigger the hook can detect in the conversation or the tool call input
@@ -815,25 +851,25 @@ D) None in hooks; all four fit the system prompt, and the fraud rule can be back
 
 ---
 
-## Question 46
-A fintech support agent has a process_refund tool. The system prompt states refunds above $200 require manager approval, yet logs show the agent issued a $480 refund last week after a persuasive customer message. Compliance now requires that over-cap refunds can never execute. What should the architect implement?
+## Question 48
+Compliance asks a support team to log every refund attempt their Agent SDK agent makes, including attempts that fail. The team added a PostToolUse hook on process_refund that writes each call to the audit log, but an audit finds that failed refunds, such as those the payment gateway rejects partway through the call, are missing from the log. What should the team change?
 
-A) A PreToolUse hook on process_refund that checks the amount and exits with code 2 when it exceeds $200, writing the violation to stderr
-B) A refund policy moved to the very top of the system prompt and repeated in CLAUDE.md, in bold, so the model cannot miss the $200 limit on any refund
-C) A second model pass that reviews every pending refund and approves or rejects it before execution
-D) A temperature of 0 on the support agent so it follows the refund policy more consistently
+A) Widen the PostToolUse matcher to "*" so that the logger catches the failed refund calls along with every other tool's successful ones
+B) Tell the agent in its system prompt to mention each failed refund in its reply, and scrape those replies into the audit log every night
+C) Move the audit logger into a Stop hook so that it writes one record per refund attempt when the agent finishes each conversation
+D) Register the same audit logger under PostToolUseFailure for process_refund, since PostToolUse runs only when a call succeeds
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Critical business rules like refund caps belong in hooks because hooks are deterministic code that guarantees enforcement, while prompt instructions are probabilistic best-effort. Exit code 2 blocks the tool call and the stderr message is fed back to the model so it can adapt. The second-model reviewer is the strongest distractor, but it is still a probabilistic component and cannot guarantee zero violations, and temperature 0 changes sampling, not whether the model can be persuaded.
+**D)** PostToolUse runs right after a tool completes successfully; a call that starts and then fails (the tool throws, or an MCP tool returns an error result) fires PostToolUseFailure instead, which is the documented place to log failures. A wider matcher still only sees successful calls. Scraping replies depends on the model remembering to mention failures, and a Stop hook fires once at the end of the turn rather than once per call.
 
-*Hint if stuck: Think about which mechanism is deterministic rather than probabilistic when a business rule must never be violated.*
+*Hint if stuck: Check which lifecycle event fires when a tool call goes wrong after it has already started.*
 </details>
 
 ---
 
-## Question 47
+## Question 49
 A platform team wrote a PreToolUse hook to stop Claude Code from editing files under infra/prod/. The script correctly detects the protected path, prints 'Edit blocked: protected production path' to stdout, and exits with code 0. In testing, the edits still go through and the agent never acknowledges any block. What is wrong?
 
 A) PreToolUse hooks cannot block tool calls; the rule must instead be a deny entry in settings.json permissions for that path
@@ -846,12 +882,12 @@ D) The hook fires too early to see the file path; the protection must move to a 
 
 **C)** For PreToolUse hooks, a zero exit code allows the tool call to proceed; exit code 2 is what blocks the call, and stderr (not stdout) is the channel fed back to the model explaining why. PreToolUse hooks can block calls, since gating tool calls before they run is exactly what they exist for, so no settings.json deny rule is needed. additionalContext injects information but does not block anything, and PreToolUse receives the full tool input including the file path, so it does not fire too early.
 
-*Hint if stuck: Recall which exit code blocks a tool call and which output stream gets fed back to the model.*
+*Hint if stuck: The script found the path correctly; look at how it reported its verdict back to Claude Code.*
 </details>
 
 ---
 
-## Question 48
+## Question 50
 A customer support agent calls a get_customer CRM tool that returns 40 fields per record, including marketing flags and audit metadata. After 15 lookups in a long session, context is bloated and the agent starts missing the three fields it actually uses: plan tier, billing status, and open tickets. What is the best fix?
 
 A) Instruct the agent in the system prompt to ignore the irrelevant CRM fields when reading tool results
@@ -864,18 +900,18 @@ D) Run /compact after every few lookups to summarize the accumulated CRM payload
 
 **B)** Verbose tool outputs should be trimmed deterministically at the source, and PostToolUse is the hook designed to normalize and reduce tool results before they enter context. A larger context window still leaves 37 useless fields per record diluting attention, so lost-in-the-middle misses persist. Prompting the model to ignore fields is probabilistic and the tokens still consume context either way, and /compact is reactive and lossy: it lets the bloat accumulate first and its summarization can blur the exact field values the agent needs.
 
-*Hint if stuck: Verbose tool outputs are best handled deterministically at the moment they are produced, not by the model afterward.*
+*Hint if stuck: Ask whether the model should ever have to read the 37 fields it never uses.*
 </details>
 
 ---
 
-## Question 49
+## Question 51
 A healthcare intake agent writes visit summaries to a shared log through a write_log tool. CLAUDE.md instructs it to redact Social Security numbers first, and audits show it complies about 98% of the time. The compliance team requires zero SSNs in the logs, full stop. Which approach satisfies the requirement?
 
-A) Add few-shot examples of correctly redacted summaries to the system prompt
+A) Add few-shot examples of correctly redacted summaries to the system prompt, covering every SSN format seen in past logs
 B) Repeat the redaction rule in both the system prompt and CLAUDE.md and label it as mandatory
-C) Have a reviewer subagent check each summary for SSNs before it is logged
-D) Add a hook that scans write_log input and deterministically redacts or blocks any SSN pattern before the write runs
+C) Have a reviewer subagent read each summary and strip out any SSN it finds before the summary is logged
+D) Add a PreToolUse hook on write_log that matches SSN patterns in the input and redacts or blocks the write
 
 <details>
 <summary>Answer & explanation</summary>
@@ -887,7 +923,7 @@ D) Add a hook that scans write_log input and deterministically redacts or blocks
 
 ---
 
-## Question 50
+## Question 52
 In a monorepo CI assistant, a run_coverage tool returns raw percentages per package. Reviewers notice the agent keeps flagging packages/legacy-billing for missing the 80% bar even though that package is formally exempt until Q3. The exemption list lives in a YAML file that changes as exemptions are granted and expire, and the agent rarely reads it. How should the team ensure coverage results are interpreted correctly every time?
 
 A) Add a PostToolUse hook on run_coverage that reads the exemption YAML and injects current exemptions via hookSpecificOutput.additionalContext
@@ -900,12 +936,12 @@ D) Add a prompt instruction telling the agent to call a second tool that fetches
 
 **A)** hookSpecificOutput.additionalContext lets a PostToolUse hook attach fresh interpretive context at the exact moment the tool result returns, so the model always sees the current exemptions alongside the numbers. CLAUDE.md is the strongest distractor, but it is a static copy that drifts from the changing YAML and can be lost mid-context in long sessions. The prompt-enforced second tool call is probabilistic and is exactly the behavior the agent is already failing to perform, and renaming the tool conveys nothing about which packages are exempt.
 
-*Hint if stuck: Consider which mechanism can attach fresh interpretive context at the exact moment a tool result returns.*
+*Hint if stuck: The exemptions change over time; ask which option shows the agent the current list every time it reads coverage numbers, without relying on it to go and look.*
 </details>
 
 ---
 
-## Question 51
+## Question 53
 An e-commerce operations agent answers on-call engineers' questions in long-running sessions; engineers execute any deploys themselves. Answers must always reflect the current deploy-freeze status and on-call rotation, both of which change mid-session. Today the agent advised an engineer to deploy during a freeze that began an hour after the session started. Which hook placement fixes this?
 
 A) A SessionStart hook that injects freeze status and the rotation when the session begins
@@ -923,7 +959,7 @@ D) A UserPromptSubmit hook that fetches current freeze status and rotation and a
 
 ---
 
-## Question 52
+## Question 54
 A code-generation session in Claude Code keeps ending turns with edits in place but the test suite never run, despite a CLAUDE.md rule saying 'always run the tests before finishing.' The team wants a guarantee that no turn completes after file edits without a test run. What is the right mechanism?
 
 A) Move the rule to the top of CLAUDE.md and rephrase it as a hard, non-negotiable requirement
@@ -936,12 +972,12 @@ D) Set a minimum iteration count so the session cannot end before a fixed number
 
 **B)** Stop hooks fire when the agent attempts to finish its turn and can deterministically block completion, feeding the reason back so the model runs the tests. The PostToolUse distractor is deterministic but enforces at the wrong granularity: it runs the whole suite after every one of possibly dozens of edits, burning time and failing spuriously on intentionally incomplete intermediate states mid-refactor, when the requirement only concerns the state at turn completion. Stronger prompt wording remains probabilistic, and iteration counts are safety fallbacks, not behavioral guarantees.
 
-*Hint if stuck: There is a hook event that fires at the moment the agent tries to finish its turn.*
+*Hint if stuck: The requirement is about the state when a turn ends, not after each individual change.*
 </details>
 
 ---
 
-## Question 53
+## Question 55
 In a monorepo, the data team must prevent Claude Code from editing files under db/migrations/ that have already been applied to production. Applied migrations are listed in db/applied.json, which changes daily, and new unapplied migration files must remain fully editable. How should this be enforced?
 
 A) A PreToolUse hook on Edit and Write that checks the target against db/applied.json and exits 2 with an explanation when the migration is already applied
@@ -959,7 +995,7 @@ D) A PostToolUse hook that detects edits to already-applied migrations after the
 
 ---
 
-## Question 54
+## Question 56
 A fintech extraction pipeline's fetch_transactions tool returns dates in a mix of MM/DD/YYYY, ISO 8601, and Unix epoch depending on the upstream bank. The model must compare transaction dates against statement periods and gets it wrong on roughly 1 in 12 records, almost always the epoch-formatted ones. What is the root-cause fix?
 
 A) A PostToolUse hook on fetch_transactions that converts every date to ISO 8601 before the model sees the result
@@ -972,12 +1008,12 @@ D) A stricter output schema requiring the model to return all dates as ISO 8601 
 
 **A)** Date normalization is a mechanical transformation, so it belongs in deterministic PostToolUse code that guarantees the model only ever sees one consistent format. The stricter output schema is the strongest distractor: it constrains the answer's format but does nothing to stop the model misreading epoch values on the way in, since schemas guarantee syntax, not semantic correctness. Prompted conversion examples remain probabilistic, and retries re-fetch the same mixed formats and reproduce the same misreads.
 
-*Hint if stuck: Mechanical transformations of tool output belong in deterministic code, not model instructions.*
+*Hint if stuck: Is the error in how the model writes dates, or in how it reads them?*
 </details>
 
 ---
 
-## Question 55
+## Question 57
 An e-commerce agent's apply_store_credit tool is gated by a PreToolUse hook that exits 2 for credits over $50. The block works, but logs show the agent then retries the identical $75 credit four times before giving up, and the customer gets no resolution. The hook's stderr message is just the word 'Blocked.' What should change?
 
 A) Convert it to a PostToolUse hook so the agent can observe the outcome of each attempted credit and then adjust its next step accordingly
@@ -990,12 +1026,12 @@ D) Remove apply_store_credit from the agent's tools and route all credit request
 
 **B)** When a PreToolUse hook blocks with exit code 2, its stderr is fed back to the model and is the model's only explanation of why the call was refused; a bare 'Blocked.' is the hook equivalent of a bare 'Operation failed' tool error, leaving nothing to adapt to. Stating the cap and the escalation path lets the agent immediately take the correct action. Retry caps are safety fallbacks that stop the loop without producing a resolution, converting to PostToolUse would let the over-cap credit execute, and removing the tool punishes every legitimate under-cap credit.
 
-*Hint if stuck: What the hook writes to stderr is the model's only explanation of why the call was refused.*
+*Hint if stuck: Put yourself in the model's place: after the refusal, what did it learn about what to do instead?*
 </details>
 
 ---
 
-## Question 56
+## Question 58
 A developer-productivity team wants three automated behaviors in Claude Code: (1) load the current sprint's ticket list once when a session opens, (2) strip ANSI color codes out of every Bash result before the model reads it, and (3) prevent any edit to files under vendor/. Which hook events implement these behaviors?
 
 A) (1) UserPromptSubmit, (2) PreToolUse, (3) Stop
@@ -1008,12 +1044,12 @@ D) (1) SessionStart, (2) PostToolUse, (3) PreToolUse
 
 **D)** SessionStart runs once when the session opens, which is the right place for one-time context like the sprint ticket list. PostToolUse fires after a tool runs and is where outputs get normalized, such as stripping ANSI codes from Bash results. PreToolUse gates calls before they execute, so it is where vendor/ edits get blocked with exit code 2. Pairing (2) with PreToolUse and (3) with PostToolUse reverses the last two events: PreToolUse cannot clean a result that does not exist yet, and PostToolUse fires only after the edit has already happened.
 
-*Hint if stuck: Match each behavior to when it must run: session open, after a tool returns, or before a tool executes.*
+*Hint if stuck: For each behaviour, ask whether the thing it acts on exists yet at the moment the hook fires.*
 </details>
 
 ---
 
-## Question 57
+## Question 59
 A support resolution agent built with the Claude Agent SDK has an issue_refund tool. The system prompt says refunds over $200 require human approval, yet last week it refunded $450 unprompted. Separately, transcripts show that when customers type "let me talk to a person," the agent keeps troubleshooting for several more turns. Which combination fixes both failures at the root?
 
 A) Move the $200 limit to the very top of the system prompt in emphatic language, and add a sentiment classifier that escalates whenever customer frustration crosses a threshold
@@ -1026,12 +1062,12 @@ D) Add a PreToolUse hook that blocks issue_refund calls over $200 via exit code 
 
 **D)** Critical business rules like refund caps belong in deterministic PreToolUse hooks, which gate the call before it executes and feed the blocking reason back to the model — prompts are probabilistic and will eventually be ignored. Explicit human requests are a reliable escalation trigger that must be honored immediately, while sentiment is unreliable because sentiment does not equal complexity. The PostToolUse option fails because it cleans up after the violating refund has already gone through.
 
-*Hint if stuck: One enforcement mechanism here is a guarantee and one is best-effort — and recall which escalation triggers are considered reliable.*
+*Hint if stuck: Two failures, two questions: which mechanism cannot be talked out of the rule, and which signal from a customer leaves no room for interpretation?*
 </details>
 
 ---
 
-## Question 58
+## Question 60
 A developer forks a Claude Code session twice with --fork-session to compare two refactors of the same payments module, planning to run both forks at the same time in the same checkout. A teammate warns this will go wrong. Why, and what should the developer do?
 
 A) Forks share one conversation history, so each fork will see the other's messages; run them one at a time instead
@@ -1049,7 +1085,7 @@ D) Forks lose the parent's earlier tool results, so neither will know the module
 
 ---
 
-## Question 59
+## Question 61
 A developer juggles two tasks in Claude Code: a flaky-test investigation in the morning and a dependency upgrade in the afternoon. Each morning she runs `claude --continue`, and twice it reopened the dependency-upgrade conversation instead of the test investigation. What is the most reliable way for her to return to the right conversation?
 
 A) Keep using --continue but always end the day in the test-investigation session so that it is the most recent one
@@ -1067,7 +1103,7 @@ D) Name each session when it starts, for example with -n or /rename, and return 
 
 ---
 
-## Question 60
+## Question 62
 A support platform uses the Agent SDK in TypeScript. Each incoming customer message calls `query()` with `continue: true` so the agent remembers the conversation. With many customers chatting at once, agents have begun referencing other customers' orders. What change fixes the root cause?
 
 A) Capture each conversation's session_id from the result message, store it per customer, and pass it to `resume` on later turns
@@ -1085,7 +1121,7 @@ D) Turn off session persistence entirely so that every customer message is answe
 
 ---
 
-## Question 61
+## Question 63
 A CI workflow runs an analysis job on one ephemeral runner and a fix job on a different runner later in the pipeline. The fix job calls the Agent SDK with `resume` and the analysis job's session ID, but fails with a not-found error. What is the most robust way to carry the analysis into the fix job?
 
 A) Switch the fix job to `continue: true` so the SDK finds the most recent session without needing the session ID
@@ -1103,7 +1139,7 @@ D) Pin both jobs to the same working directory path so that the session lookup o
 
 ---
 
-## Question 62
+## Question 64
 A developer resumes yesterday's Claude Code session on a caching refactor. Since then, only one thing changed: a teammate edited `cache-config.yaml` to lower the default TTL from 300 to 60 seconds. The rest of the session's analysis is still accurate. What is the best way to continue?
 
 A) Start a fresh session and have Claude re-explore the whole caching layer, since any change makes the old session unsafe
@@ -1121,7 +1157,7 @@ D) Resume the session and run /compact first so that the outdated configuration 
 
 ---
 
-## Question 63
+## Question 65
 A research agent built on the Agent SDK ended its run with `error_max_turns` after gathering about 80% of the sources for a market study. The team's current recovery is to start the whole study again with a higher turn limit. What is the better recovery?
 
 A) Start again with the higher limit but ask the agent to work faster so that it finishes within the original number of turns
@@ -1134,12 +1170,12 @@ D) Resume the session by its ID with a higher turn limit, so the agent continues
 
 **D)** Resuming with a higher limit is the documented recovery from `error_max_turns`: the agent picks up with everything it already gathered. Restarting wastes the earlier work, forking adds a branch with no alternative to compare, and the partial answer omits most of the tool results the agent collected.
 
-*Hint if stuck: The session already holds everything the agent learned before it stopped.*
+*Hint if stuck: Ask what is lost by starting over, and whether the earlier run's work can still be reached.*
 </details>
 
 ---
 
-## Question 64
+## Question 66
 A support agent's session for a customer was paused while a human supervisor approved a goodwill credit outside the agent's authority. The customer writes back the next morning. The supervisor's action happened in the billing system, not in the agent's conversation. How should the system continue the case?
 
 A) Resume the customer's session and inject a note stating that the supervisor approved and applied the credit, with its amount
@@ -1157,7 +1193,7 @@ D) Resume the customer's session as it was, since the agent can work out what ha
 
 ---
 
-## Question 65
+## Question 67
 Two developers both resume the same Claude Code session, one on each terminal of a shared dev box, to explore a database connection leak from different angles. Afterwards the transcript is a confusing mix of both lines of questioning. What should they have done?
 
 A) Taken turns, with each developer running /compact before handing the session over to the other developer to continue
@@ -1175,25 +1211,7 @@ D) Resumed with --continue instead of --resume, since --continue keeps a separat
 
 ---
 
-## Question 66
-A research coordinator has spent a long session collecting and vetting 40 sources on the adoption of heat pumps. The team now wants two final reports from the same evidence: one framed for policymakers and one for installers, each needing several rounds of revision. What setup is best?
-
-A) Write both reports in the same session, one after the other, so that the second report can reuse whatever the first one already decided
-B) Run the source collection again in two new sessions, one per audience, so that each report has its own research
-C) Fork the session once per audience so each report develops from the same vetted evidence without affecting the other
-D) Paste the list of 40 source titles into two new sessions and ask each one to write a report for its audience
-
-<details>
-<summary>Answer & explanation</summary>
-
-**C)** Forking gives each audience its own branch from the shared baseline of vetted evidence, so revisions on one cannot leak into the other. Sequential work in one session lets the first framing bleed into the second, recollecting sources wastes the vetting effort, and source titles alone drop the analysis the session built.
-
-*Hint if stuck: Branch from shared evidence when you need independent outputs.*
-</details>
-
----
-
-## Question 67
+## Question 68
 An extraction service processes 5,000 shipping documents a day. To save setup time, an engineer changed it so that every document is sent as a new turn in one long-running resumed session. Accuracy has been drifting down through the day, and some outputs contain values from earlier documents. What is the right design?
 
 A) Keep one long session but run /compact every hundred documents so that older documents are summarised away
@@ -1206,12 +1224,12 @@ D) Process each document in its own independent call with no carried-over histor
 
 **D)** Independent documents need no shared history; carrying it over fills context with unrelated data and invites cross-document leakage. Compaction still keeps summaries of other documents, forking from the long session copies all of that history into every document, and a prompt rule cannot reliably stop the model from using material that is in its context.
 
-*Hint if stuck: Should one document's processing ever see another document?*
+*Hint if stuck: Ask what the 4,000th item of the day gains from having all the earlier ones in its context.*
 </details>
 
 ---
 
-## Question 68
+## Question 69
 A developer used --fork-session to try two caching strategies from the same analysis. After an hour, the fork using a write-through cache is clearly better. The original session explored the alternative. How should he carry on with the winning approach tomorrow?
 
 A) Resume the fork using its own session ID or name, since it is an independent session and the original was left unchanged
@@ -1229,7 +1247,7 @@ D) Fork the original session again tomorrow and repeat the write-through work in
 
 ---
 
-## Question 69
+## Question 70
 An architect wants to resume a three-week-old research session about a regulatory landscape. Many of the web sources the session read may have been updated since, but nobody knows which ones. The session's high-level conclusions are probably still useful. What is the most reliable way to continue?
 
 A) Resume the session and tell it which sources changed, so it re-reads only those before continuing the work
@@ -1247,7 +1265,7 @@ D) Resume the session as it is, since high-level conclusions about regulation ra
 
 ---
 
-## Question 70
+## Question 71
 Mid-session, a developer ran /clear to start on a different bug, then realised she needed a detail Claude had found earlier about the auth middleware. What is the most direct way to get that context back?
 
 A) Run /compact in the new conversation, which merges a summary of the cleared conversation back into the current one
@@ -1265,7 +1283,7 @@ D) Search the project CLAUDE.md, since Claude saves its findings there automatic
 
 ---
 
-## Question 71
+## Question 72
 Claude Code crashed while it was running a long database migration command during a schema refactor. The developer resumes the session. The transcript shows the migration call as cut off with no result. What should happen next?
 
 A) Have Claude rerun the migration immediately, since a tool call with no recorded result can safely be assumed to have done nothing at all
@@ -1278,12 +1296,12 @@ D) Have Claude check the database's migration state to see whether the migration
 
 **D)** A missing result does not mean the action did not happen, so the safe next step is to verify the real state before repeating a side-effecting command. Rerunning blindly risks applying the migration twice, a fresh session discards valid context without solving the uncertainty, and a fork changes nothing about the shared database.
 
-*Hint if stuck: Did the command take effect? Find out before doing it again.*
+*Hint if stuck: A missing result is not the same as a missing effect.*
 </details>
 
 ---
 
-## Question 72
+## Question 73
 A support team wants to test whether offering store credit instead of a refund would resolve a long-running dispute better, using the real customer conversation as the starting point, without touching the live conversation the customer can see. What is the best way to set this up with the Agent SDK?
 
 A) Resume the live session with `fork_session` enabled, so the experiment runs in a new session that starts from a copy of the history
@@ -1301,7 +1319,7 @@ D) Resume the live session with `continue` instead of `resume`, which runs the e
 
 ---
 
-## Question 73
+## Question 74
 A research coordinator was paused overnight. It is resumed in the morning, but the shared pricing dataset that two of its subagents queried was refreshed at 2 a.m.; the other four subagents used static sources. What is the most effective way to continue the run?
 
 A) Resume the coordinator without changes, since data refreshed only a few hours ago is unlikely to change the conclusions much
@@ -1319,7 +1337,7 @@ D) Resume the coordinator and ask it to decide for itself, without guidance, whi
 
 ---
 
-## Question 74
+## Question 75
 A team's CI bot keeps one long-lived Claude Code session per repository and resumes it for every new pull request, so it 'remembers' past reviews. Reviews have started citing functions that were deleted weeks ago. What is the better design?
 
 A) Keep the long-lived session but run /compact at the start of each review to reduce the amount of old material
@@ -1337,7 +1355,7 @@ D) Keep resuming the session but add an instruction that the bot must verify eac
 
 ---
 
-## Question 75
+## Question 76
 A team resumes Claude Code sessions across several days of work on an internal search service. Developers launch with `--mcp-config` pointing at a local file that adds the search-index MCP server, and resumed sessions keep coming back without the search-index tools whenever someone forgets the flag. Which change prevents this class of failure?
 
 A) Run /compact right after each resume so that the summary of earlier tool calls brings the search-index tools back into context
@@ -1355,7 +1373,7 @@ D) Move the server into the project's committed .mcp.json configuration, which i
 
 ---
 
-## Question 76
+## Question 77
 A developer has to hand over a half-finished investigation into memory growth in a worker service to a colleague who uses a different laptop. The developer's Claude Code session holds a lot of useful analysis. What is the most practical way to carry it over?
 
 A) Have Claude write a structured summary of findings, ruled-out causes and next steps, which the colleague uses to start a fresh session
@@ -1373,7 +1391,7 @@ D) Fork the session and share the fork's ID with the colleague, since forks are 
 
 ---
 
-## Question 77
+## Question 78
 A team tuning an invoice extraction prompt has spent a session having Claude analyse 20 failed extractions and categorise the failure patterns. They now want to try two schema designs, one with nullable fields and one with an explicit 'unclear' enum, each needing several iterations. What is the most efficient setup?
 
 A) Try the first schema in the current session, then run /clear and try the second one in the same session afterwards
@@ -1391,7 +1409,7 @@ D) Try both schema designs in the same session at the same time, alternating pro
 
 ---
 
-## Question 78
+## Question 79
 A long-running support session for a business customer was resumed after the company changed its refund policy from 30 to 14 days. Earlier in the session the agent fetched the old policy with a tool call and cited 30 days to the customer. The customer now asks whether a 20-day-old order can be refunded. What should the system do before the agent answers?
 
 A) Nothing extra, since the agent will fetch the policy again automatically whenever the customer asks a policy question
@@ -1409,7 +1427,7 @@ D) Run /compact on the session so that the earlier policy lookup is condensed an
 
 ---
 
-## Question 79
+## Question 80
 A nightly CI job first runs `claude -p` to audit dependency licences and records the result message's session_id. A second step on the same runner should ask that audit session a follow-up question and parse the answer as JSON. How should the second step be written?
 
 A) Run `claude -p --continue` so that the CLI picks the most recent interactive session on the runner automatically
@@ -1427,7 +1445,7 @@ D) Run `claude -p --resume <session-id> --output-format json` with the follow-up
 
 ---
 
-## Question 80
+## Question 81
 An architect has spent an hour in Claude Code mapping how a monolith's order module talks to six other modules. She now wants to evaluate splitting it out as a service, but the evaluation involves speculative changes she may abandon. She also wants to keep working on a small bug fix from the same understanding. What is the best approach?
 
 A) Keep the bug fix in this session and run the speculative evaluation in a --fork-session fork working in a separate git worktree
@@ -1445,7 +1463,7 @@ D) Open a second terminal, resume the same session there, and run the evaluation
 
 ---
 
-## Question 81
+## Question 82
 An engineer resumes a Claude Code session after a long weekend. In the meantime, the team rebased the feature branch, which rewrote 300 files including most of the ones the session read. The engineer is unsure exactly which changes matter. Which approach is most reliable?
 
 A) Resume the session and paste in the full git diff of the rebase, so it can work out which of its earlier file reads are now wrong
@@ -1463,7 +1481,7 @@ D) Resume the session and continue as normal, re-reading files only when an edit
 
 ---
 
-## Question 82
+## Question 83
 A data team spent yesterday afternoon in a Claude Code session named `po-edge-cases` cataloguing why purchase-order extractions fail on scanned multi-currency documents. Nothing in the repository or the sample set has changed since. A teammate suggests starting a fresh session with a summary 'to be safe'. What should the analyst do?
 
 A) Start the fresh session with a summary, since a resumed session always carries some risk of stale tool results
@@ -1481,7 +1499,7 @@ D) Copy the session's key findings into CLAUDE.md and start a new session so the
 
 ---
 
-## Question 83
+## Question 84
 An architect spent 30 minutes in a Claude Code session reading 40 files of a monorepo and building a verified mental model of its service boundaries. She now wants to explore three mutually exclusive migration strategies, each requiring long follow-up investigation that would contaminate the others' reasoning. What is the most efficient setup?
 
 A) Explore the three strategies sequentially in the same session, running /compact between each one to free up context for the next
@@ -1499,7 +1517,7 @@ D) Use fork_session to branch three sessions from the current one, so each strat
 
 ---
 
-## Question 84
+## Question 85
 An engineer resumes a Claude Code session from Friday to continue a refactor. Over the weekend a teammate merged 14 commits to main that renamed AuthClient to IdentityClient and moved the src/auth/ directory. The resumed agent immediately proposes edits referencing the old class name and paths. What is the most reliable way to handle this resume staleness?
 
 A) Add a CLAUDE.md note saying that after resuming, the agent should assume any file may have changed and re-verify before editing
@@ -1512,43 +1530,43 @@ D) Run /compact immediately after resuming so the stale history shrinks to a sho
 
 **C)** Stale resumed context is fixed by informing the agent of the specific changes, for example a SessionStart hook on resume that diffs against the last session's commit and injects what was renamed and moved. Always starting fresh is the strongest distractor, but it throws away the valuable in-progress refactor context that made resuming worthwhile. The CLAUDE.md note is probabilistic and forces wasteful wholesale re-reading, and /compact summarizes the stale facts without correcting any of them, so the wrong names survive in condensed form.
 
-*Hint if stuck: Stale resumed context is fixed by telling the agent exactly what changed, not by general caution.*
-</details>
-
----
-
-## Question 85
-On Monday an engineer spent an hour in a Claude Code session named payment-flake narrowing down a flaky payments test. Nothing in the repository changed overnight. On Tuesday she wants to continue exactly where she left off. What should she do?
-
-A) Start a new session and paste Monday's whole transcript into the first message
-B) Run claude --resume payment-flake to continue the named session
-C) Use fork_session so Tuesday's work does not disturb Monday's history
-D) Add Monday's findings to the project CLAUDE.md so any new session picks them up
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** Named session resumption continues a specific prior conversation with its context intact, and because nothing changed, its earlier tool results are still valid. Pasting a transcript is a clumsy copy of the same thing, forking is for exploring divergent approaches from a shared baseline, and CLAUDE.md is for durable project standards, not one investigation's notes.
-
-*Hint if stuck: The prior context is still valid, so keep it.*
+*Hint if stuck: Ask which option corrects the agent's specific wrong beliefs without throwing away what is still right.*
 </details>
 
 ---
 
 ## Question 86
-Two weeks ago an agent session analysed a service's module layout. Since then the team has refactored 60 files and renamed several packages. A developer wants to pick the analysis back up today. Which approach is most reliable?
+A CI pipeline uses the Agent SDK in two jobs. The first reviews a pull request and records the session ID; a later job asks follow-up questions that refer back to that review's earlier turns, so it has to continue the same conversation. Jobs land on arbitrary ephemeral runners, and resuming by session ID in the second job fails because no conversation is found. What should the team do?
 
-A) Resume the old session and trust its earlier analysis, since the overall architecture is similar
-B) Resume the old session and immediately run /compact to shrink the outdated context
-C) Fork the old session so the original analysis is preserved while the fork works on the new code with all the earlier context intact
-D) Start a fresh session seeded with a structured summary of the earlier findings, and let it re-read the code that changed
+A) Attach a session store adapter that mirrors transcripts to shared storage, and resume from a working directory matching the first job's
+B) Pass continue: true in the second job instead of the session ID, so the SDK picks up the most recent session wherever it was created
+C) Fork the session in the second job instead of resuming it, since forking copies the conversation over from the first job's runner
+D) Raise the second job's maxTurns and resend the original review prompt, so the same conversation is rebuilt turn by turn on the new runner
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** When many earlier tool results are stale, resuming makes the agent reason from file contents that no longer exist. A new session seeded with a concise summary keeps the useful conclusions without the stale details. Compacting or forking still carries the outdated tool results forward.
+**A)** Session files live on the machine that created them, so an ephemeral runner cannot resume one by ID alone. The sessions docs offer a sessionStore adapter that mirrors transcripts to your own backend (its lookup key comes from the working directory) or moving the .jsonl file; passing results into a fresh session is often more robust, but here the follow-ups need the conversation itself. continue looks for the latest session on the local machine, a fork needs the source transcript to be present, and re-running the prompt produces a new conversation rather than the original one.
 
-*Hint if stuck: How much of the old context is still true?*
+*Hint if stuck: Ask where the conversation history physically lives after the first job ends, and how a different machine could reach it.*
+</details>
+
+---
+
+## Question 87
+A TypeScript Agent SDK service runs one-shot extractions: each request is a single query() call on one document, and nothing ever resumes or forks those sessions. Operations notice the containers' disks filling with session transcript files, and some documents contain personal data the team does not want written to disk anywhere. What should the team set?
+
+A) forkSession: true on each query, so each document runs in a throwaway copy and the original transcript stays empty
+B) persistSession: false on each query, so the session lives only in memory for that call and no transcript is written to disk
+C) continue: true on each query, so every request shares one session and the service writes a single transcript file overall
+D) A nightly job that deletes transcripts older than one day, since the SDK always writes a transcript for every query call
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** For a stateless task where nothing should be written to disk, the sessions docs point to persistSession: false (TypeScript; Python suppresses transcript writes with CLAUDE_CODE_SKIP_PROMPT_HISTORY), which keeps the session in memory for the call only. A fork is a new session that is itself saved. Continuing one shared session piles unrelated documents into one context and one file, and a cleanup job still writes the personal data to disk before deleting it.
+
+*Hint if stuck: If nothing will ever come back to these sessions, ask whether they need to be stored at all.*
 </details>
 
 ---

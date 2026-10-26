@@ -1,7 +1,7 @@
 # Practice Test 02: Coordination Hall
 **D1: Agentic Architecture & Orchestration** (27% of the exam) · task statements 1.2, 1.3, 1.6
 
-88 questions. Exam pace is 2 minutes per question.
+89 questions. Exam pace is 2 minutes per question.
 
 ---
 
@@ -72,7 +72,7 @@ D) Switch to one explorer per file type, such as Python, YAML and SQL, so every 
 
 **B)** Having explorers report outward dependencies gives the coordinator what it needs to spot unowned areas and assign them, closing the coverage gap with a check rather than luck. More turns only make it more likely that an explorer wanders outside its scope. A single whole-repository reader brings back the context overload that decomposition was meant to avoid, and slicing by file type still leaves shared logic split with no owner.
 
-*Hint if stuck: The coordinator can only fill gaps it knows about; who can tell it where they are?*
+*Hint if stuck: Which option turns an accidental miss into something the system can notice during the run?*
 </details>
 
 ---
@@ -144,7 +144,7 @@ D) Filter the posted comments so that performance and security findings are drop
 
 **B)** Choosing subagents per input is the coordinator's job: a docs-only diff does not need the performance or security reviewers at all. Prompting every reviewer to exit early still spawns all four and relies on each one obeying. A smaller model keeps the pointless runs, and filtering comments afterwards pays for the reviews and then throws them away.
 
-*Hint if stuck: The cheapest reviewer run is the one the coordinator never starts.*
+*Hint if stuck: Ask where the decision about which reviewers to run is being made today, if anywhere.*
 </details>
 
 ---
@@ -216,7 +216,7 @@ D) Make each subagent catch every exception internally and return a best-effort 
 
 **B)** The coordinator owns aggregation, which includes knowing what it is still waiting for; tracking expected results lets it retry or reassign and, failing that, state the gap honestly. Doubling every subagent doubles the cost to cover a rare failure and still says nothing when both copies fail. A smooth report hides the gap even more, and a forced best-effort answer from an unreadable source invites fabrication.
 
-*Hint if stuck: A missing result is still something the final report owes the reader.*
+*Hint if stuck: Ask which agent in the system is responsible for noticing that part of the work never came back.*
 </details>
 
 ---
@@ -240,19 +240,19 @@ D) Tell the refunds subagent in its prompt to wait until it has received a verif
 ---
 
 ## Question 14
-A competitive-intelligence coordinator needs three things: a list of a rival's product launches, a pricing analysis of those launches, and a market-share estimate that does not depend on either. Today it spawns all three subagents at once, and the pricing subagent guesses which launches to analyze. How should it orchestrate them?
+An engineering team wants Claude to implement a feature inside one module: a schema change, the service code that depends on it, and tests for that code. A proposal splits the work across five parallel subagents, one per file group, under a lead agent. Each step depends on decisions made in the step before it. How should the architect assess the proposal?
 
-A) Merge the launches and pricing work into one subagent and drop the market-share estimate to keep the plan simple
-B) Run all three subagents strictly one after the other, so each one can read whatever the previous subagent produced
-C) Keep spawning all three at once, but tell the pricing subagent to wait and poll for the finished launch list before it starts any analysis
-D) Run the launches and market-share subagents in parallel, then start the pricing subagent with the launch list in its prompt
+A) Approve it, since splitting work across more subagents always finishes faster and keeps every agent's context small and focused on its files
+B) Prefer a single agent, because the steps are tightly linked and parallel subagents would multiply token use for little real gain
+C) Approve it but put all five subagents on the smallest model, since token cost is the only real drawback of splitting the work this way
+D) Approve it, but let the subagents message each other directly while they work so each one can see the decisions the others are making
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Independent tasks can run in parallel, while a dependent task should start once its input exists, with that input passed explicitly by the coordinator. Running everything in series wastes the time the independent market-share task could save. Telling the pricing subagent to wait and poll leaves the dependency to the subagents instead of having the coordinator pass the list once it exists, and dropping a required deliverable is not orchestration.
+**B)** Anthropic reports that multi-agent systems use roughly 15 times the tokens of a chat, and that they pay off on breadth-first work with many independent directions. They fit poorly where agents need shared context or have many dependencies, which describes most coding tasks. Dependent steps serialize anyway, so more subagents do not make the run faster. A smaller model does nothing about the coordination problem, and peer-to-peer messaging adds coordination risk while bypassing the coordinator.
 
-*Hint if stuck: Map which task needs another task's output before deciding what runs together.*
+*Hint if stuck: Consider which kinds of work really benefit from many workers at once, and whether this task is one of them.*
 </details>
 
 ---
@@ -324,7 +324,7 @@ D) Pick only the subagents the question needs, here code search and possibly doc
 
 **D)** The coordinator should select subagents per request; a read-only explanation question needs search and maybe docs, not a full test run. Running the test suite in the background still wastes compute and clutters results. Asking the developer every time moves the coordinator's job onto the user, and a single all-tools agent gives up both the routing and the context isolation that subagents provide.
 
-*Hint if stuck: Match the agents you start to what the question actually requires.*
+*Hint if stuck: Consider what a question about reading code does and does not need in order to be answered.*
 </details>
 
 ---
@@ -396,7 +396,7 @@ D) After the first round, have the coordinator review findings for new questions
 
 **D)** Research is iterative: the coordinator should evaluate first-round findings, identify gaps or new questions that matter to the brief, and delegate a targeted second round before synthesis. Listing unanswered questions passes the work to the reader, and a bigger first round cannot target questions that only emerge from its own results. Having the writer answer from memory adds unsourced claims to a cited report.
 
-*Hint if stuck: Some of the right questions only appear once the early findings come back.*
+*Hint if stuck: Think about when it first becomes possible to know which follow-up questions matter.*
 </details>
 
 ---
@@ -404,7 +404,7 @@ D) After the first round, have the coordinator review findings for new questions
 ## Question 23
 A security-review coordinator audits a payments service by spawning three subagents: SQL injection in /api/orders, XSS in /web/templates, and hardcoded secrets in /config. Two weeks after release, an SSRF vulnerability is exploited in /api/webhooks — a directory no subagent was ever assigned. What was the architectural failure?
 
-A) The decomposition left coverage gaps; the coordinator should partition the full scope so every directory and vulnerability class has an owner
+A) Coverage gap: the full scope should be partitioned so every directory and flaw class has an owner
 B) The subagents ran on Haiku, which is too weak to detect SSRF; the scouts should run on Opus
 C) The SSRF-focused subagent failed silently; add retry logic so transient subagent failures are re-run
 D) Each subagent prompt should have ended with 'also flag anything else suspicious you happen to notice'
@@ -414,7 +414,7 @@ D) Each subagent prompt should have ended with 'also flag anything else suspicio
 
 **A)** Overly narrow decomposition is a known multi-agent pitfall: anything outside the assigned slices is simply never examined. The fix is to partition the entire scope — directories and vulnerability classes — so the union of subagent assignments covers everything. No SSRF agent existed to retry, and a vague 'anything else' suffix is a probabilistic patch that never guarantees /api/webhooks gets read.
 
-*Hint if stuck: Ask whether the union of the assigned slices actually equals the whole scope.*
+*Hint if stuck: Look at which parts of the system, and which kinds of flaw, anyone was ever asked to examine.*
 </details>
 
 ---
@@ -468,7 +468,7 @@ D) Add cache_control breakpoints to the six specialist system prompts to reuse t
 
 **C)** Running the full pipeline on every input is the anti-pattern here; dynamic subagent selection lets the coordinator triage and spawn only relevant specialists, which fixes both the 6x cost and the latency for the 70% single-specialist majority. Parallelizing all six helps latency but still pays for five useless invocations per ticket, and Haiku or caching shave cost without addressing the wasted work.
 
-*Hint if stuck: Question whether every spoke should run at all, not how fast or cheaply they run.*
+*Hint if stuck: Start from the 70% figure and ask how much work a typical ticket actually calls for.*
 </details>
 
 ---
@@ -504,7 +504,7 @@ D) A single subagent given the full contract, since splitting risks losing cross
 
 **B)** Good decomposition partitions the scope: every page is owned by exactly one agent, so there are no coverage gaps and no duplicated effort, and article boundaries keep semantic units intact. Keyword-scoped agents overlap heavily and leave risks phrased without those keywords with no owner. Per-page slicing is the too-narrow pitfall — clauses spanning pages get split so no agent sees a whole obligation — and a single agent over 200 pages forfeits delegation while straining one context.
 
-*Hint if stuck: Aim for slices that are collectively exhaustive and mutually exclusive without splitting semantic units.*
+*Hint if stuck: For each scheme, ask what could slip through unexamined and whether any agent sees a whole obligation.*
 </details>
 
 ---
@@ -522,7 +522,7 @@ D) Increase to 28 subagents covering component suppliers as well, giving the coo
 
 **B)** Overly narrow decomposition causes coverage gaps — single-manufacturer scopes cannot surface cross-cutting trends — and synthesis without claim-source mappings plus dates loses provenance, making contradictions unresolvable. The fix addresses both flaws: broader task scoping and provenance metadata flowing back to the coordinator. Direct subagent-to-subagent exchange fails because inter-subagent traffic routes through the coordinator, and deleting conflicting claims discards information that attribution and temporal metadata would resolve.
 
-*Hint if stuck: Two separate design flaws are present — one in how the work was sliced, one in what the subagents hand back.*
+*Hint if stuck: Trace each symptom back to the design decision that produced it before choosing a remedy.*
 </details>
 
 ---
@@ -630,7 +630,7 @@ D) Spawn one subagent that does all four analyses in sequence, so the risk summa
 
 **B)** Multiple Task calls in one response run in parallel, so the three independent reports should go out together; the dependent summary starts afterwards with their results passed explicitly. Launching the summary in parallel starts it before the other reports exist, and nothing passes their results into its prompt. Spawning one per turn serializes independent work, and a single all-in-one subagent gives up both parallelism and isolation.
 
-*Hint if stuck: Parallelize what is independent, and hand dependent work its inputs directly.*
+*Hint if stuck: Sketch which report needs which other report before deciding what starts when.*
 </details>
 
 ---
@@ -654,19 +654,19 @@ D) Store the conversation in a shared file and tell each subagent to read the fi
 ---
 
 ## Question 37
-A coordinator asks three analysis subagents for findings, and each returns a few paragraphs of free text. The coordinator then struggles to merge them, mixing up which statistics came from which source. Which change to the Task prompts is most effective?
+A research platform's dashboard counts how many subagents each coordinator run spawns by scanning the Agent SDK message stream for tool_use blocks named Task. After a routine SDK upgrade the dashboard shows zero spawns, yet the reports still cite subagent findings and the traces show delegation happening as before. What is the right fix?
 
-A) Ask each subagent to keep its answer under 200 words so the coordinator has less text to compare and merge
-B) Tell each subagent to read the other two subagents' outputs before writing, so they can align their findings
-C) Ask each subagent to write in the same tone and with the same paragraph structure as the other two subagents
-D) Require each subagent to return its findings as a list of claims, each with its source, date and a confidence note
+A) Add Task back to the coordinator's allowedTools, because the upgrade dropped it and the coordinator is now doing every step on its own
+B) Pin the SDK to the previous release, because the new version no longer reports subagent spawns anywhere in the message stream it emits
+C) Have each subagent start its final report with a SPAWNED marker, and count those markers in the coordinator's output instead of tool calls
+D) Match tool_use blocks named Agent as well as Task, since the spawning tool was renamed and older versions still emit the old name
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Specifying a structured return format in the Task prompt, with each claim tied to its source, makes the coordinator's merge mechanical and keeps attribution intact. A word limit shortens the text without fixing attribution, and a shared tone or structure still leaves sources buried in prose. The three run in parallel with isolated contexts, so there are no finished outputs to read, and aligning among themselves would bypass the coordinator.
+**D)** Claude Code v2.1.63 renamed the Task tool to Agent: tool_use blocks now carry the name Agent (the init message's tool list still says Task), and the docs recommend matching both names so detection works across versions. The stem shows delegation still happening, so nothing is missing from the coordinator's tools, and allowedTools only pre-approves calls anyway. Pinning an old release avoids the fix rather than making it, and a text marker depends on every subagent remembering to write it.
 
-*Hint if stuck: Ask for results in the shape the coordinator needs to combine them.*
+*Hint if stuck: The delegation is clearly still happening; ask what changed about how it is labelled in the stream.*
 </details>
 
 ---
@@ -774,7 +774,7 @@ D) Spawn a single subagent to do all three edits so the main agent's context sta
 
 **B)** Each subagent starts with fresh context and must rebuild understanding, so delegation only pays when isolation or parallelism outweighs that cost; a three-file rename is cheaper done directly. Parallel spawning still pays the exploration cost three times. Passing context into each subagent reduces waste but keeps an unnecessary split, and a single subagent adds overhead to protect context that a small edit barely uses.
 
-*Hint if stuck: Spawning has a cost; weigh it against what isolation buys for this task.*
+*Hint if stuck: Ask whether splitting this particular job earns back the ramp-up each helper has to do first.*
 </details>
 
 ---
@@ -900,25 +900,25 @@ D) Add 'work on all competitors at the same time' to the coordinator's system pr
 
 **A)** Parallel subagents are spawned by issuing multiple Task tool calls in one assistant response — each tool_use block launches a subagent that runs concurrently. CLAUDE_PARALLEL is not a real setting, and the Batch API trades latency for cost with results within 24 hours, so it cannot speed up a pipeline whose problem is wall-clock time. A prompt instruction is probabilistic best-effort; the actual mechanism is emitting the Task calls together in one turn, and only that guarantees concurrency.
 
-*Hint if stuck: Recall how a single assistant turn can contain more than one tool invocation.*
+*Hint if stuck: Separate real runtime mechanisms from settings or wording that only sound like one.*
 </details>
 
 ---
 
 ## Question 51
-A nightly CI job runs claude -p 'Audit every changed package for license violations' --allowedTools 'Read,Grep,Glob,Bash'. The prompt tells the coordinator to delegate each package to a subagent, but it never spawns any — it scans everything itself and exhausts its context window on large diffs. What is wrong?
+A nightly CI job runs claude -p 'Audit every changed package for license violations', and the job's configuration limits the session's tools to Read, Grep, Glob and Bash. The prompt tells Claude to delegate each package to a subagent, but it never spawns one; it scans everything itself and runs out of context on large diffs. What is wrong?
 
-A) Headless print mode cannot spawn subagents; the audit must run in an interactive session
-B) The Task tool is missing from allowedTools, so the coordinator has no way to spawn subagents; add Task to the list
-C) The prompt needs firmer wording such as 'you MUST delegate every package to a subagent'
-D) Subagent support in CI requires exporting CLAUDE_SUBAGENTS=true before invoking claude -p
+A) Headless print mode cannot spawn subagents, so the audit has to run in an interactive session instead
+B) The subagent-spawning tool (Task, now Agent) is missing from the session's tool list and has to be added
+C) The prompt needs firmer wording, such as 'you MUST delegate every package', to force the delegation
+D) Subagent support in CI requires exporting CLAUDE_SUBAGENTS=true in the environment before claude -p
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Spawning subagents happens through the Task tool, so Task must appear in allowedTools like any other tool; without it the coordinator can only do the work inline. Headless mode supports subagents fine, and CLAUDE_SUBAGENTS is not a real variable. Stronger prompt wording cannot grant a capability the tool allowlist has removed.
+**B)** Subagents are spawned through a tool (Task in the exam guide; renamed Agent in Claude Code v2.1.63, with Task kept as an alias), so a session whose tool set leaves it out has no way to delegate and does the work inline. In the guide's terms, allowedTools must include Task; in current Claude Code, where allowedTools only pre-approves, the restriction that removes it is a --tools list or a deny rule. Headless mode supports subagents, CLAUDE_SUBAGENTS is not a real variable, and firmer wording cannot grant a tool the session does not have.
 
-*Hint if stuck: Delegation itself happens through a tool, and tools must be permitted.*
+*Hint if stuck: Ask what mechanism actually performs delegation, then check whether this session can reach it.*
 </details>
 
 ---
@@ -934,9 +934,9 @@ D) Add .claude/commands/migration-checker.md so engineers can invoke it as a sla
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Custom subagents are defined as files in .claude/agents/ whose YAML frontmatter declares the description, the tool allowlist, and a per-agent model — exactly the three requirements here — and committing the file shares it repo-wide. CLAUDE.md is memory and cannot enforce tool or model restrictions. An MCP server exposes tools, not a delegable agent, and a slash command is a reusable prompt without its own restricted toolset and model.
+**C)** Custom subagents are defined as files in .claude/agents/ whose YAML frontmatter declares the description, a tools allowlist and a per-agent model, which covers all three requirements, and committing the file shares it across the repo. CLAUDE.md is guidance and cannot enforce tool or model limits. An MCP server exposes tools, not a delegable agent, and a slash command runs its prompt in the main session rather than as a separate subagent with its own context; its allowed-tools pre-approves tools instead of limiting them.
 
-*Hint if stuck: One specific directory holds delegable agent definitions with per-agent tools and model.*
+*Hint if stuck: Ask which kind of artifact can actually enforce tool and model limits, rather than just describe them.*
 </details>
 
 ---
@@ -996,24 +996,6 @@ D) The subagents were forked from too early a baseline; re-fork them after the s
 ---
 
 ## Question 56
-A research coordinator running on Opus is prompted to fan out work, and its response contains one text block plus three Task tool_use blocks targeting different subagents. The team's harness executes only the first Task call, discards the other two, and sends back a single tool_result; the coordinator then re-issues the missing tasks one at a time, tripling wall-clock time. What is the correct fix?
-
-A) Prompt the coordinator to emit exactly one Task call per turn, since mixing text with multiple tool calls in one response indicates a malformed turn
-B) Execute every tool_use block in the response — running the Tasks in parallel — and return one tool_result per tool_use_id in the next user message
-C) Set tool_choice to {"type":"tool","name":"Task"} permanently so each response is constrained to a single, well-formed Task invocation
-D) Have subagents poll a shared queue that the coordinator writes task specifications into, decoupling spawning from the tool_use protocol entirely
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** Parallel subagent fan-out is expressed as multiple Task tool_use blocks in a single response, and responses legitimately mix text with tool_use blocks; the harness must execute all of them and return a tool_result for each tool_use_id. Forcing one call per turn — by prompt or by permanently forcing tool_choice — serializes the very fan-out the coordinator was correctly attempting. The shared-queue design abandons the protocol and reintroduces implicit state instead of fixing the harness bug.
-
-*Hint if stuck: A single assistant response can legitimately request several tool executions at once.*
-</details>
-
----
-
-## Question 57
 A market-intelligence team runs a nightly CI job where a coordinator agent spawns six subagents through parallel Task calls to analyze competitor filings. The coordinator's conversation contains the target fiscal quarter and the exact ticker list, yet subagents repeatedly research the wrong quarter and unrelated companies. What is the correct fix?
 
 A) Move the quarter and ticker list into the project CLAUDE.md so subagents pick them up automatically each night
@@ -1024,32 +1006,32 @@ D) Raise the subagent iteration limit so they have time to rediscover the correc
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Subagent contexts are isolated — they inherit nothing from the coordinator's conversation, so every fact a subagent needs must be explicitly packed into its task prompt. CLAUDE.md is for stable team standards, not per-run parameters: routing nightly values through it would mean rewriting a version-controlled file on every run, and it still substitutes shared memory for explicit context passing. Subagents cannot interrogate the coordinator mid-task, since traffic routes through the coordinator only as task prompts and returned results, and extra iterations just burn tokens rediscovering facts the coordinator already had.
+**C)** Subagent contexts are isolated: a regular subagent inherits nothing from the coordinator's conversation, so every fact it needs must be packed into its task prompt. CLAUDE.md is for stable team standards, not per-run parameters; routing nightly values through it means rewriting a version-controlled file on every run. Having subagents ask the coordinator mid-task adds round trips for facts the coordinator could have passed up front, and extra iterations just burn tokens rediscovering them.
 
 *Hint if stuck: Consider what a freshly spawned subagent can and cannot see of its parent's conversation.*
 </details>
 
 ---
 
-## Question 58
-A monorepo platform team wants every engineer's Claude Code session to delegate dependency-graph exploration to a fast, cheap scout while the main session stays on Sonnet. Today each engineer ad-libs a prompt like use a cheaper model for this, with wildly inconsistent results. How should the team standardize this?
+## Question 57
+A developer-productivity app built on the Agent SDK defines a dependency-auditor subagent with a clear, specific description. Claude usually delegates license checks to it, but in a nightly compliance job the audit must always run inside that subagent, and logs show Claude sometimes does the check itself in the main agent. What is the most direct way to guarantee delegation for that job?
 
-A) Document the delegation prompt in an onboarding guide that each engineer pastes into their personal ~/.claude/CLAUDE.md
-B) Set a CLAUDE_SUBAGENT_MODEL environment variable in the team's shared settings.json file
-C) Add a project CLAUDE.md instruction telling Claude to mention Haiku whenever it spawns a Task for exploration
-D) Commit a custom subagent in .claude/agents/ whose YAML frontmatter sets its description, tools, and model: haiku
+A) Name the subagent in the job's prompt, for example by asking Claude to use the dependency-auditor agent for the license check
+B) Add a line to the dependency-auditor's own prompt field saying it must be used for license checks in every job that the app runs
+C) Add Agent(dependency-auditor) to allowedTools so that the main agent is required to route every license check through that subagent
+D) Set the subagent's model to opus so the main agent treats it as more capable and routes license checks to it more consistently
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Custom subagents live in .claude/agents/ with YAML frontmatter that pins description, tools, and model, and committing the file version-controls the behavior for the entire team. Personal CLAUDE.md copies drift and are not shared, CLAUDE_SUBAGENT_MODEL is not a real setting, and a CLAUDE.md nudge to mention Haiku remains probabilistic where a config field is deterministic.
+**A)** The SDK docs say that to guarantee Claude uses a specific subagent, you mention it by name in the prompt, which bypasses automatic matching. The subagent's prompt field is its own system prompt, which it only sees after it has been invoked, so it cannot influence routing. allowedTools pre-approves tool calls but compels nothing, and the model setting changes how the subagent runs, not whether Claude chooses it.
 
-*Hint if stuck: Look for the version-controlled artifact that pins a subagent's model deterministically.*
+*Hint if stuck: Automatic matching is a judgement call; think about what the caller can say to take that judgement out of the loop.*
 </details>
 
 ---
 
-## Question 59
+## Question 58
 A platform team's CI job sends all 22 changed files of a pull request to Claude in one review prompt. Reviewers notice that findings cluster on the first and last few files, files in the middle get one-line comments, and the same retry pattern is praised in one file and flagged in another. What change to the review design addresses this?
 
 A) Keep the single prompt but add an instruction to give every file equal attention and to apply the same standard to repeated patterns
@@ -1062,12 +1044,12 @@ D) Sort the files so the most security-sensitive ones appear first in the prompt
 
 **B)** Splitting into per-file local passes gives every file focused attention, and a dedicated integration pass catches the cross-file issues that per-file passes cannot see. Telling the model to pay equal attention is a prompt-only fix for a structural attention problem, and voting across runs of the same overloaded prompt just repeats the same blind spots.
 
-*Hint if stuck: When one pass has too much to look at, think about splitting local checks from cross-cutting ones.*
+*Hint if stuck: Uneven depth and inconsistent verdicts are two different failures; ask what structure gives each of them its own fix.*
 </details>
 
 ---
 
-## Question 60
+## Question 59
 A CI review pipeline already reviews each changed file in its own pass. On a recent PR it approved every file, yet the merge broke production: `formatAmount()` in currency.ts changed from returning a string to returning an object, and two callers in other files still concatenate it. Which change fixes the root cause?
 
 A) Give each per-file pass the full contents of every other changed file as extra context so it can notice broken callers on its own
@@ -1085,7 +1067,7 @@ D) Raise the severity threshold so that any change to a function's return type b
 
 ---
 
-## Question 61
+## Question 60
 A multi-agent research system receives the request: 'Assess how the new battery-recycling rules will affect our European supply chain.' The coordinator immediately splits it into five fixed subtopics and dispatches subagents, but two subtopics turn out to be irrelevant and a key upstream supplier issue is never examined. How should the coordinator decompose open-ended requests like this?
 
 A) Use a larger fixed template of ten subtopics so that the decomposition covers more of the possible ground on every request
@@ -1098,12 +1080,12 @@ D) First run a short scoping step to map the landscape and find the highest-impa
 
 **D)** Open-ended investigations need a plan that starts from mapping what matters and then adapts as findings come in. A bigger fixed template still only covers what someone predicted, pushing the decomposition back to the user ignores the system's job, and one subagent per vendor spends effort uniformly rather than on high-impact areas.
 
-*Hint if stuck: For work whose shape is unknown at the start, the first subtask is learning the shape.*
+*Hint if stuck: Two subtopics were wasted and a vital one was missed. When was the split decided, and what was known at that moment?*
 </details>
 
 ---
 
-## Question 62
+## Question 61
 An accounts-payable pipeline extracts data from supplier invoices. Every invoice goes through the same steps: identify the supplier, extract line items, compute totals, and check totals against the stated amount. The team currently uses an autonomous agent with tool access that sometimes skips the totals check. What design fits best?
 
 A) Replace it with a fixed prompt chain, one step per stage, with a programmatic gate that verifies the totals before output is accepted
@@ -1121,25 +1103,7 @@ D) Merge all four stages into one carefully engineered prompt so that the model 
 
 ---
 
-## Question 63
-A customer writes to the support agent: 'My last order arrived damaged, I was charged twice for it, and I need to change my delivery address for next week's order.' The current agent handles the damaged item thoroughly and then closes the conversation. What decomposition approach should the agent use for messages like this?
-
-A) Answer the concern the customer mentioned first, then ask whether they have any other issues before the agent closes the support ticket
-B) Split the message into its separate issues, investigate each one with the shared customer context, then send one combined resolution
-C) Route the message to whichever specialist queue matches the most urgent of the issues and let that queue handle the full ticket
-D) Reply asking the customer to open a separate ticket for each issue so that every request is tracked and resolved independently
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** A multi-concern request should be broken into distinct items that are each investigated, then synthesised into one unified response. Asking whether there is anything else relies on the customer to repeat themselves, routing on the most urgent issue drops the others, and making the customer open three tickets pushes the decomposition work onto them.
-
-*Hint if stuck: Count the problems in the message before you start solving any of them.*
-</details>
-
----
-
-## Question 64
+## Question 62
 A developer asks Claude to migrate a large repository from one HTTP client library to another. Nobody knows how many files use the old library or how many wrap it in custom helpers. A teammate drafts a fixed 12-step plan listing the folders to change in order. What approach should the developer use instead?
 
 A) Ask the agent to rewrite every file in the repository in one pass, since a single pass guarantees that no usage of the old library is missed
@@ -1157,7 +1121,7 @@ D) Split the repository into equal-sized chunks by directory and give each chunk
 
 ---
 
-## Question 65
+## Question 63
 An agent was asked to untangle a slow nightly data job. It mapped the job's stages, picked the three slowest, and wrote a plan. While working on the first stage it discovered that two of the 'slow' stages are only slow because they wait on a lock held by the third. It keeps executing its original plan step by step. What should the architect change?
 
 A) Write a more detailed plan up front that lists every possible dependency, so the agent never has to change course once execution starts
@@ -1175,7 +1139,7 @@ D) Have the agent revisit and re-prioritise its plan whenever a finding changes 
 
 ---
 
-## Question 66
+## Question 64
 A developer asks Claude Code to add per-tenant rate-limit settings to an unfamiliar codebase where the change will touch the admin UI, an API layer and a database migration. The developer wants the work to go smoothly the first time. Which way of breaking down the task is most effective?
 
 A) Have Claude first explore how existing settings flow from UI to storage, identify the affected modules, agree a plan, then implement and adjust it
@@ -1193,7 +1157,7 @@ D) Write three separate prompts, one per layer, and run them in parallel session
 
 ---
 
-## Question 67
+## Question 65
 A CI pipeline runs a fixed four-step review chain on every pull request: security, performance, API contracts, tests. Many PRs only change Markdown docs, and on those the security and performance steps produce irrelevant warnings that developers have started ignoring everywhere. What is the best fix?
 
 A) Tell each review step in its prompt to return no findings when it decides that the changes it was given do not affect its area at all
@@ -1206,12 +1170,12 @@ D) Keep running the full chain for all PRs but hide the security and performance
 
 **B)** Inputs fall into distinct categories that need different handling, so a routing step in front of the chain keeps each path focused while the full chain still runs on code changes. Asking each step to stay quiet relies on probabilistic judgement in every step, an autonomous agent throws away the predictability that suits code review, and hiding comments treats the symptom.
 
-*Hint if stuck: When different kinds of input need different paths, decide the path before doing the work.*
+*Hint if stuck: The noise only appears on one kind of pull request. Does every pull request need to go through the same steps?*
 </details>
 
 ---
 
-## Question 68
+## Question 66
 A loan-processing team extracts data from each application packet: a form, three pay stubs, a bank statement and an employer letter. Each document is extracted well on its own, but the system missed that the income on the form was 40% higher than the pay stubs showed. What should the architect add?
 
 A) A stricter JSON schema for each document type so that every income field must be filled in with a validated numeric value
@@ -1224,12 +1188,12 @@ D) A follow-up instruction in each document's extraction prompt to flag any figu
 
 **C)** This is the per-unit then integration pattern: per-document passes do local extraction well, and a separate cross-document pass is where consistency checks belong. A stricter schema validates each document alone and cannot see the conflict, merging everything into one prompt sacrifices the per-document accuracy that already works, and asking each extractor to judge 'unusually high' gives it no comparison point.
 
-*Hint if stuck: A per-document step cannot spot a disagreement between documents.*
+*Hint if stuck: Each document was read correctly. Which step, if any, ever looked at two of them side by side?*
 </details>
 
 ---
 
-## Question 69
+## Question 67
 A support resolution agent is handling a billing dispute where the customer says a refund never arrived. It planned to check the order, check the refund record, then reply. The refund record shows the refund was issued to an account the customer says they closed last year. What should the agent's decomposition strategy be at this point?
 
 A) Finish the original three steps and reply that the refund was issued, since that is the plan the agent started with
@@ -1247,7 +1211,7 @@ D) Treat the finding as new information and add steps to verify the account's st
 
 ---
 
-## Question 70
+## Question 68
 A CI job reviews very large pull requests by fanning out one subagent per changed file and then running an integration pass. The integration step is given the raw contents of all 60 files and keeps timing out with shallow results. What should the integration pass receive instead?
 
 A) The per-file findings plus a summary of each file's changed interfaces, exports and call sites, so it can reason about connections
@@ -1260,12 +1224,12 @@ D) The full contents of all 60 files split across six sequential integration cal
 
 **A)** The integration pass exists to reason about how files connect, so it needs condensed structured input about interfaces and findings rather than raw text. Picking the largest files is an arbitrary filter, withholding per-file findings makes it redo work, and splitting into ten-file batches reintroduces the very boundaries the integration pass is meant to cross.
 
-*Hint if stuck: Give the cross-file step what it needs to see connections, not everything.*
+*Hint if stuck: Raw text for 60 files is too much; ask what condensed information a cross-file check actually uses.*
 </details>
 
 ---
 
-## Question 71
+## Question 69
 A developer asks Claude to work out why the team's build time doubled over the past month. The repository has 300 packages and a custom build graph. Which first step gives the investigation the best chance of finding the cause efficiently?
 
 A) Ask Claude to read the build configuration of every package in alphabetical order and report anything unusual that it notices
@@ -1278,12 +1242,12 @@ D) Ask Claude to revert the last month of build-related commits one at a time un
 
 **B)** Open-ended diagnosis starts by mapping the system and finding where impact is concentrated, then planning from there. Reading every package spends equal effort everywhere, a checklist of common causes is a fixed plan built on guesses, and reverting commits one by one is slow and ignores what the data would show.
 
-*Hint if stuck: Find where the time is going before deciding where to look.*
+*Hint if stuck: Before guessing at causes, ask what data would point you to the right part of a 300-package build.*
 </details>
 
 ---
 
-## Question 72
+## Question 70
 A team uses Claude Code to generate 14 REST endpoints for an internal admin service. Every endpoint follows the same pattern: route, validation, handler, repository call, tests. The first attempt asked for all 14 at once and produced inconsistent validation. How should the work be decomposed?
 
 A) Have Claude explore the codebase from scratch before each endpoint, since each one may reveal something unexpected about the design
@@ -1301,7 +1265,7 @@ D) Have one autonomous agent decide its own order and approach for the endpoints
 
 ---
 
-## Question 73
+## Question 71
 A research pipeline writes market briefs in a fixed chain: outline, draft, edit. Briefs are sometimes missing a required regulatory section, and the gap only surfaces when a reviewer reads the finished brief. Where is the most effective place to catch this?
 
 A) Move the regulatory section to the top of the outline template so that the model is more likely to remember to include it
@@ -1319,7 +1283,7 @@ D) Add a programmatic check after the outline step that confirms every required 
 
 ---
 
-## Question 74
+## Question 72
 An engineering lead proposes replacing a three-step prompt chain that classifies, summarises and tags incoming bug reports with a multi-agent orchestrator plus five specialist subagents. The current chain is accurate on 97% of reports and the failures are mostly malformed inputs. What is the most sensible response?
 
 A) Keep the chain and fix the malformed-input cases directly, adding complexity only if evaluation shows a simpler design falling short
@@ -1337,7 +1301,7 @@ D) Collapse the chain into one prompt, since fewer steps is always simpler and s
 
 ---
 
-## Question 75
+## Question 73
 A document-processing service receives a mix of invoices, purchase orders and signed contracts in the same inbox. A single extraction prompt handles all three and its accuracy on contracts is poor because the instructions are dominated by invoice rules. What decomposition should the team use?
 
 A) Add more contract examples to the shared prompt so the model has a stronger sense of what contract fields look like
@@ -1355,7 +1319,7 @@ D) Process every document with all three extraction prompts and keep the output 
 
 ---
 
-## Question 76
+## Question 74
 A team uses a fixed prompt chain for routine support tasks such as address changes. A product manager wants to use the same fixed chain (look up order, check policy, apply change, confirm) for complaints about unexplained account charges, which often turn out to involve fraud, family-member purchases or bank errors. What should the architect advise?
 
 A) Use the fixed chain for both, since one consistent workflow for all support tickets makes the system easier to test and maintain
@@ -1373,7 +1337,7 @@ D) Send all charge complaints straight to human agents, since a model cannot han
 
 ---
 
-## Question 77
+## Question 75
 A team per-file reviews a 30-file PR with parallel subagents. The results contradict each other: one subagent flags a silent `catch {}` block as a bug, while another accepts the identical pattern in a sibling file. Developers do not know which verdict to trust. What is the most effective improvement?
 
 A) Merge all 30 files back into one review prompt so that a single reviewer applies one consistent standard to every file at the same time
@@ -1391,7 +1355,7 @@ D) Add an integration pass that reconciles findings across files, so the same pa
 
 ---
 
-## Question 78
+## Question 76
 A new staff engineer asks Claude to help document an undocumented internal platform of about 200 modules before a quarterly planning meeting in two weeks. They cannot document everything in time. How should the work be broken down?
 
 A) Map entry points and dependency structure first, find the modules most other code relies on, and plan to document those first
@@ -1409,7 +1373,7 @@ D) Ask each team that owns a module to list its most important functions and doc
 
 ---
 
-## Question 79
+## Question 77
 A research coordinator plans four subagent tasks to compare treatment costs for a medical device across three countries. The first subagent reports that the device was withdrawn from one of those markets last year. The other three tasks are already queued with their original instructions. What should the coordinator do?
 
 A) Let the queued tasks run unchanged and mention the withdrawal in a footnote of the final report so the original plan is honoured
@@ -1427,7 +1391,7 @@ D) Cancel the whole research job and ask the user to submit a new request that t
 
 ---
 
-## Question 80
+## Question 78
 A developer asks Claude Code to replace every `console.log` call with the team's structured `logger.info` across 400 files. The mapping is mechanical and identical everywhere, and tests exist for all files. A teammate suggests an investigate-first approach that explores the architecture and plans adaptively. What is the better choice?
 
 A) Agree with the teammate, since any task touching 400 files is complex enough to need an exploratory mapping phase first
@@ -1445,7 +1409,7 @@ D) Ask Claude to do all 400 files in one prompt, since the change is so simple t
 
 ---
 
-## Question 81
+## Question 79
 A content team runs a weekly report agent for 'top changes in our competitors' public pricing'. The report always has the same five sections and draws on the same eight public pages. The agent currently plans freely each week and sometimes skips a competitor entirely. What design would make the report reliable?
 
 A) Give the agent more autonomy and a larger turn budget so it has time to cover every competitor on its own each week
@@ -1463,7 +1427,7 @@ D) Use a fixed chain: one fetch-and-summarise step per page, then an assembly st
 
 ---
 
-## Question 82
+## Question 80
 An extraction service processes 80-page supplier contracts in one prompt that pulls 45 fields, normalises dates and currencies, and checks clause consistency. Fields from the last third of the contract are often missing or wrong. Which redesign best addresses this?
 
 A) Split the contract into sections, extract each section's fields in its own step, then run normalisation and a cross-section consistency step
@@ -1476,12 +1440,12 @@ D) Repeat the same single-prompt extraction twice and fill any missing fields in
 
 **A)** One prompt doing many jobs over a long document dilutes attention; splitting into focused section steps, then normalising and checking consistency across sections, gives each concern its own pass. More output tokens does not fix attention, an instruction to take extra care is a prompt-only fix, and merging two runs of the same overloaded prompt repeats its weakness.
 
-*Hint if stuck: When one step does too much over too much text, split by both scope and concern.*
+*Hint if stuck: The errors cluster in one region of a long input that a single overloaded step handles. What does that say about the step's size?*
 </details>
 
 ---
 
-## Question 83
+## Question 81
 A research system's coordinator dispatches two subagents in parallel: one to identify the five largest vendors of warehouse robots, and one to compare those five vendors' service contracts. The comparison subagent keeps choosing its own list of vendors, which rarely matches the first subagent's list. What is the right fix to the decomposition?
 
 A) Give the comparison subagent a longer prompt explaining that it must pick the same vendors as the other subagent
@@ -1499,7 +1463,25 @@ D) Merge both tasks into one subagent prompt and tell it to identify the vendors
 
 ---
 
-## Question 84
+## Question 82
+A research system drafts policy briefs that must meet a published checklist: every claim cited, no recommendation without a cost estimate, and a summary under 200 words. First drafts usually miss one or two items, and editors find that pointing out the specific misses produces a much better second draft. How should the architect structure the drafting step?
+
+A) Use one drafting call with the full checklist stated more emphatically in its prompt, and then publish whatever that call produces
+B) Split the brief into sections drafted in parallel by separate calls, then join the sections into a single document and publish it
+C) Run three drafting calls on the same prompt and publish the draft that most of them agree on, so that outlying drafts get discarded
+D) Loop a drafting call with a separate call that checks each draft against the checklist and returns feedback, until the draft passes
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** The evaluator-optimizer pattern has one call generate while another evaluates and gives feedback in a loop. It fits when there are clear evaluation criteria and when feedback demonstrably improves the output, both of which the stem states. A more emphatic single pass ignores the feedback signal. Parallel sections speed up drafting, but nothing checks the result against the criteria. Voting chooses among drafts that may all miss the same items, and agreement between prose drafts is hard to define.
+
+*Hint if stuck: The stem says targeted critique against known criteria improves results; pick the structure that puts that observation to work.*
+</details>
+
+---
+
+## Question 83
 A document pipeline handles leases, invoices and NDAs, each with its own extraction schema. Today one prompt contains all three schemas and asks the model to pick the right one and extract. About 6% of documents are extracted against the wrong schema, which corrupts downstream records. What design best fixes this?
 
 A) Run a separate classification step first, then have code choose the schema for that type and run extraction with only that schema
@@ -1512,7 +1494,25 @@ D) Lower the temperature to zero so that the model picks the same schema consist
 
 **A)** Breaking the task into a classification step and an extraction step, with code routing between them, makes each step simpler and lets the routing be deterministic. More examples and stating the type first still leave schema choice and extraction tangled in one call. Temperature zero makes the choice consistent, not correct.
 
-*Hint if stuck: Separate the decision from the work that depends on it.*
+*Hint if stuck: Ask whether choosing the schema and filling it in need to happen in the same model call.*
+</details>
+
+---
+
+## Question 84
+A telecom support agent answers customer messages and, in the same prompt, is told to screen each message for abuse and for attempts to obtain other customers' data. Reviews show that when it works hard on a tricky billing problem it often skips the screening, and when it screens carefully its answers get weaker. Which design addresses both problems?
+
+A) Move the screening rules to the top of the system prompt in bold, so the agent applies them before it starts working on the billing problem
+B) Screen only after the answer is written, by having the same call review both the customer's message and its own reply in one final pass
+C) Run a separate screening call on each incoming message in parallel with the call that drafts the answer, and act on both results in code
+D) Ask the agent to reason step by step and write its screening verdict in a tag before it answers, all inside the same single response
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** This is the sectioning form of parallelization: independent subtasks run as separate calls and code combines the results. Anthropic's guidance gives guardrails as the example, noting that one instance answering while another screens tends to perform better than one call handling both, because each consideration gets focused attention. Bold rules, a step-by-step tag or a self-review pass all keep both jobs in one call, which is exactly what is splitting its attention.
+
+*Hint if stuck: Ask whether the two jobs depend on each other, and whether one call really has to carry both.*
 </details>
 
 ---
@@ -1530,7 +1530,7 @@ D) Run the single prompt three times and keep only findings that appear in at le
 
 **C)** When the work is predictable and multi-aspect, a fixed prompt chain gives each aspect its own focused pass and consistent coverage. Dynamic, self-directed decomposition is for open-ended investigations where the next step depends on what was found; here the steps never change. Asking for equal effort does not fix dilution inside one prompt, and majority voting suppresses real findings that only appear intermittently.
 
-*Hint if stuck: Are the steps known in advance, or discovered along the way?*
+*Hint if stuck: Ask whether anything about this review is unknown before it starts.*
 </details>
 
 ---
@@ -1585,6 +1585,24 @@ D) Finding the root cause of an intermittent memory leak that spans several serv
 **D)** A root-cause hunt across services is open-ended, so each finding changes what to examine next, which is what adaptive decomposition is for. The other three are predictable, repeated transformations where a fixed chain is simpler and more reliable.
 
 *Hint if stuck: Which one could not be planned step by step in advance?*
+</details>
+
+---
+
+## Question 89
+A CI pipeline asks Claude to flag security vulnerabilities in every pull request before merge. A single review pass misses some issues, and the security lead says one missed vulnerability costs far more than a few extra false alarms. Each diff is small and one review is cheap and fast. Which workflow design best fits this goal?
+
+A) Run several separate review prompts on the same diff in parallel, and send the change to a human if any of them flags a vulnerability
+B) Chain the review into a second prompt that rewrites the first reviewer's findings into a cleaner and more confident report for the PR
+C) Run one review with a much longer checklist of vulnerability classes in its prompt, and ask it to be as thorough as it possibly can
+D) Let the reviewer plan its own investigation and adapt as it goes, deciding for itself how deeply each part of the diff needs checking
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** This is the voting form of parallelization: run the same task several times to get diverse outputs, then aggregate them, and Anthropic's own example is several prompts reviewing code for vulnerabilities. A low threshold (any flag escalates) matches the stated cost asymmetry. Rewriting one reviewer's output adds no new detection, a longer checklist still leaves a single pass with a single miss rate, and an adaptive plan suits open-ended investigations rather than a small, fixed check.
+
+*Hint if stuck: When a single attempt misses things and a miss is expensive, consider what you gain from asking more than once and how you would combine the answers.*
 </details>
 
 ---

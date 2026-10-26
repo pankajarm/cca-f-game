@@ -1,7 +1,7 @@
 # Practice Test 01: The Loop Chamber
 **D1: Agentic Architecture & Orchestration** (27% of the exam) · task statements 1.1
 
-29 questions. Exam pace is 2 minutes per question.
+26 questions. Exam pace is 2 minutes per question.
 
 ---
 
@@ -90,7 +90,7 @@ D) Remove the cap entirely, because the loop already terminates correctly on end
 
 **A)** An iteration cap is a safety backstop, not a completion signal: reaching it means the work did not finish, so the result must be reported as incomplete rather than dressed up as a final report. Removing the cap loses protection against runaway loops, and raising it only moves the same mislabelling further out. A forced wrap-up request still presents unfinished research as if it were complete.
 
-*Hint if stuck: A guardrail firing tells you something different from the model saying it is done.*
+*Hint if stuck: Ask what each way of stopping actually tells you about the state of the work.*
 </details>
 
 ---
@@ -144,7 +144,7 @@ D) Return the validation errors as the tool_result so Claude can see exactly whi
 
 **D)** Validation errors are exactly the information Claude needs to fix the draft, and returning them as a tool_result in the same conversation lets the next turn act on them. Restarting from scratch throws that feedback away, so repeated identical failures are expected; a higher temperature only makes the guesses more random. Repeating the schema adds nothing the model was missing, and accepting after three failures turns a fixable error into manual work.
 
-*Hint if stuck: Which piece of information would let the model correct its mistake on the next turn?*
+*Hint if stuck: Ask what each new attempt knows about why the previous one was rejected.*
 </details>
 
 ---
@@ -180,7 +180,7 @@ D) Ask Claude to request every tool call it will need in the first response, so 
 
 **B)** Each Messages API request is stateless, so the tools array must be sent again on every request of the loop, including those that return tool results; without it the history refers to tools the request does not define. Describing tools in prose does not give Claude callable tools, and starting a new conversation per call discards the history the loop depends on. Asking for every call up front defeats the point of letting each result shape the next step.
 
-*Hint if stuck: The API does not remember anything between requests, including what tools exist.*
+*Hint if stuck: Think about what the server has to work with when it validates a request whose history contains tool calls.*
 </details>
 
 ---
@@ -216,7 +216,7 @@ D) Return the empty result to Claude as a normal tool_result and let it decide w
 
 **D)** An empty result is information, and the model is best placed to decide whether to rephrase, widen the date range, or conclude that the gap is real. Hard-coded fallback templates rebuild a brittle decision tree outside the model, and asking for more results does not help when the query itself is wrong. Respawning with an identical prompt simply repeats the same search.
 
-*Hint if stuck: Who should react to a disappointing tool result: the code around the loop or the model inside it?*
+*Hint if stuck: Ask whether an empty search is a failure of the run or just one more fact to reason about.*
 </details>
 
 ---
@@ -224,7 +224,7 @@ D) Return the empty result to Claude as a normal tool_result and let it decide w
 ## Question 13
 A code-generation agent's loop receives a response with stop_reason tool_use and runs the requested tools, but then builds the next request from the old history plus a user message holding the tool_result blocks. It never appends the assistant turn that contained the tool_use blocks. What will happen, and what is the fix?
 
-A) Claude will see results with no matching call; append the assistant content first, then the user message with the results
+A) The request will be rejected for results with no matching call; append the assistant content, then the results
 B) Claude will work normally but use more tokens; trim the tool_result blocks so the history stays compact between loop turns
 C) Claude will repeat its last call; add a system-prompt rule telling it never to call the same tool twice in a row
 D) Claude will lose its tool definitions; resend the full tools array with a note naming the tool that was just called
@@ -252,48 +252,30 @@ D) Stop the loop and show the user an error, because a denied command means the 
 
 **B)** Every tool_use needs a matching tool_result, and an explicit 'blocked by policy' result keeps the history valid and lets Claude choose a safer approach. Editing the assistant message rewrites what the model actually said and hides the refusal from it. Running the command elsewhere defeats the policy, and ending the whole session over one blocked call throws away work the agent can still finish safely.
 
-*Hint if stuck: Every request for a tool deserves an answer, even when the answer is no.*
+*Hint if stuck: Think about what the history must look like for the next request to be valid, and what Claude should learn from it.*
 </details>
 
 ---
 
 ## Question 15
-A customer support resolution agent's loop decides it is finished by checking whether the assistant's text contains the phrase TASK COMPLETE. In production the agent sometimes exits while a refund lookup is still pending, because the model wrote 'Task complete for step one — now checking refund status' right before emitting a tool_use block. What is the correct fix?
+A research coordinator calls the Messages API with Anthropic's server-side web_search tool and no client tools. On broad questions, some responses come back with stop_reason pause_turn and a server_tool_use block that has no result yet. The loop treats anything other than tool_use as final, so these partial answers get published as finished reports. How should the loop handle this stop reason?
 
-A) Tighten the system prompt so the model writes TASK COMPLETE only as the final line of its genuinely last message
-B) Switch the completion check to look for an empty content array in the API response
-C) Terminate the loop only on stop_reason end_turn, and route stop_reason tool_use back into tool execution
-D) Add a regex that ignores TASK COMPLETE whenever it appears in the same response as a tool_use block
+A) Run the web search locally for the dangling server_tool_use block and return its output in a tool_result block that carries the matching id
+B) Send a new request with the paused assistant content appended as-is, so Claude can resume the server-side search and finish its turn
+C) Treat pause_turn the same as end_turn and publish the report, since Claude only pauses after it has gathered enough sources to answer
+D) Raise max_tokens and repeat the original request without the paused content, since the pause means the output budget was used up
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** stop_reason is the API's authoritative, machine-readable signal for whether the model is done; assistant prose is probabilistic and responses routinely mix narration with tool_use blocks. The regex patch still leaves termination dependent on phrasing the model is never guaranteed to produce, and the prompt-tightening fix is best-effort for the same reason, so both paper over the root cause instead of fixing it.
+**B)** pause_turn means a server-tool loop reached its iteration limit; the docs say to send the assistant content back unchanged so Claude can continue. The search runs on Anthropic's side, so the client has nothing to execute: a response that waits on a client tool always stops with tool_use, never pause_turn. Treating the pause as end_turn publishes unfinished work, and max_tokens is a separate stop reason; restarting without the paused content throws away the progress already made.
 
-*Hint if stuck: The API already provides a machine-readable signal for whether the model is done — do not infer completion from language.*
+*Hint if stuck: Ask who executes this tool, and what the API expects from you so that the turn it started can carry on.*
 </details>
 
 ---
 
 ## Question 16
-A fintech document-extraction service runs an agentic loop against the Claude API. After executing a lookup_exchange_rate tool, the developer appends a user message containing the tool_result and calls the API again — and the request fails with a 400 error saying the tool_result references an unknown tool_use id. What is wrong?
-
-A) The assistant message containing the tool_use block was never appended to history, so the tool_result has no preceding call to match
-B) The tool_result block must be wrapped in an assistant-role message rather than a user-role message, otherwise the API cannot perform the id matching
-C) The follow-up request must set tool_choice to any so the API can correlate the returned result with the originating call
-D) The tool_result content must be stringified JSON, because structured content blocks cannot be matched against a tool_use id
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** Every tool_result must reference a tool_use block in the immediately preceding assistant message, so the loop has to append the full assistant response (including its tool_use blocks) and then a user message carrying the tool_result before resending the complete history. The assistant-role distractor inverts the protocol — tool_results belong in user messages because tool output is input you provide — and tool_choice and content formatting have nothing to do with id matching.
-
-*Hint if stuck: A tool_result can only be matched against a tool_use block that actually exists in the history you send back.*
-</details>
-
----
-
-## Question 17
 A platform team's deployment agent decides whether to execute a tool with the check: if response.content[0].type == 'tool_use'. It worked in testing, but in production the agent frequently ends with half-finished commentary like 'Let me check the rollout status first' and never runs the tool. Why?
 
 A) tool_use blocks are only emitted when tool_choice is set to any, so the default auto setting suppresses them in production traffic and the check sees only text
@@ -311,7 +293,7 @@ D) The model is hitting max_tokens before reaching the tool_use block, so raisin
 
 ---
 
-## Question 18
+## Question 17
 A structured-extraction pipeline pulls clause data from 80-page legal contracts. The loop's logic is: if stop_reason is tool_use, run tools; otherwise treat the response as the final answer. QA reports that roughly 5% of outputs are valid-looking JSON that simply ends mid-field. What is the root cause?
 
 A) The model is hallucinating malformed JSON under load, so the pipeline needs a retry pass at temperature 0
@@ -324,12 +306,12 @@ D) The loop treats stop_reason max_tokens as completion; it must detect truncati
 
 **D)** stop_reason max_tokens means the response was cut off at the token ceiling, not finished, and any branch that lumps everything other than tool_use together with end_turn will silently accept truncated output. Retrying at temperature 0 regenerates the same truncated result because the cause is the token limit, not randomness, and schema gaps would produce wrong structure, not output that stops mid-field.
 
-*Hint if stuck: There are more stop_reason values than just tool_use and end_turn — one of them means the model was cut off.*
+*Hint if stuck: Consider every way a response can end, and which of them this branch quietly treats as finished.*
 </details>
 
 ---
 
-## Question 19
+## Question 18
 After a runaway agent burned $400 in API calls overnight, an e-commerce team's incident review proposes capping the order-management agent at 3 loop iterations as the primary termination mechanism. A week later, 30% of legitimate multi-step tasks (check inventory, apply discount, create shipment) fail half-finished. What should the architecture look like?
 
 A) Keep the cap at 3 but prompt the model to plan ahead so every task finishes within three tool calls
@@ -347,7 +329,7 @@ D) Replace the loop with a fixed three-step pipeline so the iteration count beco
 
 ---
 
-## Question 20
+## Question 19
 A market-research agent asks Claude to compare three competitors, and the response comes back with stop_reason tool_use containing three web_search tool_use blocks. The developer's loop executes only the first tool_use block, appends a single tool_result, and resends the history. The API rejects the request. Why?
 
 A) Every tool_use block in the response must be executed, and the next user message must carry a tool_result for each of them
@@ -365,43 +347,25 @@ D) The text block preceding the tool calls must be stripped from history before 
 
 ---
 
-## Question 21
+## Question 20
 A logistics agent calls a track_shipment tool. The developer's code executes the tool, writes the carrier response to a dashboard, and immediately calls the API again with the message history unchanged. The model calls track_shipment again with identical arguments, and again, indefinitely. What explains the behavior?
 
 A) The model is overfitting to the tool description, so it should be rewritten to say call at most once per shipment
 B) track_shipment is not idempotent, so the API keeps retrying the call automatically until its results converge
 C) The loop needs tool_choice set to none after the first call so the model stops requesting the same tool
-D) From the model's perspective the tool was never answered, because the history it receives still ends at its own unanswered call
+D) The result never entered the history, so each request looks like the first and the model asks again
 
 <details>
 <summary>Answer & explanation</summary>
 
 **D)** The model's only memory is the message array you send; using the result out-of-band while resending unchanged history means every request is identical to the first, so re-requesting the tool is the model's rational move. The fix is to append the assistant message with its tool_use block plus a user message carrying the tool_result, then resend the full history. Setting tool_choice none suppresses the symptom while the model still never sees the data it asked for, and the API never executes or retries tools on its own.
 
-*Hint if stuck: The model's entire memory of the conversation is the message array you send it.*
+*Hint if stuck: Picture the exact request the API receives on the second call and compare it with the first.*
 </details>
 
 ---
 
-## Question 22
-A telecom support agent has 12 tools. Transcripts show it alternating endlessly: get_customer, then search_invoices, then get_customer again with the same id, then search_invoices again. Inspecting the loop code, each API call sends only the system prompt, the original user question, and the single most recent assistant and tool_result exchange. What is the root cause?
-
-A) Earlier tool results are dropped from each request, so the model cannot see what it already learned and keeps re-fetching the same data
-B) get_customer and search_invoices have overlapping descriptions, so the model cannot decide between the two of them reliably
-C) The model needs an explicit scratchpad tool so it can persist its accumulated findings between loop iterations
-D) Twelve tools exceeds the reliable selection limit for one agent, so the model thrashes among similar-looking options
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** The agentic loop requires resending the full accumulated history on every iteration; truncating to the latest exchange erases everything the model previously learned, making a re-fetch the rational next step every time. Overlapping descriptions or tool count would cause wrong-tool selection, not this precise alternating re-retrieval of data the agent already had, and a scratchpad tool is a workaround for history the loop should simply be sending.
-
-*Hint if stuck: Compare what the agent has already learned with what each new API request actually contains.*
-</details>
-
----
-
-## Question 23
+## Question 21
 An SRE team built an incident-triage agent as a hard-coded decision tree: 60 branches mapping alert types to runbook steps. Every novel failure mode requires an engineering sprint to add branches, and last month the tree dead-ended on 40% of incidents. No individual triage step is mandatory or compliance-sensitive — engineers just need the right runbook surfaced. What should they move to?
 
 A) A hybrid design that hard-codes the first three diagnostic steps and lets the model choose only afterward
@@ -419,30 +383,30 @@ D) The existing tree plus a fallback branch that pages a human engineer for any 
 
 ---
 
-## Question 24
+## Question 22
 A CI pipeline agent streams Claude's responses into a build log. The loop's rule is: if the response contains any text block, post it as the final summary and exit; otherwise execute tools. Builds frequently end with summaries like 'Now I will run the test suite to confirm' while the test tool never executes. What is the flaw?
 
 A) Streaming splits text across multiple deltas, so the loop observes text before the tool blocks finish parsing
 B) The system prompt should instruct the model to never produce text in the same turn as a tool call
 C) max_tokens is truncating each response after the text block but before the tool_use block arrives
-D) Text and tool_use blocks legitimately coexist in one response; stop_reason, not the content, tells the loop what to do next
+D) Text and tool_use blocks can share a response, so the loop should branch on stop_reason, not on content
 
 <details>
 <summary>Answer & explanation</summary>
 
 **D)** A response with stop_reason tool_use routinely carries narrative text alongside its tool_use blocks, so the mere presence of text says nothing about completion — the rule fails even on a fully assembled, non-streamed response, which makes the delta-ordering theory a red herring. Branching on stop_reason is deterministic and correct, whereas prompting the model to suppress accompanying text fights normal, useful behavior and remains best-effort.
 
-*Hint if stuck: Ask which field of the response is the contract for the loop's next action — it is not the content array.*
+*Hint if stuck: Ask whether this failure would still happen with streaming switched off and the full response in hand.*
 </details>
 
 ---
 
-## Question 25
+## Question 23
 A travel-booking agent receives a response with four parallel tool_use blocks: two flight searches and two hotel searches. The calls run on an async worker pool and finish out of order. The developer sends each tool_result back as its own user message the moment it completes, and the API rejects the second request. What is the correct handling?
 
 A) Buffer the results and send four consecutive user messages arranged in the original tool_use order
 B) Re-run the workers sequentially so results arrive in exactly the order the model requested them
-C) Gather all four results into one user message, each tool_result matched by its tool_use_id; completion order is irrelevant
+C) Send all four results together in one user message, each matched to its call by tool_use_id
 D) Restrict the agent to one tool_use block per response using tool_choice so ordering never arises
 
 <details>
@@ -450,17 +414,17 @@ D) Restrict the agent to one tool_use block per response using tool_choice so or
 
 **C)** All tool_results answering a parallel batch belong in the single next user message, where each is paired with its call by tool_use_id rather than by position or arrival time. Splitting results across multiple user messages leaves unanswered tool_use blocks at each intermediate step, which the API rejects regardless of ordering, and forcing sequential execution throws away the latency benefit of parallel calls.
 
-*Hint if stuck: Think about how the API pairs a result with its originating call — it is not by arrival order.*
+*Hint if stuck: Consider what the API expects to see right after an assistant turn that made several calls at once.*
 </details>
 
 ---
 
-## Question 26
+## Question 24
 A developer-productivity Slack bot built on the Claude API answers questions like 'who owns the payments service?'. The loop calls Claude, sees stop_reason tool_use, executes the ownership-lookup tool, appends the assistant message and tool_result correctly — and then posts the raw tool_result JSON to Slack as the answer. Users complain the output is unreadable. What step is missing?
 
 A) A post-processing step in code that reformats the lookup JSON into readable prose before it gets posted
 B) A second formatting call to a separate Claude session that rewrites the JSON into a friendly answer
-C) Calling the API again with the full updated history so the model turns the tool_result into its answer, looping until stop_reason end_turn
+C) Calling the API again with the updated history so the model can turn the tool result into its answer
 D) Changing the tool itself to return prose instead of JSON so no later formatting step is ever needed
 
 <details>
@@ -473,7 +437,7 @@ D) Changing the tool itself to return prose instead of JSON so no later formatti
 
 ---
 
-## Question 27
+## Question 25
 An internal code-generation agent for a monorepo executes a read_file tool and appends the result to history as a new assistant-role message containing the tool_result block. The next API call fails with a 400 validation error about tool_result placement. Where does the tool_result belong?
 
 A) Inside the same assistant message that contained the tool_use block, placed directly after it
@@ -491,12 +455,12 @@ D) In a dedicated top-level tool_results request parameter, kept separate from t
 
 ---
 
-## Question 28
+## Question 26
 A customer support resolution agent built on the Claude API runs an agentic loop. The implementation scans each assistant response for the phrase "Ticket resolved" to decide when to stop, and caps the loop at 4 iterations as its primary completion control. Tickets sometimes close while the agent still had a pending tool call, and complex tickets get cut off mid-investigation. Which change fixes the loop?
 
 A) Raise the iteration cap to 12 and require the agent to print TICKET RESOLVED in capital letters on its own line before the loop is allowed to exit
 B) Set tool_choice to "any" on every request so the agent always calls a tool and the loop can never end prematurely on a text-only response
-C) Drive the loop off stop_reason — continue on "tool_use" by executing tools and resending history, finish on "end_turn" — keeping the cap as a safety fallback
+C) Drive the loop off stop_reason: run tools and resend history on tool_use, finish on end_turn, keep the cap as a backstop
 D) Treat any response containing a text block as the final answer and end the loop there, on the assumption that tool-calling turns contain only tool_use blocks
 
 <details>
@@ -505,24 +469,6 @@ D) Treat any response containing a text block as the final answer and end the lo
 **C)** The loop's control signal is stop_reason, not assistant prose: "tool_use" means execute and continue, "end_turn" means done, and iteration caps are safety fallbacks rather than primary controls. Parsing text for a completion phrase is unreliable, and ending on any text block fails because responses can legitimately contain text and tool_use blocks together. Forcing tool_choice "any" prevents the loop from ever ending naturally, and raising the cap just patches the same broken signal.
 
 *Hint if stuck: The API already gives you a machine-readable completion signal — do not infer completion from prose.*
-</details>
-
----
-
-## Question 29
-An e-commerce team built a custom agent loop that calls the Claude API to triage failing checkout tests in their deploy pipeline. The script scans the assistant's text for the word COMPLETE to decide when to exit. Sometimes the loop terminates while Claude is mid-investigation; other times it hangs after Claude has clearly finished. What is the correct loop control?
-
-A) Tighten the prompt so Claude always prints COMPLETE alone on the final line of its last message
-B) Branch on stop_reason: execute tools on tool_use, finish on end_turn, continue generation on max_tokens
-C) Cap the loop at ten iterations and treat reaching the cap as the signal that triage is complete
-D) Treat any response that contains a text block as the final answer, since tool calls always arrive without accompanying prose
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** The agentic loop is driven by stop_reason, never by parsing prose: tool_use means execute the tool and resend the full history, end_turn means done, and max_tokens means truncated output needing continuation. Prose markers are unreliable, iteration caps are safety fallbacks rather than primary control, and treating any text block as final fails because a single response can contain text and tool_use blocks together.
-
-*Hint if stuck: The API already tells you, in a dedicated field, why generation stopped.*
 </details>
 
 ---

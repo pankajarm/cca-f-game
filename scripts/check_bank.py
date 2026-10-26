@@ -26,6 +26,13 @@ def load_bank():
     return bankio.load()
 
 
+def guide_scenario_domains():
+    """scenario id -> the domains it covers, from guide.js"""
+    src = (ROOT / 'guide.js').read_text()
+    return {int(i): set(d.replace("'", '').replace(' ', '').split(','))
+            for i, d in re.findall(r"\{ id: (\d), name: '[^']*', domains: \[([^\]]*)\]", src)}
+
+
 def guide_ts_ids():
     return set(re.findall(r"\{ id: '(\d\.\d)'", (ROOT / 'guide.js').read_text()))
 
@@ -53,6 +60,7 @@ def near_dupes(items, others=()):
 
 def main():
     bank, valid_ts, errors = load_bank(), guide_ts_ids(), []
+    scen = guide_scenario_domains()
     ids = collections.Counter()
     per_ts, per_dom = collections.Counter(), collections.Counter()
     pos, longest, allq = collections.Counter(), 0, []
@@ -66,6 +74,8 @@ def main():
             if not (isinstance(q.get('correct'), int) and 0 <= q['correct'] < 4): errors.append(f'{where}: bad correct'); continue
             if q.get('ts') not in valid_ts: errors.append(f'{where}: bad ts {q.get("ts")}')
             if q.get('scenario') not in range(0, 7): errors.append(f'{where}: bad scenario {q.get("scenario")}')
+            if q.get('scenario') and 'D' + str(q.get('ts', '0'))[0] not in scen.get(q['scenario'], ()):
+                errors.append(f'{where} {q["id"]}: scenario {q["scenario"]} does not cover its domain (use a covering scenario or 0)')
             if q.get('oos'): errors.append(f'{where}: out-of-scope questions are not kept in the bank')
             if POSITION_RX.search(q.get('explanation', '') + ' ' + q.get('hint', '')):
                 errors.append(f'{where} {q["id"]}: explanation refers to an option by position (options are shuffled)')

@@ -1,11 +1,29 @@
 # Practice Test 07: Prompt Workshop
 **D4: Prompt Engineering & Structured Output** (20% of the exam) · task statements 4.1, 4.2, 4.3
 
-74 questions. Exam pace is 2 minutes per question.
+76 questions. Exam pace is 2 minutes per question.
 
 ---
 
 ## Question 1
+A CI review bot reports security issues, logic bugs and style comments. Its security findings are accurate, but most PRs also get a dozen style comments that repeat what the linter already enforces. Developers now resolve all bot comments without reading them, and last week a real injection flaw was dismissed with the rest. What should the team change first?
+
+A) Add severity labels so security findings stand out, while keeping every style comment in each review
+B) Tell the reviewer to skip anything the linter already enforces, so the comments left carry real weight
+C) Require developers to reply to each bot comment before merging, so nothing is resolved without reading
+D) Ask the reviewer to be more conservative overall, so it reports fewer findings in every category
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** A noisy category teaches developers to ignore the bot as a whole, so the accurate security findings lose their value too; the fix is an explicit criterion that removes the noise, and the Code Review docs suggest listing what CI already enforces among the things not to report. Severity labels help ranking but leave the flood in place, forced replies add friction without removing the cause, and a vague request to be conservative cuts across every category, including security, without saying what to skip.
+
+*Hint if stuck: Consider why developers stopped reading the accurate findings at all.*
+</details>
+
+---
+
+## Question 2
 A CI security reviewer flags every SQL string built with concatenation, including queries assembled only from hard-coded constants and those in test fixtures. Developers now dismiss its SQL findings without reading them. Which prompt change most improves precision?
 
 A) State that it reports concatenation only when user data reaches an unparameterized query, and skips constants and test fixtures
@@ -23,7 +41,7 @@ D) Lower the SQL category's severity to informational so the findings stop block
 
 ---
 
-## Question 2
+## Question 3
 A team's CI reviewer keeps commenting that private helper functions lack docstrings. The team's convention only requires docstrings on exported, public API functions, and nobody has told the reviewer that. What is the most effective fix?
 
 A) Ask the reviewer to group all of its documentation findings into one summary comment at the end of each review instead of inline
@@ -41,7 +59,7 @@ D) Remove documentation from the reviewer's scope entirely so it never comments 
 
 ---
 
-## Question 3
+## Question 4
 A research system's evaluator subagent rates each source as "strong", "moderate" or "weak" evidence. Analysts find the same kind of source (a vendor white paper) rated strong in one report and weak in another. The prompt only lists the three labels. What change makes the ratings consistent?
 
 A) Ask the evaluator to explain its reasoning in detail before each rating so that analysts can override any ratings they disagree with
@@ -59,7 +77,7 @@ D) Run the evaluator twice on every source and keep the lower of the two ratings
 
 ---
 
-## Question 4
+## Question 5
 An invoice extraction pipeline also flags "anomalies" for the finance team. It now flags about 40 percent of invoices, mostly for rounding differences of a cent or two and for vendors that use a different date format. The finance team cares about duplicate invoice numbers, totals that differ from line items by more than 1 percent, and bank-detail changes. What is the best fix?
 
 A) Tell the model to flag only anomalies it considers financially significant and to ignore anything trivial
@@ -77,7 +95,7 @@ D) List the three anomaly types to report with thresholds, and state that roundi
 
 ---
 
-## Question 5
+## Question 6
 A QA agent audits support transcripts and flags "tone problems" in the resolution agent's replies. It flags almost every transcript that contains an apology or a refusal, and team leads have stopped opening its reports. What change most improves the audit's precision?
 
 A) Define tone problems concretely, such as blaming the customer, with examples of acceptable apologies and refusals
@@ -90,12 +108,12 @@ D) Limit the audit to transcripts where the customer later left a negative satis
 
 **A)** A concrete definition with examples of what does and does not count gives the agent a decision rule, so ordinary apologies and refusals stop being flagged. "Be more forgiving" is still vague, a numeric score with a threshold relies on an undefined scale, and filtering by satisfaction ratings misses tone problems with customers who never rated.
 
-*Hint if stuck: Show the reviewer where the line between acceptable and unacceptable sits.*
+*Hint if stuck: Ask whether the QA agent has ever been told what a tone problem actually is.*
 </details>
 
 ---
 
-## Question 6
+## Question 7
 To cut noise, a team asked its CI reviewer to attach a confidence score from 0 to 1 to each finding and now posts only findings above 0.8. Most posted findings still turn out to be false positives, because the model gives high scores to style complaints. What is the root-cause fix?
 
 A) Raise the cutoff to 0.95 so that only the findings the model is most certain about reach developers
@@ -108,12 +126,12 @@ D) Average the confidence over three independent runs to smooth out scores that 
 
 **B)** The false positives come from the model not knowing what counts as a reportable issue, and self-rated confidence does not supply that definition; explicit report and skip criteria do. A higher cutoff or averaged scores still rank the wrong things, and justifications make inflation visible without preventing it.
 
-*Hint if stuck: A model can be confidently wrong about what you consider an issue.*
+*Hint if stuck: Ask whether a score tells the model anything about what this team wants to hear about.*
 </details>
 
 ---
 
-## Question 7
+## Question 8
 A fact-check subagent in a research system marks a claim "unsupported" whenever the source words it differently, even when the figures and the meaning match. Synthesis is dropping many correctly sourced claims. What is the best change to the fact-checker's prompt?
 
 A) Tell the fact-checker to give claims the benefit of the doubt and to mark them supported unless the source clearly contradicts them
@@ -126,12 +144,12 @@ D) Ask the fact-checker to require an exact quote match before it marks any clai
 
 **C)** An explicit definition of support, with what counts (paraphrase with matching figures) and what does not (different year, scope or figure), fixes the false "unsupported" labels without letting real mismatches through. Benefit of the doubt swings to false negatives, exact-quote matching is the current problem made stricter, and removing the label just moves the undefined judgment elsewhere.
 
-*Hint if stuck: Spell out what does and does not count as support.*
+*Hint if stuck: Ask what rule the fact-checker is applying today, and what rule the synthesis step actually needs.*
 </details>
 
 ---
 
-## Question 8
+## Question 9
 An engineer asks a productivity agent to list dead code in a large Java service. The report includes handlers registered through a plugin registry, methods invoked by reflection from a config file, and public API methods that external clients call. What prompt change most improves the report's precision?
 
 A) Ask the agent to report only code it is highly certain is unused, and to leave out anything doubtful
@@ -149,7 +167,7 @@ D) State that code reached through the plugin registry, reflection config or pub
 
 ---
 
-## Question 9
+## Question 10
 A platform team has rewritten its PR reviewer's prompt with explicit report and skip criteria. A manager wants to know whether precision actually improved before rolling it out to 30 repositories. What is the best way to find out?
 
 A) Run old and new prompts on past PRs whose findings were labeled real or false, and compare precision per category
@@ -167,7 +185,7 @@ D) Ask a few senior engineers to read a handful of new reviews and say whether t
 
 ---
 
-## Question 10
+## Question 11
 A contract-review pipeline flags agreements that "contain an auto-renewal clause." It flags many contracts that only offer an optional renewal the customer must request, and legal reviewers are wasting hours on them. What change most improves precision?
 
 A) Ask the model to quote the exact clause it relied on for each flag so that legal reviewers can reject the false positives more quickly
@@ -180,12 +198,12 @@ D) Add a keyword check that only passes contracts to the model when the word aut
 
 **B)** A precise definition with an explicit exclusion separates true auto-renewal from optional renewal, which is exactly the confusion causing the false positives. Quoting the clause speeds up rejecting false positives without preventing them, "clearly and unambiguously" adds no definition, and a keyword gate misses auto-renewal clauses written without that word.
 
-*Hint if stuck: Define the thing you want found, including the look-alike you don't.*
+*Hint if stuck: Ask what the model currently cannot tell apart, and which change gives it a way to.*
 </details>
 
 ---
 
-## Question 11
+## Question 12
 A team adds a /precommit-review custom command in Claude Code so developers get a quick check before committing. The command's prompt says "flag anything that should block this commit," and it blocks on missing comments, long functions and TODOs. The team wants it to block only on real problems. What should they change?
 
 A) Change the wording to "flag only serious problems" so that minor issues like comments and TODOs fall through
@@ -203,7 +221,7 @@ D) Run the command only on files larger than a set size so the small changes are
 
 ---
 
-## Question 12
+## Question 13
 A CI reviewer's "possible performance regression" category is 75 percent false positives, but it caught one serious N+1 query bug last quarter, so a product manager objects to turning it off. What approach best balances precision and that occasional catch?
 
 A) Keep posting the category but add a disclaimer to every performance comment saying it may be a false positive
@@ -221,7 +239,7 @@ D) Stop posting the category to PRs, log its findings privately, and rewrite its
 
 ---
 
-## Question 13
+## Question 14
 A support agent decides refund eligibility and was told to "be strict about refunds to prevent abuse." Customers with valid, in-policy returns are now being refused and escalating. The policy is clear: unused items within 30 days, or any item that arrived damaged. What is the best fix?
 
 A) Replace the strictness instruction with the actual eligibility rules, plus examples of approved and refused cases
@@ -239,7 +257,7 @@ D) Change the instruction to "be fair but careful with refunds" so the agent str
 
 ---
 
-## Question 14
+## Question 15
 An intake pipeline routes "incomplete applications" to manual review. It sends about a third of all applications, mostly because optional fields such as a fax number or middle name are blank or because answers use common abbreviations, even when every required field is present and clear. Manual reviewers are overwhelmed. Which change best fixes the routing?
 
 A) Tell the model to be more tolerant of imperfect applications and to route only the worst cases to reviewers
@@ -257,7 +275,7 @@ D) Ask the model to score completeness from 1 to 10 and route only the applicati
 
 ---
 
-## Question 15
+## Question 16
 A research system's source-screening agent flags sources for "possible bias." It flags nearly every industry report and most news articles, and analysts have stopped reading the flags. The analysts actually want to know about undisclosed funding from the company being studied and about authors with a stake in the outcome. What should change?
 
 A) Tell the agent to flag bias only when it is strongly suspected rather than for every possible concern
@@ -275,7 +293,7 @@ D) Exclude industry reports and news articles from screening, since those are th
 
 ---
 
-## Question 16
+## Question 17
 A monorepo's CI reviewer comments on performance in one-off maintenance scripts under /scripts, which run once a quarter. The team only cares about performance in request-handling code under /services. What change best removes these comments?
 
 A) Tell the reviewer to focus on the most important performance issues in each PR and not to waste comments on the minor ones
@@ -293,7 +311,7 @@ D) Scope the performance criteria to request-handling code under /services, and 
 
 ---
 
-## Question 17
+## Question 18
 A CI reviewer labels findings "critical", "major" or "minor", and the team wants to post only critical findings inline and put the rest in a summary. In practice the model labels most findings critical, so the summary is nearly empty. What is the best fix?
 
 A) Define each level with concrete examples, such as critical for data loss or auth bypass and minor for readability
@@ -311,7 +329,7 @@ D) Tell the model to use the critical label sparingly and only when it is truly 
 
 ---
 
-## Question 18
+## Question 19
 An evaluation on 300 labeled findings shows that adding "be conservative and only report real problems" to a review prompt cut true positives and false positives by about the same proportion. Precision barely moved, and recall dropped. What does this suggest the team should do next?
 
 A) Strengthen the conservative wording further, since it is already reducing the number of false positives
@@ -329,7 +347,7 @@ D) Keep the wording and add a confidence threshold on top, so that only the stro
 
 ---
 
-## Question 19
+## Question 20
 A developer productivity agent audits dependencies and flags every package that is not on its latest version as a "risk." Its weekly report lists 600 packages, and engineers ignore it. The security team wants only packages with a known CVE or on an end-of-life major version. What change fixes the report?
 
 A) Tell the agent to flag only the most outdated packages and to ignore packages that are a little behind
@@ -347,7 +365,7 @@ D) Run the audit monthly instead of weekly so the report is reviewed less often 
 
 ---
 
-## Question 20
+## Question 21
 A CI reviewer comments heavily on generated files, including database migration snapshots, lockfiles and protobuf stubs, which developers never edit by hand. Every comment on these is dismissed. What is the most precise fix?
 
 A) Tell the reviewer to skip files that look automatically generated or that seem unimportant to the change
@@ -365,7 +383,7 @@ D) List the generated paths explicitly, such as lockfiles, migration snapshots a
 
 ---
 
-## Question 21
+## Question 22
 Your CI pipeline runs claude -p to review every PR in a 40-developer monorepo. The review prompt includes the line 'be careful not to flag things that are not real problems,' yet PRs still average 12 comments each, mostly style nitpicks the linter already enforces. What is the most effective prompt change?
 
 A) Lower the sampling temperature so the model generates fewer speculative findings and sticks to obvious problems
@@ -378,12 +396,12 @@ D) Add a hard cap of five comments per PR so the volume of nitpicks stays manage
 
 **C)** Vague cautions like 'be careful' give the model no operational definition of a real problem, so they fail at scale; explicit flag and skip criteria provide a checkable decision rule. Confidence-based phrasing is the same vagueness restated, temperature changes randomness rather than the decision rule, and a comment cap hides noise without improving precision.
 
-*Hint if stuck: The fix is to make the decision rule operational, not to restate the caution more forcefully.*
+*Hint if stuck: Ask what the model would need in order to tell a nitpick from a defect on its own.*
 </details>
 
 ---
 
-## Question 22
+## Question 23
 An automated security reviewer posts findings on PRs across your platform team's repositories. Its 'potential race condition' category has run at roughly 80 percent false positives for three weeks, and engineers have started dismissing every finding unread, including valid secret-exposure alerts from other categories. What should you do first?
 
 A) Attach a model-reported confidence score to each finding so engineers can sort the findings and triage the noisy race-condition category by themselves
@@ -401,7 +419,7 @@ D) Send the team a reliability ranking of the finding categories so they know wh
 
 ---
 
-## Question 23
+## Question 24
 A CI step asks Claude to 'check that code comments are accurate'. It flags dozens of comments per PR for minor wording, and developers have started ignoring it. Which prompt change most improves precision?
 
 A) Add 'only report high-confidence findings'
@@ -412,14 +430,14 @@ D) Flag a comment only when the behaviour it describes contradicts what the code
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Explicit categorical criteria define what counts as an issue. General instructions like 'be conservative' or 'high confidence only' don't reliably improve precision, and self-rated confidence is poorly calibrated.
+**D)** Defining the defect (a comment whose described behaviour contradicts the code) tells the model exactly what to report, so wording nitpicks drop out. 'High-confidence only' and 'be conservative' are vague cautions that leave the model's notion of an issue unchanged, and a self-rated 1-10 score ranks the same wrong findings because the model has no criterion to score against.
 
 *Hint if stuck: Define what counts as wrong, rather than how careful to be.*
 </details>
 
 ---
 
-## Question 24
+## Question 25
 An automated reviewer labels the same unchecked null dereference 'critical' on one PR and 'minor' on another, and teams can't trust its severity labels for routing. What is the most effective fix?
 
 A) Run the review three times and use the most common severity
@@ -437,7 +455,7 @@ D) Drop severity labels entirely and post every finding at the same level so rat
 
 ---
 
-## Question 25
+## Question 26
 A procurement team extracts supplier, invoice date and line items from invoices. All three examples in the prompt come from the company's largest supplier, whose invoices use a clean two-column header. On invoices from smaller suppliers with tabular headers or stamped dates, the model often returns empty fields or fills in values that appear nowhere on the page. What change addresses the cause?
 
 A) Add a sentence telling the model that invoices from smaller suppliers can look different and it should search the whole page carefully before giving up and treat a missing field as a last resort only
@@ -450,12 +468,12 @@ D) Lower the temperature to zero for this pipeline so the model stops improvisin
 
 **B)** The examples all share one layout, so the model learned that layout rather than the task; showing varied layouts with correct extractions teaches it where fields can hide and reduces both empty and invented extractions. A generic warning to search carefully is a vague instruction that does not show what the other layouts look like, another example from the same supplier deepens the bias, and temperature affects randomness, not the missing knowledge of other layouts.
 
-*Hint if stuck: Ask what the model could have learned about document structure from the examples it was given.*
+*Hint if stuck: Ask what the model never got to see before it met the smaller suppliers' invoices.*
 </details>
 
 ---
 
-## Question 26
+## Question 27
 A clinical-trials team extracts adverse_event_grade from case reports into a nullable field. Every example in the prompt shows a report where the grade is stated, and in production the model returns a plausible grade such as 2 for reports that never mention one. The schema already allows null. Which prompt change most directly reduces these invented values?
 
 A) Add an instruction in capital letters stating that the model must never guess a grade, and that inventing values will cause regulatory problems for the sponsor
@@ -473,7 +491,7 @@ D) Remove the examples entirely so the model is not anchored to graded reports, 
 
 ---
 
-## Question 27
+## Question 28
 A telecom's support agent drafts the final reply after resolving a billing issue. The style guide says replies should acknowledge the issue, state what was done, and give the next step, in under 120 words. The guide is pasted into the system prompt, yet replies vary widely in structure and some run to 300 words. What is the most effective improvement?
 
 A) Ask the model to rate its own draft against the style guide and rewrite it whenever the self-assigned score falls below eight before the reply goes out
@@ -491,7 +509,7 @@ D) Add three short example replies for different issue types, each following the
 
 ---
 
-## Question 28
+## Question 29
 An airline's support agent decides whether to escalate to a human. Clear cases are handled well, but borderline ones, like a furious customer whose problem is a simple seat change, or a calm customer describing a possible safety issue, flip between outcomes on reruns. The prompt already has two examples, both of obvious escalations. What should the architect change?
 
 A) Replace the two obvious examples with borderline cases like these, each showing the decision and a sentence on why it beats the other choice
@@ -509,7 +527,7 @@ D) Instruct the model to escalate whenever it is uncertain, since an unnecessary
 
 ---
 
-## Question 29
+## Question 30
 In a multi-agent research system, the synthesis agent writes findings that a downstream script parses to build a bibliography. Some runs cite sources as numbered brackets, others as author-year, and some put the URL inline, which breaks the parser. The prompt describes the citation format in one sentence. What is the most reliable fix at the prompt level?
 
 A) Add a second sentence to the citation description that lists every format the model should avoid, including author-year and inline URLs
@@ -527,7 +545,7 @@ D) Ask the subagents to return their sources in the same citation style, since t
 
 ---
 
-## Question 30
+## Question 31
 A research subagent labels each source as primary, secondary or unreliable before synthesis. Reviewers find it is inconsistent on preprints, company white papers and conference abstracts, while the written definitions of each label are already detailed and agreed by the team. What is the most effective next step?
 
 A) Rewrite the three label definitions at greater length, adding sub-clauses for preprints, white papers and abstracts so each case is spelled out in prose
@@ -545,7 +563,7 @@ D) Add a fourth label called uncertain so that the model can opt out of labellin
 
 ---
 
-## Question 31
+## Question 32
 A platform team's internal assistant generates commit messages from staged diffs. The team's convention is a type prefix, a scope in parentheses, and a lowercase imperative summary under 72 characters. Despite a clear description, generated messages mix past tense, title case and missing scopes, and the commit-lint hook rejects about a third of them. What should the team add to the prompt?
 
 A) A list of all the valid type prefixes and scopes in the repository, so the model always has the correct vocabulary available while writing
@@ -563,7 +581,7 @@ D) Several real commit messages from the repository that pass the linter, chosen
 
 ---
 
-## Question 32
+## Question 33
 A developer-productivity bot summarises pull requests for a weekly digest. The prompt has three examples, and each example summary happens to begin with "This PR refactors". Now nearly every digest entry starts the same way, even for bug fixes and new features, and readers complain it is misleading. What is the best fix?
 
 A) Rewrite the examples so they cover a bug fix, a feature and a refactor, each opening in a way that reflects what that change actually does
@@ -581,7 +599,7 @@ D) Post-process the digest to replace the opening words with a label generated f
 
 ---
 
-## Question 33
+## Question 34
 A team uses Claude Code to generate database migration files. Their convention is a timestamped filename, an up and down function, and a comment linking the ticket. Generated migrations follow the convention about half the time, often omitting the down function. The team wants a prompt-level fix before adding any tooling. What is most likely to make the output consistent?
 
 A) Paste the internal wiki page that describes the migration convention into the prompt so the model has the full written policy
@@ -599,7 +617,7 @@ D) Tell Claude Code to read the entire migrations directory on each request so i
 
 ---
 
-## Question 34
+## Question 35
 A CI job runs Claude non-interactively to post review comments, and a script parses each comment for a file path, line number and severity. Comments arrive as free paragraphs, as bullet lists, or with severity at the end, so the script drops about 20 percent of findings. The team does not want to change the parser. What prompt change fixes this most reliably?
 
 A) Add a sentence to the prompt saying the parser is strict and that badly formatted comments will be silently dropped from the review
@@ -617,7 +635,7 @@ D) Tell the model to put the severity first and the file path second, and list t
 
 ---
 
-## Question 35
+## Question 36
 A legal team's extraction prompt contains three sample contracts with their expected JSON, followed by the real contract to process. On short contracts the model sometimes returns party names and dates from the sample contracts instead of the real one. The samples are pasted as plain text with headings like "Contract 1". What change most directly fixes this?
 
 A) Validate that every extracted party name appears in the real contract and rerun the whole request automatically whenever an extracted value turns up in a sample instead
@@ -630,12 +648,12 @@ D) Wrap each sample in example tags and the real contract in its own clearly nam
 
 **D)** The model is confusing demonstrations with input because nothing separates them; the docs recommend wrapping examples in example tags so Claude can distinguish them from instructions and data. Shortening samples reduces their teaching value without separating them, putting the samples last makes them more likely to be read as the input, and a post-hoc validator catches leaks but leaves the root cause in place.
 
-*Hint if stuck: Ask how the model is supposed to know where the examples end and the real job begins.*
+*Hint if stuck: Look at the raw prompt as the model sees it: what marks one block as teaching material and another as the work to do?*
 </details>
 
 ---
 
-## Question 36
+## Question 37
 An e-commerce support agent classifies each incoming message as order_status, return_request, damaged_item or account_issue before choosing a workflow. Messages like "the box arrived crushed but the item seems fine, can I still send it back?" are labelled differently from run to run. The category definitions were rewritten twice with little gain. What is the most effective next step?
 
 A) Add a few examples of mixed messages like this one, each with the chosen label and a short rationale for picking it over the others
@@ -653,7 +671,7 @@ D) Ask the model to output a probability for each category and pick the highest 
 
 ---
 
-## Question 37
+## Question 38
 A research system's extraction subagent pulls the main quantitative finding from each paper. The prompt's four examples are all papers whose key result appears in the abstract. Evaluation shows the subagent now misses findings in papers that report the key number only in a results table, returning the abstract's vaguer claim instead. What should the architect do?
 
 A) Instruct the subagent to always skip the abstract and read only the results section, since that is where the precise numbers are reported
@@ -671,7 +689,7 @@ D) Add a sentence to the prompt saying the key finding may sometimes be in a tab
 
 ---
 
-## Question 38
+## Question 39
 A lab-results pipeline extracts test name, value and unit from reports produced by dozens of clinics. Glucose appears as "GLU 5.4 mmol/L", "Glucose: 97 mg/dL" and "Fasting glucose 97". The schema needs a canonical test name and the unit exactly as written, and outputs are inconsistent across clinics. Which prompt change most improves consistency?
 
 A) Add a sentence asking the model to normalise test names to their canonical form while keeping each unit exactly as it was written in the output
@@ -689,7 +707,7 @@ D) Pass each clinic's reports through a separate prompt tuned with that clinic's
 
 ---
 
-## Question 39
+## Question 40
 An insurance team built its few-shot set by sampling twelve random claims from last month's traffic. Accuracy is high on routine claims, but the costly errors are on claims with partial liability or multiple policies, and none of the twelve examples covers those. The prompt is already long. What is the best way to revise the examples?
 
 A) Add twelve more randomly sampled claims so that the larger sample is more likely to include partial-liability and multi-policy cases
@@ -707,7 +725,7 @@ D) Swap most of the routine examples for a small, targeted set that includes par
 
 ---
 
-## Question 40
+## Question 41
 A content team's prompt says "summarise each meeting in five bullet points", but all three examples show three-bullet summaries because they were written for an older template. The model returns three bullets most of the time. A teammate proposes adding "IMPORTANT: always use five bullets" at the top. What should the architect recommend?
 
 A) Rewrite the examples so they show five-bullet summaries, because the examples are the stronger signal and currently contradict the rule
@@ -725,7 +743,7 @@ D) Add a post-processing step that asks the model to expand any summary with few
 
 ---
 
-## Question 41
+## Question 42
 A release pipeline asks Claude to turn merged PR titles into user-facing changelog lines. Product wants each line in plain language, grouped under Added, Changed or Fixed, with internal ticket numbers removed. Output varies: some lines keep jargon, some keep ticket IDs, and grouping headers change names between releases. What change gives the most consistent output?
 
 A) Write a longer description of what plain language means for the product's audience, with a list of jargon words that must be removed
@@ -743,7 +761,7 @@ D) Have a second model call check the changelog against the rules and send it ba
 
 ---
 
-## Question 42
+## Question 43
 An internal developer Q&A assistant answers questions about the company's APIs, and an IDE plugin renders each answer as a short explanation, a code snippet and a link. About a quarter of answers put the code first or omit the link, so the plugin shows them badly. The prompt describes the three parts in a paragraph. What should the team change?
 
 A) Have the plugin detect the code block and link wherever they appear and rearrange them into the expected order before display
@@ -761,7 +779,7 @@ D) Shorten the paragraph describing the three parts to a single sentence so the 
 
 ---
 
-## Question 43
+## Question 44
 A team asks Claude Code to write unit tests in their house style: arrange-act-assert blocks, one behaviour per test, and descriptive names. The prompt includes one example test for a pure function. Generated tests for functions with database or network calls invent mocking patterns the team does not use. What change should the architect make?
 
 A) Add an instruction telling the model never to mock anything and to use real database and network connections in all tests
@@ -779,7 +797,7 @@ D) Add a second example test for a function with a database call, showing the te
 
 ---
 
-## Question 44
+## Question 45
 A CI review bot labels each finding as blocker, warning or nit. Teams complain the same pattern, an unchecked return value, is a blocker in one PR and a nit in the next. The severity definitions are written out, and the bot's output format is already consistent. Which change best reduces this inconsistency?
 
 A) Add examples of borderline findings such as an unchecked return value, each with the chosen severity and why it is not the adjacent level
@@ -792,12 +810,12 @@ D) Run the bot three times on each PR and report the severity that appears most 
 
 **A)** The inconsistency is in judgment, not format, and examples of borderline findings with reasons for the chosen level teach the boundary in a way that generalises. Collapsing the levels throws away information teams need, defaulting upward floods PRs with false blockers, and majority voting triples the cost while still voting among unstable judgments.
 
-*Hint if stuck: Format is fine here, so look at how the model learns where one level ends.*
+*Hint if stuck: The definitions exist and the output shape is stable; ask what the model lacks for cases that sit near a boundary.*
 </details>
 
 ---
 
-## Question 45
+## Question 46
 A benefits administrator extracts member ID and claim amount from claim forms. Typed forms work well, but on handwritten forms and forms where the member ID is in a sidebar box, the model often reports the ID as missing. The prompt has two examples, both of typed forms with the ID in the header. What change addresses the cause?
 
 A) Instruct the model that the member ID is always present on valid forms and that it should keep looking until it finds a value
@@ -815,7 +833,7 @@ D) Route all handwritten forms and sidebar-layout forms to a manual data-entry t
 
 ---
 
-## Question 46
+## Question 47
 A support-resolution agent ends each conversation by writing a handoff summary for human agents. The required format is four labeled sections, but in production the model sometimes merges sections, renames headers, or adds extras, even though the prompt describes the format in detail. What is the most reliable prompt-level fix?
 
 A) Add two to four complete example summaries to the prompt that demonstrate the exact section structure on representative tickets
@@ -828,12 +846,12 @@ D) Ask the model to first restate the format rules in its own words, then write 
 
 **A)** Few-shot examples demonstrate format far more reliably than prose descriptions, and 2 to 4 well-chosen examples are typically enough for format consistency. Thirty examples add cost and context bloat with diminishing returns, stronger prose wording is the same probabilistic instruction that is already failing, and a restatement preamble adds extra text that itself violates the required four-section output.
 
-*Hint if stuck: Showing the model the output usually beats describing it, but more of a good thing has diminishing returns.*
+*Hint if stuck: Prose has already been tried in detail; ask what else can carry a format to the model.*
 </details>
 
 ---
 
-## Question 47
+## Question 48
 A healthcare intake assistant classifies patient messages as urgent, routine, or administrative. Accuracy on clear-cut messages is 98 percent, but messages mixing signals, like a medication-refill request that also mentions new chest pain, get classified inconsistently across runs. The prompt already contains three clear examples of each category. What should you add?
 
 A) More clear-cut examples of each category, scaling up to ten per class so every label is better represented
@@ -846,12 +864,12 @@ D) A few examples of mixed-signal messages, each paired with the correct label a
 
 **D)** The failures are concentrated in ambiguous inputs, so the examples must demonstrate how to resolve ambiguity, and including the reasoning teaches the decision process rather than just the answer. More clear-cut examples reinforce what already works, 'use best judgment' gives the model no new decision rule, and a bigger thinking budget adds latency to every message without supplying the missing tie-breaking criteria.
 
-*Hint if stuck: Target the examples at where the model actually fails, and show the why, not only the what.*
+*Hint if stuck: Ask where the errors cluster and what the prompt currently teaches about those cases.*
 </details>
 
 ---
 
-## Question 48
+## Question 49
 An extraction pipeline pulls sample_size from research papers. When the paper has a Methods section it works; when the sample size is mentioned inside the results text, the model returns null even though the number is there. What change best fixes this?
 
 A) Add few-shot examples showing correct extraction from both layouts: a dedicated Methods section and figures embedded in results text
@@ -864,12 +882,12 @@ D) Add a paragraph explaining that sample sizes can appear anywhere
 
 **A)** Few-shot examples that show varied document structures are the most effective way to reduce empty extractions caused by layout differences. A required field pushes the model to invent values when the data really is absent, unchanged retries repeat the failure, and prose explanations are weaker than demonstrations.
 
-*Hint if stuck: Show it what the other layout looks like.*
+*Hint if stuck: Ask what the model has seen that would tell it the number can live somewhere other than Methods.*
 </details>
 
 ---
 
-## Question 49
+## Question 50
 A support agent handles clear requests well, but ambiguous ones like 'where's my money?', which could be a refund status check or a billing dispute, are routed inconsistently between check_refund_status and open_billing_dispute. What is the most effective improvement?
 
 A) Add twenty clear-cut examples for each tool
@@ -882,12 +900,12 @@ D) Add two to four examples of ambiguous requests, each showing which tool was c
 
 **D)** Few-shot examples work best when they target the ambiguous cases and show the reasoning for one choice over a plausible alternative, which lets the model generalise its judgement. Many clear-cut examples don't cover the hard cases, a keyword router bypasses the model's understanding, and merging tools just hides the decision.
 
-*Hint if stuck: Teach the hard cases, with the reasoning.*
+*Hint if stuck: Ask which requests the agent currently gets wrong and what the prompt shows it about them.*
 </details>
 
 ---
 
-## Question 50
+## Question 51
 A lease-abstraction pipeline extracts `commencement_date` from commercial leases written in the US, UK and Germany. The schema declares the field as a string, and output arrives as "03/04/2025", "4 March 2025" and "04.03.2025", so downstream systems misread US and UK dates. Every response is schema-valid. What should the team add?
 
 A) A normalization rule in the field description: output ISO 8601, reading day-month order by the lease's jurisdiction
@@ -905,7 +923,7 @@ D) A second extraction pass that asks the model to double-check each date it ret
 
 ---
 
-## Question 51
+## Question 52
 A support agent records each case's outcome through a `log_resolution` tool whose `refund_amount` field is a string. Values arrive as "$45", "45.00 USD", "forty-five dollars" and "45", and the finance export fails on a third of them. What is the best schema change?
 
 A) Keep the field as a string and add a downstream script that strips currency words and symbols before the finance export runs
@@ -923,7 +941,7 @@ D) Make `refund_amount` an enum of the refund amounts the business most often is
 
 ---
 
-## Question 52
+## Question 53
 A freight pipeline extracts shipment weight from bills of lading as a number. Some documents state pounds and others kilograms, and the model returns the number exactly as written, so a 2,000 lb load and a 2,000 kg load look identical downstream. What is the best fix?
 
 A) Ask the model to convert every weight to kilograms before answering and return only the converted number in the field
@@ -936,12 +954,12 @@ D) Reject any document whose weight unit is not kilograms and send it to a human
 
 **C)** Capturing the unit in the schema, as an enum filled from what the document states, stops two very different loads from looking the same and leaves downstream code free to convert reliably. Assuming kilograms is wrong for every pound document, having the model convert without recording the unit hides the source value and makes any misread unit or arithmetic slip undetectable, and rejecting every pound document creates needless manual work.
 
-*Hint if stuck: A number without its unit is ambiguous no matter how valid it is.*
+*Hint if stuck: Ask what a downstream reader needs in order to interpret the figure 2,000 correctly.*
 </details>
 
 ---
 
-## Question 53
+## Question 54
 A CI job asks Claude to review a PR and "return findings as JSON." A script then parses the reply to post comments, but a few runs a week fail because the reply has a sentence before the JSON or a trailing comma. What is the most reliable fix?
 
 A) Add a stronger instruction to return only raw JSON with no prose before or after it
@@ -959,7 +977,7 @@ D) Define a `report_findings` tool with a JSON schema for findings and have Clau
 
 ---
 
-## Question 54
+## Question 55
 A support agent tags each ticket with a `reason` enum: billing, shipping, product_defect, account_access. When a message is too vague to tell ("it still doesn't work"), the agent picks whichever reason seems closest, and these tickets are misrouted. The team wants such tickets to go to a clarifying-question flow instead. What schema change fits best?
 
 A) Add an "unclear" value to the enum and route tickets carrying it to the clarifying-question flow
@@ -977,7 +995,7 @@ D) Ask the agent in the prompt to choose the closest reason only when it is reas
 
 ---
 
-## Question 55
+## Question 56
 A loan-application extractor has a required `co_applicant_name` string. When there is no co-applicant, the model sometimes returns an empty string and sometimes copies the primary applicant's name, and underwriting cannot tell "no co-applicant" from a bad extraction. What is the best schema design?
 
 A) Keep the field required and tell the model to write "N/A" whenever no co-applicant appears anywhere on the form
@@ -995,7 +1013,7 @@ D) Keep the field required and have a validator reject any co-applicant name tha
 
 ---
 
-## Question 56
+## Question 57
 A research coordinator receives each search subagent's results as prose with inline citations and uses regular expressions to pull out claims, source URLs and publication dates. Every change in the subagent's phrasing breaks the parser, and some claims lose their sources. What is the best design change?
 
 A) Have the coordinator ask a separate model to re-read each prose result carefully and list every claim it can identify in it
@@ -1013,7 +1031,7 @@ D) Let the coordinator rely only on claims that appear in more than one subagent
 
 ---
 
-## Question 57
+## Question 58
 A developer productivity agent generates deployment config entries, and its `environment` field is a free string. Engineers find "prod", "Production", "PRD" and "live" in the same repository, and the deploy tool only recognizes three exact values. What is the most effective fix?
 
 A) Add a lookup table in the deploy tool that maps every spelling seen so far to the three recognized values
@@ -1031,7 +1049,7 @@ D) Change the field to an enum of the three values the deploy tool accepts, with
 
 ---
 
-## Question 58
+## Question 59
 A support agent records related order IDs in a required `related_orders` array. For customers with no related orders, the model sometimes invents a plausible order number so the array is not empty. What is the best fix?
 
 A) State in the description that the array lists only order IDs mentioned in the conversation, and is empty if none are
@@ -1049,7 +1067,7 @@ D) Add a validator that checks every listed order ID against the order database 
 
 ---
 
-## Question 59
+## Question 60
 An invoice pipeline offers two tools: `extract_invoice` for readable invoices and `flag_unreadable` for documents that cannot be processed. With `tool_choice` set to auto, the model sometimes replies in plain text ("This scan is too blurry to read"), which the pipeline cannot route. The team's model supports every `tool_choice` mode. Which `tool_choice` setting fits?
 
 A) Force `extract_invoice` on every request, so the pipeline always receives structured invoice data
@@ -1062,12 +1080,12 @@ D) Keep auto and add a prompt line telling the model to always use one of the to
 
 **B)** "any" requires a tool call while leaving the model free to choose between extracting and flagging, which is exactly what the pipeline needs. Forcing `extract_invoice` makes the model extract from blurry scans it should flag, forcing `flag_unreadable` first wastes a call and still leaves the auto problem, and a prompt line under auto is only advisory.
 
-*Hint if stuck: You need a guaranteed tool call without removing the model's choice between tools.*
+*Hint if stuck: Ask which setting rules out a plain-text reply without dictating which path the document takes.*
 </details>
 
 ---
 
-## Question 60
+## Question 61
 A purchase-order extractor uses a schema where `line_items` is a single string. The model returns values like "Widget A x2 @ 4.50; Bolt M8 x100 @ 0.12", and the ERP import script breaks whenever a product name contains a semicolon or the letter x. What is the best schema change?
 
 A) Ask the model to use a rarer separator, such as a pipe, between line items in the string
@@ -1085,7 +1103,7 @@ D) Add a rule asking the model to wrap each product name in double quotes inside
 
 ---
 
-## Question 61
+## Question 62
 A research team moves its synthesis agent to strict structured outputs, and every report now validates against the schema. A reviewer still finds that `published_date` sometimes holds the date the source was accessed rather than published, and a few `source_url` values point to the wrong paper. The lead proposes tightening the schema further. What is the better response?
 
 A) Add a regex pattern for `source_url` so that only well-formed URLs pass the schema validation
@@ -1103,7 +1121,7 @@ D) Clarify field descriptions and add semantic checks, such as resolving each UR
 
 ---
 
-## Question 62
+## Question 63
 A CI test-generation step returns results through a tool whose schema has `test_type` as an enum of unit, integration and e2e. Some generated tests are contract tests, so the model files them under integration and the team cannot tell them apart later. The team wants to discover how many new kinds of test appear before deciding on more enum values. What change fits best?
 
 A) Add an "other" value with an `other_detail` string to fill in, and review those details to decide later additions
@@ -1121,25 +1139,43 @@ D) Keep the three values and tell the model in the prompt to put anything unusua
 
 ---
 
-## Question 63
-Your fintech extraction service uses a tool_use definition with a detailed JSON schema to pull line items and totals from vendor invoices. Every response parses cleanly against the schema, yet on 6 percent of invoices the extracted line-item amounts do not add up to the extracted invoice total. What does this indicate?
+## Question 64
+A document-extraction pipeline is moving to Claude Opus 5.5. Its requests set tool_choice to {"type": "tool", "name": "record_invoice"} so every response is a call carrying the extracted fields, and on the new model those requests now fail with a 400 error. The team still needs each invoice to come back as schema-valid record_invoice input. What should they change?
 
-A) The schema is underspecified; adding minimum and maximum constraints on the amount fields will bring the sums into alignment
-B) The schema guarantees syntactic compliance only, so semantic checks like sum validation must run as a separate programmatic step
-C) tool_choice should be set to any so the model is forced to use the extraction tool on every invoice it processes
-D) The schema's field descriptions are too short; expanding them will make the extracted values arithmetically consistent
+A) Set tool_choice to any, which still makes Claude call one of the tools and is accepted on the new model where naming one tool is rejected
+B) Remove the tools array, ask for the fields as JSON in the reply text, and pull them out of each reply with a regular expression
+C) Keep the forced tool_choice and wrap each request in a retry loop, because the 400 error is a transient fault that clears on a later try
+D) Set tool_choice to auto, add strict: true to record_invoice, and instruct Claude in the prompt to record each invoice with that tool
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** A tool_use JSON schema guarantees the output's structure, not the correctness of its values, and JSON Schema cannot express cross-field arithmetic like line items summing to a total. The root-cause fix is programmatic semantic validation downstream; numeric bounds and longer descriptions cannot enforce arithmetic consistency, and tool_choice changes when tools are called, not whether values are right.
+**D)** On Opus 5.5, Sonnet 5.5, Fable 5.1 and Mythos 5.1, both any and a named tool return a 400, and the docs point to auto with strict tool use (or structured outputs for a fixed JSON reply). strict: true guarantees the inputs match the schema, and the prompt steers which tool auto picks. any is rejected on these models too, although on models that support forced tool use it remains a valid way to guarantee a call. Regex over free text gives up the schema guarantee, and the 400 is a permanent model restriction, not a transient fault.
 
-*Hint if stuck: Separate what a schema can promise about shape from what it can promise about meaning.*
+*Hint if stuck: Separate the two guarantees the old setting gave you, and ask which of them the new model still lets you enforce at the API level.*
 </details>
 
 ---
 
-## Question 64
+## Question 65
+An invoice pipeline sends a raw JSON schema through structured outputs. To stop impossible values, an engineer adds minimum: 0 to every amount field and maxLength: 20 to invoice_number. The next deploy fails on every request with a 400 error about the schema. How should those limits be enforced?
+
+A) Leave the unsupported keywords out of the sent schema and check those limits in code on the response
+B) Swap minimum for exclusiveMinimum and maxLength for minLength, which the decoder fully supports
+C) Send the same schema as a tool with strict: true instead, since strict tool use enforces bounds
+D) Wrap each bounded field in anyOf with a null branch, which makes the API skip constraint checks
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Structured outputs do not support numerical constraints such as minimum, maximum and multipleOf, or string constraints such as minLength and maxLength, and using them returns a 400. Strict tool use shares the same limitations, so moving the schema into a tool changes nothing. The fix is to send the schema without those keywords and validate the limits in code; the SDK helpers do this for you by stripping them, noting them in the field description and checking the response. exclusiveMinimum and minLength are unsupported too, and anyOf does not switch validation off.
+
+*Hint if stuck: Check which parts of JSON Schema the constrained decoder actually understands.*
+</details>
+
+---
+
+## Question 66
 An e-commerce pipeline asks Claude to return product attributes as JSON in a plain text response. About 2 percent of responses begin with 'Here is the extracted JSON:' or wrap the object in a code fence, crashing the downstream parser. The prompt already says 'respond with only the JSON object, no other text.' What is the root-cause fix?
 
 A) Use strict structured outputs or a tool_use schema so conformance is guaranteed rather than requested through instructions
@@ -1157,7 +1193,7 @@ D) Detect parse failures at runtime and automatically resend the request until a
 
 ---
 
-## Question 65
+## Question 67
 An insurance claims pipeline extracts fields from faxed forms using a tool_use schema where policy_number is a required string. When a fax is missing the policy number, about 1 in 30, the model fills in a realistic-looking but invented value, which downstream systems then attempt to look up and fail on. What is the root-cause fix?
 
 A) Add a prompt warning: 'Never fabricate a policy number; write UNKNOWN if it is absent from the document'
@@ -1175,7 +1211,7 @@ D) Add few-shot examples of faxes that do include policy numbers so extraction o
 
 ---
 
-## Question 66
+## Question 68
 A logistics intake system classifies shipping documents with an enum field of six values: bill_of_lading, packing_list, customs_declaration, invoice, delivery_receipt, insurance_certificate. A carrier starts sending a new dangerous-goods declaration form, and the model silently labels every one as customs_declaration. How should the schema evolve?
 
 A) Replace the enum with a free-text document_type string so the model can name any document it encounters
@@ -1193,8 +1229,8 @@ D) Add an other value to the enum alongside a free-text detail field that captur
 
 ---
 
-## Question 67
-A legal-discovery pipeline receives unlabeled documents that may be contracts, depositions, or court filings, with a dedicated extraction tool for each type. With tool_choice set to auto, the model sometimes replies in prose asking which document type it is looking at instead of extracting anything. What configuration fixes this?
+## Question 69
+A legal-discovery pipeline receives unlabeled documents that may be contracts, depositions, or court filings, with a dedicated extraction tool for each type. With tool_choice set to auto, the model sometimes replies in prose asking which document type it is looking at instead of extracting anything. The pipeline runs on a model that supports every tool_choice mode. What configuration fixes this?
 
 A) Set tool_choice to any so the model must call one of the extraction tools, choosing which based on the document's content
 B) Set tool_choice to force the contracts tool, since contracts make up the majority of the incoming document stream
@@ -1204,15 +1240,15 @@ D) Combine the three tools into a single extractor whose schema is a union of al
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** tool_choice any guarantees a tool call on every request while leaving the model free to pick the right extractor for the content, the exact fit for unlabeled streams with one tool per document type. Forcing a specific named tool misroutes every non-contract, a prompt rule against clarifying questions is best-effort rather than a guarantee, and a union schema blurs three focused tools into one ambiguous surface.
+**A)** On a model that supports it, tool_choice any guarantees a tool call on every request while leaving the model free to pick the right extractor for the content, the exact fit for unlabeled streams with one tool per document type. Forcing a specific named tool misroutes every non-contract, a prompt rule against clarifying questions is best-effort rather than a guarantee, and a union schema blurs three focused tools into one ambiguous surface. (The newest models reject any and forced tool_choice; there the docs recommend auto with strict tool use.)
 
-*Hint if stuck: You need a guarantee that some tool gets called without dictating which one.*
+*Hint if stuck: Ask which setting rules out a prose reply without deciding in advance what kind of file it is.*
 </details>
 
 ---
 
-## Question 68
-A research-ingestion agent must always log a paper's title, authors, and venue via its extract_metadata tool before doing anything else, then decide among summarize_abstract, extract_citations, or finishing. In testing, the model occasionally skips metadata and goes straight to summarization. How do you enforce the ordering?
+## Question 70
+A research-ingestion agent must always log a paper's title, authors, and venue via its extract_metadata tool before doing anything else, then decide among summarize_abstract, extract_citations, or finishing. It runs on a model that supports forced tool use. In testing, the model occasionally skips metadata and goes straight to summarization. How do you enforce the ordering?
 
 A) Set tool_choice to any for the whole session so every turn is guaranteed to produce some tool call
 B) Force the first request with tool_choice naming the extract_metadata tool, then switch tool_choice to auto for subsequent turns
@@ -1229,10 +1265,10 @@ D) Add a system-prompt instruction in emphatic wording that extract_metadata mus
 
 ---
 
-## Question 69
+## Question 71
 After migrating an expense-report extractor to strict structured outputs, an engineer opens a PR deleting the downstream validation layer that checks each report's category subtotals against its grand total, arguing that 'the output is schema-guaranteed now.' How should you respond?
 
-A) Keep the validation layer: strict outputs guarantee structural conformance, but cross-field arithmetic is semantic and can still be wrong
+A) Keep the validation layer, since strict mode fixes the output's shape but not whether its numbers add up
 B) Approve the deletion, since strict structured outputs make schema violations impossible and the checks are now dead code
 C) Replace the validation layer with a prompt instruction requiring that subtotals always sum exactly to the grand total
 D) Encode the subtotal constraint directly in the JSON schema so the API enforces the arithmetic at generation time
@@ -1242,13 +1278,13 @@ D) Encode the subtotal constraint directly in the JSON schema so the API enforce
 
 **A)** Strict structured outputs harden the syntactic guarantee of well-formed JSON matching the schema, but say nothing about whether the values are right, so semantic invariants like subtotal arithmetic still need programmatic checks. JSON Schema cannot express cross-field arithmetic constraints, so that option is not implementable, and a prompt instruction downgrades a deterministic check to a best-effort request.
 
-*Hint if stuck: Upgrading the syntax guarantee does not upgrade the meaning of the values.*
+*Hint if stuck: Ask what kind of mistake the old validation layer was written to catch.*
 </details>
 
 ---
 
-## Question 70
-A medical-records pipeline forces its first call with tool_choice set to the extract_patient_header tool, which works, but the integration leaves that same tool_choice on every subsequent request. The model now re-extracts the header repeatedly and never calls extract_medications or produces its final summary. What is the fix?
+## Question 72
+A medical-records pipeline, on a model that supports forced tool use, forces its first call with tool_choice set to the extract_patient_header tool, which works, but the integration leaves that same tool_choice on every subsequent request. The model now re-extracts the header repeatedly and never calls extract_medications or produces its final summary. What is the fix?
 
 A) Add a system-prompt rule that the header tool may be called at most once per document so the model stops repeating it
 B) Switch tool_choice to any after the first turn so the model is forced to keep selecting among the remaining tools
@@ -1265,7 +1301,7 @@ D) After the forced first call returns, send subsequent requests with tool_choic
 
 ---
 
-## Question 71
+## Question 73
 A fintech team extracts fields from 80,000 vendor invoices. Their schema marks vendor_tax_id as a required string, and spot checks show the model invents plausible-looking tax IDs for the roughly 12% of invoices that have none. The team's plan is to add "NEVER fabricate tax IDs" to the prompt and submit all 80,000 documents to the Batch API tonight. As the reviewing architect, what do you change?
 
 A) Make vendor_tax_id nullable (type ["string","null"]) so absence is representable, and run a synchronous pilot on a sample before submitting the full batch
@@ -1283,56 +1319,56 @@ D) Switch the field to an enum of known tax ID formats with a catch-all pattern,
 
 ---
 
-## Question 72
-A research swarm classifies each extracted claim into an enum field: market_trend, regulation, technology, or competitor_move. Reviewers keep finding genuinely novel claim types — supply chain disruptions, labor actions — silently shoehorned into competitor_move. What is the right schema fix?
-
-A) Add an "other" value to the enum together with a free-text detail field that captures what the claim actually describes
-B) Add five more specific enum values covering every claim type observed so far, and brief reviewers to expect occasional residual misfits
-C) Add a prompt instruction telling the model to classify carefully and to skip any claim that does not clearly match one of the four categories
-D) Make the category field nullable so the model can return null whenever a claim falls outside the four currently defined values
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** Closed enums force the model to pick the least-wrong value, so novel claims get shoehorned; the canonical fix is an "other" or "unclear" escape value paired with a free-text detail field that preserves the information. A nullable category discards the signal entirely — you learn nothing about what the claim was. Adding more enum values is a treadmill: the next novel type shoehorns all over again, and a prompt instruction to skip claims silently drops data.
-
-*Hint if stuck: The schema needs an escape hatch that still captures information instead of dropping it.*
-</details>
-
----
-
-## Question 73
-A support agent emits structured ticket dispositions through a tool_use call with a JSON schema. Every response validates, yet in 4% of cases refund_total does not equal the sum of the line_items amounts, and resolution_code sometimes contradicts the narrative summary. The team concludes schema enforcement is broken and wants to switch providers. What is actually happening, and what is the fix?
-
-A) The schema lacks strict mode — switching to strict structured outputs guarantees both the payload's shape and its internal arithmetic consistency
-B) Temperature is too high for structured work — pinning it to 0 makes the numeric fields deterministic and therefore internally consistent
-C) The field descriptions are too thin — documenting each field's relationship to the others lets the model reliably self-enforce the cross-field invariants
-D) Schema enforcement worked: it guarantees syntactic compliance, not semantic correctness — add programmatic cross-field validation with a repair retry
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** tool_use with a JSON schema guarantees the output parses and conforms structurally; it never guarantees semantic correctness such as sums that reconcile or fields that agree. Cross-field invariants therefore need programmatic validation with a repair loop. Strict structured outputs only harden the syntactic guarantee — arithmetic consistency is still semantics — richer descriptions help probabilistically but cannot guarantee the invariant, and determinism at temperature 0 just makes the same wrong sums repeatable.
-
-*Hint if stuck: Distinguish what schema validation can promise from what only your own code can check.*
-</details>
-
----
-
 ## Question 74
-An insurance company extracts fields from 80,000 scanned claim forms through the Message Batches API. The extraction tool schema marks policy_end_date as a required string; on forms where the date is illegible, Claude returns plausible fabricated dates. Adding NEVER GUESS — write UNKNOWN to the prompt cut fabrication only slightly. What fixes the root cause?
+A research system's report subagent uses output_config.format with a JSON schema so the coordinator can parse each section. The team now also wants source-anchored citations, so it enables citations on the attached documents in the same request. Every request starts failing with a 400 error. What is the right design?
 
-A) Escalate the prompt warning and add three few-shot examples demonstrating refusal to guess illegible dates
-B) Change policy_end_date to type ["string","null"] and remove it from required so the model can return null
-C) Set temperature to 0 so the model stops inventing values when the source document is uncertain
-D) Move the illegible forms over to synchronous API calls, where extraction accuracy is higher
+A) Ask for the citations as a JSON array in the schema and leave the citations feature switched on
+B) Lower max_tokens so the citation blocks fit inside the schema's string fields without a conflict
+C) Keep citations and the schema in separate requests, or carry source quotes as fields in the schema
+D) Add the structured-outputs beta header, which lets citations and a JSON schema share one request
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** A required string field forces the model to emit some string even when the document lacks the data — that schema constraint is the structural cause of fabrication, and a nullable field gives the model a legitimate way to return null. Prompt warnings and few-shot examples fight the schema and stay probabilistic, temperature does not change a forced-required constraint, and the Batch API runs the identical model with identical accuracy to synchronous calls.
+**C)** Structured outputs are incompatible with citations: citations interleave citation blocks with text, which conflicts with strict schema constraints, and the API returns a 400 when both are on. The fix is to split the work (a cited request and a structured one) or to drop the feature and capture quotes and document references as schema fields. Structured outputs are generally available, and no header makes the two compatible. Keeping the feature on still triggers the 400, and max_tokens has nothing to do with it.
 
-*Hint if stuck: When a schema demands a value the document may not contain, ask what escape hatch is missing.*
+*Hint if stuck: Ask whether two output features impose conflicting shapes on the same response.*
+</details>
+
+---
+
+## Question 75
+A support agent routes each ticket by calling a route_ticket tool, with tool_choice set to force that tool. Escalation staff want a sentence explaining each routing choice, so the prompt now says: before calling the tool, briefly explain your reasoning. Responses still contain only the tool_use block. The model in use supports every tool_choice mode. What is the best fix?
+
+A) Raise max_tokens so the model has enough room to write an explanation before the forced call
+B) Set tool_choice to any instead, which still forces a tool call but lets the model write text first
+C) Move the explain-first instruction into the system prompt, where it outweighs the user message
+D) Switch tool_choice to auto and ask in the user message for a reason, then a route_ticket call
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** With tool_choice any or tool, the API prefills the assistant turn to force a tool call, so the model emits no natural-language text before the tool_use block even when asked. The documented route for getting text as well is auto plus an explicit instruction in the user message to use the tool; a short explanation field in the tool's schema is another option (ask for a brief explanation, not step-by-step reasoning). any prefills the same way as a forced tool, and neither moving the instruction nor raising max_tokens gets past the prefill. On the newest models any and forced return a 400, which is a further reason to know the auto route.
+
+*Hint if stuck: Consider what the API does to the start of the assistant's turn when a tool call is required.*
+</details>
+
+---
+
+## Question 76
+An extraction service moved from prompt-only JSON to output_config.format with a JSON schema. The old code prefilled the assistant turn with an opening brace to push the model straight into JSON, and the migration ticket asks whether that prefill should stay. What is the right call?
+
+A) Keep the prefill and add a beta header, which is what lets a prefill coexist with a JSON schema
+B) Remove the prefill, because the schema already shapes the output and prefills don't work with it
+C) Extend the prefill to the first key as well, so the start of the output lines up with the schema
+D) Move the opening brace into the system prompt, which has the same effect as a prefill with schemas
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Prefilling is listed as incompatible with JSON outputs, and it is unnecessary: constrained decoding already guarantees the response follows the schema from its first token. A longer prefill makes the conflict no better, a brace in the system prompt is just text with no effect on decoding, and structured outputs are generally available with no beta header, nor does any header make prefills compatible.
+
+*Hint if stuck: Ask what job the prefill was doing and whether anything in the new setup already does it.*
 </details>
 
 ---

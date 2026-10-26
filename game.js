@@ -102,7 +102,7 @@ const ACHIEVEMENTS = [
   { id: 'tower-master',  ic: '🗼', nm: 'Tower Master',     ds: 'Clear all 10 floors' },
   { id: 'flawless',      ic: '👑', nm: 'Flawless Ascent',  ds: 'Earn ★ on every floor' },
   { id: 'certified',     ic: '📜', nm: 'Certified',        ds: 'Score 720+ on a strict mock exam' },
-  { id: 'beat-blogger',  ic: '✍️', nm: 'Beat the Blogger', ds: 'Score 900+ — the famous pass post was 893' },
+  { id: 'beat-blogger',  ic: '✍️', nm: 'High Scorer',      ds: 'Score 900+ on a strict mock exam' },
   { id: 'lightning-15',  ic: '⚡', nm: 'Storm Caller',     ds: 'Score 15+ in one Recall Sprint' },
   { id: 'monster-hunter',ic: '🔦', nm: 'Monster Hunter',   ds: 'Capture all 12 monsters in the Hunt' },
   { id: 'clinic-clear',  ic: '🩹', nm: 'Clean Bill',       ds: 'Empty a Mistake Clinic of 10+ cards' },
@@ -120,7 +120,23 @@ const POWERUPS = {
 
 /* ---------------- save state ---------------- */
 const SAVE_KEY = 'architects-ascent-v2';
-const SCHEMA = 4;
+const SCHEMA = 5;
+
+/* v2 clinic cards were {src, idx}. The frozen ids were assigned from those v2 positions, so map by id,
+   not by today's array (buckets have lost items since) */
+const LEGACY_PREFIX = { 'exam-mix-1': 'mx1', 'exam-mix-2': 'mx2', hunt: 'hunt' };
+function legacyId(c) {
+  const p = LEGACY_PREFIX[c.src] || (/^floor-(\d\d)$/.test(c.src || '') ? 'f' + c.src.slice(6) : null);
+  return p && Number.isInteger(c.idx) ? p + '-' + String(c.idx).padStart(2, '0') : null;
+}
+
+/* local calendar day, so the study streak follows the player's own midnight */
+function localDay(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/* a question's revision: the bank bumps it when the key or concept changed (absent = 0) */
+function qRev(q) { return q && Number.isInteger(q.rev) && q.rev > 0 ? q.rev : 0; }
 
 const Game = {
   s: null,
@@ -131,7 +147,7 @@ const Game = {
       streak: { count: 0, last: null },
       floors: {}, powerups: { compact: 1, think: 1, shield: 1 },
       bestiary: [], achievements: [],
-      deck: [], examBest: 0, legacyExamBest: 0, examHistory: [], lightningBest: 0,
+      deck: [], clinicPeak: 0, examBest: 0, legacyExamBest: 0, examHistory: [], lightningBest: 0,
       totals: { answered: 0, correct: 0 },
       qstats: {}, mockSeen: {}, schemaVersion: SCHEMA,
     };
@@ -142,42 +158,123 @@ const Game = {
     try {
       raw = localStorage.getItem(SAVE_KEY);
       saved = raw ? JSON.parse(raw) : null;
-    } catch (e) { saved = null; }
+    } catch (e) {
+      saved = null;
+      try { if (raw) localStorage.setItem(SAVE_KEY + '.corrupt', raw); } catch (_) {}
+    }
+    if (saved && (typeof saved !== 'object' || Array.isArray(saved))) saved = null;
+    const ver = saved ? (Number(saved.schemaVersion) || 2) : SCHEMA;
+    this.adopt(saved);
+    if (ver < 3) this.migrate(raw);
+    if (ver < 4) this.migrate4(raw);
+    if (ver < 5) this.migrate5(raw);
+    this.cleanDeck();
+    const reset = this.sweepRevs();
+    if (reset && raw && ver >= SCHEMA) { try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {} }
+    if (saved && (ver < SCHEMA || reset || raw !== JSON.stringify(this.s))) this.save();
+  },
+
+  /* take a parsed save (this tab's boot, or another tab's write) and repair anything missing or mistyped */
+  adopt(saved) {
     this.s = Object.assign(this.fresh(), saved || {});
-    if (saved && (saved.schemaVersion || 2) < 3) this.migrate(raw);
-    if (saved && this.s.schemaVersion < SCHEMA) this.migrate4(raw);
+    this.normalise();
+  },
+
+  /* a null or wrongly typed field falls back to its default instead of breaking every screen */
+  normalise() {
+    const f = this.fresh(), s = this.s;
+    for (const k in f) {
+      let v = s[k];
+      const d = f[k];
+      if (typeof d === 'number' && typeof v === 'string' && v.trim() && isFinite(v)) v = s[k] = Number(v);
+      if (v == null || typeof v !== typeof d || Array.isArray(v) !== Array.isArray(d) || (typeof d === 'number' && !isFinite(v))) { s[k] = d; continue; }
+      if (d && typeof d === 'object' && !Array.isArray(d) && k !== 'qstats' && k !== 'mockSeen' && k !== 'floors') {
+        const m = Object.assign({}, d, v);
+        for (const k2 in d) if (typeof d[k2] === 'number' && (typeof m[k2] !== 'number' || !isFinite(m[k2]))) m[k2] = d[k2];
+        s[k] = m;
+      }
+    }
+    ['qstats', 'mockSeen', 'floors'].forEach(k => Object.keys(s[k]).forEach(id => {
+      const v = s[k][id];
+      if (k === 'mockSeen' ? typeof v !== 'number' || !isFinite(v) : !v || typeof v !== 'object') delete s[k][id];
+    }));
+    Object.values(s.qstats).forEach(st => ['seen', 'right', 'last', 'at'].forEach(f2 => { if (typeof st[f2] !== 'number' || !isFinite(st[f2])) st[f2] = 0; }));
+    s.deck = s.deck.filter(c => c && typeof c === 'object');
+    s.examHistory = s.examHistory.filter(h => h && typeof h === 'object');
+    s.bestiary = s.bestiary.filter(m => typeof m === 'string');
+    s.achievements = s.achievements.filter(a => typeof a === 'string');
+    s.clinicPeak = Math.max(s.clinicPeak, s.deck.length);
   },
 
   /* v2 -> v3: clinic cards {src, idx} become {id}; Proctor scores move to legacyExamBest */
   migrate(raw) {
     try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
-    this.s.deck = this.s.deck.map(c => {
-      if (c.id) return c;
-      const q = Bank.byRef(c.src, c.idx);
-      return q && q.id ? { id: q.id, streak: c.streak || 0 } : c;
-    });
+    this.s.deck = this.s.deck.map(c => c.id ? c : { id: legacyId(c), streak: c.streak || 0 });
     this.s.legacyExamBest = this.s.examBest || 0;
     this.s.examBest = 0;
     this.s.examHistory = this.s.examHistory.map(h => h.mode ? h : { ...h, mode: 'proctor' });
     this.s.schemaVersion = 3;
-    this.save();
   },
 
   /* v3 -> v4: hunt and out-of-scope questions left the bank; first-try results for readiness */
   migrate4(raw) {
     try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
-    this.s.deck = this.s.deck.filter(c => !c.id || Bank.byId(c.id));
     Object.keys(this.s.qstats).forEach(id => {
       const st = this.s.qstats[id];
       if (!Bank.byId(id)) delete this.s.qstats[id];
       else if (st.first == null && st.seen === 1) st.first = st.last;  // older multi-try stats can't tell their first try
     });
     this.s.bestiary = [...new Set(this.s.bestiary.map(m => RETIRED_MONSTERS[m] || m))].filter(m => MONSTERS[m]);
-    this.s.schemaVersion = SCHEMA;
-    this.save();
+    this.s.schemaVersion = 4;
+  },
+
+  /* v4 -> v5: questions carry a revision and qstats remember the one they were answered on (sweepRevs runs on every load) */
+  migrate5(raw) {
+    try { localStorage.setItem(SAVE_KEY + '.bak', raw); } catch (e) {}
+    this.s.schemaVersion = 5;
+  },
+
+  /* every clinic card must name a question still in the bank; runs on every load, so saves migrated
+     before this rule (cards left as {src, idx}) are cleaned too */
+  cleanDeck() {
+    const ids = new Set();
+    this.s.deck = this.s.deck.filter(c => {
+      if (typeof c.id !== 'string' || !Bank.byId(c.id) || ids.has(c.id)) return false;
+      ids.add(c.id);
+      if (typeof c.streak !== 'number' || !isFinite(c.streak)) c.streak = 0;
+      return true;
+    });
+  },
+
+  /* a question whose key or concept changed (its rev went up) starts over: its stats go, so readiness
+     never counts a first try on the old version, and its clinic streak restarts. Returns how many */
+  sweepRevs() {
+    let n = 0;
+    Object.keys(this.s.qstats).forEach(id => {
+      const q = Bank.byId(id);
+      if (!q || (Number(this.s.qstats[id].rev) || 0) >= qRev(q)) return;
+      delete this.s.qstats[id];
+      const c = this.s.deck.find(c => c.id === id);
+      if (c) c.streak = 0;
+      n++;
+    });
+    return n;
   },
 
   save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.s)); } catch (e) {} },
+
+  /* another tab wrote the save: adopt it, so this tab's next save doesn't write stale progress back */
+  syncFrom(raw) {
+    let saved;
+    try { saved = JSON.parse(raw); } catch (e) { return; }
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+    this.adopt(saved);
+    this.cleanDeck();
+    if (this.sweepRevs()) this.save();
+    document.documentElement.dataset.theme = this.s.theme;
+    UI.refreshHud();
+    if (UI.current === 'home') UI.renderHome();
+  },
 
   hardReset() {
     if (!confirm('Reset ALL progress — XP, floors, bestiary, exam history?')) return;
@@ -214,32 +311,37 @@ const Game = {
   },
 
   touchStreak() {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDay(new Date());
     const st = this.s.streak;
     if (st.last === today) return;
     const y = new Date(); y.setDate(y.getDate() - 1);
-    st.count = (st.last === y.toISOString().slice(0, 10)) ? st.count + 1 : 1;
+    st.count = (st.last === localDay(y)) ? st.count + 1 : 1;
     st.last = today;
     this.save();
     UI.refreshHud();
+    if (st.count >= 7) this.unlock('streak-7');
     if (st.count >= 30) this.unlock('streak-30');
-    else if (st.count >= 7) this.unlock('streak-7');
   },
 
-  /* timed: a rushed answer (Lightning) counts as seen but never as the question's first try */
-  recordAnswer(ok, id, timed) {
-    this.touchStreak();
+  /* timed: a rushed answer (Lightning) counts as seen but never as the question's first try; the first
+     try is the first UNTIMED answer (st.t counts the timed ones before it).
+     late: answers scored after the fact (a mock that expired while away) don't touch today's streak */
+  recordAnswer(ok, id, timed, late) {
+    if (!late) this.touchStreak();
     this.s.totals.answered++;
     if (ok) this.s.totals.correct++;
     if (id) {
       const st = this.s.qstats[id] || (this.s.qstats[id] = { seen: 0, right: 0, last: 0, at: 0 });
-      if (st.seen === 0 && !timed) st.first = ok ? 1 : 0;
+      if (st.first == null && !timed && st.seen === (st.t || 0)) st.first = ok ? 1 : 0;
+      if (timed) st.t = (st.t || 0) + 1;
       st.seen++; if (ok) st.right++;
       st.last = ok ? 1 : 0; st.at = Date.now();
+      const rev = qRev(Bank.byId(id));
+      if (rev) st.rev = rev; else delete st.rev;
     }
     if (this.s.totals.correct >= 100) this.unlock('scholar-100');
     const h = new Date().getHours();
-    if (h >= 0 && h < 5) this.unlock('night-shift');
+    if (!late && h >= 0 && h < 5) this.unlock('night-shift');
     this.save();
   },
 
@@ -254,21 +356,24 @@ const Game = {
   },
 
   grantPowerup() {
-    const keys = Object.keys(POWERUPS);
+    const keys = Object.keys(POWERUPS).filter(k => this.s.powerups[k] < 9);
+    if (!keys.length) return null;
     const k = keys[Math.floor(Math.random() * keys.length)];
-    if (this.s.powerups[k] >= 9) return null;
     this.s.powerups[k]++;
     this.save();
     return k;
   },
 
-  /* mistake deck — stable question ids; correct twice in a row discharges */
+  /* mistake deck — stable question ids; correct twice in a row discharges, and a miss anywhere
+     (another mode included) restarts the run */
   deckAdd(id) {
-    if (id && !this.s.deck.some(c => c.id === id)) {
-      this.s.deck.push({ id, streak: 0 });
-      this.save();
-      UI.refreshHud();
-    }
+    if (!id) return;
+    const c = this.s.deck.find(c => c.id === id);
+    if (c) c.streak = 0;
+    else this.s.deck.push({ id, streak: 0 });
+    this.s.clinicPeak = Math.max(this.s.clinicPeak || 0, this.s.deck.length);
+    this.save();
+    UI.refreshHud();
   },
 };
 
@@ -277,9 +382,6 @@ const Bank = {
   _byId: null,
 
   floor(id) { return (window.BANK && window.BANK[id]) || []; },
-
-  /* legacy position lookup, used only by the v2 save migration */
-  byRef(src, idx) { return this.floor(src)[idx] || null; },
 
   byId(id) {
     if (!this._byId) {
@@ -312,10 +414,15 @@ const Bank = {
     const rank = r => { const st = qs[r.id]; return !st ? 0 : st.last ? 2 : 1; };
     const sorted = shuffle(refs).sort((a, b) => rank(a) - rank(b) || ((qs[a.id] || {}).at || 0) - ((qs[b.id] || {}).at || 0));
     if (!spread) return sorted.slice(0, n);
-    const lanes = {};
-    sorted.forEach(r => (lanes[r.q.ts] = lanes[r.q.ts] || []).push(r));
-    const order = shuffle(Object.keys(lanes)), out = [];
-    while (out.length < n && order.some(t => lanes[t].length)) order.forEach(t => { if (out.length < n && lanes[t].length) out.push(lanes[t].shift()); });
+    /* take turns within each rank tier, best tier first, so a lane of seen questions never
+       displaces an unseen one */
+    const out = [];
+    for (const tier of [0, 1, 2]) {
+      const lanes = {};
+      sorted.filter(r => rank(r) === tier).forEach(r => (lanes[r.q.ts] = lanes[r.q.ts] || []).push(r));
+      const order = shuffle(Object.keys(lanes));
+      while (out.length < n && order.some(t => lanes[t].length)) order.forEach(t => { if (out.length < n && lanes[t].length) out.push(lanes[t].shift()); });
+    }
     return shuffle(out);
   },
 
@@ -335,6 +442,15 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/* short hash of a question's options and key: a saved mock answer is replayed only onto the same content */
+function qFingerprint(q) {
+  if (!q || !Array.isArray(q.options)) return '';
+  const s = q.options.join('␞') + '#' + q.correct;
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
 }
 
 /* shuffle a question's options (or replay a saved order), remapping the correct index */
@@ -416,12 +532,14 @@ const UI = {
     }
     if (EXAM_SETTLE_ON.has(name) && Exam.settleExpired()) return;
     if (name !== 'lightning') Lightning.stop();
-    document.getElementById('overlay').classList.remove('show');
+    this.closeModal();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById('screen-' + name);
     if (el) el.classList.add('active');
     this.current = name;
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    /* the control that was clicked is now hidden: start keyboard and screen-reader users at the new heading */
+    if (el) setTimeout(() => this.focusScreen(el), 0);
     if (name === 'home') this.renderHome();
     if (name === 'tower') Tower.render();
     if (name === 'blueprint') Blueprint.render();
@@ -432,6 +550,27 @@ const UI = {
     Sound.click();
   },
 
+  /* focus the active screen's heading unless focus already sits on something visible in it */
+  focusScreen(el) {
+    const a = document.activeElement;
+    if (document.getElementById('overlay').classList.contains('show')) return;
+    if (a && a !== document.body && el.contains(a) && a.offsetParent) return;
+    const h = el.querySelector('h1');
+    if (!h) return;
+    if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+    h.focus({ preventScroll: true });
+  },
+
+  reducedMotion() { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); },
+
+  /* polite screen-reader announcement */
+  announce(msg) {
+    const r = document.getElementById('sr-live');
+    if (!r) return;
+    r.textContent = '';
+    setTimeout(() => { r.textContent = msg; }, 60);
+  },
+
   refreshHud() {
     const s = Game.s;
     document.getElementById('hud-title').textContent = Game.title();
@@ -440,9 +579,16 @@ const UI = {
     const prev = [...TITLES].reverse().find(t => s.xp >= t.xp);
     const pct = next ? Math.min(100, ((s.xp - prev.xp) / (next.xp - prev.xp)) * 100) : 100;
     document.getElementById('hud-xpfill').style.width = pct + '%';
+    document.getElementById('hud-xpbar').setAttribute('aria-valuenow', Math.round(pct));
     document.getElementById('hud-streak').textContent = s.streak.count;
-    document.getElementById('btn-sound').textContent = s.soundOn ? '🔊' : '🔇';
-    document.getElementById('btn-theme').textContent = s.theme === 'light' ? '🌙' : '☀️';
+    document.getElementById('hud-streak-chip').setAttribute('aria-label', 'Daily streak: ' + s.streak.count + (s.streak.count === 1 ? ' day' : ' days'));
+    const snd = document.getElementById('btn-sound');
+    snd.innerHTML = '<span aria-hidden="true">' + (s.soundOn ? '🔊' : '🔇') + '</span>';
+    snd.setAttribute('aria-pressed', String(!!s.soundOn));
+    const th = document.getElementById('btn-theme'), toDark = s.theme !== 'dark';
+    th.innerHTML = '<span aria-hidden="true">' + (toDark ? '🌙' : '☀️') + '</span>';
+    th.title = toDark ? 'Switch to dark theme' : 'Switch to light theme';
+    th.setAttribute('aria-label', th.title);
     const deckN = s.deck.length;
     const db = document.getElementById('deck-badge'); if (db) db.textContent = deckN + (deckN === 1 ? ' card' : ' cards');
   },
@@ -466,7 +612,7 @@ const UI = {
     document.getElementById('trophy-badge').textContent = s.achievements.length;
     const live = Exam.saved();
     document.getElementById('exam-badge').textContent = live ? '⏳ in progress · ' + clock(Math.max(0, Math.ceil((live.deadline - Date.now()) / 1000))) + ' left'
-      : s.examBest ? 'best ' + s.examBest : 'the real format';
+      : s.examBest ? 'best est. ' + s.examBest : '60 Q · 120 min';
     const bpSt = Blueprint.stats(pool);
     document.getElementById('bp-badge').textContent = bpSt.seen + '/' + bpSt.total + ' seen';
     const learn = document.getElementById('card-learn');
@@ -489,7 +635,7 @@ const UI = {
       box.style.display = 'block';
     } else box.style.display = 'none';
     const hist = Game.s.examHistory.slice(-5).reverse();
-    document.getElementById('ei-history').innerHTML = hist.length ? '<h4>Recent attempts</h4>' + hist.map(h =>
+    document.getElementById('ei-history').innerHTML = hist.length ? '<h2>Recent attempts</h2>' + hist.map(h =>
       `<div class="hist-row"><span>${h.date} · ${h.mode === 'practice' ? 'Practice' : h.mode === 'proctor' ? 'Proctor (old)' : 'Mock'}</span><span>${h.correct}/${h.total}${h.mode === 'proctor' ? '' : ' · est. ' + h.score}</span></div>`).join('') : '';
   },
 
@@ -498,12 +644,12 @@ const UI = {
     grid.innerHTML = Object.entries(MONSTERS).map(([name, m]) => {
       const got = Game.s.bestiary.includes(name);
       return `<div class="beast-card${got ? '' : ' locked'}">
-        <div class="face">${m.face}</div>
-        <h4>${got ? name : '???'}</h4>
+        <div class="face" aria-hidden="true">${m.face}</div>
+        <h2>${got ? name : '<span aria-hidden="true">???</span><span class="sr-only">Unknown monster</span>'}</h2>
         <div class="cry">${got ? m.cry : 'Undiscovered. Hunt it down.'}</div>
         <div class="weak">${got ? '✦ Weakness: ' + m.weak : '🔒 capture to reveal weakness'}</div>
         <div class="haunts">Haunts ${m.ts.map(t => `<b>${t}</b>`).join(' · ')}</div>
-        <button class="btn small ${got ? 'ghost' : 'primary'}" onclick="Hunt.start('${name}')">🔦 ${got ? 'Hunt again' : 'Hunt'}</button>
+        <button class="btn small ${got ? 'ghost' : 'primary'}" onclick="Hunt.start('${name}')"${got ? ` aria-label="Hunt ${name} again"` : ` aria-label="Hunt the monster that haunts ${m.ts.join(', ')}"`}><span aria-hidden="true">🔦</span> ${got ? 'Hunt again' : 'Hunt'}</button>
       </div>`;
     }).join('');
   },
@@ -512,7 +658,7 @@ const UI = {
     document.getElementById('t-sub').textContent = Game.s.achievements.length + '/' + ACHIEVEMENTS.length + ' unlocked · title: ' + Game.title();
     document.getElementById('trophy-grid').innerHTML = ACHIEVEMENTS.map(a => {
       const got = Game.s.achievements.includes(a.id);
-      return `<div class="trophy${got ? '' : ' locked'}"><div class="ic">${a.ic}</div><div><div class="nm">${a.nm}</div><div class="ds">${a.ds}</div></div></div>`;
+      return `<div class="trophy${got ? '' : ' locked'}"><div class="ic" aria-hidden="true">${a.ic}</div><div><div class="nm">${a.nm}${got ? '' : '<span class="sr-only"> (locked)</span>'}</div><div class="ds">${a.ds}</div></div></div>`;
     }).join('');
   },
 
@@ -525,6 +671,7 @@ const UI = {
   },
 
   confetti() {
+    if (this.reducedMotion()) return;
     const colors = ['#D97757', '#C2912E', '#4E8F83', '#5B7FA6', '#B0628F', '#4E8F5B'];
     for (let i = 0; i < 90; i++) {
       const b = document.createElement('div');
@@ -559,9 +706,34 @@ const UI = {
     document.getElementById('m-expl').innerHTML = fmt(explanation);
     const btn = document.getElementById('m-next');
     btn.textContent = opts.btn || 'Continue';
-    btn.onclick = () => { o.classList.remove('show'); onNext && onNext(); };
+    const back = document.activeElement;
+    btn.onclick = () => {
+      this.closeModal();
+      onNext && onNext();
+      this.restoreFocus(back);
+    };
     o.classList.add('show');
+    document.getElementById('app').inert = true;
+    o.querySelector('.modal').scrollTop = 0;
+    btn.focus();
   },
+
+  closeModal() {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('app').inert = false;
+  },
+
+  /* after the dialog: back where focus was if it is still there, else the next question's first answer */
+  restoreFocus(prev) {
+    if (document.getElementById('overlay').classList.contains('show')) return;
+    const scr = document.querySelector('.screen.active');
+    if (!scr) return;
+    if (prev && prev !== document.body && prev.isConnected && prev.offsetParent && scr.contains(prev) && !prev.classList.contains('disabled')) { prev.focus(); return; }
+    const first = scr.querySelector('.answer:not(.disabled)');
+    if (first) first.focus({ preventScroll: true });
+    else this.focusScreen(scr);
+  },
+
 };
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -577,39 +749,46 @@ const Tower = {
       const fs = Game.s.floors[f.id] || {};
       const unlocked = prevCleared;
       const next = unlocked && !fs.cleared;
-      const row = document.createElement('div');
+      /* unlocked floors are buttons; a locked floor is plain text */
+      const row = document.createElement(unlocked ? 'button' : 'div');
       row.className = 'floor-card' + (fs.cleared ? ' cleared' : '') + (next ? ' next-up' : '') + (!unlocked ? ' locked' : '');
       row.innerHTML = `
-        <div class="floor-num" style="background:${f.dcolor}">F${i + 1}</div>
-        <div class="floor-meta">
-          <div class="name">${FLOORS[i].boss.face} ${f.name}</div>
-          <div class="dom">${f.domain} · task statements ${f.ts.join(', ')} · ${Bank.forTs(f.ts).length} questions · boss: ${f.boss.name}</div>
-        </div>
-        <div class="floor-right">
-          ${fs.best ? `<div class="score">${fs.best}/10${fs.best === 10 ? ' <span class="stars">★</span>' : ''}</div>` : ''}
-          <div class="status">${!unlocked ? '🔒 clear the floor below' : fs.cleared ? 'cleared — fight again' : 'ENTER'}</div>
-        </div>`;
+        <span class="floor-num" style="background:${f.dcolor}">F${i + 1}</span>
+        <span class="floor-meta">
+          <span class="name"><span aria-hidden="true">${FLOORS[i].boss.face} </span>${f.name}</span>
+          <span class="dom">${f.domain} · task statements ${f.ts.join(', ')} · ${Bank.forTs(f.ts).length} questions · boss: ${f.boss.name}</span>
+        </span>
+        <span class="floor-right">
+          ${fs.best ? `<span class="score">${fs.best}/10${fs.best === 10 ? ' <span class="stars" aria-label="perfect">★</span>' : ''}</span>` : ''}
+          <span class="status">${!unlocked ? '<span aria-hidden="true">🔒</span> locked: clear the floor below' : fs.cleared ? 'cleared — fight again' : 'ENTER'}</span>
+        </span>`;
       if (unlocked) row.onclick = () => Battle.start(i);
       rows.push(row);
       prevCleared = !!fs.cleared;
     });
     // final floor card (Proctor)
     const allClear = FLOORS.every(f => (Game.s.floors[f.id] || {}).cleared);
-    const fin = document.createElement('div');
+    const fin = document.createElement('button');
     fin.className = 'floor-card final';
     fin.innerHTML = `
-      <div class="floor-num" style="background:var(--gold)">👁️</div>
-      <div class="floor-meta">
-        <div class="name">📋 THE PROCTOR · Mock exam</div>
-        <div class="dom">All domains at exam weights · 60 questions · 120 minutes · pass 720/1000</div>
-      </div>
-      <div class="floor-right">
-        ${Game.s.examBest ? `<div class="score">${Game.s.examBest}/1000</div>` : ''}
-        <div class="status">${allClear ? 'You are ready.' : 'open early, if you dare'}</div>
-      </div>`;
+      <span class="floor-num" style="background:var(--gold-ink)" aria-hidden="true">👁️</span>
+      <span class="floor-meta">
+        <span class="name"><span aria-hidden="true">📋 </span>THE PROCTOR · Mock exam</span>
+        <span class="dom">All domains at exam weights · 60 questions · 120 minutes · pass 720/1000</span>
+      </span>
+      <span class="floor-right">
+        ${Game.s.examBest ? `<span class="score">best est. ${Game.s.examBest}</span>` : ''}
+        <span class="status">${allClear ? 'Tower cleared: take a mock to check your readiness' : 'open early, if you dare'}</span>
+      </span>`;
     fin.onclick = () => UI.go('examintro');
     rows.push(fin);
     rows.forEach(r => list.appendChild(r));
+    /* the list climbs upward, so the floor to play next can sit far below the fold on a phone */
+    const nextUp = list.querySelector('.next-up');
+    if (nextUp) requestAnimationFrame(() => {
+      const r = nextUp.getBoundingClientRect();
+      if (r.bottom > window.innerHeight) nextUp.scrollIntoView({ block: 'center', behavior: 'auto' });
+    });
   },
 };
 
@@ -634,12 +813,19 @@ const Battle = {
     sprite.className = 'boss-sprite';
     document.getElementById('b-speech').textContent = '“' + f.boss.taunt + '”';
     document.getElementById('b-boss-hp').style.width = '100%';
+    document.getElementById('b-boss-hpbar').setAttribute('aria-label', 'Boss health 100%');
     UI.go('battle');
     this.renderPowerups();
     this.show();
   },
 
   hearts() { return Math.max(0, 3 - this.wrong); },
+
+  renderHearts() {
+    const el = document.getElementById('b-hearts'), n = this.hearts();
+    el.textContent = '❤️'.repeat(n) + '🖤'.repeat(3 - n);
+    el.setAttribute('aria-label', n + ' of 3 lives left');
+  },
 
   show() {
     const item = this.queue[this.qi];
@@ -648,7 +834,7 @@ const Battle = {
     this.qStart = Date.now();
     document.getElementById('b-progress').textContent = `Q ${this.qi + 1}/${this.queue.length}`;
     document.getElementById('b-combo').textContent = this.combo >= 2 ? `🔥 combo ×${this.combo}` : '';
-    document.getElementById('b-hearts').textContent = '❤️'.repeat(this.hearts()) + '🖤'.repeat(3 - this.hearts());
+    this.renderHearts();
     document.getElementById('b-hint').className = 'hint-strip';
     document.getElementById('b-shield').className = 'shield-note' + (this.shield ? ' show' : '');
     document.getElementById('b-qtext').innerHTML = fmt(q.q);
@@ -664,21 +850,24 @@ const Battle = {
       const b = document.createElement('button');
       b.className = 'powerup';
       b.disabled = n <= 0 || (k === 'compact' && this.usedCompact) || (k === 'think' && this.usedThink) || (k === 'shield' && this.shield);
-      b.innerHTML = `${p.ic} ${p.nm} <span class="cnt">${n}</span>`;
+      b.innerHTML = `<span aria-hidden="true">${p.ic}</span> ${p.nm} <span class="cnt"><span class="sr-only">(</span>${n}<span class="sr-only"> left)</span></span>`;
       b.title = p.ds;
+
       b.onclick = () => this.usePowerup(k);
       bar.appendChild(b);
     });
   },
 
   usePowerup(k) {
-    if (Game.s.powerups[k] <= 0) return;
+    if (Game.s.powerups[k] <= 0 || UI.current !== 'battle') return;
+    if (this.buttons.some(b => b.classList.contains('correct'))) return;  // already answered: nothing to spend it on
     const q = this.queue[this.qi].deal;
     if (k === 'compact') {
       if (this.usedCompact) return;
       this.usedCompact = true;
       const wrongs = shuffle([0, 1, 2, 3].filter(i => i !== q.correct)).slice(0, 2);
-      wrongs.forEach(i => { this.buttons[i].classList.add('dim', 'disabled'); });
+      wrongs.forEach(i => { this.buttons[i].classList.add('dim', 'disabled'); this.buttons[i].setAttribute('aria-disabled', 'true'); });
+      UI.announce('Two wrong options removed.');
     }
     if (k === 'think') {
       if (this.usedThink) return;
@@ -728,6 +917,7 @@ const Battle = {
       this.floatDamage(crit ? 'CRIT ' + (12 + this.combo) : '' + (10 + this.combo), crit);
       const hpLeft = Math.max(0, 100 - this.right * (100 / this.queue.length));
       document.getElementById('b-boss-hp').style.width = hpLeft + '%';
+      document.getElementById('b-boss-hpbar').setAttribute('aria-label', 'Boss health ' + Math.round(hpLeft) + '%');
       if (hpLeft <= 40) speech.textContent = '“' + f.boss.hurt + '”';
     } else {
       this.buttons[i].classList.add('wrong');
@@ -742,10 +932,11 @@ const Battle = {
       Game.deckAdd(q.id);
       Sound.bad();
       speech.textContent = pick(['“Ha! A classic trap!”', '“Your prompt-based defenses amuse me.”', '“That one costs a heart.”', '“The distractor claims another victim!”']);
-      document.getElementById('b-hearts').textContent = '❤️'.repeat(this.hearts()) + '🖤'.repeat(3 - this.hearts());
+      this.renderHearts();
     }
 
     setTimeout(() => {
+      if (UI.current !== 'battle' || this.queue[this.qi] !== item) return;  // the player left this battle
       UI.modal(ok, q.options[q.correct], q.explanation, () => this.next());
     }, ok ? 700 : 900);
   },
@@ -792,7 +983,9 @@ const Battle = {
       this.xpGained += bonus;
     }
 
+    const queue = this.queue;
     setTimeout(() => {
+      if (UI.current !== 'battle' || this.queue !== queue) return;  // progress is saved; don't yank the player back
       document.getElementById('r-emoji').textContent = win ? (this.right === 10 ? '👑' : '🏆') : '💀';
       const t = document.getElementById('r-title');
       t.textContent = win ? (this.right === 10 ? 'FLAWLESS!' : 'FLOOR CLEARED') : 'DEFEATED';
@@ -808,11 +1001,12 @@ const Battle = {
       document.getElementById('r-actions').innerHTML = '';
       const acts = document.getElementById('r-actions');
       const again = document.createElement('button');
-      again.className = 'btn ghost'; again.textContent = win ? '↻ Fight again' : '⚔️ Rematch';
+      again.className = 'btn ghost'; again.innerHTML = win ? '<span aria-hidden="true">↻</span> Fight again' : '<span aria-hidden="true">⚔️</span> Rematch';
       again.onclick = () => Battle.start(this.floorIdx);
       const tower = document.createElement('button');
       tower.className = 'btn primary'; tower.style.marginLeft = '10px';
-      tower.textContent = win ? '🗼 Climb on' : '🗼 Back to tower';
+      tower.innerHTML = '<span aria-hidden="true">🗼</span> ' + (win ? 'Climb on' : 'Back to tower');
+
       tower.onclick = () => UI.go('tower');
       acts.append(again, tower);
       if (win) { Sound.win(); UI.confetti(); } else Sound.lose();
@@ -889,46 +1083,84 @@ const Exam = {
     Game.save();
   },
 
-  /* ---- persistence (strict mock only) ---- */
+  /* the same, for a saved attempt that is discarded without being restored (abandoned or voided).
+     Records from before `sh` existed count the answered items */
+  creditExposure(rec) {
+    (rec.items || []).forEach(s => {
+      if (s && Bank.byId(s.id) && (s.sh == null ? s.sel != null : s.sh)) Game.s.mockSeen[s.id] = (Game.s.mockSeen[s.id] || 0) + 1;
+    });
+    Game.save();
+  },
+
+  /* ---- persistence (strict mock only) ----
+     v2 records carry a per-item fingerprint of the options and key, so an answer is only replayed onto
+     the question the player actually saw. v1 records (no fingerprints) are voided on load */
   stored() {
-    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && r.v === 1 ? r : null; }
+    try { const r = JSON.parse(localStorage.getItem(EXAM_KEY)); return r && (r.v === 1 || r.v === 2) ? r : null; }
     catch (e) { return null; }
   },
-  saved() { const r = this.stored(); return r && r.status === 'live' ? r : null; },
+  saved() { const r = this.stored(); return r && r.v === 2 && r.status === 'live' && Array.isArray(r.items) ? r : null; },
   clearSaved() { try { localStorage.removeItem(EXAM_KEY); } catch (e) {} },
   /* a finished attempt leaves a marker so another tab can't write it back as live */
-  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 1, status, attemptId })); } catch (e) {} },
+  endSaved(status, attemptId = this.attemptId) { try { localStorage.setItem(EXAM_KEY, JSON.stringify({ v: 2, status, attemptId })); } catch (e) {} },
   /* true when another tab submitted, reset or replaced this attempt */
   takenOver() { const r = this.stored(); return !!r && (r.attemptId !== this.attemptId || r.status !== 'live'); },
-  persist() {
+  /* fresh: a new attempt replaces whatever record or end marker is there */
+  persist(fresh) {
     if (this.variant !== 'mock' || this.submitted) return;
-    if (this.takenOver()) return this.detach();
+    if (!fresh && this.takenOver()) return this.detach();
     const rec = {
-      v: 1, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
+      v: 2, status: 'live', attemptId: this.attemptId, bankHash: Bank.hash(),
       startedAt: this.startedAt, deadline: this.deadline, idx: this.idx, scenarios: this.scenarios,
-      items: this.items.map(it => ({ id: it.id, o: it.deal.order, sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore, mb: it.mockBefore, sh: it.shown })),
+      items: this.items.map(it => ({ id: it.id, o: it.deal.order, fp: qFingerprint(Bank.byId(it.id)), sel: it.sel, flag: it.flag, sc: it.scenario, seen: it.seenBefore, mb: it.mockBefore, sh: it.shown })),
     };
     try { localStorage.setItem(EXAM_KEY, JSON.stringify(rec)); } catch (e) {}
   },
-  /* an attempt survives bank growth; it is void only if one of its own questions is gone */
+  /* an attempt survives bank growth; it is void only if one of its own questions is gone. An item whose
+     options or key changed since it was saved (fingerprint mismatch, or an order that isn't a permutation)
+     loses its answer and is dealt again. Returns false (void) or the number of answers cleared */
   restore(rec) {
     const items = [];
+    let cleared = 0, changed = 0;
     for (const s of rec.items) {
-      const q = Bank.byId(s.id);
+      const q = s && Bank.byId(s.id);
       if (!q) return false;
-      items.push(this.item(q, s.o, { sel: s.sel, flag: !!s.flag, scenario: s.sc, seenBefore: !!s.seen, mockBefore: !!s.mb, shown: !!s.sh }));
+      const n = q.options.length, o = s.o;
+      const perm = Array.isArray(o) && o.length === n && n === 4 && o.every(i => Number.isInteger(i) && i >= 0 && i < n) && new Set(o).size === n;
+      const same = perm && s.fp === qFingerprint(q);
+      const sel = same && Number.isInteger(s.sel) && s.sel >= 0 && s.sel < n ? s.sel : null;
+      if (!same) { changed++; if (s.sel != null) cleared++; }
+      items.push(this.item(q, same ? o : null, { sel, flag: !!s.flag, scenario: s.sc || 0, seenBefore: !!s.seen, mockBefore: !!s.mb,
+        shown: s.sh == null ? s.sel != null : !!s.sh }));
     }
-    Object.assign(this, { variant: 'mock', items, idx: rec.idx || 0, startedAt: rec.startedAt, deadline: rec.deadline,
-      attemptId: rec.attemptId, scenarios: rec.scenarios, submitted: false, warned: false, exposed: false });
+    Object.assign(this, { variant: 'mock', items, idx: Math.max(0, Math.min(items.length - 1, rec.idx || 0)), startedAt: rec.startedAt, deadline: rec.deadline,
+      attemptId: rec.attemptId, scenarios: rec.scenarios || [], submitted: false, warned: false, exposed: false });
+    if (changed) {
+      this.persist();  // store the new deal and fingerprints, so this happens once
+      if (cleared) UI.toast('✏️', cleared + (cleared === 1 ? ' answer was' : ' answers were') + ' cleared',
+        'Those questions were updated in the bank since you answered them. Answer them again.');
+    }
+    return cleared;
+  },
+
+  /* a v1 record has no fingerprints, so its answers can't be checked against today's bank: void it */
+  voidLegacy() {
+    const r = this.stored();
+    if (!r || r.v === 2 || r.status !== 'live') return false;
+    this.creditExposure(r);
+    this.endSaved('voided', r.attemptId);
+    UI.toast('🗑️', 'Saved mock exam voided', 'The question bank was updated since you started it, and that attempt can\'t be checked against the new questions safely.');
     return true;
   },
 
   /* on boot: void a stale attempt, or finish one whose clock ran out while away */
   checkSaved() {
+    if (this.voidLegacy()) return;
     const rec = this.saved();
     if (!rec) return;
-    if (!this.restore(rec)) {
-      this.clearSaved();
+    if (this.restore(rec) === false) {
+      this.creditExposure(rec);
+      this.endSaved('voided', rec.attemptId);
       UI.toast('🗑️', 'Saved mock exam voided', 'Some of its questions were removed from the bank.');
       return;
     }
@@ -942,7 +1174,7 @@ const Exam = {
   settleExpired() {
     const rec = this.saved();
     if (this.active || !rec || Date.now() < rec.deadline) return false;
-    if (!this.restore(rec)) { this.clearSaved(); return false; }
+    if (this.restore(rec) === false) { this.creditExposure(rec); this.endSaved('voided', rec.attemptId); return false; }
     UI.toast('🛎️', 'Your mock exam ran out of time', 'It was submitted with the answers you saved.');
     this.submit('expired');
     return true;
@@ -973,21 +1205,25 @@ const Exam = {
   /* ---- lifecycle ---- */
   start(variant) {
     if (this.settleExpired()) return;
-    if (this.saved() && !confirm('Abandon the mock exam you have in progress? It will not be scored.')) return;
-    this.clearSaved();
+    const old = this.saved();
+    if (old && !confirm('Abandon the mock exam you have in progress? It will not be scored.')) return;
+    /* the abandoned attempt's displayed questions still count as exposure, and its end marker makes
+       another tab on it detach (a new mock then replaces the marker) */
+    if (old) { this.creditExposure(old); this.endSaved('abandoned', old.attemptId); }
+    else this.clearSaved();
     const scenarios = this.drawScenarios();
     const items = this.build(scenarios);
     if (items.length < 60) { UI.toast('🚧', 'Bank too small for a full exam', items.length + ' eligible questions.'); return; }
     const now = Date.now();
     Object.assign(this, { variant, items, scenarios, idx: 0, startedAt: now, deadline: now + EXAM_SECS * 1000,
       attemptId: String(now), submitted: false, warned: false, exposed: false });
-    this.persist();
+    this.persist(true);
     this.enter();
   },
 
   resume() {
     const rec = this.saved();
-    if (!rec || !this.restore(rec)) { this.clearSaved(); UI.toast('🗑️', 'Nothing to resume', 'That attempt is gone or the bank changed.'); UI.go('examintro'); return; }
+    if (!rec || this.restore(rec) === false) { if (rec) { this.creditExposure(rec); this.endSaved('voided', rec.attemptId); } UI.toast('🗑️', 'Nothing to resume', 'That attempt is gone or the bank changed.'); UI.go('examintro'); return; }
     if (Date.now() >= this.deadline) { this.submit('expired'); return; }
     this.enter();
   },
@@ -997,6 +1233,8 @@ const Exam = {
     UI.go('exam');
     document.getElementById('screen-exam').classList.toggle('practice', this.variant === 'practice');
     document.getElementById('e-mode').textContent = this.variant === 'mock' ? 'Mock exam · no feedback until you submit' : 'Practice exam · feedback after each question';
+    this.shownIdx = -1;
+    document.getElementById('e-grid').innerHTML = '';
     this.renderGrid(); this.show();
     clearInterval(this.timer); clearTimeout(this.away);
     this.timer = setInterval(() => this.tick(), 1000);
@@ -1020,7 +1258,7 @@ const Exam = {
       const left = this.remaining();
       t.textContent = clock(left);
       t.className = 't' + (left <= 600 ? ' low' : '');
-      document.getElementById('e-timer-lbl').textContent = 'remaining';
+      document.getElementById('e-timer-lbl').textContent = left <= 600 ? 'remaining · under 10 minutes' : 'remaining';
       if (!this.warned && left <= 600 && left > 0) { this.warned = true; UI.toast('⏳', '10 minutes remain', 'The Proctor taps the desk.'); }
       if (left <= 0) { UI.toast('🛎️', 'Time!', 'Pencils down. Auto-submitting.'); this.submit('timeout'); return; }
     } else {
@@ -1053,13 +1291,18 @@ const Exam = {
     const dt = document.getElementById('e-domain');
     dt.textContent = it.domain + ' · ' + it.deal.ts;
     dt.style.background = DOMAINS[it.domain].color;
+    /* the real exam doesn't label items by domain or task statement; the strict mock shows them only in the review */
+    dt.style.display = practice ? '' : 'none';
     const sc = GUIDE.scenarios.find(x => x.id === it.scenario);
     document.getElementById('e-scen').textContent = sc ? 'Scenario: ' + sc.name : 'General';
     const box = document.getElementById('e-scenbox');
     const blockStart = !prev || prev.scenario !== it.scenario;
     box.innerHTML = blockStart ? (sc ? `<strong>${sc.name}.</strong> ${sc.blurb}` : '<strong>General questions.</strong> Items that don\'t belong to one of this exam\'s four scenarios.') : '';
     box.style.display = blockStart ? 'block' : 'none';
-    document.getElementById('e-flag').className = 'flag-btn' + (it.flag ? ' on' : '');
+    const flag = document.getElementById('e-flag');
+    flag.className = 'flag-btn' + (it.flag ? ' on' : '');
+    flag.setAttribute('aria-pressed', String(!!it.flag));
+    flag.lastChild.textContent = it.flag ? ' Flagged' : ' Flag';
     document.getElementById('e-qtext').innerHTML = fmt(it.deal.q);
     const fb = document.getElementById('e-feedback');
     fb.innerHTML = '';
@@ -1069,12 +1312,16 @@ const Exam = {
     const btns = UI.renderAnswers('e-answers', it.deal.options, (i) => {
       if (practice) { if (it.sel == null) this.practiceAnswer(i); return; }
       it.sel = i;
-      btns.forEach((b, j) => b.classList.toggle('picked', j === i));
+      btns.forEach((b, j) => { b.classList.toggle('picked', j === i); b.setAttribute('aria-pressed', String(j === i)); });
       this.renderGrid(); this.persist(); this.renderPace();
       Sound.click();
     });
     if (practice && it.sel != null) this.markPractice(btns, it);
-    else if (it.sel != null) btns[it.sel].classList.add('picked');
+    else if (!practice) btns.forEach((b, j) => { b.classList.toggle('picked', j === it.sel); b.setAttribute('aria-pressed', String(j === it.sel)); });
+    if (this.shownIdx !== this.idx) {
+      this.shownIdx = this.idx;
+      UI.announce('Question ' + (this.idx + 1) + ' of ' + this.items.length + (it.sel != null ? ', answered' : '') + (it.flag ? ', flagged' : ''));
+    }
     document.getElementById('e-prev').disabled = this.idx === 0;
     document.getElementById('e-next').disabled = this.idx === this.items.length - 1;
   },
@@ -1096,6 +1343,10 @@ const Exam = {
     btns[it.deal.correct].classList.add('correct');
     if (!ok) btns[it.sel].classList.add('wrong');
     const last = this.idx === this.items.length - 1;
+    if (this.announced !== it) {
+      this.announced = it;
+      UI.announce((ok ? 'Correct. ' : 'Not quite. The answer is ' + (it.deal.correct + 1) + ': ') + (ok ? '' : it.deal.options[it.deal.correct]));
+    }
     document.getElementById('e-feedback').innerHTML = `
       <div class="verdict ${ok ? 'good' : 'bad'}">${ok ? 'Correct' : 'Not quite'}${it.secs != null ? ` · ${clock(it.secs)}${it.secs > PACE_SECS ? ' (over 2:00)' : ''}` : ''}</div>
       <div class="expl">${fmt(it.deal.explanation)}</div>
@@ -1107,22 +1358,41 @@ const Exam = {
   jump(i) { this.idx = i; this.show(); this.renderGrid(); this.persist(); },
   toggleFlag() { const it = this.items[this.idx]; it.flag = !it.flag; this.show(); this.renderGrid(); this.persist(); },
 
+  /* cells are updated in place, so the one you just used keeps keyboard focus */
   renderGrid() {
     const g = document.getElementById('e-grid');
-    g.innerHTML = '';
+    if (g.children.length !== this.items.length) {
+      g.innerHTML = '';
+      this.items.forEach((it, i) => {
+        const c = document.createElement('button');
+        c.textContent = i + 1;
+        c.onclick = () => this.jump(i);
+        g.appendChild(c);
+      });
+    }
     const practice = this.variant === 'practice';
     this.items.forEach((it, i) => {
-      const c = document.createElement('button');
-      let cls = 'nav-cell';
-      if (it.sel != null) cls += practice ? (it.sel === it.deal.correct ? ' answered' : ' missed') : ' answered';
-      if (it.flag) cls += ' flagged';
-      if (i === this.idx) cls += ' current';
+      const c = g.children[i];
+      let cls = 'nav-cell', state = [];
+      if (it.sel != null) {
+        const right = it.sel === it.deal.correct;
+        cls += practice ? (right ? ' answered' : ' missed') : ' answered';
+        state.push(practice ? (right ? 'correct' : 'missed') : 'answered');
+      } else state.push('not answered');
+      if (it.flag) { cls += ' flagged'; state.push('flagged'); }
+      if (i === this.idx) { cls += ' current'; c.setAttribute('aria-current', 'step'); } else c.removeAttribute('aria-current');
       if (i > 0 && this.items[i - 1].scenario !== it.scenario) cls += ' block-start';
       c.className = cls;
-      c.textContent = i + 1;
-      c.onclick = () => this.jump(i);
-      g.appendChild(c);
+      c.setAttribute('aria-label', 'Question ' + (i + 1) + ', ' + state.join(', '));
     });
+  },
+
+  /* phone: jump from the sticky clock bar to the navigator, landing on the current question */
+  focusGrid() {
+    const c = document.getElementById('e-grid').children[this.idx];
+    if (!c) return;
+    c.scrollIntoView({ block: 'center', behavior: UI.reducedMotion() ? 'auto' : 'smooth' });
+    c.focus({ preventScroll: true });
   },
 
   confirmSubmit() {
@@ -1151,8 +1421,9 @@ const Exam = {
       const ps = perScen[it.scenario] || (perScen[it.scenario] = { right: 0, total: 0 });
       ps.total++;
       if (ok) { correct++; perDomain[it.domain].right++; ps.right++; }
-      /* unanswered items score as wrong but don't count as seen in the per-question stats */
-      if (mock) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.sel != null ? it.id : null); }
+      /* unanswered items score as wrong but stay out of the clinic, totals and per-question stats;
+         a mock scored after expiring while away doesn't count as studying today */
+      if (mock && it.sel != null) { if (!ok) Game.deckAdd(it.id); Game.recordAnswer(ok, it.id, false, reason === 'expired'); }
     });
     const total = this.items.length, pct = correct / total;
     const score = scaledScore(pct);
@@ -1180,8 +1451,13 @@ const Exam = {
   },
 
   renderResult(r) {
-    document.getElementById('er-kind').textContent = r.mock ? '📋 Mock exam result' : '📝 Practice exam result';
-    document.getElementById('er-score').textContent = r.score;
+    document.getElementById('er-kind').textContent = r.mock ? 'Mock exam result' : 'Practice exam result';
+    /* one sitting is a noisy sample: show a band (about two standard errors), not a point */
+    const se = Math.sqrt(Math.max(r.pct * (1 - r.pct), 0.01) / r.total);
+    const r10 = x => Math.round(x / 10) * 10;
+    const lo = Math.max(100, r10(scaledScore(Math.max(0, r.pct - 2 * se)))), hi = Math.min(1000, r10(scaledScore(Math.min(1, r.pct + 2 * se))));
+    document.getElementById('er-score').textContent = '~' + lo + '–' + hi;
+    document.getElementById('er-raw').textContent = r.correct + '/' + r.total + ' raw';
     const arc = document.getElementById('er-arc');
     arc.style.transition = 'none'; arc.style.strokeDashoffset = 540;
     arc.style.stroke = r.band === 'above' ? 'var(--good)' : r.band === 'near' ? 'var(--gold)' : 'var(--bad)';
@@ -1190,7 +1466,8 @@ const Exam = {
     banner.textContent = { above: '📜 Above the 720 line', near: '⚖️ Right on the line', below: '❌ Below the 720 line' }[r.band];
     banner.style.color = { above: 'var(--good)', near: 'var(--gold)', below: 'var(--bad)' }[r.band];
     document.getElementById('er-sub').textContent = `${r.correct}/${r.total} correct (${Math.round(r.pct * 100)}%) · ${Math.round(r.used / 60)}${r.mock ? ' of 120' : ''} minutes · ${Math.round(r.used / r.total)}s per question · +${r.xp} XP`;
-    document.getElementById('er-note').innerHTML = `Scaled score is an <strong>estimate</strong> (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
+    document.getElementById('er-note').innerHTML = `The scaled score is an <strong>estimate</strong>: a likely range of ${lo}–${hi}, centred on ${r.score} (72% raw maps to 720; the real scaling isn't published). One 60-question attempt is roughly ±100 points, so take two or three before trusting a trend.`
+      + ` This mock has no multiple-response items, which the real exam includes.`
       + ` <strong>${r.total - r.seenBefore} of ${r.total}</strong> questions were new to you`
       + (r.mockBefore ? ` and <strong>${r.mockBefore}</strong> had appeared in an earlier mock or practice exam` : '')
       + (r.seenBefore > r.total / 4 ? '. Questions you have answered before can inflate the score.' : '.');
@@ -1200,29 +1477,31 @@ const Exam = {
       return `<div class="dbar"><div class="row"><span>${label}</span><span>${right}/${total} · ${pct}%</span></div>
         <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
     };
-    document.getElementById('er-bars').innerHTML = '<h4>By domain</h4>' + Object.entries(r.perDomain).map(([d, x]) => bar(d + ' · ' + DOMAINS[d].label, x.right, x.total, DOMAINS[d].color)).join('')
-      + '<h4>By scenario</h4>' + Object.entries(r.perScen).map(([sid, x]) => {
+    document.getElementById('er-bars').innerHTML = '<h2>By domain</h2>' + Object.entries(r.perDomain).map(([d, x]) => bar(d + ' · ' + DOMAINS[d].label, x.right, x.total, DOMAINS[d].color)).join('')
+      + '<h2>By scenario</h2>' + Object.entries(r.perScen).map(([sid, x]) => {
         const sc = GUIDE.scenarios.find(s => s.id === Number(sid));
         return bar(sc ? sc.name : 'General', x.right, x.total, 'var(--accent)');
       }).join('');
 
     const focus = Blueprint.focus(3);
-    document.getElementById('er-focus').innerHTML = focus.length ? `<h4>Focus next <span class="muted">(from all your answers so far)</span></h4>` + focus.map(f =>
-      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small ghost" onclick="Blueprint.drillTs('${f.t.id}')">Drill</button></div>`).join('') : '';
+    document.getElementById('er-focus').innerHTML = focus.length ? `<h2>Focus next <span class="muted">(from all your answers so far)</span></h2>` + focus.map(f =>
+      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small ghost" onclick="Blueprint.drillTs('${f.t.id}')" aria-label="Drill ${f.t.id}">Drill</button></div>`).join('') : '';
 
     const acts = document.getElementById('er-actions');
     acts.innerHTML = '';
-    [['all', '🔍 Review all'], ['wrong', '✘ Wrong only'], ['flagged', '🚩 Flagged']].forEach(([k, label]) => {
+    [['all', '🔍', 'Review all'], ['wrong', '✘', 'Wrong only'], ['flagged', '🚩', 'Flagged']].forEach(([k, ic, label]) => {
       const b = document.createElement('button');
-      b.className = 'btn ghost small'; b.textContent = label;
+      b.className = 'btn ghost small review-filter'; b.innerHTML = `<span aria-hidden="true">${ic}</span> ${label}`;
+      b.setAttribute('aria-pressed', 'false'); b.dataset.filter = k;
+      b.setAttribute('aria-controls', 'er-review');
       b.onclick = () => this.renderReview(k);
       acts.appendChild(b);
     });
     const bp = document.createElement('button');
-    bp.className = 'btn ghost small'; bp.textContent = '📘 Blueprint';
+    bp.className = 'btn ghost small'; bp.innerHTML = '<span aria-hidden="true">📘</span> Blueprint';
     bp.onclick = () => UI.go('blueprint');
     const home = document.createElement('button');
-    home.className = 'btn primary small'; home.textContent = '🏛️ Back to the hall';
+    home.className = 'btn primary small'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Back to the hall';
     home.onclick = () => UI.go('home');
     acts.append(bp, home);
     document.getElementById('er-review').innerHTML = '';
@@ -1242,7 +1521,12 @@ const Exam = {
         <div class="ex">${fmt(it.deal.explanation)}</div>
       </div>`;
     }).join('') : '<p class="center muted">Nothing in this filter.</p>';
+    document.querySelectorAll('#er-actions .review-filter').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === filter)));
+    UI.announce(list.length + (list.length === 1 ? ' question' : ' questions') + ' in this review');
+    const rv = document.getElementById('er-review');
+    if (rv.getBoundingClientRect().top > window.innerHeight * 0.6) rv.scrollIntoView({ block: 'start', behavior: UI.reducedMotion() ? 'auto' : 'smooth' });
   },
+
 };
 
 /* ---------------- the blueprint (exam-guide study mode) ---------------- */
@@ -1272,7 +1556,7 @@ const Readiness = {
       return { ic: '📘', label: 'Start with a D1 drill', sub: 'Domain 1 is 27% of the exam. Ten questions, explained one by one.', run: () => Blueprint.drillDomain('D1') };
     }
     if (s.deck.length >= 10) return { ic: '🩹', label: `Treat ${s.deck.length} mistakes in the Clinic`, sub: 'Your own misses are the highest-yield study there is.', run: () => Review.start() };
-    const thin = rows.filter(r => r.firstN < READY_MIN_FIRST).sort((a, b) => a.firstN / a.meta.exam - b.firstN / b.meta.exam)[0];
+    const thin = rows.filter(r => r.firstN < READY_MIN_FIRST).sort((a, b) => a.firstN - b.firstN || b.meta.weight - a.meta.weight)[0];
     if (thin) return { ic: '🧭', label: `Cover ${thin.d}: ${thin.meta.label}`, sub: `${thin.firstN} of ${READY_MIN_FIRST} first tries so far. A drill serves questions you haven't seen.`, run: () => Blueprint.drillDomain(thin.d) };
     const weighted = rows.reduce((a, r) => a + r.acc * r.meta.weight, 0) / 100, last = this.lastMock();
     if (weighted >= READY_TARGET && (!last || days(last) >= 7)) return { ic: '📋', label: 'Take a full mock exam', sub: 'Your practice says you are close. Test it under real conditions: 60 questions, 120 minutes.', run: () => UI.go('examintro') };
@@ -1291,27 +1575,28 @@ const Readiness = {
     const weighted = ready ? Math.round(rows.reduce((a, r) => a + r.acc * r.meta.weight, 0)) : null;
     box.innerHTML = `
       <div class="ready-head">
-        <div><h3>Exam readiness</h3>
+        <div><h2>Exam readiness</h2>
           <div class="muted small">First-try accuracy on questions you've practised, by exam domain. A domain counts once you have ${READY_MIN_FIRST} first tries in it.</div></div>
         <div class="ready-sum">
           <div class="k">Practice, weighted</div><div class="v">${weighted != null ? weighted + '%' : '—'}</div>
-          <div class="k">Last mock</div><div class="v">${last ? last.score + ' <span class="muted small">est. · ' + last.date + '</span>' : '—'}</div>
+          <div class="k">Last mock</div><div class="v">${last ? '~' + last.score + ' <span class="muted small">estimate · ' + last.date + '</span>' : '—'}</div>
         </div>
       </div>
       <div class="ready-rows">${rows.map(r => {
         const pct = r.acc != null ? Math.round(r.acc * 100) : 0, cov = Math.round(Math.min(1, r.firstN / READY_MIN_FIRST) * 100);
-        return `<div class="ready-row" onclick="Blueprint.drillDomain('${r.d}')" title="Drill ${r.d}">
-          <span class="domain-tag" style="background:${r.meta.color}">${r.d}</span>
+        const counted = r.firstN >= READY_MIN_FIRST;
+        return `<button class="ready-row" onclick="Blueprint.drillDomain('${r.d}')" title="Drill ${r.d}">
+          <span class="domain-tag" style="background:${r.meta.color}"><span class="sr-only">Drill </span>${r.d}</span>
           <span class="nm">${r.meta.label}<span class="muted small"> · ${r.meta.weight}% of the exam</span></span>
-          <span class="track"><span class="cov" style="width:${cov}%"></span><span class="acc" style="width:${r.firstN >= READY_MIN_FIRST ? pct : 0}%;background:${r.meta.color}"></span><span class="target"></span></span>
-          <span class="val">${r.firstN >= READY_MIN_FIRST ? pct + '%' : r.firstN + '/' + READY_MIN_FIRST + ' tries'}</span>
-        </div>`;
+          <span class="track"><span class="cov" style="width:${cov}%"></span><span class="acc" style="width:${counted ? pct : 0}%;background:${r.meta.color}"></span><span class="target"></span></span>
+          <span class="val">${counted ? pct + '%<span class="sr-only"> right on first tries</span>' : r.firstN + '/' + READY_MIN_FIRST + ' tries'}</span>
+        </button>`;
       }).join('')}</div>
       <div class="next-step">
-        <span class="ic">${nx.ic}</span>
-        <span class="txt"><b>Next best step:</b> ${nx.label}<br><span class="muted small">${nx.sub}</span></span>
-        ${nx.lesson ? `<button class="btn small ghost" onclick="Learn.open('${nx.lesson}')">🎓 Lesson</button>` : ''}
-        <button class="btn small primary" onclick="Readiness.go()">Go →</button>
+        <span class="ic" aria-hidden="true">${nx.ic}</span>
+        <span class="txt" id="next-step-txt"><b>Next best step:</b> ${nx.label}<br><span class="muted small">${nx.sub}</span></span>
+        ${nx.lesson ? `<button class="btn small ghost" onclick="Learn.open('${nx.lesson}')"><span aria-hidden="true">🎓</span> Lesson</button>` : ''}
+        <button class="btn small primary" onclick="Readiness.go()" aria-describedby="next-step-txt">Go →</button>
       </div>
       <p class="muted small">The line on each bar marks ${Math.round(READY_TARGET * 100)}%, the raw score our mock maps to the 720 pass mark. Practice accuracy is not an exam score; a strict mock is the closest thing to one.</p>`;
   },
@@ -1363,11 +1648,11 @@ const Blueprint = {
     document.getElementById('bp-facts').innerHTML = [
       `❓ <b>${g.items}</b> items`, `⏱️ <b>${g.minutes}</b> min`, `🎬 <b>${g.scenarios}</b> of ${g.scenarioBank} scenarios`, `🎯 pass <b>${g.pass}</b> scaled (${g.scaleMin}–${g.scaleMax})`,
     ].map(x => `<div class="fact-pill">${x}</div>`).join('');
-    document.querySelectorAll('#bp-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === this.tab));
+    document.querySelectorAll('#bp-tabs button').forEach(b => { b.classList.toggle('on', b.dataset.tab === this.tab); b.setAttribute('aria-pressed', String(b.dataset.tab === this.tab)); });
 
     const focus = this.focus(3);
-    document.getElementById('bp-focus').innerHTML = `<h4>🎯 Focus next</h4>` + focus.map(f =>
-      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small primary" onclick="Blueprint.drillTs('${f.t.id}')">Drill</button></div>`).join('');
+    document.getElementById('bp-focus').innerHTML = `<h2><span aria-hidden="true">🎯</span> Focus next</h2>` + focus.map(f =>
+      `<div class="focus-row"><span><b>${f.t.id}</b> ${f.t.title}<br><span class="muted">${f.note}</span></span><button class="btn small primary" onclick="Blueprint.drillTs('${f.t.id}')" aria-label="Drill ${f.t.id}">Drill</button></div>`).join('');
 
     const body = document.getElementById('bp-body');
     body.innerHTML = this.tab === 'domains' ? this.renderDomains() : this.tab === 'scenarios' ? this.renderScenarios() : this.renderPrep();
@@ -1377,7 +1662,7 @@ const Blueprint = {
   bar(st, color) {
     const pct = st.total ? Math.round((st.right / st.total) * 100) : 0;
     const seen = st.total ? Math.round((st.seen / st.total) * 100) : 0;
-    return `<div class="bp-bar" title="seen ${seen}% · right on last try ${pct}%"><div class="seen" style="width:${seen}%"></div><div class="right" style="width:${pct}%;background:${color}"></div></div>`;
+    return `<div class="bp-bar" title="seen ${seen}% · right on last try ${pct}%" role="img" aria-label="seen ${seen}%, right on last try ${pct}%"><div class="seen" style="width:${seen}%"></div><div class="right" style="width:${pct}%;background:${color}"></div></div>`;
   },
 
   renderDomains() {
@@ -1385,14 +1670,15 @@ const Blueprint = {
       const dom = DOMAINS[d.id];
       const st = this.stats(this.refsFor(q => Bank.domainOf(q) === d.id));
       const tss = GUIDE.taskStatements.filter(t => t.id[0] === String(d.n));
-      return `<details class="bp-domain" style="--dc:${dom.color}">
+      /* the drill button sits beside the summary, not inside it (no control nested in a control) */
+      return `<div class="bp-dwrap"><details class="bp-domain" style="--dc:${dom.color}">
         <summary>
           <span class="bp-dnum">D${d.n}</span>
           <span class="bp-dmeta"><span class="nm">${d.label}</span><span class="muted">${d.weight}% · ${d.exam} of 60 items · ${this.statLine(st)}</span>${this.bar(st, dom.color)}</span>
-          <button class="btn small ghost" onclick="event.preventDefault();Blueprint.drillDomain('${d.id}')">Drill domain</button>
         </summary>
         ${tss.map(t => this.renderTs(t, dom.color)).join('')}
-      </details>`;
+      </details>
+      <button class="btn small ghost bp-ddrill" onclick="Blueprint.drillDomain('${d.id}')" aria-label="Drill domain ${d.n}: ${d.label}">Drill domain</button></div>`;
     }).join('');
   },
 
@@ -1405,12 +1691,12 @@ const Blueprint = {
       <div class="bp-tshead">
         <span class="bp-tsid">${t.id}</span>
         <span class="bp-tstitle">${t.title}<br><span class="muted">${this.statLine(st)}</span>${this.bar(st, color)}</span>
-        ${lesson ? `<button class="btn small ghost" onclick="Learn.open('${lesson}')">🎓 Lesson</button>` : ''}
-        <button class="btn small primary" ${st.total ? '' : 'disabled'} onclick="Blueprint.drillTs('${t.id}')">Drill ${Math.min(10, st.total)}</button>
+        ${lesson ? `<button class="btn small ghost" onclick="Learn.open('${lesson}')"><span aria-hidden="true">🎓</span> Lesson</button>` : ''}
+        <button class="btn small primary" ${st.total ? '' : 'disabled'} onclick="Blueprint.drillTs('${t.id}')" aria-label="Drill ${Math.min(10, st.total)} questions on ${t.id}">Drill ${Math.min(10, st.total)}</button>
       </div>
       <div class="bp-ideas">
-        <div><h5>Know</h5><ul>${t.know.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
-        <div><h5>Be able to</h5><ul>${t.skills.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
+        <div><h3>Know</h3><ul>${t.know.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
+        <div><h3>Be able to</h3><ul>${t.skills.map(x => `<li>${fmt(x)}</li>`).join('')}</ul></div>
       </div>
       ${docs ? `<div class="bp-docs">📚 Official docs: ${docs}</div>` : ''}
       ${delta ? `<div class="bp-delta">🔄 <strong>Docs have moved on since the guide:</strong> ${fmt(delta)}</div>` : ''}
@@ -1435,7 +1721,7 @@ const Blueprint = {
         <div class="chips">${sc.domains.map(d => `<span class="domain-tag" style="background:${DOMAINS[d].color}">${d}</span>`).join(' ')}</div>
         <p>${sc.blurb}</p>
         <div class="muted small">${this.statLine(st)}</div>${this.bar(st, 'var(--accent)')}
-        <button class="btn small primary" onclick="Blueprint.drillScenario(${sc.id})">Drill scenario</button>
+        <button class="btn small primary" onclick="Blueprint.drillScenario(${sc.id})" aria-label="Drill scenario ${sc.id}: ${sc.name}">Drill scenario</button>
       </div>`;
     }).join('') + `</div><p class="muted small mt">On the real exam, 4 of these 6 scenarios are drawn at random. Each frames a set of questions.</p>`;
   },
@@ -1450,11 +1736,15 @@ const Drill = {
     if (!refs.length) { UI.toast('🚧', 'No questions here yet', 'This part of the guide has no questions in the bank.'); return; }
     this.queue = refs.map(r => dealQuestion(r.q));
     this.qi = 0; this.right = 0; this.xp = 0; this.label = label; this.opts = opts;
+    /* a drill started from the hall (next best step, readiness rows) goes back there, so the next step updates */
+    const from = UI.current === 'drill' || UI.current === 'result' ? (this.from || 'blueprint') : UI.current;
+    this.from = from === 'home' ? 'home' : 'blueprint';
     UI.go('drill');
     document.getElementById('d-title').textContent = label;
     const back = document.getElementById('d-back');
-    back.textContent = opts.back ? opts.back[1] : '← Blueprint';
-    back.onclick = () => UI.go(opts.back ? opts.back[0] : 'blueprint');
+    const dflt = this.from === 'home' ? ['home', '← Hall'] : ['blueprint', '← Blueprint'];
+    back.textContent = opts.back ? opts.back[1] : dflt[1];
+    back.onclick = () => UI.go(opts.back ? opts.back[0] : dflt[0]);
     this.show();
   },
 
@@ -1495,10 +1785,15 @@ const Drill = {
       .map(([k, v]) => `<div class="stat-card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
     const acts = document.getElementById('r-actions');
     acts.innerHTML = '';
+    const home = document.createElement('button');
+    home.className = this.from === 'home' ? 'btn primary' : 'btn ghost';
+    home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall · next step';
+    home.onclick = () => UI.go('home');
     const bp = document.createElement('button');
-    bp.className = 'btn primary'; bp.textContent = '📘 Back to the Blueprint';
+    bp.className = this.from === 'home' ? 'btn ghost' : 'btn primary'; bp.style.marginLeft = '10px';
+    bp.innerHTML = '<span aria-hidden="true">📘</span> Back to the Blueprint';
     bp.onclick = () => UI.go('blueprint');
-    acts.appendChild(bp);
+    acts.append(home, bp);
     good ? Sound.win() : Sound.lose();
     UI.go('result');
   },
@@ -1516,9 +1811,11 @@ const Lightning = {
 
   start() {
     const pool = this.sprintPool();
-    if (pool.length < 10) { UI.toast('🚧', 'Bank not loaded', 'Generate questions first.'); return; }
+    if (pool.length < 10) { UI.toast('🚧', 'Not enough questions here yet', 'The question bank did not load. Try reloading the page.'); return; }
     this.pool = shuffle(pool);
     this.score = 0; this.combo = 0; this.secs = 90;
+    document.getElementById('l-time').style.width = '100%';
+    document.getElementById('l-timebar').setAttribute('aria-label', '90 seconds left');
     UI.go('lightning');
     this.running = true;
     document.getElementById('l-best').textContent = Game.s.lightningBest ? 'best: ' + Game.s.lightningBest : 'first run — set the bar';
@@ -1533,6 +1830,7 @@ const Lightning = {
     if (!this.running) return;
     this.secs--;
     document.getElementById('l-time').style.width = (this.secs / 90 * 100) + '%';
+    if (this.secs % 15 === 0 || this.secs === 10) document.getElementById('l-timebar').setAttribute('aria-label', this.secs + ' seconds left');
     if (this.secs <= 10 && this.secs > 0) Sound.tick();
     if (this.secs <= 0) this.finish();
   },
@@ -1565,7 +1863,9 @@ const Lightning = {
       Game.deckAdd(q.id);
       Sound.bad();
     }
-    setTimeout(() => this.running && this.show(), ok ? 350 : 900);
+    UI.announce((ok ? 'Correct. ' : 'Wrong. ') + 'Score ' + this.score + '.');
+    const cur = this.cur;
+    setTimeout(() => this.running && this.cur === cur && this.show(), ok ? 350 : 900);
   },
 
   finish() {
@@ -1586,10 +1886,10 @@ const Lightning = {
     const acts = document.getElementById('r-actions');
     acts.innerHTML = '';
     const again = document.createElement('button');
-    again.className = 'btn ghost'; again.textContent = '⚡ Again';
+    again.className = 'btn ghost'; again.innerHTML = '<span aria-hidden="true">⚡</span> Again';
     again.onclick = () => Lightning.start();
     const home = document.createElement('button');
-    home.className = 'btn primary'; home.style.marginLeft = '10px'; home.textContent = '🏛️ Hall';
+    home.className = 'btn primary'; home.style.marginLeft = '10px'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall';
     home.onclick = () => UI.go('home');
     acts.append(again, home);
     Sound.win();
@@ -1630,10 +1930,10 @@ const Hunt = {
     const acts = document.getElementById('r-actions');
     acts.innerHTML = '';
     const again = document.createElement('button');
-    again.className = 'btn ghost'; again.textContent = win ? '🔦 Next monster' : '🔦 Try again';
+    again.className = 'btn ghost'; again.innerHTML = '<span aria-hidden="true">🔦</span> ' + (win ? 'Next monster' : 'Try again');
     again.onclick = () => win ? Hunt.start() : Hunt.start(name);
     const beast = document.createElement('button');
-    beast.className = 'btn primary'; beast.style.marginLeft = '10px'; beast.textContent = '📖 Bestiary';
+    beast.className = 'btn primary'; beast.style.marginLeft = '10px'; beast.innerHTML = '<span aria-hidden="true">📖</span> Bestiary';
     beast.onclick = () => UI.go('bestiary');
     acts.append(again, beast);
     win ? Sound.win() : Sound.lose();
@@ -1643,7 +1943,7 @@ const Hunt = {
 
 /* ---------------- mistake clinic ---------------- */
 const Review = {
-  session: [], qi: 0, buttons: [], hadTen: false,
+  session: [], qi: 0, buttons: [],
 
   start() {
     UI.go('review');
@@ -1655,14 +1955,13 @@ const Review = {
     const deck = Game.s.deck;
     document.getElementById('rv-progress').textContent = deck.length + ' in the ward';
     if (!deck.length) {
-      body.innerHTML = `<div class="deck-empty"><div class="big">🌿</div><p><strong>The clinic is empty.</strong></p><p>No outstanding mistakes. Go make some interesting new ones.</p></div>`;
+      body.innerHTML = `<div class="deck-empty"><div class="big" aria-hidden="true">🌿</div><p><strong>The clinic is empty.</strong></p><p>No outstanding mistakes. Go make some interesting new ones.</p></div>`;
       return;
     }
-    this.hadTen = this.hadTen || deck.length >= 10;
     body.innerHTML = `
       <div class="exam-rules">
         <p><strong>${deck.length}</strong> missed question${deck.length === 1 ? '' : 's'} awaiting treatment. Answer one correctly <strong>twice in a row</strong> and it is discharged for good.</p>
-        <div class="center mt"><button class="btn primary" id="rv-start">🩹 Treat ${Math.min(10, deck.length)} cards</button></div>
+        <div class="center mt"><button class="btn primary" id="rv-start"><span aria-hidden="true">🩹</span> Treat ${Math.min(10, deck.length)} cards</button></div>
       </div>
       <div class="battle-stage mt" id="rv-stage" style="display:none">
         <div class="q-zone">
@@ -1689,7 +1988,7 @@ const Review = {
     document.getElementById('rv-count').textContent = `card ${this.qi + 1}/${this.session.length} · streak ${card.streak}/2`;
     document.getElementById('rv-qtext').innerHTML = fmt(this.cur.q);
     this.buttons = UI.renderAnswers('rv-answers', this.cur.options, (i) => this.answer(i));
-    document.getElementById('rv-stage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('rv-stage').scrollIntoView({ behavior: UI.reducedMotion() ? 'auto' : 'smooth', block: 'center' });
   },
 
   answer(i) {
@@ -1714,9 +2013,14 @@ const Review = {
     }
     if (ok) { Game.addXP(10); Sound.good(); } else Sound.bad();
     if (discharged) UI.toast('🌿', 'Discharged!', 'That mistake will not haunt the exam.');
-    if (!Game.s.deck.length && this.hadTen) Game.unlock('clinic-clear');
+    if (!Game.s.deck.length) {
+      if (Game.s.clinicPeak >= 10) Game.unlock('clinic-clear');
+      Game.s.clinicPeak = 0; Game.save();
+    }
 
+    const cur = this.cur;
     setTimeout(() => {
+      if (UI.current !== 'review' || this.cur !== cur) return;  // the player left the clinic
       UI.modal(ok, this.cur.options[this.cur.correct], this.cur.explanation, () => this.next(), { btn: this.qi + 1 >= this.session.length ? 'Finish round' : 'Next card' });
     }, 800);
   },
@@ -1732,9 +2036,18 @@ const Review = {
 document.addEventListener('keydown', (e) => {
   const overlay = document.getElementById('overlay');
   if (overlay.classList.contains('show')) {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('m-next').click(); }
+    /* the dialog: Enter or Escape continues, Tab stays inside */
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); document.getElementById('m-next').click(); }
+    else if (e.key === 'Tab') {
+      const f = [...overlay.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      e.preventDefault();
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
     return;
   }
+  if (e.key === 'Escape' && UI.current === 'lightning') { e.preventDefault(); UI.go('home'); return; }
   if (e.key === 'Enter' && UI.current === 'exam' && Exam.variant === 'practice') {
     const f = document.activeElement, next = document.querySelector('#e-feedback button');
     if (f && f !== document.body && !f.closest('#e-answers, #e-feedback')) return;
@@ -1754,12 +2067,27 @@ document.addEventListener('keydown', (e) => {
 
 /* ---------------- boot ---------------- */
 Game.load();
-document.documentElement.dataset.theme = Game.s.theme;
+/* theme: the player's explicit pick, else follow the system setting (and keep following it) */
+const darkMQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+const applyTheme = () => {
+  if (!Game.s.themeSet) Game.s.theme = darkMQ && darkMQ.matches ? 'dark' : 'light';
+  document.documentElement.dataset.theme = Game.s.theme;
+};
+if (Game.s.themeSet === undefined) Game.s.themeSet = Game.s.theme === 'dark';  // an older save that picked dark keeps it
+applyTheme();
+if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', () => { if (!Game.s.themeSet) { applyTheme(); UI.refreshHud(); } });
 document.getElementById('btn-theme').onclick = () => {
   Game.s.theme = Game.s.theme === 'light' ? 'dark' : 'light';
+  Game.s.themeSet = true;
   document.documentElement.dataset.theme = Game.s.theme;
   Game.save(); UI.refreshHud(); Sound.click();
 };
+/* the sticky exam clock sits under the top bar, whose height changes as it wraps */
+const topbarEl = document.getElementById('topbar');
+const syncTopbar = () => document.documentElement.style.setProperty('--topbar-h', topbarEl.offsetHeight + 'px');
+syncTopbar();
+if (window.ResizeObserver) new ResizeObserver(syncTopbar).observe(topbarEl);
+
 document.getElementById('btn-sound').onclick = () => {
   Game.s.soundOn = !Game.s.soundOn;
   Game.save(); UI.refreshHud();
@@ -1768,10 +2096,13 @@ document.getElementById('btn-sound').onclick = () => {
 UI.refreshHud();
 Exam.checkSaved();
 window.addEventListener('storage', (e) => {
+  if (e.key === SAVE_KEY) { if (e.newValue) Game.syncFrom(e.newValue); return; }
   if (e.key !== EXAM_KEY || !Exam.active || Exam.variant !== 'mock') return;
   if (Exam.takenOver()) Exam.detach();
   else if (Exam.stored()) UI.toast('⚠️', 'Exam open in another tab', 'Answers from two tabs will overwrite each other. Use one.');
 });
+/* practice exams aren't persisted: count what was displayed if the tab closes mid-exam */
+window.addEventListener('pagehide', () => { if (Exam.active && Exam.variant === 'practice') Exam.noteExposure(); });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && EXAM_SETTLE_ON.has(UI.current)) Exam.settleExpired();
 });
