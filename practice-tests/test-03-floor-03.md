@@ -1,24 +1,24 @@
 # Practice Test 03: The Hook Forge
 **D1: Agentic Architecture & Orchestration** (27% of the exam) · task statements 1.4, 1.5, 1.7
 
-87 questions. Exam pace is 2 minutes per question.
+99 questions. Exam pace is 2 minutes per question.
 
 ---
 
 ## Question 1
-A customer writes to the support agent: 'My last order arrived damaged, I was charged twice for it, and I need to change my delivery address for next week's order.' The current agent handles the damaged item thoroughly and then closes the conversation. What decomposition approach should the agent use for messages like this?
+A support agent built on the Agent SDK keeps a per-conversation issue list, and its prompt says to resolve each listed issue before wrapping up. In about 3% of multi-issue chats it still ends its turn with an item marked open, and the customer leaves without an answer on it. Which control holds the agent to the list?
 
-A) Answer the concern the customer mentioned first, then ask whether they have any other issues before the agent closes the support ticket
-B) Split the message into its separate issues, investigate each one with the shared customer context, then send one combined resolution
-C) Route the message to whichever specialist queue matches the most urgent of the issues and let that queue handle the full ticket
-D) Reply asking the customer to open a separate ticket for each issue so that every request is tracked and resolved independently
+A) A PostToolUse hook that checks the issue list after each tool call and logs any item still marked open
+B) A Stop hook that reads the issue list and returns decision block, with a reason naming the open items
+C) A UserPromptSubmit hook that adds the open items to the customer's next message as extra context
+D) A sharper prompt rule, repeated at the end of the system prompt, that lists the unfinished-issue cases
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** A multi-concern request should be broken into distinct items that are each investigated, then synthesised into one unified response. Asking whether there is anything else relies on the customer to repeat themselves, routing on the most urgent issue drops the others, and making the customer open three tickets pushes the decomposition work onto them.
+**B)** A Stop hook runs when the agent is about to finish responding, and returning decision block with a reason keeps it working and tells it which items remain. A PostToolUse hook fires after tool calls, so it cannot stop a turn from ending, and a log changes nothing for the customer. A UserPromptSubmit hook waits for a next message the customer may never send. A sharper prompt rule is still a request with a non-zero miss rate.
 
-*Hint if stuck: Count the problems the customer raised before you start solving any of them.*
+*Hint if stuck: The failure happens at one specific moment; pick the control that runs at that moment and can change the outcome.*
 </details>
 
 ---
@@ -170,7 +170,7 @@ D) Have the agent ask the customer to phone the supervisor line, ending the chat
 ## Question 10
 An invoice-extraction pipeline gives the model three tools: extract_fields, validate_record and write_record. Validation checks totals and vendor IDs against the ERP. Roughly 1 in 200 invoices is written to the database without validation because the model calls write_record directly after extraction. What is the best fix?
 
-A) Keep all three tools but add a prompt rule and examples showing validate_record called between the other two tools on every invoice
+A) Keep the three tools but add a prompt rule and examples showing validate_record called between the other two tools on each invoice
 B) Ask the model to report in its final message whether it validated, and route invoices where it says no to a manual reprocessing queue
 C) Have pipeline code run validation as a fixed step after extraction and write only records that pass, instead of leaving the order to the model
 D) Merge validation into the extraction prompt so the model checks totals itself while it extracts, removing the separate validation tool from the pipeline
@@ -243,7 +243,7 @@ D) Append the user's original question verbatim to every subagent's prompt so ea
 A developer asks an internal Agent SDK assistant: 'Rename the feature flag new_checkout to checkout_v2 everywhere, update the docs page that mentions it, and bump the minor version in package.json.' The assistant does the rename across 14 files, summarises it well, and stops. The docs and version are untouched. What design change best prevents this?
 
 A) Increase the model's max_tokens so the summary of the rename does not crowd out the remaining work in the same turn
-B) Tell developers in the team handbook to send one request per message so the assistant is never given more than one change at a time
+B) Tell developers in the team handbook to send one request per message so the assistant is not given more than one change at a time
 C) Have the assistant record each requested change as a tracked task at the start and only finish once every task is marked complete
 D) Add a system-prompt line asking the assistant to reread the request before finishing and mention anything it may have skipped
 
@@ -368,10 +368,10 @@ D) Keep improving the prompt with more examples until compliance reaches 99.9%, 
 ## Question 21
 An internal IT agent onboards new hires by creating accounts in four systems in sequence: directory, email, payroll, then badge access. When payroll's API times out, the agent retries from the start on the next run and creates duplicate directory and email accounts; when it eventually escalates, IT staff cannot tell which systems are done. What should the workflow do?
 
-A) Have the agent re-check all four systems from scratch at the start of each run and work out for itself which accounts already exist and which are missing
-B) Wrap the four steps in a single long tool call so that either all four accounts are created together or none of them are created
+A) Have the agent re-check the four systems from scratch at the start of each run and work out for itself which accounts already exist and which are missing
+B) Wrap the four steps in a single long tool call so that the four accounts are created together or none of them are created
 C) Persist each step's completion in workflow state, resume from the first incomplete step, and include done and pending steps in any escalation
-D) Add a system-prompt rule telling the agent never to repeat a step it has already completed earlier for the same new hire
+D) Add a system-prompt rule telling the agent not to repeat a step it has already completed earlier for the same new hire
 
 <details>
 <summary>Answer & explanation</summary>
@@ -388,7 +388,7 @@ A platform team exposes a rotate_db_credentials tool to two Agent SDK assistants
 
 A) Copy the same gating code into the chat-ops bot's loop so that both loops apply the same check before calling the rotation tool
 B) Add the on-call requirement to the chat-ops bot's system prompt, since chat requests are slower and give the model more time to follow it carefully
-C) Route all rotation requests from chat to the CLI helper so that only the loop that already has the gate can perform credential rotations
+C) Route rotation requests from chat to the CLI helper so that the loop that already has the gate performs credential rotations
 D) Move the check into the rotate_db_credentials service itself, so every caller, from any assistant, must present a confirmed on-call requester
 
 <details>
@@ -438,12 +438,107 @@ D) Have the supervisor apply the credit manually in the billing system, and let 
 ---
 
 ## Question 25
+A returns agent built with the Agent SDK has two complaints against it. Audits show that in about 2% of conversations it calls issue_refund before verify_customer has succeeded, even though the system prompt says verification must come first. And the human team that receives escalations says each case arrives as a 60-turn transcript, so they re-ask customers for the order number and the amount. Which changes should the team make? (Choose two.)
+
+A) Add a PreToolUse hook that denies issue_refund until verify_customer has returned a match in this session
+B) Attach the full conversation transcript to each escalation so the human reviewer has the whole history at hand
+C) Lower the temperature to zero so the agent follows the order in the system prompt the same way each time
+D) Restate the verification rule in capitals at the top and bottom of the system prompt, with two examples
+E) Escalate through a tool that passes customer ID, order, amount, root cause, steps tried and a recommendation
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, E** Prompt instructions have a non-zero failure rate, so a required order of tool calls needs a code gate: a PreToolUse hook can deny the refund call until verification has succeeded. Human agents need a structured summary they can act on (who, what, how much, what was tried, what to do next), not a transcript to dig through. Louder prompt wording and temperature zero still leave compliance to the model, and a full transcript is exactly what the team says it cannot use.
+
+*Hint if stuck: One problem needs a guarantee rather than a better request; the other is about what a busy human needs to act without starting over.*
+</details>
+
+---
+
+## Question 26
+A customer writes: "My blender arrived broken, I was charged twice for it, and I'm disputing a $900 charge I don't recognise." The agent may refund duplicates and arrange replacements, but fraud disputes over $500 go to a human team. Today it either answers the first concern and ends its turn, or escalates the whole conversation as soon as it sees the dispute. Which changes should the team make? (Choose two.)
+
+A) Handle the replacement and the duplicate refund itself, and hand off just the dispute with its details
+B) Split the message into its concerns at the start and track each one to a stated outcome before replying
+C) Resolve the concerns in the order written and close each turn by asking whether anything else is needed
+D) Ask the customer to send each concern in its own message so the agent can resolve them one by one
+E) Escalate the whole conversation when any concern is out of scope, so a single person owns the case
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** Listing the concerns up front and tracking each to an outcome stops the agent ending its turn after the first one. Resolving what is within its authority and escalating only the dispute, with a structured summary, keeps simple fixes fast and gives the fraud team what it needs. Making the customer split the message moves the agent's job onto the customer. Escalating everything sends a broken blender and a duplicate charge to a fraud queue. Working in order and asking "anything else?" still drops the concerns the customer already stated.
+
+*Hint if stuck: Which parts of this message is the agent allowed to finish on its own, and how does it make sure none get dropped?*
+</details>
+
+---
+
+## Question 27
+A support agent's issue_refund tool is gated in code: it refuses unless verify_customer has been called earlier in the session. An audit finds two bad refunds. In one, verify_customer was called and returned "no match", and the refund went through anyway. In the other, the caller verified as the holder of account A and then got a refund paid to account B. Which changes close both gaps? (Choose two.)
+
+A) Require verify_customer to be the first tool call of the session before any other tool is allowed to run
+B) Clear the verification flag after each refund so that every new refund needs a fresh identity check
+C) Store the verified account ID and refuse refunds on any account other than that one for the session
+D) Open the gate only when verify_customer returned a match, not just when the tool was called
+E) Add a PostToolUse hook on issue_refund that logs each refund's account and amount for later audit
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, D** The gate tested that a step happened, not what it found: it must require a successful match. It also never tied verification to an account, so the verified identity has to be recorded and each refund checked against it. Clearing the flag after each refund still lets a failed verification or a different account through on the next refund. Forcing verification to run first fixes ordering, which was never the problem. Logging after the refund records the mistake but does not prevent it.
+
+*Hint if stuck: A gate can check that a step ran, what it returned, and whom it was about. Which of these did this gate skip?*
+</details>
+
+---
+
+## Question 28
+A research system's coordinator is told to run every draft through a citation checker before calling publish_report, yet about one report in fifty goes out unchecked. Claims the checker can't confirm go to a human fact-checker, who receives every subagent transcript for the report and spends most of each review hunting for the claim in question. Which changes should the team make? (Choose two.)
+
+A) Make publish_report refuse unless a checker record exists for that exact draft, naming what's missing
+B) Gate publish_report on whether the citation checker was called at any earlier point during that same run
+C) Let the coordinator skip the checker when it rates its own confidence in the citations above 0.9
+D) Send the fact-checker a link to the full run log so they can search it for the claims they need
+E) Send the fact-checker each disputed claim with its sources, URLs, dates and what the checker has tried
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, E** A prompt instruction fails some of the time, so publishing must be blocked in code until the checker has passed the very draft being published, with a refusal that says what is missing. The human needs a per-claim record, not raw transcripts, to decide quickly. Checking only that the checker ran at some point lets an edited later draft through unchecked. Self-rated confidence is not a reliable reason to skip verification. A searchable log is still the transcript problem in another form.
+
+*Hint if stuck: One fix makes a skipped step impossible; the other decides what a human reviewer actually needs in front of them.*
+</details>
+
+---
+
+## Question 29
+An internal Agent SDK assistant deploys branches to staging. After it skipped check_build in about 1 in 80 runs, the team made deploy_to_staging refuse when no passing check_build exists. Now the agent retries the deploy several times and then tells the user staging is broken, because the refusal just says "Request denied". One deploy also went out on a commit newer than the one check_build had tested. Which changes complete the fix? (Choose two.)
+
+A) Return the refusal as a normal success result with an empty body so that the agent simply moves on
+B) Return a refusal that names the missing step and the next action: run check_build on this commit
+C) Have the gate accept only a passing check_build for the exact commit being deployed, not any older run
+D) Have the agent call check_build after each deploy and roll the deploy back whenever the check fails
+E) Remove the code gate now that the prompt states the rule, since the gate is what causes the retries
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, C** A bare "Request denied" gives the agent nothing to act on, so it retries or gives up; naming the unmet prerequisite and the next step lets it recover. The gate must also bind the prerequisite to the thing being deployed, or a build check on an older commit unlocks a newer one. Disguising the refusal as success hides that nothing was deployed. Removing the gate brings back the skipped checks the gate was added to stop. Checking after deploying puts untested code on staging first.
+
+*Hint if stuck: Ask what the agent can do with the refusal it receives, and what exactly the gate should prove before it opens.*
+</details>
+
+---
+
+## Question 30
 A bank's account-onboarding agent must always run a KYC sanctions screen before account creation and always write an audit record afterward — regulators fine for misses. Between those two steps the conversation varies wildly: document re-requests, name clarifications, address conflicts. The current pure model-driven loop skipped the sanctions screen twice last quarter despite a bolded system-prompt instruction. What design fixes this?
 
-A) Strengthen the system prompt with few-shot examples that show the sanctions screen running first every time
-B) Replace the whole flow with a hard-coded decision tree that enumerates every possible onboarding path
+A) Add few-shot examples to the system prompt that show the sanctions screen running before account creation
+B) Replace the model-driven loop with a hard-coded decision tree that covers the known onboarding paths
 C) Run the sanctions screen and audit write in code around a model-driven loop that handles the variable conversation
-D) Set tool_choice to force the sanctions-screen tool on every single API call made inside the agent loop
+D) Set tool_choice to force the sanctions-screen tool on each request the agent loop sends to the model
 
 <details>
 <summary>Answer & explanation</summary>
@@ -455,7 +550,7 @@ D) Set tool_choice to force the sanctions-screen tool on every single API call m
 
 ---
 
-## Question 26
+## Question 31
 A support resolution agent escalates hard cases to human specialists. Specialists complain that each escalation arrives as a raw 150-message transcript and they spend twenty minutes reconstructing what happened before they can act. What should each escalation carry instead?
 
 A) A sentiment trajectory chart plus the customer's last five messages
@@ -473,11 +568,11 @@ D) A live link back into the agent session so the specialist can question the ag
 
 ---
 
-## Question 27
+## Question 32
 An insurance support agent receives one message: 'I was double-billed in May, my new address is 14 Elm Street, and your last rep was rude - I want that on record.' The agent resolves the billing issue thoroughly and closes the conversation; the address change and the complaint are silently dropped. How should the architect fix this failure pattern?
 
 A) Increase max_tokens so the agent has enough room to address everything in a single reply
-B) Add a prompt instruction saying the agent must be thorough and never ignore parts of a message
+B) Add a prompt instruction saying the agent must be thorough and must not ignore parts of a message
 C) Route each incoming message to three specialized subagents, chosen by keyword matching on the message text
 D) Have the agent list each distinct concern first and track every one to resolution before it ends the turn
 
@@ -491,7 +586,7 @@ D) Have the agent list each distinct concern first and track every one to resolu
 
 ---
 
-## Question 28
+## Question 33
 A healthcare intake assistant opens with a patient who reports three concerns: a billing question, a prescription refill, and a referral request. By turn 15 the assistant has resolved the billing question and closes the conversation, never addressing concerns #2 and #3. What design change fixes this reliably?
 
 A) Track the concerns in a structured issue list with per-item status, updated as each one closes
@@ -509,7 +604,7 @@ D) Shorten the flow so all three concerns are handled within the first ten turns
 
 ---
 
-## Question 29
+## Question 34
 A billing-support service runs Claude through the Agent SDK with nobody watching a terminal. Goodwill credits above $150 need sign-off from a team lead, which can take hours. The team wants Claude to stop at the issue_credit call, show the request in the service's own approvals queue, and carry on from that exact call once the lead decides. Which mechanism fits?
 
 A) A PreToolUse hook that returns permissionDecision "defer" for large credits, then resuming the session once the lead has decided
@@ -527,7 +622,7 @@ D) A system-prompt rule telling Claude to end its turn and wait for the lead whe
 
 ---
 
-## Question 30
+## Question 35
 A support agent's refund-cap check is a PreToolUse shell hook defined in the repository's .claude/settings.json, and it worked in every test run. To stop the production Agent SDK service from picking up stray settings files, an engineer set settingSources to an empty list. Since that release, over-cap refunds have gone through and the hook's log is empty. What should the team do?
 
 A) Move the check into a PostToolUse hook in the same settings file, since PostToolUse hooks still load when setting sources are restricted
@@ -545,7 +640,7 @@ D) Set permissionMode to bypassPermissions, so that hooks are evaluated before e
 
 ---
 
-## Question 31
+## Question 36
 A support agent queries two order systems after a merger. The legacy system returns statuses like 'SHP', 'BKO' and 'CXL'; the new one returns 'shipped', 'backordered' and 'cancelled'. The agent sometimes tells customers a cancelled order 'is on its way'. Both systems are owned by other teams with year-long change queues. What should the architect implement?
 
 A) A mapping table of legacy codes in the system prompt with instructions to translate every status before replying to a customer about an order
@@ -563,12 +658,12 @@ D) A request to both owning teams to align on a shared status vocabulary, with t
 
 ---
 
-## Question 32
+## Question 37
 A team protects .env files in Claude Code with a PreToolUse hook whose matcher is 'Write|Edit'; the callback denies any call whose file_path ends in .env. In a review they find Claude updated .env anyway by running `echo 'API_URL=...' >> .env` in the terminal. What should they do to close the gap?
 
-A) Change the matcher to '*.env' so the hook fires for every tool call that touches a file with that extension, whichever tool is used
-B) Switch the hook to PostToolUse so that it inspects every tool's result afterwards and reverts any .env change it detects
-C) Add a line to CLAUDE.md saying .env files must never be modified, including through shell commands or redirects
+A) Change the matcher to '*.env' so the hook fires for any tool call that touches a file with that extension, whichever tool is used
+B) Switch the hook to PostToolUse so that it inspects each tool's result afterwards and reverts any .env change it detects
+C) Add a line to CLAUDE.md saying .env files must not be modified, including through shell commands or redirects
 D) Also cover the Bash tool, with the callback inspecting tool_input.command for writes to .env and denying them with a reason
 
 <details>
@@ -581,7 +676,7 @@ D) Also cover the Bash tool, with the callback inspecting tool_input.command for
 
 ---
 
-## Question 33
+## Question 38
 In a multi-agent research system, web-research subagents call a fetch_page tool that returns raw page text including navigation menus, cookie banners and footers. About 70% of each result is boilerplate, subagents run out of context after a dozen pages, and the publication date is often lost. What is the best fix?
 
 A) Add a PostToolUse hook on fetch_page that strips boilerplate and returns the main text with URL and date as separate fields
@@ -599,7 +694,7 @@ D) Tell each subagent in its prompt to skip navigation and footer text and to no
 
 ---
 
-## Question 34
+## Question 39
 An internal Agent SDK assistant provisions cloud machines through create_instance. Policy lets engineers self-serve instances up to $500 a month; anything larger needs a FinOps request, which the assistant can open with file_finops_request. The prompt states the policy, yet each month a few $3,000 GPU instances get created after engineers insist. What should the architect implement?
 
 A) A PostToolUse hook on create_instance that checks the new instance's monthly cost and shuts the instance down straight away whenever it is over $500
@@ -617,7 +712,7 @@ D) A PreToolUse hook that sends every create_instance call, whatever its size, t
 
 ---
 
-## Question 35
+## Question 40
 A support agent has two PreToolUse hooks on issue_credit: an enrichment hook that looks up the customer's tier and stores it in shared state, and a policy hook that reads that tier to decide whether the credit exceeds the tier's limit. Most of the time it works, but occasionally a gold-tier customer's valid credit is denied. What is the likely cause and fix?
 
 A) The deny from the policy hook is overriding an allow from the enrichment hook; the enrichment hook should return allow with a higher priority
@@ -635,7 +730,7 @@ D) The policy check belongs in a PostToolUse hook, which always runs after every
 
 ---
 
-## Question 36
+## Question 41
 A CI job uses Claude Code to triage test failures across three services that use pytest, Jest and Go's test runner. Each call to the team's run_tests MCP tool returns a different raw format, and Claude sometimes counts skipped tests as failures or misses the failing test name in Go output. What change makes triage most reliable?
 
 A) Add each runner's output format to CLAUDE.md with examples of passed, failed and skipped results for Claude to follow
@@ -653,7 +748,7 @@ D) Use a PostToolUse hook on run_tests that converts each runner's output into o
 
 ---
 
-## Question 37
+## Question 42
 An extraction pipeline built on the Agent SDK has Claude open supplier contracts with the built-in Read tool. The text exports carry page headers, footers and repeated legal boilerplate that confuse the extraction. A PostToolUse hook on Read already builds a cleaned version, but it returns that version as additionalContext, so Claude still sees the noisy original beside it. How should the hook return the cleaned text?
 
 A) Return it in updatedMCPToolOutput, which is the field that replaces results for built-in tools such as Read as well as for MCP tools
@@ -671,7 +766,7 @@ D) Return decision "block" with the cleaned text as the reason, since a block on
 
 ---
 
-## Question 38
+## Question 43
 A telecom support agent's get_billing_profile tool returns full payment card numbers along with the rest of the profile. The agent never needs them, but they appear in logs and once were read back to a caller. Security wants card numbers kept out of the model's context entirely while the billing API is unchanged. What should the architect implement?
 
 A) A system-prompt rule telling the agent never to repeat card numbers and to refer only to the last four digits when needed
@@ -689,7 +784,7 @@ D) An output filter on the agent's replies that removes any 16-digit card number
 
 ---
 
-## Question 39
+## Question 44
 A developer-productivity assistant has a run_sql tool that takes a connection name and a query. Developers should be able to explore data freely, but every query must run against the read replica, never the primary. Developers sometimes ask for 'the primary, it's fresher', and the model passes 'primary' as the connection. The data team wants such requests simply served from the replica, which lags by under a second, rather than refused. What is the best design?
 
 A) A PreToolUse hook that denies every run_sql call whose connection is not the replica, so the model must retry with the correct connection
@@ -707,7 +802,7 @@ D) A PostToolUse hook that checks which connection served each query and warns t
 
 ---
 
-## Question 40
+## Question 45
 A team wants to make sure Claude Code never runs `npm publish` from developer machines. They wrote a PostToolUse hook on Bash that detects publish commands and alerts the security channel. In the first week, two internal packages were accidentally published to the public registry, and the alerts fired after both. What should they change?
 
 A) Make the PostToolUse hook also run `npm unpublish` right after it detects a publish, so the package is withdrawn within seconds
@@ -725,7 +820,7 @@ D) Use a PreToolUse hook on Bash that denies publish commands with a reason, so 
 
 ---
 
-## Question 41
+## Question 46
 A research system's subagents may only cite sources from an approved list of journals and government sites. Despite a clear prompt, about one in ten reports includes material fetched from content farms. The team wants unapproved domains never fetched, while subagents should still be able to choose which approved pages to read. What should they implement?
 
 A) Add a PreToolUse hook on the fetch tool that checks the URL's host against the allowlist and denies others with a reason listing approved sources
@@ -743,7 +838,7 @@ D) Add the full approved list to each subagent's prompt and ask the synthesis st
 
 ---
 
-## Question 42
+## Question 47
 A PreToolUse hook blocks close_account for accounts with an open balance. It returns permissionDecision 'deny' with an empty permissionDecisionReason, plus a systemMessage: 'Account has balance: escalate to billing.' Customers now hear 'something went wrong on our end' and the agent never escalates. What is the fix?
 
 A) Change the decision from deny to ask so that the agent stops and asks the customer whether they want to escalate to billing
@@ -761,12 +856,12 @@ D) Add a system-prompt line telling the agent that any blocked close_account cal
 
 ---
 
-## Question 43
+## Question 48
 A contracts-extraction pipeline has a PostToolUse hook that converts parties' names and dates from the parse_contract tool into a canonical format. To speed up the pipeline, an engineer made every hook return async output. Throughput improved, but the model is again seeing raw, unnormalised dates. What should the team do?
 
 A) Keep the hooks async but raise asyncTimeout so the normalisation has enough time to finish before the model reads the result
 B) Move the normalisation into a PreToolUse hook, which runs before the tool and so is not affected by the async setting
-C) Make the normalisation hook synchronous again and keep async output only for hooks with side effects such as logging
+C) Make the normalisation hook synchronous again and keep async output only for side-effect hooks such as logging
 D) Remove the normalisation hook and ask the model to normalise dates itself as part of its output schema instructions
 
 <details>
@@ -779,7 +874,7 @@ D) Remove the normalisation hook and ask the model to normalise dates itself as 
 
 ---
 
-## Question 44
+## Question 49
 A company's compliance team needs an audit trail of every tool call its internal Agent SDK assistants complete: tool name, inputs, result and timestamp. The first design adds a log_action tool and instructs the assistant to call it after each action, but spot checks show gaps in about 8% of sessions. What should replace it?
 
 A) A stronger instruction with examples making log_action the last step of every turn so that no session finishes without logging
@@ -797,7 +892,7 @@ D) A PostToolUse hook with no matcher that writes each call's tool name, input, 
 
 ---
 
-## Question 45
+## Question 50
 A CI pipeline runs Claude Code to review pull requests and post findings through a post_review_comment tool. Some diffs contain hard-coded API keys, and twice the review quoted a key verbatim in a public comment. The review prompt already says never to repeat secrets. The team wants such comments never posted, while reviews should still flag the problem. What should they implement?
 
 A) A PreToolUse hook on post_review_comment that scans the comment body for credential patterns and denies it, saying to cite the file and line instead
@@ -815,7 +910,7 @@ D) A PostToolUse hook on post_review_comment that deletes any posted comment con
 
 ---
 
-## Question 46
+## Question 51
 A platform team requires that new npm dependencies come only from an approved list maintained in deps-allowlist.json, which changes weekly. Claude Code sessions in the monorepo keep running `npm install` for unapproved packages when solving tasks, and reviewers catch them late. What is the most effective control?
 
 A) A permissions deny rule for every package name not on the list, regenerated by hand each week when the allowlist file changes
@@ -833,7 +928,7 @@ D) A PostToolUse hook on Bash that runs `npm uninstall` for any unlisted package
 
 ---
 
-## Question 47
+## Question 52
 An architect is reviewing four rules for a support agent and must decide which belong in a PreToolUse hook rather than the system prompt: (1) keep a warm, concise tone; (2) never issue a refund to an account flagged for fraud; (3) prefer self-service links when they fully answer the question; (4) suggest a callback when the customer seems frustrated. Which choice is right?
 
 A) Rules 2 and 4 in hooks, since both protect the company and both involve a clear trigger the hook can detect in the conversation or the tool call input
@@ -851,11 +946,68 @@ D) None in hooks; all four fit the system prompt, and the fraud rule can be back
 
 ---
 
-## Question 48
+## Question 53
+A support agent built on the Agent SDK reads orders from two systems after a merger: one returns dates like 03/04/2026 (month first), the other Unix timestamps, and the agent sometimes tells customers the wrong delivery date. Policy also caps refunds at $250 without a supervisor, and logs show the agent occasionally issuing larger refunds despite the system prompt. Which hooks should the team add? (Choose two.)
+
+A) A PostToolUse hook on issue_refund that flags refunds over $250 and asks Claude to reverse them at once
+B) A PreToolUse hook on both order tools that rewrites the dates in their input to ISO 8601 before they run
+C) A UserPromptSubmit hook that adds both date formats and the $250 cap to each customer message received
+D) A PreToolUse hook on issue_refund that denies amounts over $250 and says to route them to supervisors
+E) A PostToolUse hook on both order tools that rewrites each date to ISO 8601 before Claude reads the result
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** The mixed dates are in what the tools return, so a PostToolUse hook that replaces the result (updatedToolOutput) normalises them before Claude reasons over them. The refund cap must hold before money moves, so a PreToolUse hook denies the call and its reason points Claude to escalation. Rewriting the tools' inputs does not touch the dates they send back. A post-call check on refunds acts after the refund has been paid. Injecting the rules as context is guidance Claude can still misapply, not enforcement or normalisation.
+
+*Hint if stuck: For each problem, ask whether it lives in what a tool sends back or in what a tool is about to do.*
+</details>
+
+---
+
+## Question 54
+A team protects infra/prod/ in Claude Code with a PreToolUse hook on Edit and Write. The script spots the protected path, prints "Blocked: production config" and exits with code 1, yet the edits still go through. Their audit logger, registered as a PostToolUse hook on Bash, records successful commands, but compliance notices that failed commands never appear in the log. Which changes fix both problems? (Choose two.)
+
+A) Register the audit logger for PostToolUseFailure, since PostToolUse fires after successful calls
+B) Move the check to a PostToolUse hook that restores the original file once Claude's edit has been made
+C) Exit the protection script with code 2 and write the reason to stderr, which Claude receives as feedback
+D) Keep exit code 1 and print the message to stdout as plain text, which Claude Code reads as a denial
+E) Register the audit logger as a Stop hook so that it records each command once the turn has ended
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** Exit code 1 is a non-blocking error, so the edit proceeds; exit code 2 blocks a PreToolUse call and feeds stderr back to Claude as the reason. PostToolUse runs after a tool call succeeds and PostToolUseFailure after one fails, so the logger needs both events. Reverting after the edit lets the change happen first and races anything that reads the file. Plain stdout with exit 1 is still a non-blocking error, not a denial. A Stop hook fires once at the end of a turn and does not receive each failed call's input and error.
+
+*Hint if stuck: Look up what each exit code means to Claude Code, and which events fire when a tool call succeeds versus when it fails.*
+</details>
+
+---
+
+## Question 55
+A support agent built on the Agent SDK has two PreToolUse hooks on issue_credit: one looks up the customer's tier and saves it to shared state, the other denies credits above that tier's limit. Sometimes the second hook finds no tier and lets a large credit through. A PostToolUse hook that rewrites raw status codes into plain words was also switched to async output to cut latency, and since then Claude sees the raw codes again. Which changes fix these? (Choose two.)
+
+A) Move the tier lookup into a PostToolUse hook so the tier is ready by the time the policy check runs
+B) Do the tier lookup inside the policy hook itself, since matching hooks run in parallel in no set order
+C) List the tier-lookup hook ahead of the policy hook in the hooks array so that it is sure to run first
+D) Make the status-rewriting hook synchronous again, since async output cannot change the tool result
+E) Give the async hook a longer asyncTimeout so it finishes before Claude reads the result of the call
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** When an event fires, all matching hooks run in parallel and finish in no fixed order, so a policy hook must not depend on another hook having run; it should fetch what it needs itself. An async hook lets the agent move on at once, so its output cannot block, modify or add context to the call; a rewrite of the result has to be synchronous. Array position does not sequence parallel hooks. A longer asyncTimeout only gives the background work more time, after the result has already gone to Claude. PostToolUse runs after the credit has been issued, too late for the check.
+
+*Hint if stuck: What does the SDK promise about hook execution order, and what can a background hook still influence?*
+</details>
+
+---
+
+## Question 56
 Compliance asks a support team to log every refund attempt their Agent SDK agent makes, including attempts that fail. The team added a PostToolUse hook on process_refund that writes each call to the audit log, but an audit finds that failed refunds, such as those the payment gateway rejects partway through the call, are missing from the log. What should the team change?
 
-A) Widen the PostToolUse matcher to "*" so that the logger catches the failed refund calls along with every other tool's successful ones
-B) Tell the agent in its system prompt to mention each failed refund in its reply, and scrape those replies into the audit log every night
+A) Widen the PostToolUse matcher to "*" so that the logger catches the failed refund calls along with each other tool's successful ones
+B) Tell the agent in its system prompt to mention each failed refund in its reply, and scrape those replies into the audit log each night
 C) Move the audit logger into a Stop hook so that it writes one record per refund attempt when the agent finishes each conversation
 D) Register the same audit logger under PostToolUseFailure for process_refund, since PostToolUse runs only when a call succeeds
 
@@ -869,7 +1021,7 @@ D) Register the same audit logger under PostToolUseFailure for process_refund, s
 
 ---
 
-## Question 49
+## Question 57
 A platform team wrote a PreToolUse hook to stop Claude Code from editing files under infra/prod/. The script correctly detects the protected path, prints 'Edit blocked: protected production path' to stdout, and exits with code 0. In testing, the edits still go through and the agent never acknowledges any block. What is wrong?
 
 A) PreToolUse hooks cannot block tool calls; the rule must instead be a deny entry in settings.json permissions for that path
@@ -887,7 +1039,7 @@ D) The hook fires too early to see the file path; the protection must move to a 
 
 ---
 
-## Question 50
+## Question 58
 A customer support agent calls a get_customer CRM tool that returns 40 fields per record, including marketing flags and audit metadata. After 15 lookups in a long session, context is bloated and the agent starts missing the three fields it actually uses: plan tier, billing status, and open tickets. What is the best fix?
 
 A) Instruct the agent in the system prompt to ignore the irrelevant CRM fields when reading tool results
@@ -905,7 +1057,7 @@ D) Run /compact after every few lookups to summarize the accumulated CRM payload
 
 ---
 
-## Question 51
+## Question 59
 A healthcare intake agent writes visit summaries to a shared log through a write_log tool. CLAUDE.md instructs it to redact Social Security numbers first, and audits show it complies about 98% of the time. The compliance team requires zero SSNs in the logs, full stop. Which approach satisfies the requirement?
 
 A) Add few-shot examples of correctly redacted summaries to the system prompt, covering every SSN format seen in past logs
@@ -923,7 +1075,7 @@ D) Add a PreToolUse hook on write_log that matches SSN patterns in the input and
 
 ---
 
-## Question 52
+## Question 60
 In a monorepo CI assistant, a run_coverage tool returns raw percentages per package. Reviewers notice the agent keeps flagging packages/legacy-billing for missing the 80% bar even though that package is formally exempt until Q3. The exemption list lives in a YAML file that changes as exemptions are granted and expire, and the agent rarely reads it. How should the team ensure coverage results are interpreted correctly every time?
 
 A) Add a PostToolUse hook on run_coverage that reads the exemption YAML and injects current exemptions via hookSpecificOutput.additionalContext
@@ -941,7 +1093,7 @@ D) Add a prompt instruction telling the agent to call a second tool that fetches
 
 ---
 
-## Question 53
+## Question 61
 An e-commerce operations agent answers on-call engineers' questions in long-running sessions; engineers execute any deploys themselves. Answers must always reflect the current deploy-freeze status and on-call rotation, both of which change mid-session. Today the agent advised an engineer to deploy during a freeze that began an hour after the session started. Which hook placement fixes this?
 
 A) A SessionStart hook that injects freeze status and the rotation when the session begins
@@ -959,7 +1111,7 @@ D) A UserPromptSubmit hook that fetches current freeze status and rotation and a
 
 ---
 
-## Question 54
+## Question 62
 A code-generation session in Claude Code keeps ending turns with edits in place but the test suite never run, despite a CLAUDE.md rule saying 'always run the tests before finishing.' The team wants a guarantee that no turn completes after file edits without a test run. What is the right mechanism?
 
 A) Move the rule to the top of CLAUDE.md and rephrase it as a hard, non-negotiable requirement
@@ -977,7 +1129,7 @@ D) Set a minimum iteration count so the session cannot end before a fixed number
 
 ---
 
-## Question 55
+## Question 63
 In a monorepo, the data team must prevent Claude Code from editing files under db/migrations/ that have already been applied to production. Applied migrations are listed in db/applied.json, which changes daily, and new unapplied migration files must remain fully editable. How should this be enforced?
 
 A) A PreToolUse hook on Edit and Write that checks the target against db/applied.json and exits 2 with an explanation when the migration is already applied
@@ -995,13 +1147,13 @@ D) A PostToolUse hook that detects edits to already-applied migrations after the
 
 ---
 
-## Question 56
+## Question 64
 A fintech extraction pipeline's fetch_transactions tool returns dates in a mix of MM/DD/YYYY, ISO 8601, and Unix epoch depending on the upstream bank. The model must compare transaction dates against statement periods and gets it wrong on roughly 1 in 12 records, almost always the epoch-formatted ones. What is the root-cause fix?
 
 A) A PostToolUse hook on fetch_transactions that converts every date to ISO 8601 before the model sees the result
 B) A system prompt section with worked examples showing how to convert epoch timestamps to ISO 8601 correctly before comparing dates
 C) A retry policy that re-fetches the transactions whenever a date comparison fails validation
-D) A stricter output schema requiring the model to return all dates as ISO 8601 strings
+D) A stricter output schema requiring the model to return its dates as ISO 8601 strings
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1013,7 +1165,7 @@ D) A stricter output schema requiring the model to return all dates as ISO 8601 
 
 ---
 
-## Question 57
+## Question 65
 An e-commerce agent's apply_store_credit tool is gated by a PreToolUse hook that exits 2 for credits over $50. The block works, but logs show the agent then retries the identical $75 credit four times before giving up, and the customer gets no resolution. The hook's stderr message is just the word 'Blocked.' What should change?
 
 A) Convert it to a PostToolUse hook so the agent can observe the outcome of each attempted credit and then adjust its next step accordingly
@@ -1031,7 +1183,7 @@ D) Remove apply_store_credit from the agent's tools and route all credit request
 
 ---
 
-## Question 58
+## Question 66
 A developer-productivity team wants three automated behaviors in Claude Code: (1) load the current sprint's ticket list once when a session opens, (2) strip ANSI color codes out of every Bash result before the model reads it, and (3) prevent any edit to files under vendor/. Which hook events implement these behaviors?
 
 A) (1) UserPromptSubmit, (2) PreToolUse, (3) Stop
@@ -1049,7 +1201,7 @@ D) (1) SessionStart, (2) PostToolUse, (3) PreToolUse
 
 ---
 
-## Question 59
+## Question 67
 A support resolution agent built with the Claude Agent SDK has an issue_refund tool. The system prompt says refunds over $200 require human approval, yet last week it refunded $450 unprompted. Separately, transcripts show that when customers type "let me talk to a person," the agent keeps troubleshooting for several more turns. Which combination fixes both failures at the root?
 
 A) Move the $200 limit to the very top of the system prompt in emphatic language, and add a sentiment classifier that escalates whenever customer frustration crosses a threshold
@@ -1067,7 +1219,7 @@ D) Add a PreToolUse hook that blocks issue_refund calls over $200 via exit code 
 
 ---
 
-## Question 60
+## Question 68
 A developer forks a Claude Code session twice with --fork-session to compare two refactors of the same payments module, planning to run both forks at the same time in the same checkout. A teammate warns this will go wrong. Why, and what should the developer do?
 
 A) Forks share one conversation history, so each fork will see the other's messages; run them one at a time instead
@@ -1085,12 +1237,12 @@ D) Forks lose the parent's earlier tool results, so neither will know the module
 
 ---
 
-## Question 61
+## Question 69
 A developer juggles two tasks in Claude Code: a flaky-test investigation in the morning and a dependency upgrade in the afternoon. Each morning she runs `claude --continue`, and twice it reopened the dependency-upgrade conversation instead of the test investigation. What is the most reliable way for her to return to the right conversation?
 
-A) Keep using --continue but always end the day in the test-investigation session so that it is the most recent one
-B) Start a fresh session every morning and paste in her notes from the previous day about where the investigation stopped
-C) Run both tasks in a single long-lived session so that there is only ever one conversation that can be resumed
+A) Keep using --continue but end each day in the test-investigation session so that it is the most recent one
+B) Start a fresh session each morning and paste in her notes from the previous day about where the investigation stopped
+C) Run both tasks in a single long-lived session so that there is a single conversation she can resume each morning
 D) Name each session when it starts, for example with -n or /rename, and return with `claude --resume <name>`
 
 <details>
@@ -1103,7 +1255,7 @@ D) Name each session when it starts, for example with -n or /rename, and return 
 
 ---
 
-## Question 62
+## Question 70
 A support platform uses the Agent SDK in TypeScript. Each incoming customer message calls `query()` with `continue: true` so the agent remembers the conversation. With many customers chatting at once, agents have begun referencing other customers' orders. What change fixes the root cause?
 
 A) Capture each conversation's session_id from the result message, store it per customer, and pass it to `resume` on later turns
@@ -1121,7 +1273,7 @@ D) Turn off session persistence entirely so that every customer message is answe
 
 ---
 
-## Question 63
+## Question 71
 A CI workflow runs an analysis job on one ephemeral runner and a fix job on a different runner later in the pipeline. The fix job calls the Agent SDK with `resume` and the analysis job's session ID, but fails with a not-found error. What is the most robust way to carry the analysis into the fix job?
 
 A) Switch the fix job to `continue: true` so the SDK finds the most recent session without needing the session ID
@@ -1139,7 +1291,7 @@ D) Pin both jobs to the same working directory path so that the session lookup o
 
 ---
 
-## Question 64
+## Question 72
 A developer resumes yesterday's Claude Code session on a caching refactor. Since then, only one thing changed: a teammate edited `cache-config.yaml` to lower the default TTL from 300 to 60 seconds. The rest of the session's analysis is still accurate. What is the best way to continue?
 
 A) Start a fresh session and have Claude re-explore the whole caching layer, since any change makes the old session unsafe
@@ -1157,13 +1309,13 @@ D) Resume the session and run /compact first so that the outdated configuration 
 
 ---
 
-## Question 65
+## Question 73
 A research agent built on the Agent SDK ended its run with `error_max_turns` after gathering about 80% of the sources for a market study. The team's current recovery is to start the whole study again with a higher turn limit. What is the better recovery?
 
 A) Start again with the higher limit but ask the agent to work faster so that it finishes within the original number of turns
 B) Paste the partial final answer into a new session and ask it to finish the remaining part of the study from there
 C) Fork the session and continue in the fork, so that the original truncated run stays available for later comparison
-D) Resume the session by its ID with a higher turn limit, so the agent continues with the sources it already gathered
+D) Resume the session by its ID with a higher turn limit, so the agent continues with the sources it gathered
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1175,7 +1327,7 @@ D) Resume the session by its ID with a higher turn limit, so the agent continues
 
 ---
 
-## Question 66
+## Question 74
 A support agent's session for a customer was paused while a human supervisor approved a goodwill credit outside the agent's authority. The customer writes back the next morning. The supervisor's action happened in the billing system, not in the agent's conversation. How should the system continue the case?
 
 A) Resume the customer's session and inject a note stating that the supervisor approved and applied the credit, with its amount
@@ -1193,7 +1345,7 @@ D) Resume the customer's session as it was, since the agent can work out what ha
 
 ---
 
-## Question 67
+## Question 75
 Two developers both resume the same Claude Code session, one on each terminal of a shared dev box, to explore a database connection leak from different angles. Afterwards the transcript is a confusing mix of both lines of questioning. What should they have done?
 
 A) Taken turns, with each developer running /compact before handing the session over to the other developer to continue
@@ -1211,12 +1363,12 @@ D) Resumed with --continue instead of --resume, since --continue keeps a separat
 
 ---
 
-## Question 68
+## Question 76
 An extraction service processes 5,000 shipping documents a day. To save setup time, an engineer changed it so that every document is sent as a new turn in one long-running resumed session. Accuracy has been drifting down through the day, and some outputs contain values from earlier documents. What is the right design?
 
-A) Keep one long session but run /compact every hundred documents so that older documents are summarised away
-B) Keep the long session and add a system-prompt rule stating that the agent must only ever use values taken from the current document
-C) Fork a new session from the long-running one for every document so each starts with the accumulated experience
+A) Keep one long session but run /compact after each hundred documents so that older documents are summarised away
+B) Keep the long session and add a system-prompt rule stating that the agent must use values taken from the current document
+C) Fork a new session from the long-running one for each document so each starts with the accumulated experience
 D) Process each document in its own independent call with no carried-over history, since documents do not depend on one another
 
 <details>
@@ -1229,7 +1381,7 @@ D) Process each document in its own independent call with no carried-over histor
 
 ---
 
-## Question 69
+## Question 77
 A developer used --fork-session to try two caching strategies from the same analysis. After an hour, the fork using a write-through cache is clearly better. The original session explored the alternative. How should he carry on with the winning approach tomorrow?
 
 A) Resume the fork using its own session ID or name, since it is an independent session and the original was left unchanged
@@ -1247,7 +1399,7 @@ D) Fork the original session again tomorrow and repeat the write-through work in
 
 ---
 
-## Question 70
+## Question 78
 An architect wants to resume a three-week-old research session about a regulatory landscape. Many of the web sources the session read may have been updated since, but nobody knows which ones. The session's high-level conclusions are probably still useful. What is the most reliable way to continue?
 
 A) Resume the session and tell it which sources changed, so it re-reads only those before continuing the work
@@ -1265,7 +1417,7 @@ D) Resume the session as it is, since high-level conclusions about regulation ra
 
 ---
 
-## Question 71
+## Question 79
 Mid-session, a developer ran /clear to start on a different bug, then realised she needed a detail Claude had found earlier about the auth middleware. What is the most direct way to get that context back?
 
 A) Run /compact in the new conversation, which merges a summary of the cleared conversation back into the current one
@@ -1283,7 +1435,7 @@ D) Search the project CLAUDE.md, since Claude saves its findings there automatic
 
 ---
 
-## Question 72
+## Question 80
 Claude Code crashed while it was running a long database migration command during a schema refactor. The developer resumes the session. The transcript shows the migration call as cut off with no result. What should happen next?
 
 A) Have Claude rerun the migration immediately, since a tool call with no recorded result can safely be assumed to have done nothing at all
@@ -1301,7 +1453,7 @@ D) Have Claude check the database's migration state to see whether the migration
 
 ---
 
-## Question 73
+## Question 81
 A support team wants to test whether offering store credit instead of a refund would resolve a long-running dispute better, using the real customer conversation as the starting point, without touching the live conversation the customer can see. What is the best way to set this up with the Agent SDK?
 
 A) Resume the live session with `fork_session` enabled, so the experiment runs in a new session that starts from a copy of the history
@@ -1319,7 +1471,7 @@ D) Resume the live session with `continue` instead of `resume`, which runs the e
 
 ---
 
-## Question 74
+## Question 82
 A research coordinator was paused overnight. It is resumed in the morning, but the shared pricing dataset that two of its subagents queried was refreshed at 2 a.m.; the other four subagents used static sources. What is the most effective way to continue the run?
 
 A) Resume the coordinator without changes, since data refreshed only a few hours ago is unlikely to change the conclusions much
@@ -1337,11 +1489,11 @@ D) Resume the coordinator and ask it to decide for itself, without guidance, whi
 
 ---
 
-## Question 75
+## Question 83
 A team's CI bot keeps one long-lived Claude Code session per repository and resumes it for every new pull request, so it 'remembers' past reviews. Reviews have started citing functions that were deleted weeks ago. What is the better design?
 
 A) Keep the long-lived session but run /compact at the start of each review to reduce the amount of old material
-B) Fork the long-lived session for every pull request, so that each review starts from the full accumulated history of earlier reviews
+B) Fork the long-lived session for each pull request, so that each review starts from the full accumulated history of earlier reviews
 C) Start a fresh session per pull request, passing in only the specific prior findings that are still relevant to it
 D) Keep resuming the session but add an instruction that the bot must verify each function exists before citing it
 
@@ -1355,11 +1507,11 @@ D) Keep resuming the session but add an instruction that the bot must verify eac
 
 ---
 
-## Question 76
+## Question 84
 A team resumes Claude Code sessions across several days of work on an internal search service. Developers launch with `--mcp-config` pointing at a local file that adds the search-index MCP server, and resumed sessions keep coming back without the search-index tools whenever someone forgets the flag. Which change prevents this class of failure?
 
 A) Run /compact right after each resume so that the summary of earlier tool calls brings the search-index tools back into context
-B) Stop resuming sessions and start a fresh one every day, since resumed sessions cannot be relied on to have MCP tools available
+B) Stop resuming sessions and start a fresh one each day, since resumed sessions cannot be relied on to have MCP tools available
 C) Add a CLAUDE.md line asking Claude to reconnect the search-index server itself whenever it notices those tools are missing
 D) Move the server into the project's committed .mcp.json configuration, which is read at every launch, instead of a per-launch flag
 
@@ -1373,7 +1525,7 @@ D) Move the server into the project's committed .mcp.json configuration, which i
 
 ---
 
-## Question 77
+## Question 85
 A developer has to hand over a half-finished investigation into memory growth in a worker service to a colleague who uses a different laptop. The developer's Claude Code session holds a lot of useful analysis. What is the most practical way to carry it over?
 
 A) Have Claude write a structured summary of findings, ruled-out causes and next steps, which the colleague uses to start a fresh session
@@ -1391,7 +1543,7 @@ D) Fork the session and share the fork's ID with the colleague, since forks are 
 
 ---
 
-## Question 78
+## Question 86
 A team tuning an invoice extraction prompt has spent a session having Claude analyse 20 failed extractions and categorise the failure patterns. They now want to try two schema designs, one with nullable fields and one with an explicit 'unclear' enum, each needing several iterations. What is the most efficient setup?
 
 A) Try the first schema in the current session, then run /clear and try the second one in the same session afterwards
@@ -1409,7 +1561,7 @@ D) Try both schema designs in the same session at the same time, alternating pro
 
 ---
 
-## Question 79
+## Question 87
 A long-running support session for a business customer was resumed after the company changed its refund policy from 30 to 14 days. Earlier in the session the agent fetched the old policy with a tool call and cited 30 days to the customer. The customer now asks whether a 20-day-old order can be refunded. What should the system do before the agent answers?
 
 A) Nothing extra, since the agent will fetch the policy again automatically whenever the customer asks a policy question
@@ -1427,11 +1579,11 @@ D) Run /compact on the session so that the earlier policy lookup is condensed an
 
 ---
 
-## Question 80
+## Question 88
 A nightly CI job first runs `claude -p` to audit dependency licences and records the result message's session_id. A second step on the same runner should ask that audit session a follow-up question and parse the answer as JSON. How should the second step be written?
 
 A) Run `claude -p --continue` so that the CLI picks the most recent interactive session on the runner automatically
-B) Run a new `claude -p` call that includes the first step's printed output pasted at the top of its prompt text
+B) Run a new `claude -p` call that includes the first step's printed output pasted at the top of its prompt text as context
 C) Run `claude -p --fork-session` with no session reference so that a copy of the audit is created for the question
 D) Run `claude -p --resume <session-id> --output-format json` with the follow-up prompt and parse the result field
 
@@ -1445,7 +1597,7 @@ D) Run `claude -p --resume <session-id> --output-format json` with the follow-up
 
 ---
 
-## Question 81
+## Question 89
 An architect has spent an hour in Claude Code mapping how a monolith's order module talks to six other modules. She now wants to evaluate splitting it out as a service, but the evaluation involves speculative changes she may abandon. She also wants to keep working on a small bug fix from the same understanding. What is the best approach?
 
 A) Keep the bug fix in this session and run the speculative evaluation in a --fork-session fork working in a separate git worktree
@@ -1463,7 +1615,7 @@ D) Open a second terminal, resume the same session there, and run the evaluation
 
 ---
 
-## Question 82
+## Question 90
 An engineer resumes a Claude Code session after a long weekend. In the meantime, the team rebased the feature branch, which rewrote 300 files including most of the ones the session read. The engineer is unsure exactly which changes matter. Which approach is most reliable?
 
 A) Resume the session and paste in the full git diff of the rebase, so it can work out which of its earlier file reads are now wrong
@@ -1481,10 +1633,10 @@ D) Resume the session and continue as normal, re-reading files only when an edit
 
 ---
 
-## Question 83
+## Question 91
 A data team spent yesterday afternoon in a Claude Code session named `po-edge-cases` cataloguing why purchase-order extractions fail on scanned multi-currency documents. Nothing in the repository or the sample set has changed since. A teammate suggests starting a fresh session with a summary 'to be safe'. What should the analyst do?
 
-A) Start the fresh session with a summary, since a resumed session always carries some risk of stale tool results
+A) Start the fresh session with a summary, since a resumed session carries some risk of stale tool results
 B) Fork `po-edge-cases` before continuing, so the original catalogue is protected in case today's work goes badly
 C) Run `claude --resume po-edge-cases` and carry on, since the session's earlier reads and analysis are all still valid
 D) Copy the session's key findings into CLAUDE.md and start a new session so the findings load automatically
@@ -1499,7 +1651,83 @@ D) Copy the session's key findings into CLAUDE.md and start a new session so the
 
 ---
 
-## Question 84
+## Question 92
+A developer spent yesterday in a Claude Code session named payment-audit mapping how a legacy payments module works. Overnight a teammate merged changes to ledger.py and refunds.py. Today she wants to keep that analysis and try two refactoring strategies side by side, one per terminal, without the two attempts writing into the same conversation. Which steps fit? (Choose two.)
+
+A) Resume payment-audit in both terminals at once, since each terminal keeps its own copy of the conversation
+B) Resume payment-audit and tell it that ledger.py and refunds.py changed overnight so it re-reads them first
+C) Start the second attempt with --resume payment-audit --fork-session so it works on its own copy of the history
+D) Use --continue in the second terminal, which opens a new branch of the most recent session for that work
+E) Start fresh unnamed sessions and paste in yesterday's last answer, since a named session cannot be branched
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, C** The resumed history holds tool results from before the merge, so naming the changed files lets Claude re-read them instead of reasoning from stale content. Forking (--fork-session, or /branch inside a session) copies the history into a new session ID, so both strategies start from the same analysis without touching each other. Resuming the same session in two terminals interleaves both into one transcript. --continue reopens the most recent session itself rather than branching it. Named sessions can be forked, so throwing the analysis away is unnecessary.
+
+*Hint if stuck: Separate two questions: is the earlier analysis still accurate, and how do two lines of work share one starting point?*
+</details>
+
+---
+
+## Question 93
+A TypeScript Agent SDK support service calls query() with continue: true on each customer message, so it picks up the most recent session in its working directory. With many customers at once, replies sometimes draw on another customer's history. Separately, when a supervisor approves a credit while a conversation is paused, the resumed agent still tells the customer the credit is pending. Which changes should the team make? (Choose two.)
+
+A) On resuming after an approval, add a message stating the credit was approved, with amount and date
+B) Store each customer's session_id from the result message and pass it as resume on their next message
+C) Set forkSession: true on each message so that every customer works on a separate copy of the session
+D) Set persistSession: false on each call so nothing from one customer's session lingers on disk for others
+E) Call query() with continue: true once more after the approval so the agent reloads the latest case state
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** continue picks the most recent session in the directory, which is wrong when several conversations run at once; resume with a stored session ID returns to the right one. A resumed session holds only its old history, so the approval must be stated in a new message. Forking still starts from whichever session continue would have picked. Turning persistence off throws away the history the service relies on. Continuing again reloads the same stale transcript, which knows nothing of the approval.
+
+*Hint if stuck: How does each option find which conversation to load, and where would news from outside that conversation come from?*
+</details>
+
+---
+
+## Question 94
+A nightly job uses the Agent SDK in two steps. Step one audits licences and records its session ID; step two asks follow-up questions that need that audit. When both steps ran on the same runner, step two worked. Since the pipeline moved step two to a fresh container, resuming by that ID fails to find the session. Which approaches let step two build on the audit? (Choose two.)
+
+A) Name the session in step one so that step two can resume it by its name from any machine in the run
+B) Pass forkSession: true with the recorded ID so the SDK copies the session over to the new container
+C) Copy step one's .jsonl transcript to the same ~/.claude/projects/ path in the new container, then resume
+D) Export the audit findings as structured data and pass them into a fresh session's prompt in step two
+E) Pass continue: true in step two so the SDK finds the most recent session without needing the ID
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, D** Session transcripts are files local to the machine that wrote them. Restoring the .jsonl file under ~/.claude/projects/ on the new host, at the path the first run used, makes it resumable there, and passing the results into a fresh session's prompt avoids depending on transcripts at all. continue looks for the most recent session on the new host, where none exists. Forking needs the original session on the same host and copies nothing between machines. A name is a label for a local session, not a way to reach one stored elsewhere.
+
+*Hint if stuck: Where does a session actually live, and what has to be on the new machine for step two to use it?*
+</details>
+
+---
+
+## Question 95
+A team's rule of thumb is to resume a named Claude Code session when they come back to a task, unless the tool results it holds can no longer be trusted, in which case they start a fresh session seeded with a summary of the conclusions. In which of these situations should they start fresh rather than resume? (Choose two.)
+
+A) A three-week-old research session read web pages and API docs that have since had several new releases
+B) The developer closed the laptop mid-task last night, and nothing in the repository has changed since
+C) A teammate edited one config file the session had read, and the developer knows exactly what changed
+D) The developer wants to try a second design from the same analysis without losing the first attempt
+E) The feature branch was rebased overnight, rewriting most of the 200 files the session had read
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, E** When most of what a session read has changed, such as a rebase that rewrote its files or sources that have moved on, its stored tool results mislead more than they help, so a fresh session with a summary that re-reads what it needs is safer. One known change is better handled by resuming and telling the session exactly what changed. With nothing changed, resuming keeps all the useful context. Trying a second design from the same baseline is what forking is for.
+
+*Hint if stuck: Ask how much of what was read earlier still holds today.*
+</details>
+
+---
+
+## Question 96
 An architect spent 30 minutes in a Claude Code session reading 40 files of a monorepo and building a verified mental model of its service boundaries. She now wants to explore three mutually exclusive migration strategies, each requiring long follow-up investigation that would contaminate the others' reasoning. What is the most efficient setup?
 
 A) Explore the three strategies sequentially in the same session, running /compact between each one to free up context for the next
@@ -1517,7 +1745,7 @@ D) Use fork_session to branch three sessions from the current one, so each strat
 
 ---
 
-## Question 85
+## Question 97
 An engineer resumes a Claude Code session from Friday to continue a refactor. Over the weekend a teammate merged 14 commits to main that renamed AuthClient to IdentityClient and moved the src/auth/ directory. The resumed agent immediately proposes edits referencing the old class name and paths. What is the most reliable way to handle this resume staleness?
 
 A) Add a CLAUDE.md note saying that after resuming, the agent should assume any file may have changed and re-verify before editing
@@ -1535,7 +1763,7 @@ D) Run /compact immediately after resuming so the stale history shrinks to a sho
 
 ---
 
-## Question 86
+## Question 98
 A CI pipeline uses the Agent SDK in two jobs. The first reviews a pull request and records the session ID; a later job asks follow-up questions that refer back to that review's earlier turns, so it has to continue the same conversation. Jobs land on arbitrary ephemeral runners, and resuming by session ID in the second job fails because no conversation is found. What should the team do?
 
 A) Attach a session store adapter that mirrors transcripts to shared storage, and resume from a working directory matching the first job's
@@ -1553,13 +1781,13 @@ D) Raise the second job's maxTurns and resend the original review prompt, so the
 
 ---
 
-## Question 87
+## Question 99
 A TypeScript Agent SDK service runs one-shot extractions: each request is a single query() call on one document, and nothing ever resumes or forks those sessions. Operations notice the containers' disks filling with session transcript files, and some documents contain personal data the team does not want written to disk anywhere. What should the team set?
 
 A) forkSession: true on each query, so each document runs in a throwaway copy and the original transcript stays empty
 B) persistSession: false on each query, so the session lives only in memory for that call and no transcript is written to disk
-C) continue: true on each query, so every request shares one session and the service writes a single transcript file overall
-D) A nightly job that deletes transcripts older than one day, since the SDK always writes a transcript for every query call
+C) continue: true on each query, so the requests share one session and the service writes a single transcript file overall
+D) A nightly job that deletes transcripts older than one day, since the SDK writes a transcript for each query call regardless
 
 <details>
 <summary>Answer & explanation</summary>

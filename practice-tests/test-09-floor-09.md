@@ -1,16 +1,16 @@
 # Practice Test 09: The Memory Halls
 **D5: Context Management & Reliability** (15% of the exam) · task statements 5.1, 5.2, 5.3
 
-55 questions. Exam pace is 2 minutes per question.
+75 questions. Exam pace is 2 minutes per question.
 
 ---
 
 ## Question 1
 A travel-booking support agent handles rebooking conversations that often run 40 turns. Older turns are summarised to save context. Customers complain that late in the chat the agent quotes the wrong rebooking fee and forgets the fare-class waiver it promised early on. What is the best fix?
 
-A) Summarise less often, for example every 20 turns instead of every 10, so fewer details are lost in each round
-B) Disable summarisation completely and keep the full transcript, relying on the large context window to hold every turn
-C) Ask the summariser prompt to be especially careful to preserve all numbers, dates and commitments when it condenses turns
+A) Summarise less often, for example at 20 turns instead of 10, so fewer details are lost in each round
+B) Disable summarisation and keep the full transcript, relying on the large context window to hold the conversation
+C) Ask the summariser prompt to be especially careful to preserve numbers, dates and commitments when it condenses turns
 D) Keep a structured case-facts block (booking ref, fees, waivers, promises) outside the summarised history, never summarised
 
 <details>
@@ -28,8 +28,8 @@ A coordinator in a pharmaceutical research system receives findings from six sub
 
 A) Have subagents return structured findings with key facts, figures and source references, instead of narrative reasoning
 B) Have the coordinator summarise each narrative itself first, then synthesise from its own six short summaries
-C) Raise the coordinator's context window budget so that all six full narratives fit with plenty of room to spare
-D) Place a note at the top of the synthesis prompt reminding the coordinator to look carefully for every sample size
+C) Raise the coordinator's context window budget so that the six full narratives fit with plenty of room to spare
+D) Place a note at the top of the synthesis prompt reminding the coordinator to look carefully for each sample size
 
 <details>
 <summary>Answer & explanation</summary>
@@ -62,10 +62,10 @@ D) Keep the order as it is but bold the field names and add an instruction to re
 ## Question 4
 A developer-productivity agent calls an internal CI-status tool that returns every job's full log, often 20,000 tokens per call, though engineers only ask whether jobs passed and which test failed. After a few calls the agent starts forgetting the branch name and ticket the engineer gave it. Which change best addresses this?
 
-A) Instruct the agent to ignore the log sections of the tool output and to focus on the job status lines only
-B) Run /compact after every tool call so the verbose logs are summarised before the next turn, keeping the branch and ticket
+A) Instruct the agent to ignore the log sections of the tool output and focus on the job status lines
+B) Run /compact after each tool call so the verbose logs are summarised before the next turn, keeping the branch and ticket
 C) Wrap the tool to return only job name, status and failing tests, plus a separate tool to fetch a log on demand
-D) Restate the branch name and ticket at the start of every user message so the agent keeps seeing them
+D) Restate the branch name and ticket at the start of each user message so the agent keeps seeing them
 
 <details>
 <summary>Answer & explanation</summary>
@@ -80,8 +80,8 @@ D) Restate the branch name and ticket at the start of every user message so the 
 ## Question 5
 A support agent keeps a case-facts block, but it is appended at the end of an ever-growing context and updated by having the model rewrite it each turn. Over long chats, the block itself starts to lose details such as the second order number. What is the most robust way to maintain it?
 
-A) Ask the model to rewrite the block more carefully each turn and to never remove any fact it has previously recorded
-B) Store the block in the first user message only, since the model reads the start of the context most reliably
+A) Ask the model to rewrite the block more carefully each turn and not to remove any fact it has previously recorded
+B) Store the block in the first user message and nowhere else, since the model reads the start of the context most reliably
 C) Move the case-facts block into the summary so that it is condensed along with the rest of the earlier conversation
 D) Have application code update the block from structured tool results and inject it in a fixed, prominent position each turn
 
@@ -98,9 +98,9 @@ D) Have application code update the block from structured tool results and injec
 ## Question 6
 After two hours in Claude Code diagnosing a flaky authentication test, a developer is about to start the fix. The context is nearly full, and the last automatic compaction produced a generic summary that dropped the exact failing test names and the environment variable that triggers the bug. What should the developer do before starting implementation?
 
-A) Run /clear and re-explain the bug from memory, since a fresh context always beats a summarized one in quality
+A) Run /clear and re-explain the bug from memory, since a fresh context gives better results than a summarized one
 B) Let automatic compaction keep running, since it already judges which details matter most for the next step
-C) Switch to a model with a larger context window so that compaction never has to run during this session
+C) Switch to a model with a larger context window so that compaction does not have to run during this session
 D) Run /compact with instructions naming what to keep, such as the failing test names and the triggering variable
 
 <details>
@@ -118,7 +118,7 @@ A research subagent returns findings as one long paragraph, with the decisive re
 
 A) Ask the subagent to bold the important sentence anywhere it happens to appear within the paragraph
 B) Ask the subagent to lead with key findings under clear headers, then supporting detail and sources
-C) Ask the subagent to repeat the key finding at the start, the middle and the end of its paragraph
+C) Ask the subagent to repeat the key finding at the start, the middle and the end of its long paragraph
 D) Ask the subagent to keep the paragraph format but shorten it to a maximum of four sentences overall
 
 <details>
@@ -134,10 +134,10 @@ D) Ask the subagent to keep the paragraph format but shorten it to a maximum of 
 ## Question 8
 An extraction agent processes a 300-email thread to build a timeline of a contract dispute. It retrieves emails via a search tool, and each result includes full headers, signatures and quoted replies. The final timeline is missing dates from the middle of the thread. Which change targets the cause most directly?
 
-A) Ask the agent to number every email as it reads so it can confirm that none were skipped before writing the timeline
+A) Ask the agent to number each email as it reads so it can confirm that none were skipped before writing the timeline
 B) Ask the agent to build the timeline in two halves and then merge the halves, each with a prompt to focus on dates
 C) Strip each email to sender, date, subject and new body text before it reaches the model; full text on request
-D) Retrieve all 300 emails in a single tool call so the agent sees the whole thread at once in chronological order
+D) Retrieve the 300 emails in a single tool call so the agent sees the whole thread at once in chronological order
 
 <details>
 <summary>Answer & explanation</summary>
@@ -168,12 +168,141 @@ D) Pass a structured case record with customer id, disputed items, amounts agree
 ---
 
 ## Question 10
+A research lead agent built on the Claude API runs for hours and calls web_fetch hundreds of times. The team turned on context editing with the clear_tool_uses strategy, so old fetch results are cleared once input passes 80k tokens. Runs no longer hit the context limit, but after each clearing the agent re-fetches pages it already read, and its interim notes drop figures it had pulled from them. What should the team add?
+
+A) The memory tool, so Claude can write findings to memory files when warned that clearing is near and read them back afterwards
+B) A higher keep value, so the 50 most recent fetch results stay in context and the older findings survive a good while longer
+C) clear_tool_inputs set to true, so the cleared calls vanish as well and the agent stops trying to revisit those pages
+D) A model with a larger context window and no clearing, so each fetched page stays available until the run ends
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Context editing frees the window by removing raw results, so what the agent learned from them has to live outside the window. Anthropic pairs it with the memory tool: as context nears the clearing threshold, Claude gets a warning and can save what matters to memory files, then consult them later. Keeping more results only delays the loss and takes back the space clearing was meant to free. Clearing the inputs too erases the record of what was fetched, so the agent loses its trail rather than its duplicates. A bigger window without clearing brings back context rot: recall falls as the window fills.
+
+*Hint if stuck: Clearing decides what leaves the window. Ask where the knowledge drawn from those results should live once they are gone.*
+</details>
+
+---
+
+## Question 11
+A support agent on the Claude API calls get_entitlements once at the start of each chat to load which services and credits the customer's plan includes, then calls get_order_history many times. To control context, the team enabled clear_tool_uses with keep set to 3. In long chats the agent starts offering credits the plan does not include. The team wants to keep clearing the bulky order-history results. Which change fits best?
+
+A) Add get_entitlements to exclude_tools so its result survives clearing, while order-history results are still cleared
+B) Lower the trigger so clearing runs earlier and more often, keeping the context small enough that the plan details stay prominent
+C) Raise keep to 20 tool uses so the entitlement lookup usually survives, as few chats make over twenty calls
+D) Set clear_tool_inputs to true so the agent no longer sees a cleared entitlement call and stops assuming it knows the plan
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** exclude_tools lists tool names whose uses and results are never cleared, which gives exactly the split needed: the one small result the whole chat depends on stays, the bulky ones go. Clearing earlier removes the entitlement result sooner, not later. A bigger keep only makes survival likely in shorter chats and holds far more order history than needed. Clearing the inputs as well removes the evidence that the lookup happened; it does not give the agent back the plan details it is missing.
+
+*Hint if stuck: Some lookups matter for the whole conversation and others for a moment. Which setting respects that difference?*
+</details>
+
+---
+
+## Question 12
+A team builds its own compaction step for a long-running coding agent on the Claude API: when context reaches 150k tokens, a separate call summarises the history and the agent continues from that summary. The summarisation prompt was tuned to produce very short summaries, and after compaction the agent keeps reopening bugs it had already diagnosed and forgets design decisions. How should the team rework the summarisation prompt?
+
+A) Keep the short summaries but compact twice as often, so each summary covers fewer turns and loses less from each stretch
+B) Ask the summariser to keep just the last ten turns verbatim and discard everything older, since recent turns matter most
+C) Tune it on real long traces to capture everything relevant first, such as decisions and open bugs, then trim what is redundant
+D) Ask the summariser to rate each turn's importance from 1 to 10 and keep the turns rated 8 or higher, dropping the others
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** Anthropic's context-engineering guidance is to start by maximising recall, so the compaction prompt keeps architectural decisions, unresolved bugs and implementation details, and only then improve precision by cutting redundant content such as old tool outputs. A prompt tuned for brevity throws away the state the agent needs. Compacting more often still runs the same lossy prompt. Keeping only recent turns discards early decisions wholesale. Self-rated importance is an unreliable filter that silently loses whatever it under-rates.
+
+*Hint if stuck: When tuning a lossy step, decide up front which kind of mistake costs the agent most.*
+</details>
+
+---
+
+## Question 13
+In one chat, a customer of an electronics retailer raises three problems: a duplicate charge, a cracked screen on delivery and a wrong billing address. The agent works on the duplicate charge for 30 turns, older turns get summarised, and the agent then closes the chat after issuing the refund, never returning to the screen or the address. Which design change prevents this?
+
+A) Record each raised problem as its own entry with a status in case facts kept outside the summary, and check them before closing
+B) Summarise older turns less aggressively, so the opening message that listed the three problems stays visible in the history for much longer
+C) Tell the agent in its system prompt to resolve the most urgent problem first and open a new chat for each remaining one
+D) Ask the customer at the end of each chat whether anything else is needed, and rely on them to repeat any open problems
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Summaries tend to keep the thread that dominated the conversation and blur the rest, so the list of open problems belongs in a structured block that is never summarised, with one entry and status per problem, checked before wrap-up. Asking the customer pushes the tracking onto them and fails when they assume the agent remembers. Gentler summarisation only delays the loss. Splitting into new chats makes the customer start over and still loses problems nobody recorded.
+
+*Hint if stuck: Ask which part of the agent's state is immune to summarising, and what it would need to hold here.*
+</details>
+
+---
+
+## Question 14
+In long support chats the agent summarises older turns to save context. Customers complain that late in a chat it quotes the wrong refund amount and forgets the delivery date it promised. Its order-lookup tool also returns about 40 fields per order, mostly warehouse codes and audit metadata, which take up much of the context. Which changes protect the facts that matter? (Choose two.)
+
+A) Summarise more often and ask each summary to keep the numbers, so the history stays short and facts survive
+B) Keep a case-facts block of amounts, dates, order IDs and promises outside the summarised history
+C) Place the full 40-field order record in the middle of the prompt, where the model attends to it most steadily
+D) Trim lookup results to the fields the agent needs, such as status, amount and dates, before they enter context
+E) Raise max_tokens on each reply so the model has room to restate each fact from earlier in the conversation
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** Progressive summaries blur exact amounts, dates and commitments, so those facts should live in a persistent block that is never summarised and is sent with every turn. Verbose tool results crowd out what matters; keeping only the relevant fields leaves room for the facts. Summarising more often adds more lossy passes. The middle of a long context is where information is used least reliably, not most. max_tokens limits the reply's length and does nothing for what the model remembers.
+
+*Hint if stuck: Ask which facts must never pass through a lossy step, and what is crowding them out.*
+</details>
+
+---
+
+## Question 15
+In a research system, six search subagents each return about 8,000 tokens of narrative notes that mix their reasoning with the facts they found. The synthesis agent's prompt opens with the research question and instructions, followed by all six notes. Reports often miss key figures that sit midway through the notes, and sometimes credit a figure to the wrong source. Which changes help? (Choose two.)
+
+A) Turn on context editing so older subagent results are cleared and the synthesis prompt stays small
+B) Move synthesis to a model with a larger context window so the six notes fit with plenty of room to spare
+C) Have subagents return structured findings, each a claim with its figure, source and date, not reasoning
+D) Have the coordinator merge the six notes into one short summary paragraph before synthesis sees them
+E) Put the six findings blocks first and the research question and instructions at the end of the prompt
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** Structured findings keep each figure tied to its source and date and drop the reasoning the synthesizer would otherwise wade through. For long inputs, putting the material at the top and the question and instructions at the end improves results, while facts buried mid-context are the ones most often missed. The notes already fit; a bigger window doesn't change how well the middle is read. A one-paragraph merge blurs figures and loses their sources. Clearing the subagent results removes the evidence synthesis needs.
+
+*Hint if stuck: Think about both the shape of what reaches the synthesizer and the order in which it reads it.*
+</details>
+
+---
+
+## Question 16
+An extraction pipeline sends 150-page supply contracts to Claude in a single request to list 12 kinds of obligations, such as notice periods, penalties and renewal terms. The prompt gives the instructions and output format first, then pastes the contract as plain text. Obligations stated midway through long contracts are often missed or paraphrased with wrong numbers. Which prompt changes address this? (Choose two.)
+
+A) Put the contract at the top inside document tags and move the instructions and output format to the end
+B) Ask Claude to first quote the passages relevant to each obligation, then extract from those quotations
+C) Summarise each contract in a first call and run the extraction on that summary instead of the full text
+D) Repeat the list of 12 obligation types in capitals at both the start and the end of the prompt for emphasis
+E) Ask Claude to rate its confidence in each obligation and rerun extraction on any rated lower than 0.8
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** For 20k+ token inputs, the docs recommend long documents at the top (wrapped in document tags with metadata) and the query at the end, which improves quality by up to 30% in tests. Asking Claude to quote the relevant parts first focuses it on the exact text and keeps numbers verbatim. A summary is exactly where specific numbers and terms blur. Shouting the list doesn't change how the middle of the document is read. Self-rated confidence is poorly calibrated, so reruns would target the wrong items.
+
+*Hint if stuck: Recall the long-context prompting advice: it covers both layout and a step before the task itself.*
+</details>
+
+---
+
+## Question 17
 A developer-productivity assistant gets its persona, coding standards, and 'never push directly to main' rules injected at the top of every user message, with each request's diff and ticket details following below. In long sessions adherence to the rules degrades, and prompt caching saves almost nothing. How should the prompt be restructured?
 
 A) Keep the rules in the user messages but also repeat them verbatim in a final reminder line at the end of each request
-B) Move the per-request diff and ticket details into the system prompt so all content shares one stable location
-C) Put the stable persona, standards, and rules in the system prompt and keep only the per-request diff and ticket details in user messages
-D) Compress the rules into a one-line summary so repeating them inside every user message costs fewer tokens
+B) Move the per-request diff and ticket details into the system prompt so the content shares one stable location
+C) Move the persona, standards and rules into the system prompt and leave the diff and ticket details in user messages
+D) Compress the rules into a one-line summary so repeating them inside each user message costs fewer tokens
 
 <details>
 <summary>Answer & explanation</summary>
@@ -185,13 +314,13 @@ D) Compress the rules into a one-line summary so repeating them inside every use
 
 ---
 
-## Question 11
+## Question 18
 A telecom support agent runs on a model with a 1M-token context window. To 'never miss anything', the team now loads the full 600-page product and policy manual into every conversation, which fits with plenty of room to spare. Since the change, answers about specific plan terms have become less accurate, not more. What best explains this, and what should the team do?
 
 A) The manual still sits too close to the token limit; move to a larger context tier so the model has more headroom to reason
-B) The model needs firmer instructions; add a system-prompt rule that it must read the entire manual before every single answer
+B) The model needs firmer instructions; add a system-prompt rule that it must read the entire manual before each answer
 C) Recall degrades as the window fills, even below the limit; load only the policy sections a case needs, retrieved on demand
-D) The repeated manual confuses the prompt cache; turn caching off so every turn re-reads the manual fresh from the beginning
+D) The repeated manual confuses the prompt cache; turn caching off so each turn re-reads the manual fresh from the beginning
 
 <details>
 <summary>Answer & explanation</summary>
@@ -203,7 +332,7 @@ D) The repeated manual confuses the prompt cache; turn caching off so every turn
 
 ---
 
-## Question 12
+## Question 19
 A logistics operations agent calls a shipment-tracking tool that returns a 45-field JSON object per shipment, including carrier metadata, customs codes, and internal routing flags. The agent only ever uses status, ETA, and current location. Sessions tracking 30+ shipments hit context limits by mid-session. What should the architect do?
 
 A) Run /compact to summarize accumulated history each time the session approaches the context limit
@@ -221,7 +350,7 @@ D) Upgrade to a model with a larger context window so the full 45-field payloads
 
 ---
 
-## Question 13
+## Question 20
 A multi-agent research system's coordinator builds a 60k-token synthesis prompt: subagent findings concatenated chronologically, with the critical scope constraint ('only include peer-reviewed sources after 2020') stated once around token 30k, where it landed in sequence. The final report repeatedly cites blog posts from 2017. What change most directly fixes this?
 
 A) Increase the thinking budget so the model reasons more carefully over the full 60k tokens
@@ -239,13 +368,13 @@ D) Lift the scope rule out of the findings into a headed instruction block at th
 
 ---
 
-## Question 14
+## Question 21
 A hospital intake agent keeps a structured case-facts block (allergies: penicillin; weight: 72 kg). The block was injected at turn 1, but by turn 30 it sits buried under 50k tokens of accumulated dialogue and tool results, and the agent suggests an amoxicillin prescription. The block's contents are intact and within the context window. What is the fix?
 
-A) Add a system prompt instruction telling the model to always consult the case-facts block before any medication suggestion
+A) Add a system prompt instruction telling the model to consult the case-facts block before any medication suggestion
 B) Run /compact on the dialogue so the case-facts block becomes a larger share of the remaining context
 C) Expand the block with severity codes and timestamps so it stands out more in the context
-D) Re-inject the block on every request in a fixed, prominent spot under clear headers, not just at turn 1
+D) Re-inject the block on each request in a fixed, prominent spot under clear headers, not just at turn 1
 
 <details>
 <summary>Answer & explanation</summary>
@@ -257,7 +386,7 @@ D) Re-inject the block on every request in a fixed, prominent spot under clear h
 
 ---
 
-## Question 15
+## Question 22
 A warranty-support agent builds each request as: system prompt, then the customer's question and answer instructions, then about 30,000 tokens of retrieved warranty terms and order history appended last 'so the freshest data sits closest to the reply'. Answers often ignore exclusions that are clearly stated in the terms. How should the request be ordered?
 
 A) Keep the data last, since the end of a prompt gets the most attention, and repeat the customer question once more at the top
@@ -275,7 +404,7 @@ D) Place the warranty terms and order history first in tagged blocks, with the c
 
 ---
 
-## Question 16
+## Question 23
 A research coordinator hands its report-writer subagent a 25,000-token brief merged from eight researcher subagents, ordered by the time each researcher finished. The three findings that decide the report's conclusion sit in sections four to six of the brief, and the final report keeps under-weighting them. Which change to the brief helps most?
 
 A) Keep the finish-time order but bold the most important sentences wherever they happen to appear across the brief
@@ -293,7 +422,7 @@ D) Cut the brief to its first 5,000 tokens so only the work of the earliest-fini
 
 ---
 
-## Question 17
+## Question 24
 An extraction pipeline sends Claude a 120-page master services agreement, already placed at the top of the prompt with the request at the end, and asks for every obligation the supplier has. The output reads well, but reviewers find obligations that loosely paraphrase the contract and two that blend clauses from different sections. Which prompt change best follows Anthropic's long-document guidance?
 
 A) Move the request and instructions above the contract so the model knows what to look for before it starts reading the text
@@ -311,13 +440,13 @@ D) Add an instruction to be precise and never paraphrase, repeated once at the s
 
 ---
 
-## Question 18
+## Question 25
 A developer-productivity agent built on the Claude API upgrades a service's dependencies over roughly 80 loop turns, calling read_file and run_tests. Every raw output stays in the message history even after the agent has recorded what it learned from it, and by turn 60 it re-runs checks and forgets the upgrade order the engineer gave it. What is the lightest-touch fix?
 
 A) Clear old tool results once they are deep in the history and already used, leaving the call so it can be re-run if needed
-B) Summarize the entire conversation into a single paragraph every ten turns and restart the loop from that paragraph alone
-C) Raise max_tokens on every request so the model has more room to process all the accumulated tool output each turn
-D) Move every earlier tool output into the system prompt so it is treated as stable guidance rather than as message history
+B) Summarize the whole conversation into one paragraph after each ten turns and restart the loop from that paragraph alone
+C) Raise max_tokens on each request so the model has more room to process the accumulated tool output on each turn
+D) Move earlier tool outputs into the system prompt so they are treated as stable guidance rather than as message history
 
 <details>
 <summary>Answer & explanation</summary>
@@ -329,7 +458,7 @@ D) Move every earlier tool output into the system prompt so it is treated as sta
 
 ---
 
-## Question 19
+## Question 26
 A utilities support agent is helping a customer read a confusing bill. Midway, the customer writes: 'Honestly, just put me through to someone.' The agent believes it can explain the bill in two more messages. What should the agent do?
 
 A) Hand off to a human now, with a structured summary of the account, the bill question and what was explained
@@ -347,7 +476,7 @@ D) Offer a discount on the next bill if the customer agrees to continue the conv
 
 ---
 
-## Question 20
+## Question 27
 A subscription-box support agent looks up a customer by email and finds no account, but finds two accounts by the name 'J. Okafor' in the same city, one with an active order. The customer wants to change the shipping address on 'my order'. What is the right next step?
 
 A) Change the address on the account with the active order, since it is the only one that could have an order to change
@@ -365,25 +494,25 @@ D) Show the customer both accounts' addresses and order details so they can poin
 
 ---
 
-## Question 21
-A support team's escalation prompt says only: 'Escalate when the situation is complex or the customer is unhappy.' Audits show the agent escalates 35 percent of chats, many of them routine, while missing chats where policy did not cover the request. What is the most effective fix?
+## Question 28
+A hotel-booking support agent's policy lets it waive cancellation fees for documented medical emergencies. A guest asks for a waiver because a hurricane warning closed the airport; the policy says nothing about weather. The agent waived the fee, reasoning that the case is 'similar to a medical emergency'. What should its instructions say about cases like this?
 
-A) Add a sentiment classifier and escalate only when the customer's sentiment score falls below a tuned threshold
-B) Have the agent report a confidence score on each turn and escalate only when its own confidence in resolving the case falls below 50 percent
-C) Replace the vague rule with explicit criteria (human requested, policy gap, no progress) and worked examples of each
-D) Tell the agent that escalations are costly and should be avoided wherever possible to bring the rate down
+A) Extend the closest matching rule when a request resembles a covered case, and note the reasoning used
+B) Decline requests the policy does not mention, since a waiver outside policy is a cost to the business
+C) Treat requests the policy does not cover as escalations, passing the details to a human to decide
+D) Grant the waiver when the guest seems upset, since a frustrated guest is likely to complain elsewhere
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Vague criteria produce inconsistent escalation, and explicit triggers with concrete examples, including what should not be escalated, align the agent with policy. Sentiment and self-reported confidence are poor proxies for whether a case actually needs a human, and discouraging escalation in general cuts the policy-gap cases too.
+**C)** A request the policy does not address is a policy gap, and the agent should hand it to a human with the facts instead of inventing coverage. Stretching a nearby rule by analogy is the agent making policy, flatly declining applies a rule nobody wrote, and the guest's mood does not tell the agent whether a waiver is allowed.
 
-*Hint if stuck: Ask whether the current rule gives the agent anything concrete to test a chat against.*
+*Hint if stuck: Notice who wrote the weather rule the agent just applied.*
 </details>
 
 ---
 
-## Question 22
+## Question 29
 An airline support agent can rebook passengers under a documented disruption policy. A passenger asks for compensation for a missed wedding caused by a 9-hour delay, something the policy does not mention at all. The agent has access to a goodwill-credit tool. What should it do?
 
 A) Issue a moderate goodwill credit with the tool, since the delay was clearly long, the passenger has a reasonable complaint and the tool is available
@@ -401,7 +530,7 @@ D) Escalate to a human, since the request falls outside documented policy, passi
 
 ---
 
-## Question 23
+## Question 30
 A home-internet support agent has walked a customer through router restart, cable checks and a firmware reset. Each step reports the same failure, and the agent has no further troubleshooting tools. The customer remains calm and patient. What should the agent do next?
 
 A) Escalate to a human technician with the steps tried and their results, since the agent is no longer making progress
@@ -419,7 +548,7 @@ D) Suggest the customer buy a new router, since the router is the most common ca
 
 ---
 
-## Question 24
+## Question 31
 A customer writes in capitals that they are furious their package is late, but tracking shows it arrives tomorrow and the agent can offer the standard late-delivery credit. The customer has not asked for a human. What is the best response pattern?
 
 A) Escalate straight away, because the customer's anger in capitals indicates a high risk of churn that a human agent is better placed to handle
@@ -437,13 +566,13 @@ D) Offer a larger credit than the standard amount, since an angry customer needs
 
 ---
 
-## Question 25
+## Question 32
 An engineer tells Claude Code: 'Add caching to the user service.' The service has three plausible layers to cache (HTTP responses, database queries, a computed permissions map) and the choice changes invalidation behaviour substantially. The session is interactive. What should Claude do?
 
 A) Pick the database-query layer, since it is usually the safest place to cache, and note the choice in the commit message
-B) Implement caching at all three layers behind feature flags so that the engineer can choose afterwards in production
+B) Implement caching at the three layers behind feature flags so that the engineer can choose afterwards in production
 C) Ask the engineer which layer they intend, briefly naming the options and the invalidation trade-off for each
-D) Write an analysis document of all three options and wait for the engineer to read it before making any change
+D) Write an analysis document of the three options and wait for the engineer to read it before making any change
 
 <details>
 <summary>Answer & explanation</summary>
@@ -455,7 +584,7 @@ D) Write an analysis document of all three options and wait for the engineer to 
 
 ---
 
-## Question 26
+## Question 33
 A research coordinator receives the request 'Compare the leading battery suppliers.' It is unclear whether the user means EV cells, grid storage or consumer electronics, and each would send subagents to very different sources. The system runs interactively. What is the best first step?
 
 A) Run subagents for all three markets in parallel and let the final report cover each of them in separate sections
@@ -473,7 +602,7 @@ D) Ask the user which market they mean, along with any time frame or region cons
 
 ---
 
-## Question 27
+## Question 34
 An extraction pipeline reads purchase orders. Some orders list two different delivery dates (one in the header, one in the line items) and the pipeline must emit a single delivery_date. The batch runs unattended overnight. How should the extractor handle these documents?
 
 A) Emit the field with both candidate values and a conflict flag so the document routes to human review
@@ -491,13 +620,13 @@ D) Leave the delivery_date field out of the record entirely so downstream system
 
 ---
 
-## Question 28
+## Question 35
 A bank's support agent escalates every refund above $100 to a human, even though the documented policy authorises the agent to refund up to $250 for duplicate charges. Queue times have doubled. Leadership asks the architect to reduce escalations without adding risk. What should change?
 
 A) Tell the agent in the prompt to be more confident and avoid escalating unless it really is necessary
 B) Align criteria with policy: resolve duplicate-charge refunds up to $250, escalate above that or outside it
-C) Raise the escalation threshold to $500 for all refund types so the agent handles more refunds on its own
-D) Add a sentiment check so the agent escalates refunds over $100 only when the customer seems upset
+C) Raise the escalation threshold to $500 for each refund type so the agent handles more refunds on its own
+D) Add a sentiment check so the agent escalates refunds over $100 when the customer seems upset
 
 <details>
 <summary>Answer & explanation</summary>
@@ -509,11 +638,11 @@ D) Add a sentiment check so the agent escalates refunds over $100 only when the 
 
 ---
 
-## Question 29
+## Question 36
 A Claude Code session is asked to 'clean up the old feature flags.' It finds 14 flags, 3 of which are also named in an external config service whose usage Claude cannot inspect. The engineer is available in the terminal. What should Claude do?
 
-A) Remove all 14 flags, since the request said to clean up old flags and the config service is not in the repository
-B) Remove none of the flags and write a report instead, since any uncertainty at all means the whole task should go back to the engineer to decide
+A) Remove the 14 flags, since the request said to clean up old flags and the config service is not in the repository
+B) Remove none of the flags and write a report instead, since any uncertainty means the whole task should go back to the engineer to decide
 C) Remove the 11 flags it can verify as unused and ask the engineer about the 3 referenced by the external config service
 D) Remove the 3 externally referenced flags first, since those are the oldest and most likely to be the ones intended
 
@@ -527,25 +656,25 @@ D) Remove the 3 externally referenced flags first, since those are the oldest an
 
 ---
 
-## Question 30
-A telecom support agent's handoff to humans today is a link to the full chat transcript. Human agents say they spend the first five minutes of every escalated case re-reading it and often re-ask customers for details. What should the escalation output include instead?
+## Question 37
+A research system is compiling a report on Meridian Logistics' safety record. The search subagent returns findings for two companies with that name, a US trucking firm and a UK freight forwarder, and the coordinator cannot tell from the brief which one the user means. What should it do?
 
-A) The transcript plus a sentiment score, so human agents know how carefully they need to approach the customer
-B) A one-line note saying why the case was escalated, so the human can quickly decide which queue it belongs in
-C) The last five messages of the conversation only, since those reflect the customer's current state most accurately
-D) A structured summary: customer id, issue, steps tried and results, escalation reason, and a recommended next action
+A) Merge the findings from both companies into one profile, since together they give the fullest picture
+B) Keep the company with more search results, since it is most likely the one the user had in mind
+C) Report on the US firm, since the brief was written in US English and that firm has the larger fleet
+D) Ask the user which company is meant, giving a distinguishing detail for each, before going on
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** An escalation should hand over a structured summary that lets the human act immediately without re-reading or re-asking. A sentiment score adds little, a one-line reason lacks the facts needed to act, and the last five messages can omit identifiers and earlier troubleshooting.
+**D)** Two entities matching one name is an ambiguity the system cannot settle from what it has, so it should ask for an identifier, such as the country, before researching further. Merging produces a profile of a company that does not exist, and choosing by result count or by spelling is a guess that could point the whole report at the wrong firm.
 
-*Hint if stuck: Design the handoff for the person who receives it.*
+*Hint if stuck: When the evidence fits two different targets, think about who holds the information that settles it.*
 </details>
 
 ---
 
-## Question 31
+## Question 38
 A CI job runs Claude Code headlessly to update a dependency. The upgrade guide offers two incompatible migration paths, and the right one depends on a product decision the job cannot see. Nobody is watching the job. How should the job be designed to handle this?
 
 A) Stop on this kind of ambiguity and open the PR or an issue describing both paths and the decision needed
@@ -563,11 +692,140 @@ D) Keep retrying the migration with different prompts until one of the paths com
 
 ---
 
-## Question 32
+## Question 39
+A broadband support agent's prompt says 'escalate to a human if you are not making progress.' Logs show chats where it calls run_line_test, gets the same failure, suggests another router restart and repeats this cycle for 25 turns before the customer gives up. The team wants escalation in these cases to happen reliably. What should they change?
+
+A) Rewrite the instruction in capitals marked IMPORTANT, and add that the agent must count its own attempts before each reply
+B) Track repeated identical tool failures in code and hand the chat to a human with the steps tried once a set limit is hit
+C) Have the agent rate its own progress from 0 to 10 after each turn and escalate automatically whenever the score drops below 4
+D) Escalate when a sentiment model detects rising frustration, since customers stuck in these loops eventually become annoyed
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** No progress is a valid escalation trigger, but a prompt-only rule fails at some rate, and here the model is clearly not applying it. Detecting the loop from observable facts in code (the same tool failing the same way, again and again) and handing off with what was tried makes the trigger dependable. Louder wording is still a prompt rule. Self-rated progress is poorly calibrated; the agent apparently believes each restart might help. Sentiment measures mood, not progress, and fires late or never for patient customers.
+
+*Hint if stuck: When a rule must fire every time, ask what can observe the situation without relying on the model's own judgment.*
+</details>
+
+---
+
+## Question 40
+A research app built on the Agent SDK runs interactively: a coordinator spawns subagents through the Agent tool. When a subagent hits a fork only the user can settle (for example, whether 'battery costs' means cell or pack level), the team wants the user asked. They added AskUserQuestion to the subagent's tools, but no question ever reaches the user. Under current Agent SDK docs, what is the right design?
+
+A) Run the subagent with bypassPermissions so its AskUserQuestion calls skip the approval flow and are shown to the user directly
+B) Tell the subagent to pick the most common interpretation and continue, since subagents are meant to finish without stopping
+C) Have the subagent return the open choice and what depends on it, and let the coordinator ask the user and re-dispatch the task
+D) List AskUserQuestion in the coordinator's allowedTools too, so the subagent's calls are pre-approved and reach the user
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** The SDK docs list a limitation: AskUserQuestion is not currently available in subagents spawned through the Agent tool. Clarifying questions therefore belong to the main agent, whose canUseTool callback surfaces them: the subagent reports the ambiguity and the options, the coordinator asks, then sends a new task with the answer. A permission mode doesn't make an unavailable tool available, and neither does pre-approving it on the coordinator. Guessing silently is the behaviour the team is trying to avoid.
+
+*Hint if stuck: Check which agent in the hierarchy is actually connected to the person.*
+</details>
+
+---
+
+## Question 41
+A team's Claude Code setup tells Claude to 'always confirm with the developer before choosing between approaches.' Developers now get asked whether to name a variable count or total, whether to put a helper above or below its caller, and whether to add a test, which they always want. They still want questions when a choice really matters. How should the instruction change?
+
+A) Remove the instruction and deny AskUserQuestion, so Claude decides everything itself and developers review the diff
+B) Ask Claude to state its confidence in each choice and ask the developer just when its confidence is below 70 percent
+C) Require plan mode for each task, so the choices come up at once in a plan the developer approves before any edits
+D) Ask only when valid options lead to materially different results the code and context can't settle; otherwise pick and say why
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Clarifying questions pay off when several options are valid, their outcomes differ materially (behaviour, data, public APIs, invalidation) and the answer can't be found in the repo or conversation. Trivial or already-settled choices should be made with the assumption stated. Banning questions brings back silent guesses on choices that matter. Self-reported confidence is poorly calibrated, so it makes a weak gate. Plan mode on every task adds overhead to small changes and still doesn't say which choices deserve a question.
+
+*Hint if stuck: Think about what makes a question worth interrupting a developer for.*
+</details>
+
+---
+
+## Question 42
+An internal platform agent on the Claude API has tools to read and edit repositories and CI config. Engineers ask things like 'why is the staging build so slow?' and the agent goes ahead and rewrites shared pipeline files, which nobody asked it to change. When engineers say 'speed up the staging build', they do want edits. What system-prompt guidance fits best?
+
+A) Tell it that when intent is unclear it should investigate and recommend, and edit only when the request clearly asks for changes
+B) Tell it to estimate a confidence score that edits are wanted, and to edit whenever that score is above 0.8 and explain otherwise
+C) Tell it to ask the engineer for confirmation before every tool call, reads included, so nothing happens without approval
+D) Tell it to infer the most useful likely action by default and make changes rather than merely suggest them, using tools to fill gaps
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Anthropic's prompting guide shows two opposite defaults. For an agent that should not jump into changes, it suggests: when intent is ambiguous, default to information, research and recommendations, and make edits only when explicitly asked. The default-to-action prompt is the opposite and would make this worse. A self-rated confidence threshold is not a calibrated signal. Confirming every call, even reads, buries engineers in prompts and treats a clear 'speed it up' the same as a question.
+
+*Hint if stuck: The agent must tell an inquiry from an instruction. What should it fall back on when it can't?*
+</details>
+
+---
+
+## Question 43
+A billing support agent escalates to humans whenever a sentiment classifier marks a customer as angry, so venting customers with simple fixes wait an hour in the human queue. Meanwhile customers who type "I want to talk to a real person" are told the agent can solve it and are kept in the chat for several more turns. Which changes should the team make? (Choose two.)
+
+A) Raise the sentiment threshold so the angriest customers are escalated and the rest stay with the agent
+B) Hand off right away when a customer asks for a human, instead of first trying to resolve the issue
+C) Escalate when the agent's self-rated confidence in its answer drops below 0.7 on any turn of the chat
+D) Ask customers who request a human to confirm twice, so handoffs happen when they really mean it
+E) Base escalation on written criteria with examples, such as policy gaps or no progress, not on sentiment
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, E** An explicit request for a human should be honoured immediately. Anger says little about whether the agent can solve the problem, so escalation should follow explicit criteria (policy gaps, requests outside its authority, no progress) illustrated with examples. A higher sentiment threshold is still the wrong signal, self-rated confidence is poorly calibrated, and making customers confirm twice ignores the request they already made.
+
+*Hint if stuck: Ask which signals actually tell you the agent cannot or should not continue, and whose stated wishes outrank the agent's plan.*
+</details>
+
+---
+
+## Question 44
+A telecom support agent identifies callers by name. When a lookup on "J. Patel" returned three accounts, it picked the one with the most recent activity and discussed that account's bill, which belonged to someone else. In another chat a customer asked for a match on a competitor's price; the written policy covers only price drops on the company's own plans, and the agent invented a 10% credit. Which changes should the team make? (Choose two.)
+
+A) Let the agent grant credits up to 10% on requests the policy doesn't cover, so customers aren't kept waiting
+B) Act on one of the matched accounts once the agent rates its confidence in that match at 0.9 or above
+C) When a lookup returns several accounts, ask the caller for another identifier, such as the account number
+D) Escalate requests that the policy doesn't cover to a human with a summary, rather than making up an offer
+E) Escalate to a human whenever a lookup returns more than one account, so that no agent guesses at identity
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, D** Several matches mean the agent lacks information the customer can supply, so it should ask for an identifier rather than guess or hand off. A request the policy doesn't cover is a policy gap: the agent lacks authority, so it should escalate with a summary instead of inventing terms. Escalating every multi-match sends a question the agent could settle in one message to a human queue. A standing credit allowance is a business decision the team hasn't made, and it still lets the agent improvise. Self-rated confidence is a poor signal, and any guess at identity risks disclosing someone else's account.
+
+*Hint if stuck: For each case, ask what the agent is missing, information or authority, and the cheapest way to get it.*
+</details>
+
+---
+
+## Question 45
+A team's CLAUDE.md says "check with the developer before any change." Developers complain that Claude stops to ask before editing the files it was asked to change and before running tests. Yet last week, while cleaning up branches, Claude force-pushed to a shared branch and deleted two remote branches without asking. Which changes fit? (Choose two.)
+
+A) Replace the line with guidance to go ahead on local, reversible work and ask before hard-to-undo actions
+B) Deny the AskUserQuestion tool so that Claude stops asking questions and decides each step on its own
+C) Remove the line and start sessions in bypassPermissions mode so routine edits and tests stop prompting
+D) Keep the line and use plan mode for each task, so that each change is approved before Claude starts
+E) Add permission ask rules for git push --force and deleting remote branches, so each needs approval
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, E** Anthropic's guidance is to encourage local, reversible actions such as edits and test runs and to ask before actions that are destructive, hard to reverse or affect shared systems, such as force-pushes and branch deletion. Because a prompt is advisory, ask rules in the permission settings make those specific commands prompt every time. bypassPermissions removes the very safeguards the force-push needed. Plan mode for every task adds approval overhead to routine edits. Denying AskUserQuestion stops all questions, including the ones that matter.
+
+*Hint if stuck: Sort the actions by how easily they can be undone, and decide which safeguards can rest on a prompt alone.*
+</details>
+
+---
+
+## Question 46
 A billing agent processes a plan downgrade in three tool calls: refund the prorated amount (done), cancel the add-on (done), and apply the new plan (not yet called). Before the third call, the customer writes: 'Stop. Get me a person.' What should the agent's design have it do?
 
 A) Apply the new plan first so the account ends up consistent, then transfer the customer with a short note attached
-B) Start no further steps, hand off now, and state in the summary which steps finished and which are still pending
+B) Start no further steps, hand off now, and state in the summary which steps finished and which are pending
 C) Reverse the refund and the add-on cancellation so nothing is half-done, then transfer the customer to a person
 D) Ask the customer to confirm they want to abandon the downgrade before transferring, so the final state is clear
 
@@ -581,7 +839,7 @@ D) Ask the customer to confirm they want to abandon the downgrade before transfe
 
 ---
 
-## Question 33
+## Question 47
 A bank's support-agent team proposes escalating to humans whenever a sentiment classifier scores the customer below -0.6. In pilot, a furious customer demanding a routine card replacement is escalated within one turn, while a calm customer methodically describing unauthorized wire transfers totaling $18,400 is never escalated. What should the architects conclude?
 
 A) The sentiment threshold is miscalibrated; retrain the classifier on banking-domain transcripts and tune the cutoff
@@ -599,12 +857,12 @@ D) Both cases warrant escalation: lower the threshold further so calm-but-seriou
 
 ---
 
-## Question 34
+## Question 48
 A platform team builds an internal scaffolding agent with the Agent SDK, passing tools ['Read', 'Glob', 'Grep', 'Write'] and a canUseTool callback that shows write approvals to the engineer. Asked to 'add caching to the orders service', where an in-process cache and a shared Redis cache are both valid, it silently picks one, and engineers often redo the work. The team wants it to ask when several approaches are valid. What should they change?
 
 A) Tell Claude to end its turn with a plain-text question whenever it is unsure which of several approaches to take
-B) Delegate design choices to a subagent that calls AskUserQuestion, so the main agent's context stays free of all that
-C) Register a PreToolUse hook that denies every Write until an engineer approves a plan in a separate review tool
+B) Delegate design choices to a subagent that calls AskUserQuestion, so the main agent's context stays free of the back-and-forth
+C) Register a PreToolUse hook that denies each Write until an engineer approves a plan in a separate review tool
 D) Add AskUserQuestion to the tools list and handle it in canUseTool by showing the options and returning the answers
 
 <details>
@@ -617,7 +875,7 @@ D) Add AskUserQuestion to the tools list and handle it in canUseTool by showing 
 
 ---
 
-## Question 35
+## Question 49
 A SaaS support platform's design review proposes that the agent append a self-assessed confidence score (0-100) to each turn, escalating when confidence drops below 60. Pilots show the agent reporting 85+ confidence while looping on an unresolvable licensing edge case, and 40 on questions it answers correctly. What is the right takeaway?
 
 A) Calibrate the scores post-hoc with a regression layer mapping reported confidence to observed accuracy
@@ -635,13 +893,13 @@ D) Average confidence across the last five turns to smooth out the noise before 
 
 ---
 
-## Question 36
+## Question 50
 A returns agent escalates 35% of its chats to humans, and most are routine, such as refund-status questions well inside policy. Its system prompt says only: 'Escalate whenever the situation is complex or the customer is unhappy.' Human agents are swamped, and leadership asks for a prompt fix that keeps escalation for the cases that need it. What change works best?
 
 A) Write explicit criteria with the reason behind them, plus examples of cases to escalate and cases to resolve
-B) Add 'CRITICAL: only escalate when truly necessary' at the top of the prompt so the model takes the rule seriously
-C) Have the agent rate its own confidence from 1 to 10 and escalate only when that self-rating falls below five
-D) Add a sentiment classifier and escalate only when the customer's measured frustration passes a set threshold
+B) Add 'CRITICAL: escalate sparingly and as a last resort' at the top of the prompt so the model takes the rule seriously
+C) Have the agent rate its own confidence from 1 to 10 and escalate when that self-rating falls below five
+D) Add a sentiment classifier and escalate once the customer's measured frustration passes a set threshold
 
 <details>
 <summary>Answer & explanation</summary>
@@ -653,13 +911,13 @@ D) Add a sentiment classifier and escalate only when the customer's measured fru
 
 ---
 
-## Question 37
+## Question 51
 A research coordinator launches three background subagents (patents, papers, market data) and keeps drafting. The papers subagent ends on a usage-limit API error after covering 2019–2022 of its 2019–2025 range; the completion notification marks it failed, names the error, and includes its last output. How should the coordinator handle this?
 
 A) Discard the partial output and launch a fresh subagent for the full 2019–2025 range at once, while the limit is still active
-B) Treat the returned output as that subagent's final answer, since a background subagent only reports once its work is done
-C) Keep the 2019–2022 findings, mark 2023–2025 as not yet covered and why, and resume that subagent once the limit clears
-D) Abort the whole run and restart all three subagents later, so the report is never built from mixed complete and partial work
+B) Treat the returned output as that subagent's final answer, since a background subagent reports once its work is done
+C) Keep the 2019–2022 findings, mark 2023–2025 as not covered and why, and resume that subagent once the limit clears
+D) Abort the whole run and restart the three subagents later, so the report is not built from mixed complete and partial work
 
 <details>
 <summary>Answer & explanation</summary>
@@ -671,7 +929,7 @@ D) Abort the whole run and restart all three subagents later, so the report is n
 
 ---
 
-## Question 38
+## Question 52
 A support agent's refund tool calls a payments API that occasionally times out. Today the tool returns the text 'Error' and the agent tells customers the refund failed, even when a retry a second later would succeed. How should the tool report this failure to the agent?
 
 A) Raise an unhandled exception in the tool so the agent loop crashes and the on-call engineer gets alerted
@@ -689,12 +947,12 @@ D) Keep returning 'Error', but tell the agent in its system prompt to retry ever
 
 ---
 
-## Question 39
+## Question 53
 A coordinator runs eight analysis subagents for a quarterly competitor report. One subagent fails after its two retries on a data provider outage. The current orchestrator aborts the entire run on any subagent failure, and the report is due in an hour. What is the better design?
 
-A) Keep aborting on any failure, because a report with missing sections is worse than no report at all
+A) Keep aborting on any failure, because a report with missing sections is worse than no report
 B) Continue with the seven results and let the synthesis subagent fill the missing section from its general knowledge
-C) Restart all eight subagents from the beginning, since the outage may also have corrupted the seven completed runs
+C) Restart the eight subagents from the beginning, since the outage may also have corrupted the seven completed runs
 D) Continue with the seven results, record the failed segment and its cause, and mark that coverage gap in the report
 
 <details>
@@ -707,7 +965,7 @@ D) Continue with the seven results, record the failed segment and its cause, and
 
 ---
 
-## Question 40
+## Question 54
 An extraction subagent processes a 40-page loan application and fails on pages 31 to 40 because they are scanned images it cannot read. It currently returns only 'extraction failed.' What should its failure report to the orchestrator contain?
 
 A) The fields it did extract from pages 1 to 30, which pages failed and why, and suggested alternatives such as OCR
@@ -725,13 +983,13 @@ D) A detailed apology explaining that scanned pages are a known limitation and t
 
 ---
 
-## Question 41
+## Question 55
 A web-search subagent in a research system hits a site that returns HTTP 429 on its first request. It currently passes the raw 429 back to the coordinator, which then reassigns the whole topic to a different subagent that hits the same site. What is the better division of responsibility?
 
-A) The coordinator should handle every HTTP error itself, since it has the broadest view and can reassign topics
-B) The subagent retries transient errors locally with backoff and escalates only if they persist, with what it tried and found
+A) The coordinator should handle each HTTP error itself, since it has the broadest view and can reassign topics
+B) The subagent retries transient errors locally with backoff and escalates if they persist, with what it tried and found
 C) The subagent should silently skip the site and return whatever it found elsewhere without mentioning the skip
-D) Both agents should ignore rate limit errors, since they are transient and will always resolve themselves eventually
+D) Both agents should ignore rate limit errors, since they are transient and will resolve themselves eventually
 
 <details>
 <summary>Answer & explanation</summary>
@@ -743,7 +1001,7 @@ D) Both agents should ignore rate limit errors, since they are transient and wil
 
 ---
 
-## Question 42
+## Question 56
 A CI pipeline uses three Claude Code subagents: lint-review, security-review and test-generation. The security subagent fails because the SAST tool it relies on is not installed in the runner image. The pipeline currently posts the other two reviews with a green check and no mention of security. What should change?
 
 A) Mark the whole pipeline as failed and post no review comments at all until the runner image is fixed
@@ -761,11 +1019,11 @@ D) Leave the behaviour as is, since the security tool missing is an infrastructu
 
 ---
 
-## Question 43
+## Question 57
 A coordinator's synthesis step merges results from five regional market subagents. Two returned partial data: one reached 3 of its 5 sources, another hit a paywall on its main source. The draft report presents all five regions with equal confidence. What should the synthesis output do?
 
-A) Present all five regions the same way, since showing uncertainty would undermine the reader's trust in the report
-B) Drop the two partial regions from the report entirely so that only fully supported sections are ever presented
+A) Present the five regions the same way, since showing uncertainty would undermine the reader's trust in the report
+B) Drop the two partial regions from the report so that each section presented is fully supported
 C) Re-run the two partial subagents repeatedly until they reach full coverage, delaying the report until then
 D) Annotate the affected sections with what coverage was missing and why, so readers can weigh those findings
 
@@ -779,13 +1037,13 @@ D) Annotate the affected sections with what coverage was missing and why, so rea
 
 ---
 
-## Question 44
+## Question 58
 A developer-productivity agent delegates 'find all callers of deprecated function parseLegacy' to a subagent that uses a code-search MCP server. The server times out on one of four repositories, and the subagent reports '12 callers found.' The engineer deletes the function and breaks a service in the fourth repository. What should the subagent have returned?
 
 A) The count from the three repositories searched, plus an explicit note that the fourth timed out and was not searched
 B) The same count but with a footnote recommending the engineer double-check the result before acting on it
-C) Nothing until all four repositories had been searched, waiting and retrying for as long as it took to finish
-D) An estimated total for all four repositories, extrapolated from the average across the three it did search
+C) Nothing until the four repositories had been searched, waiting and retrying for as long as it took to finish
+D) An estimated total for the four repositories, extrapolated from the average across the three it did search
 
 <details>
 <summary>Answer & explanation</summary>
@@ -797,7 +1055,7 @@ D) An estimated total for all four repositories, extrapolated from the average a
 
 ---
 
-## Question 45
+## Question 59
 An invoice-processing coordinator sends each document to an extraction subagent. When a vendor's PDF is password-protected, the subagent returns a JSON record with every field null and status 'ok'. Finance later finds 60 invoices that were never paid. Which change fixes the root cause?
 
 A) Add a downstream check that flags records with more than half their fields null for later manual review
@@ -815,7 +1073,7 @@ D) Have the coordinator re-send every all-null record to the subagent a second t
 
 ---
 
-## Question 46
+## Question 60
 A research coordinator receives a structured failure from a subagent: type 'source_unavailable', tried 'SEC EDGAR full-text search', partial results for 2021 to 2023 only, suggested alternative 'company investor-relations pages'. What is the coordinator's best next move?
 
 A) Discard the partial results and rerun the whole task on a fresh subagent with the same instructions for one consistent dataset
@@ -833,12 +1091,12 @@ D) Accept the partial results as complete and let the synthesis step proceed wit
 
 ---
 
-## Question 47
+## Question 61
 A support coordinator agent delegates order lookups to a subagent. When the order database is down, the subagent's error says only 'lookup failed', and the coordinator tells the customer 'I couldn't find your order.' The customer panics, thinking the order is lost. How should the error contract be redesigned?
 
-A) Have the subagent tell the customer directly what went wrong, bypassing the coordinator for all error messages
-B) Have the subagent retry the database for up to ten minutes before responding, so transient outages never reach the customer
-C) Have the coordinator always say 'please try again later' for any lookup error, whatever the underlying cause
+A) Have the subagent tell the customer directly what went wrong, bypassing the coordinator whenever an error occurs
+B) Have the subagent retry the database for up to ten minutes before responding, so transient outages do not reach the customer
+C) Have the coordinator say 'please try again later' for any lookup error, whatever the underlying cause
 D) Distinguish 'order not found' from 'database unavailable' in the error type, so the coordinator can respond correctly
 
 <details>
@@ -851,7 +1109,7 @@ D) Distinguish 'order not found' from 'database unavailable' in the error type, 
 
 ---
 
-## Question 48
+## Question 62
 A coordinator receives structured errors from subagents with fields for type, attempted actions, partial results and alternatives. To 'keep the context clean', a developer proposes that the coordinator log errors to a file and only pass a count of failed subagents into synthesis. What is the main problem with this proposal?
 
 A) Synthesis loses which topics failed and why, so it cannot annotate coverage gaps and the report will look complete
@@ -869,7 +1127,7 @@ D) The coordinator can no longer retry transient failures, because its retry log
 
 ---
 
-## Question 49
+## Question 63
 A Claude Code session spawns a subagent to run a database migration dry-run. The subagent's run is cut short by an API error midway. The engineer wants the main session to handle this sensibly rather than assume success. What should the main session do with the subagent's outcome?
 
 A) Treat the dry-run as successful if the subagent produced any output before the error interrupted it
@@ -887,7 +1145,7 @@ D) Abandon the whole session and start over from scratch, because any subagent e
 
 ---
 
-## Question 50
+## Question 64
 A news-monitoring research system has a subagent that, when a source fails to load, quietly replaces it with the next search result so it always returns five sources. Reports look complete, but editors find that some cited sources are weaker substitutes for the ones requested. What is the best change?
 
 A) Keep substituting sources, but ask the subagent to choose substitutes from a list of reputable outlets only
@@ -905,7 +1163,7 @@ D) Raise the number of sources per subagent to ten, so a few failures do not aff
 
 ---
 
-## Question 51
+## Question 65
 An architect reviews an orchestration framework with two opposite failure policies across teams: one swallows every subagent exception and continues, the other terminates the whole workflow on the first exception. The architect must write one policy for both. Which policy should it be?
 
 A) Terminate the workflow on the first unhandled exception and report it, so no output is ever built on incomplete subagent results
@@ -923,7 +1181,118 @@ D) Retry transient failures locally, return the rest as structured errors with c
 
 ---
 
-## Question 52
+## Question 66
+A support agent on the Claude API often requests three tools in one turn: get_order, get_shipment and get_refund_status. When the refund service throws an exception, the loop code sends back only the two successful tool_result blocks, and the API rejects the next request with a 400 error about tool_use ids without results. How should the loop handle the failed call?
+
+A) Send back the two successful results and add a text block before them explaining that the refund lookup failed this time
+B) Return the three results in one user message, the failed one marked is_error with a short note on what went wrong
+C) Retry the whole batch of three calls until each succeeds, then send the results back to the model together
+D) Return each result in its own user message, with the failed refund result placed last, so Claude can handle the error separately
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Every tool_use block needs a matching tool_result, all in the next user message, with tool_result blocks before any text. A failed call gets its own tool_result with is_error set and an instructive message, so Claude can retry, try another route or tell the customer accurately. Leaving a result out is what triggers the 400, and text placed before tool results breaks the ordering rule. Retrying the whole batch repeats calls that already worked and can stall on an outage. Splitting results across messages is a pattern the docs say teaches Claude to stop making parallel calls.
+
+*Hint if stuck: Every request the model made is owed a reply, even an unhappy one.*
+</details>
+
+---
+
+## Question 67
+A research coordinator fans out 12 subagents per report, and most of them query the same patent database. During an outage, each subagent retries five times with backoff and then returns a structured error marking the source unavailable, so every report now takes 40 minutes longer and the database owner complains about the retry storm. How should error handling change?
+
+A) Raise each subagent's retry count and backoff ceiling, so the subagents keep trying until the database recovers mid-run
+B) Have subagents skip the patent database silently whenever a call fails, so reports finish on time from the other sources
+C) Once the first structured error marks the source down, have the coordinator tell other subagents to skip it and record the gap
+D) Abort the whole report as soon as any subagent reports the outage, and rerun everything once the database is back up
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** Structured errors exist so the coordinator can act on them. After one subagent reports a non-transient outage, the coordinator knows something the others don't: it should stop sending work at that source (or point it at an alternative) and annotate the report with the missing coverage. More retries make the storm and the delay worse. Silent skipping hides the gap from readers. Aborting throws away all the work that doesn't depend on the patent database.
+
+*Hint if stuck: One subagent's failure is information the others could use. Who is in a position to share it?*
+</details>
+
+---
+
+## Question 68
+A research subagent built on the Claude API works through a 60-step investigation. The orchestration code wraps every tool call, and when any call raises an exception (a timeout from one site, a parse error on one PDF) it kills the subagent and starts it again from step one. Runs often never finish. What change follows Anthropic's guidance for agents whose errors compound?
+
+A) Have the subagent pre-check each site and file before it starts and drop any that fail, so no call can raise an error mid-run
+B) Keep restarting on failure but lower the temperature, so each fresh run takes the same path and is less likely to hit errors
+C) Catch each exception and return an empty tool result instead, so the subagent carries on without being distracted by failures
+D) Return the failure to the subagent as an is_error result so it can adapt, and resume crashed runs from saved progress
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Anthropic's multi-agent write-up notes that agents are stateful and errors compound, so restarting from the beginning is costly. Letting the agent know a tool is failing and allowing it to adapt works well, combined with deterministic safeguards such as retries and checkpoints so a real crash resumes from where it was. Lower temperature doesn't stop sites from timing out. Empty results disguise failures as valid answers. Pre-checks can't predict failures that happen later in the run, and they drop sources needlessly.
+
+*Hint if stuck: Consider who is best placed to work around one failed step, and what a restart throws away.*
+</details>
+
+---
+
+## Question 69
+A research coordinator sends a literature-search subagent to three databases. One database times out; the subagent catches the timeout and returns an empty list for it, the same shape as 'no studies found'. The final report then states that no trials of the drug have been published, though that database holds most of them. Which changes should the team make? (Choose two.)
+
+A) Have the subagent return a structured failure: the source, the error type, the query tried, partial results
+B) Drop the results from the other two databases whenever one fails, so the report rests on complete data
+C) Abort the whole research run whenever a subagent hits an error, so no partial report gets produced
+D) Have the final report name the sources that could not be searched instead of claiming no studies exist
+E) Have the subagent retry the timed-out database quietly until it answers, however long that may take
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** An access failure dressed up as an empty result is indistinguishable from a real 'none found', so the subagent must report what failed, what it tried and what it did get, letting the coordinator retry or route around it. The synthesis should annotate the coverage gap rather than turn missing data into a claim. Killing the whole run and silently retrying forever are both anti-patterns, and discarding the good results throws away valid work.
+
+*Hint if stuck: Ask how the coordinator could ever tell 'nothing exists' apart from 'we couldn't look', and what the reader should be told.*
+</details>
+
+---
+
+## Question 70
+A three-stage extraction pipeline (OCR, field extraction, normalisation) feeds a payments system. When the normaliser crashes on a document, it writes null for the affected fields and moves on. Downstream, null means "not stated in the source", so those invoices are paid with no late-fee terms applied. About 3% of documents are affected. Which changes fix the error handling? (Choose two.)
+
+A) Fail the whole nightly batch when any document errors, so no partial output reaches the payments system
+B) Carry a status for each field, such as extracted, not_in_source or processing_error, through each stage
+C) Route documents with processing errors to a retry-and-review queue instead of passing them downstream
+D) Fill fields that failed with the most common value seen across other documents from the same supplier
+E) Drop documents that fail from the batch output, so the payments system receives just clean records
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, C** A processing failure is not the same as a field the source never stated; an explicit status lets downstream stages tell them apart instead of treating a crash as a valid empty value. Documents that failed should go to retry and review with their error, while the other 97% continue. Failing the whole batch for 3% of documents is the kill-the-workflow anti-pattern. Filling in typical values invents data. Dropping documents silently hides the failure and leaves invoices unprocessed with no one told.
+
+*Hint if stuck: Ask how a downstream stage can tell 'the source didn't say' from 'we never found out', and what should happen next.*
+</details>
+
+---
+
+## Question 71
+A support coordinator delegates refunds to a billing subagent whose issue_refund call sometimes times out after the payment provider has already received the request. The subagent reports only "refund failed", so the coordinator either asks it to issue the refund again, which has produced duplicate refunds, or tells the customer the refund didn't go through when it did. Which changes fix this? (Choose two.)
+
+A) Tell the customer the refund went through whenever a timeout occurs, since most such requests complete
+B) Return an empty result on timeouts so the coordinator treats the refund as one that hasn't started yet
+C) Retry issue_refund inside the subagent with backoff, since timeouts are transient and clear on their own
+D) Have the subagent report a timeout as outcome unknown, with the refund request ID, not as a failure
+E) Have the coordinator check the refund's status by that ID before it retries or replies to the customer
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** A timeout after the provider received the request means the outcome is unknown, not failed; saying so, with the request ID, gives the coordinator what it needs to find out. Checking the status first prevents both the duplicate refund and the wrong message to the customer. Blind local retry is right for transient errors on safe operations, but here it is what creates duplicates. Assuming success misinforms the customer when the refund really failed. An empty result hides the error and invites a second refund.
+
+*Hint if stuck: Ask what is actually known after a timeout, and what must be learned before anyone acts again.*
+</details>
+
+---
+
+## Question 72
 An architect writes the error policy for a research system built on the Claude API. Search subagents call a fetch_page tool. Two failures recur: some pages return HTTP 403, and occasionally a subagent's own model request fails with an overloaded error partway through its run. Where should each failure be handled?
 
 A) Raise the 403 as an exception that ends the subagent so the coordinator can reassign the URL to another subagent
@@ -941,7 +1310,7 @@ D) Tell subagents in their prompt to skip failed fetches and continue silently, 
 
 ---
 
-## Question 53
+## Question 73
 In a multi-agent research system, a subagent assigned to gather regulatory filings hits a paywall it cannot bypass and returns only the string 'Task failed.' The coordinator, with no usable information, re-dispatches the identical task three times, failing identically each time. What should the subagent have returned?
 
 A) A structured report: the paywalled source that failed, what was attempted, partial results gathered, and retryability
@@ -959,7 +1328,7 @@ D) Its full raw session transcript so the coordinator can inspect every step and
 
 ---
 
-## Question 54
+## Question 74
 A fintech document-extraction subagent processing 200 statements hits two failures: a 504 gateway timeout fetching one PDF, and an 'invalid credentials' error from the archival store for twelve older PDFs. It currently propagates both to the coordinator immediately, halting the entire batch. How should each failure be handled?
 
 A) Propagate both immediately — the coordinator owns all error handling and subagents should stay stateless
@@ -977,7 +1346,7 @@ D) Retry the credentials error locally — auth tokens often refresh — and pro
 
 ---
 
-## Question 55
+## Question 75
 A research hierarchy runs filings subagent, then regional coordinator, then top-level coordinator, then report. The filings subagent returns a structured error: type auth_expired, source the filings mirror, 3 of 8 companies retrieved. The regional coordinator forwards only 'filings: unavailable', and the final report states that no filings exist for five of the companies. What should change?
 
 A) Each layer passes the structured error upward intact, adding its own context instead of rewriting it as a status word

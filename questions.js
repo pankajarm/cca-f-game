@@ -1,5 +1,5 @@
 /* ARCHITECT'S ASCENT — question bank
- * 765 scenario questions for the Claude Certified Architect — Foundations exam (2026).
+ * 865 scenario questions for the Claude Certified Architect — Foundations exam (2026).
  * Generated and adversarially verified June 2026; 548 added Oct 2026 (each batch independently reviewed). Single source of truth:
  * the markdown practice tests are built from this file by scripts/build_tests.py. */
 window.BANK = {
@@ -6514,6 +6514,414 @@ window.BANK = {
     "https://www.anthropic.com/engineering/multi-agent-research-system",
     "https://platform.claude.com/docs/en/build-with-claude/citations"
    ]
+  },
+  {
+   "type": "mr",
+   "q": "In long support chats the agent summarises older turns to save context. Customers complain that late in a chat it quotes the wrong refund amount and forgets the delivery date it promised. Its order-lookup tool also returns about 40 fields per order, mostly warehouse codes and audit metadata, which take up much of the context. Which changes protect the facts that matter?",
+   "options": [
+    "Summarise more often and ask each summary to keep the numbers, so the history stays short and facts survive",
+    "Keep a case-facts block of amounts, dates, order IDs and promises outside the summarised history",
+    "Place the full 40-field order record in the middle of the prompt, where the model attends to it most steadily",
+    "Trim lookup results to the fields the agent needs, such as status, amount and dates, before they enter context",
+    "Raise max_tokens on each reply so the model has room to restate each fact from earlier in the conversation"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Progressive summaries blur exact amounts, dates and commitments, so those facts should live in a persistent block that is never summarised and is sent with every turn. Verbose tool results crowd out what matters; keeping only the relevant fields leaves room for the facts. Summarising more often adds more lossy passes. The middle of a long context is where information is used least reliably, not most. max_tokens limits the reply's length and does nothing for what the model remembers.",
+   "hint": "Ask which facts must never pass through a lossy step, and what is crowding them out.",
+   "difficulty": "core",
+   "tags": [
+    "case-facts",
+    "summarisation",
+    "tool-output-trimming"
+   ],
+   "id": "d5-100",
+   "ts": "5.1",
+   "scenario": 1,
+   "src": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A billing support agent escalates to humans whenever a sentiment classifier marks a customer as angry, so venting customers with simple fixes wait an hour in the human queue. Meanwhile customers who type \"I want to talk to a real person\" are told the agent can solve it and are kept in the chat for several more turns. Which changes should the team make?",
+   "options": [
+    "Raise the sentiment threshold so the angriest customers are escalated and the rest stay with the agent",
+    "Hand off right away when a customer asks for a human, instead of first trying to resolve the issue",
+    "Escalate when the agent's self-rated confidence in its answer drops below 0.7 on any turn of the chat",
+    "Ask customers who request a human to confirm twice, so handoffs happen when they really mean it",
+    "Base escalation on written criteria with examples, such as policy gaps or no progress, not on sentiment"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "An explicit request for a human should be honoured immediately. Anger says little about whether the agent can solve the problem, so escalation should follow explicit criteria (policy gaps, requests outside its authority, no progress) illustrated with examples. A higher sentiment threshold is still the wrong signal, self-rated confidence is poorly calibrated, and making customers confirm twice ignores the request they already made.",
+   "hint": "Ask which signals actually tell you the agent cannot or should not continue, and whose stated wishes outrank the agent's plan.",
+   "difficulty": "core",
+   "tags": [
+    "escalation",
+    "human-handoff",
+    "sentiment"
+   ],
+   "id": "d5-101",
+   "ts": "5.2",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/about-claude/use-case-guides/customer-support-chat"
+  },
+  {
+   "type": "mr",
+   "q": "A research coordinator sends a literature-search subagent to three databases. One database times out; the subagent catches the timeout and returns an empty list for it, the same shape as 'no studies found'. The final report then states that no trials of the drug have been published, though that database holds most of them. Which changes should the team make?",
+   "options": [
+    "Have the subagent return a structured failure: the source, the error type, the query tried, partial results",
+    "Drop the results from the other two databases whenever one fails, so the report rests on complete data",
+    "Abort the whole research run whenever a subagent hits an error, so no partial report gets produced",
+    "Have the final report name the sources that could not be searched instead of claiming no studies exist",
+    "Have the subagent retry the timed-out database quietly until it answers, however long that may take"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "An access failure dressed up as an empty result is indistinguishable from a real 'none found', so the subagent must report what failed, what it tried and what it did get, letting the coordinator retry or route around it. The synthesis should annotate the coverage gap rather than turn missing data into a claim. Killing the whole run and silently retrying forever are both anti-patterns, and discarding the good results throws away valid work.",
+   "hint": "Ask how the coordinator could ever tell 'nothing exists' apart from 'we couldn't look', and what the reader should be told.",
+   "difficulty": "core",
+   "tags": [
+    "error-propagation",
+    "coverage-gaps",
+    "partial-results"
+   ],
+   "id": "d5-102",
+   "ts": "5.3",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "A claims-extraction pipeline reports 97% field accuracy across 20,000 documents, and leadership wants to stop human review of any extraction the model marks high-confidence. The documents are mostly typed forms, with a small share of handwritten claims and faxed attachments. Which steps should come before reducing review?",
+   "options": [
+    "Use the model's own confidence labels as the review cut-off without checking them on labelled data",
+    "Audit a fixed 1% of documents drawn from the typed forms, since they make up most of the volume",
+    "Break accuracy down by document type and by field to find weak segments the overall 97% can hide",
+    "Remove review for the high-confidence output once overall accuracy has stayed above 95% for two weeks in a row",
+    "Keep auditing a stratified random sample of high-confidence output to measure its real error rate"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "An aggregate dominated by typed forms can hide poor accuracy on handwritten claims or particular fields, so accuracy must be checked per type and field first. Once review is reduced, a stratified sample of high-confidence output is how you keep measuring the error you are no longer catching. A sustained overall figure has the same blind spot, model confidence must be calibrated against labelled data before it drives routing, and sampling only typed forms skips exactly the risky segments.",
+   "hint": "Ask what an average over a lopsided mix can hide, and how you would know whether the model's confidence label means what it says.",
+   "difficulty": "hard",
+   "tags": [
+    "human-review",
+    "stratified-sampling",
+    "calibration",
+    "segment-accuracy"
+   ],
+   "id": "d5-103",
+   "ts": "5.5",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests"
+  },
+  {
+   "type": "mr",
+   "q": "In a research system, six search subagents each return about 8,000 tokens of narrative notes that mix their reasoning with the facts they found. The synthesis agent's prompt opens with the research question and instructions, followed by all six notes. Reports often miss key figures that sit midway through the notes, and sometimes credit a figure to the wrong source. Which changes help?",
+   "options": [
+    "Turn on context editing so older subagent results are cleared and the synthesis prompt stays small",
+    "Move synthesis to a model with a larger context window so the six notes fit with plenty of room to spare",
+    "Have subagents return structured findings, each a claim with its figure, source and date, not reasoning",
+    "Have the coordinator merge the six notes into one short summary paragraph before synthesis sees them",
+    "Put the six findings blocks first and the research question and instructions at the end of the prompt"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "Structured findings keep each figure tied to its source and date and drop the reasoning the synthesizer would otherwise wade through. For long inputs, putting the material at the top and the question and instructions at the end improves results, while facts buried mid-context are the ones most often missed. The notes already fit; a bigger window doesn't change how well the middle is read. A one-paragraph merge blurs figures and loses their sources. Clearing the subagent results removes the evidence synthesis needs.",
+   "hint": "Think about both the shape of what reaches the synthesizer and the order in which it reads it.",
+   "difficulty": "hard",
+   "tags": [
+    "structured-handoff",
+    "long-context",
+    "lost-in-the-middle"
+   ],
+   "id": "d5-104",
+   "ts": "5.1",
+   "scenario": 3,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "An extraction pipeline sends 150-page supply contracts to Claude in a single request to list 12 kinds of obligations, such as notice periods, penalties and renewal terms. The prompt gives the instructions and output format first, then pastes the contract as plain text. Obligations stated midway through long contracts are often missed or paraphrased with wrong numbers. Which prompt changes address this?",
+   "options": [
+    "Put the contract at the top inside document tags and move the instructions and output format to the end",
+    "Ask Claude to first quote the passages relevant to each obligation, then extract from those quotations",
+    "Summarise each contract in a first call and run the extraction on that summary instead of the full text",
+    "Repeat the list of 12 obligation types in capitals at both the start and the end of the prompt for emphasis",
+    "Ask Claude to rate its confidence in each obligation and rerun extraction on any rated lower than 0.8"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "For 20k+ token inputs, the docs recommend long documents at the top (wrapped in document tags with metadata) and the query at the end, which improves quality by up to 30% in tests. Asking Claude to quote the relevant parts first focuses it on the exact text and keeps numbers verbatim. A summary is exactly where specific numbers and terms blur. Shouting the list doesn't change how the middle of the document is read. Self-rated confidence is poorly calibrated, so reruns would target the wrong items.",
+   "hint": "Recall the long-context prompting advice: it covers both layout and a step before the task itself.",
+   "difficulty": "core",
+   "tags": [
+    "long-context",
+    "quote-grounding",
+    "document-placement"
+   ],
+   "id": "d5-105",
+   "ts": "5.1",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "A telecom support agent identifies callers by name. When a lookup on \"J. Patel\" returned three accounts, it picked the one with the most recent activity and discussed that account's bill, which belonged to someone else. In another chat a customer asked for a match on a competitor's price; the written policy covers only price drops on the company's own plans, and the agent invented a 10% credit. Which changes should the team make?",
+   "options": [
+    "Let the agent grant credits up to 10% on requests the policy doesn't cover, so customers aren't kept waiting",
+    "Act on one of the matched accounts once the agent rates its confidence in that match at 0.9 or above",
+    "When a lookup returns several accounts, ask the caller for another identifier, such as the account number",
+    "Escalate requests that the policy doesn't cover to a human with a summary, rather than making up an offer",
+    "Escalate to a human whenever a lookup returns more than one account, so that no agent guesses at identity"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Several matches mean the agent lacks information the customer can supply, so it should ask for an identifier rather than guess or hand off. A request the policy doesn't cover is a policy gap: the agent lacks authority, so it should escalate with a summary instead of inventing terms. Escalating every multi-match sends a question the agent could settle in one message to a human queue. A standing credit allowance is a business decision the team hasn't made, and it still lets the agent improvise. Self-rated confidence is a poor signal, and any guess at identity risks disclosing someone else's account.",
+   "hint": "For each case, ask what the agent is missing, information or authority, and the cheapest way to get it.",
+   "difficulty": "hard",
+   "tags": [
+    "escalation",
+    "ambiguity",
+    "policy-gap",
+    "identity-match"
+   ],
+   "id": "d5-106",
+   "ts": "5.2",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/about-claude/use-case-guides/customer-support-chat"
+  },
+  {
+   "type": "mr",
+   "q": "A team's CLAUDE.md says \"check with the developer before any change.\" Developers complain that Claude stops to ask before editing the files it was asked to change and before running tests. Yet last week, while cleaning up branches, Claude force-pushed to a shared branch and deleted two remote branches without asking. Which changes fit?",
+   "options": [
+    "Replace the line with guidance to go ahead on local, reversible work and ask before hard-to-undo actions",
+    "Deny the AskUserQuestion tool so that Claude stops asking questions and decides each step on its own",
+    "Remove the line and start sessions in bypassPermissions mode so routine edits and tests stop prompting",
+    "Keep the line and use plan mode for each task, so that each change is approved before Claude starts",
+    "Add permission ask rules for git push --force and deleting remote branches, so each needs approval"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "Anthropic's guidance is to encourage local, reversible actions such as edits and test runs and to ask before actions that are destructive, hard to reverse or affect shared systems, such as force-pushes and branch deletion. Because a prompt is advisory, ask rules in the permission settings make those specific commands prompt every time. bypassPermissions removes the very safeguards the force-push needed. Plan mode for every task adds approval overhead to routine edits. Denying AskUserQuestion stops all questions, including the ones that matter.",
+   "hint": "Sort the actions by how easily they can be undone, and decide which safeguards can rest on a prompt alone.",
+   "difficulty": "core",
+   "tags": [
+    "autonomy",
+    "reversibility",
+    "permissions",
+    "when-to-ask"
+   ],
+   "id": "d5-107",
+   "ts": "5.2",
+   "scenario": 2,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "A three-stage extraction pipeline (OCR, field extraction, normalisation) feeds a payments system. When the normaliser crashes on a document, it writes null for the affected fields and moves on. Downstream, null means \"not stated in the source\", so those invoices are paid with no late-fee terms applied. About 3% of documents are affected. Which changes fix the error handling?",
+   "options": [
+    "Fail the whole nightly batch when any document errors, so no partial output reaches the payments system",
+    "Carry a status for each field, such as extracted, not_in_source or processing_error, through each stage",
+    "Route documents with processing errors to a retry-and-review queue instead of passing them downstream",
+    "Fill fields that failed with the most common value seen across other documents from the same supplier",
+    "Drop documents that fail from the batch output, so the payments system receives just clean records"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "A processing failure is not the same as a field the source never stated; an explicit status lets downstream stages tell them apart instead of treating a crash as a valid empty value. Documents that failed should go to retry and review with their error, while the other 97% continue. Failing the whole batch for 3% of documents is the kill-the-workflow anti-pattern. Filling in typical values invents data. Dropping documents silently hides the failure and leaves invoices unprocessed with no one told.",
+   "hint": "Ask how a downstream stage can tell 'the source didn't say' from 'we never found out', and what should happen next.",
+   "difficulty": "hard",
+   "tags": [
+    "error-propagation",
+    "failure-vs-empty",
+    "pipelines"
+   ],
+   "id": "d5-108",
+   "ts": "5.3",
+   "scenario": 6,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "A support coordinator delegates refunds to a billing subagent whose issue_refund call sometimes times out after the payment provider has already received the request. The subagent reports only \"refund failed\", so the coordinator either asks it to issue the refund again, which has produced duplicate refunds, or tells the customer the refund didn't go through when it did. Which changes fix this?",
+   "options": [
+    "Tell the customer the refund went through whenever a timeout occurs, since most such requests complete",
+    "Return an empty result on timeouts so the coordinator treats the refund as one that hasn't started yet",
+    "Retry issue_refund inside the subagent with backoff, since timeouts are transient and clear on their own",
+    "Have the subagent report a timeout as outcome unknown, with the refund request ID, not as a failure",
+    "Have the coordinator check the refund's status by that ID before it retries or replies to the customer"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "A timeout after the provider received the request means the outcome is unknown, not failed; saying so, with the request ID, gives the coordinator what it needs to find out. Checking the status first prevents both the duplicate refund and the wrong message to the customer. Blind local retry is right for transient errors on safe operations, but here it is what creates duplicates. Assuming success misinforms the customer when the refund really failed. An empty result hides the error and invites a second refund.",
+   "hint": "Ask what is actually known after a timeout, and what must be learned before anyone acts again.",
+   "difficulty": "hard",
+   "tags": [
+    "error-propagation",
+    "unknown-outcome",
+    "subagents"
+   ],
+   "id": "d5-109",
+   "ts": "5.3",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+  },
+  {
+   "type": "mr",
+   "q": "A developer has spent five hours in one Claude Code session mapping a legacy billing system. Its recent answers drift to generic claims (\"in a typical Rails app, callbacks handle this\") that contradict specifics it found earlier, and after several auto-compactions it no longer knows which modules it already traced. Which changes would keep the investigation grounded?",
+   "options": [
+    "Have Claude record confirmed findings, with file paths and call chains, in a notes file as it works",
+    "Add \"answer from this codebase, not from typical patterns\" to CLAUDE.md, marked as an IMPORTANT rule",
+    "Delegate each narrow question to a subagent that explores in its own context and returns a short answer",
+    "Raise the auto-compact threshold so that more of the detailed earlier history stays in the session",
+    "Resume this same session each morning with --continue so that its earlier findings stay in context"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Performance degrades as context fills, and long sessions slide toward generic patterns; findings written to a file survive compaction and can seed a fresh session. Subagents read files in their own context and return summaries, keeping the main session lean. A later compaction keeps even more stale detail in an already overfull context. Resuming the same session carries the clutter forward. A louder rule doesn't restore findings the context has lost.",
+   "hint": "Ask where findings should live so they outlast the conversation, and where the heavy reading should happen.",
+   "difficulty": "hard",
+   "tags": [
+    "context-drift",
+    "scratchpad",
+    "subagents"
+   ],
+   "id": "d5-110",
+   "ts": "5.4",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "Claude Code is migrating 600 test files to a new assertion library over several days. On day two the terminal crashed mid-file. After the developer ran claude --continue, the compacted session redid about 40 files and skipped others it believed were finished. Which practices would make the work resumable?",
+   "options": [
+    "Rely on Claude Code's checkpoints to restore progress, since they record each change made in a session",
+    "Keep a manifest file that lists each file with its status, which Claude updates after each one",
+    "Ask Claude to restate the full list of finished files in chat after each file so it stays in context",
+    "Commit after each migrated file, so the git log shows what is done and gives points to restore",
+    "Turn off auto-compaction for the migration so the session keeps a complete record of files done"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "A structured state file outside the conversation tells any new session exactly what is done and what is pending, and git commits give a log of completed work plus checkpoints to restore. Claude Code checkpoints track only changes made through its file tools, not Bash or external changes, and the docs say they are no replacement for git. A list kept in chat is lost or blurred at compaction. Without compaction the session runs out of context instead.",
+   "hint": "Ask where progress should be recorded so a brand-new session can find it without the old conversation.",
+   "difficulty": "core",
+   "tags": [
+    "crash-recovery",
+    "manifest",
+    "multi-session"
+   ],
+   "id": "d5-111",
+   "ts": "5.4",
+   "scenario": 2,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "An invoice pipeline has a second Claude call grade each extraction pass or fail, and only failures go to human review. Nobody has checked the grader against human judgment; a spot check finds it passes about a quarter of the extractions humans mark wrong. On faded or illegible scans it still returns a confident pass or fail. Which changes should come before trusting the grader to skip review?",
+   "options": [
+    "Have the extractor check its own output in the same conversation instead of using a separate grader",
+    "Measure the grader's agreement with human labels on a sample, by document type, and fix it until it aligns",
+    "Ask the grader for a 1-10 confidence score and skip human review whenever the score comes back above 8",
+    "Run the grader twice on each extraction and treat the result as correct whenever the two verdicts agree",
+    "Give the grader an unknown verdict for input it cannot read, and send those documents to human review"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "Model graders need to be calibrated against human experts before their verdicts replace review, and checking by document type shows where they fail. Letting the grader answer unknown when it lacks information stops forced, hallucinated verdicts and sends those cases to people. Two runs of an uncalibrated grader can agree and both be wrong. Self-review in the same conversation shares the extractor's blind spots. An unvalidated confidence score is no better than the unvalidated verdict.",
+   "hint": "Ask how you would know its verdicts are right, and what it should do when it can't tell.",
+   "difficulty": "hard",
+   "tags": [
+    "llm-judge",
+    "calibration",
+    "human-review"
+   ],
+   "id": "d5-112",
+   "ts": "5.5",
+   "scenario": 6,
+   "src": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"
+  },
+  {
+   "type": "mr",
+   "q": "In a receipts pipeline, human reviewers correct about 400 extracted values a week, mostly tax amounts on foreign receipts. They overwrite the value and close the item, so nothing about the correction is kept, and the same errors recur month after month. The team wants the corrections to improve the system. Which changes should it make?",
+   "options": [
+    "Log each correction with field, document type and original value, and add the cases to the labelled set",
+    "Have reviewers just mark items approve or reject, which is quicker than typing in the corrected value",
+    "Fine-tune the model on the corrected receipts each month so that it learns the right tax values itself",
+    "Turn recurring patterns into prompt fixes, such as few-shot examples, and test them on that set first",
+    "Lower the auto-approve threshold a step each time a reviewer corrects a value in that kind of field"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Recording what was corrected, where and from what turns review effort into labelled production failures, which belong in the eval set. Recurring patterns can then be fixed in the prompt, for example with targeted examples, and the change measured on that set before it ships. Fine-tuning is outside what this system controls and doesn't give a measured fix. Moving the threshold on every correction reacts to noise without measuring accuracy. Approve or reject alone throws away the right value the next fix needs.",
+   "hint": "Ask what a reviewer's fix can teach if it is kept, and how you'd know a change helped.",
+   "difficulty": "core",
+   "tags": [
+    "reviewer-feedback",
+    "eval-set",
+    "continuous-improvement"
+   ],
+   "id": "d5-113",
+   "ts": "5.5",
+   "scenario": 6,
+   "src": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A market report from a research system turns quarterly revenue for five companies over eight quarters into long paragraphs of prose. It also states as fact that the market grew 12% last year, although one credible analyst source says 12% and another says 7%, using different market definitions. Which changes should the synthesis step make?",
+   "options": [
+    "Average the two growth estimates to 9.5% and cite both sources, so the report states a single figure",
+    "Keep the figure from the more recent source and drop the other, so readers get one clear growth number",
+    "Show the quarterly figures as a table by company and quarter, and keep prose for the narrative findings",
+    "Convert the whole report into bullet points so each figure and finding appears in the same format",
+    "Report both growth figures, each with its source and market definition, marked as a contested finding"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "Forty data points compare far better in a table than in prose, while narrative findings read better as text. Two credible figures that disagree should both appear with their sources and the definitions behind them, marked as contested rather than settled. An average of figures measured on different definitions describes neither source. Dropping one source hides a real disagreement. One format for everything ignores what each kind of content needs.",
+   "hint": "Match each kind of content to a form that fits it, and ask what readers lose when a disagreement is smoothed over.",
+   "difficulty": "core",
+   "tags": [
+    "synthesis",
+    "content-rendering",
+    "contested-findings"
+   ],
+   "id": "d5-114",
+   "ts": "5.6",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
   }
  ],
  "bank-d4": [
@@ -8759,6 +9167,554 @@ window.BANK = {
    "ts": "4.3",
    "scenario": 5,
    "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+  },
+  {
+   "type": "mr",
+   "q": "An automated PR reviewer posts about 30 comments per pull request. Developers say the security and correctness findings are mostly real, but the style and naming comments are wrong or trivial most of the time, and now they skip every comment. Adding \"be conservative and only flag important issues\" to the prompt changed nothing. Which changes should the team make?",
+   "options": [
+    "Switch off the style and naming category for now while its prompt is reworked and measured on real PRs",
+    "Have the model give each finding a confidence score and post just the findings it rates at 0.8 or above",
+    "Strengthen the line to \"be extremely conservative\" and repeat it at both the start and end of the prompt",
+    "Lower the temperature so the reviewer produces the same set of comments each time a PR is reviewed again",
+    "Replace the vague instruction with explicit criteria: which issue types to report and skip, with examples"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "A noisy category drags down trust in the accurate ones, so pausing it while it is fixed restores the value of the real findings. Vague calls for caution do not raise precision; explicit criteria for what to report and what to skip, with examples, do. Self-rated confidence is not calibrated, so a 0.8 cut-off filters unpredictably. Repeating a stronger vague instruction is the approach that already failed, and a lower temperature makes the same false positives more consistent rather than fewer.",
+   "hint": "Ask what is eroding developers' trust right now, and what kind of prompt wording actually changes what the model reports.",
+   "difficulty": "core",
+   "tags": [
+    "false-positives",
+    "explicit-criteria",
+    "code-review",
+    "trust"
+   ],
+   "id": "d4-106",
+   "ts": "4.1",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/code-review-customize"
+  },
+  {
+   "type": "mr",
+   "q": "An invoice pipeline extracts fields through a forced tool call with a JSON schema, on a model that accepts forced tool_choice. Two error patterns remain: when an invoice has no purchase-order number the output carries a made-up one, and invoices for unusual charges such as customs fees get squeezed into the closest of five fixed category values. The JSON always parses. Which schema changes target these errors?",
+   "options": [
+    "Add minLength: 1 to po_number so the model cannot return an empty string where the PO number should go",
+    "Allow null for po_number, so that an invoice with no PO can come back as null instead of a plausible guess",
+    "Add other, with a category_detail text field, plus unclear to the category enum for charges that don't fit",
+    "Switch from the tool call to asking for JSON in the reply text so the model has room to explain odd cases",
+    "Set tool_choice to auto so the model can skip the tool for any invoices whose fields it cannot fill in"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Schema enforcement removes syntax errors, not semantic ones: a required non-null field forces the model to put something there, so the field must be able to say 'absent'. An enum without an escape value forces every odd charge into the nearest category; other with a detail field, and unclear, let it report the truth. minLength makes the invented-value pressure stronger. Free-text JSON gives up the schema guarantee, and auto lets the model reply without the structured output at all.",
+   "hint": "When the schema demands a value the document doesn't contain, ask what the model is being pushed to do.",
+   "difficulty": "core",
+   "tags": [
+    "json-schema",
+    "nullable",
+    "enum-other",
+    "tool-use"
+   ],
+   "id": "d4-107",
+   "ts": "4.3",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  },
+  {
+   "type": "mr",
+   "q": "A contract-extraction pipeline validates each result and retries failures. Retries resend the identical request, and the same invalid date format often comes back three times in a row. Meanwhile a large share of retry spend goes to contracts whose renewal_date fails validation because the contract never states a renewal date. Which changes improve the retry loop?",
+   "options": [
+    "Raise the temperature on each retry so later attempts are less likely to repeat the earlier mistake",
+    "Retry up to ten times for each failure, since more attempts raise the odds that one of them passes",
+    "Add \"be careful with date formats\" to the retry request and keep the rest of the message as it was",
+    "Include the validation error in the retry: the field, the value returned and the format expected",
+    "Stop retrying when the source has no renewal date; record null and route the contract to human review"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "A retry that carries the exact validation error (which field, what came back, what was expected) gives the model what it needs to correct a format mistake. When the information is not in the document, no number of retries can produce it, so the loop should stop, record the absence and send the case to review. Higher temperature or more attempts just repeat an uninformed request, and a generic warning about dates does not say what was wrong.",
+   "hint": "For each failure, ask whether another attempt has anything new to work with.",
+   "difficulty": "core",
+   "tags": [
+    "validation",
+    "retry-with-feedback",
+    "missing-data"
+   ],
+   "id": "d4-108",
+   "ts": "4.4",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+  },
+  {
+   "type": "mr",
+   "q": "A nightly job sends 40,000 document-classification requests through the Message Batches API. The team's code matches results to documents by line position, and some labels end up on the wrong documents. About 300 requests come back errored, mostly invalid_request_error from documents over the size limit, and the job then resubmits the whole batch. Which changes should they make?",
+   "options": [
+    "Give each request a unique custom_id and join each result to its document on that ID, not on position",
+    "Sort the results file by creation time before matching, so that it lines up with the order of submission",
+    "Resubmit just the errored custom_ids, after fixing those requests, e.g. by chunking big documents",
+    "Resubmit the errored requests unchanged in a new batch, since errors in a batch are usually transient",
+    "Split the job into 40 batches of 1,000 so that each smaller results file stays in submission order"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Batch results can come back in any order, so custom_id is the way to correlate each result with its request. Only the failed requests need resubmitting, and an invalid_request_error means the request body must be fixed (here, chunking oversize documents) before it can succeed. Sorting by time or using smaller batches still relies on an order the API does not guarantee. Resending invalid requests unchanged fails the same way again.",
+   "hint": "Ask what the API promises about result order, and what an invalid request needs before it can succeed.",
+   "difficulty": "core",
+   "tags": [
+    "message-batches",
+    "custom_id",
+    "partial-failure"
+   ],
+   "id": "d4-109",
+   "ts": "4.5",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+  },
+  {
+   "type": "mr",
+   "q": "A team uses Claude's managed Code Review on a backend repository. Two complaints keep coming up: reviews post many Nit comments on generated code under src/gen/ and on lockfiles, and naming or refactoring suggestions are often marked Important, so developers have started to ignore the red markers. The protected default branch already holds a short REVIEW.md. What should the team change?",
+   "options": [
+    "Commit the new REVIEW.md rules in each open pull request so that its own review reads them",
+    "Raise the repository's review level to Deep so the reviewer weighs each finding more carefully",
+    "List src/gen/ and *.lock files as paths not to report on in REVIEW.md on the default branch",
+    "Switch Review runs to on request only, so that fewer reviews post their comments on each PR",
+    "Define Important in REVIEW.md as breaking behaviour or leaking data, with style as Nit at most"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "REVIEW.md is where a team lists paths and classes of finding to skip, such as generated code and lockfiles, and redefines what Important means so style and naming land as Nit at most; on a protected default branch Code Review honours both. Code Review reads REVIEW.md from the base or default branch, never from a pull request's own changes, so rules committed inside each PR change nothing. A deeper review level makes reviews more thorough and more costly, not better calibrated. Running reviews less often leaves each review just as noisy.",
+   "hint": "Ask where review-only instructions belong, which copy a review actually reads, and what each complaint needs written down.",
+   "difficulty": "hard",
+   "tags": [
+    "code-review",
+    "REVIEW.md",
+    "severity",
+    "false-positives"
+   ],
+   "id": "d4-110",
+   "ts": "4.1",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/code-review-customize"
+  },
+  {
+   "type": "mr",
+   "q": "A CI job runs claude -p with Read and Grep over the full checkout to review each pull request. Two kinds of false positive dominate: it reports 'missing input validation' in internal service functions whose inputs the request handlers in api/ already validate, and it makes behaviour claims such as 'this can return null' that it infers from function names. Which changes to the review prompt target these?",
+   "options": [
+    "State that input checked by the api/ handlers counts as validated; flag paths that skip them",
+    "Require each behaviour claim to cite the file and line that show it, not a guess from a name",
+    "Skip each function whose name marks it as internal, such as a leading underscore or _impl",
+    "Run the review twice and post just the findings that both runs report on the same lines of code",
+    "Paste the whole repository into the prompt so the reviewer can see where validation happens"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Both false positives come from missing criteria. Saying where validation happens and what counts as a real gap tells the reviewer which validation findings to drop, and requiring a file:line citation for behaviour claims removes findings guessed from naming. Skipping functions by name is itself an inference from naming and would hide real gaps. Two runs with the same vague prompt tend to repeat the same false positives, so their agreement filters little. The reviewer can already read the code with Read and Grep; more context without criteria doesn't change what it counts as a finding.",
+   "hint": "For each false positive, ask what rule the reviewer is missing, rather than what more it could look at.",
+   "difficulty": "hard",
+   "tags": [
+    "explicit-criteria",
+    "false-positives",
+    "ci-review",
+    "evidence"
+   ],
+   "id": "d4-111",
+   "ts": "4.1",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/code-review-customize"
+  },
+  {
+   "type": "mr",
+   "q": "An extraction pipeline compares the doses and dates it extracts from each clinical-trial report with the trial registry and flags discrepancies as critical, major or minor; reviewers read only critical flags. It flags 'discrepancies' that differ only in notation, such as 5 mg vs 5 milligrams or 2025-03-04 vs 4 March 2025, and the same real mismatch is rated critical on one run and minor on the next. Which changes address these?",
+   "options": [
+    "Add a severity enum to the output schema so that every flag is critical, major or minor",
+    "Rate a flag as critical when two separate runs agree on it, and mark the others down as minor",
+    "List notation-only differences, such as unit spelling or date format, as not discrepancies",
+    "Define critical, major and minor each with a concrete case, e.g. a dose value that differs",
+    "Tell the model to flag a discrepancy only when it is certain and to leave the others out"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Notation-only flags need an explicit skip rule saying what does not count as a discrepancy, and inconsistent severity needs each level defined with concrete examples so the same mismatch lands at the same level every time. A severity enum guarantees only that the label is one of the three values, not that the same case gets the same one. Demoting anything two runs don't agree on pushes real critical mismatches into the minor pile that nobody reads. A certainty instruction gives no rule for which flags are noise, so it drops real flags along with false ones.",
+   "hint": "Ask what the model would need to know to make the same call a careful reviewer would make, case after case.",
+   "difficulty": "core",
+   "tags": [
+    "explicit-criteria",
+    "severity",
+    "false-positives"
+   ],
+   "id": "d4-112",
+   "ts": "4.1",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "A purchase-order extractor's prompt has three examples, all from one supplier: 'PO No:' is printed beside the date and every amount is in USD. On other suppliers' documents, where the PO number sits in a header table, po_number often comes back null, and on orders that never state a currency the model fills in USD. Which changes to the prompt fix these?",
+   "options": [
+    "Replace one example with a supplier document that has its PO number in a header table",
+    "Add more examples from the same supplier so the model sees the PO number field more often",
+    "Remove the examples and describe each field in prose so the model doesn't copy one layout",
+    "Wrap each example in <example> tags so its values are not copied into the real output",
+    "Add an example order with no stated currency whose expected output has currency as null"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "Examples teach through what they cover: a set drawn from one layout teaches the model to look for the PO number in one place, and examples that all show USD teach USD as the default. Adding a header-table layout and a no-currency example whose answer is null covers both gaps. More examples of the same layout reinforce the gap. Dropping the examples throws away the most reliable lever for consistent extraction. Example tags separate examples from instructions and input, but a set that only ever shows USD still teaches USD.",
+   "hint": "Ask what the current examples teach the model to expect, beyond what the instructions say.",
+   "difficulty": "hard",
+   "tags": [
+    "few-shot",
+    "example-diversity",
+    "extraction"
+   ],
+   "id": "d4-113",
+   "ts": "4.2",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "A CI job posts a summary of each pull request to a chat channel that shows plain text only. The prompt is a long markdown document with headers and bullet lists, and it ends with 'Do not use markdown.' Summaries vary in structure from run to run (the risk section is sometimes missing entirely) and are full of raw asterisks and # signs. Which changes should the team make?",
+   "options": [
+    "Add 'Do not use markdown' to the system prompt as well as at the end of the user prompt",
+    "Add three example summaries for a bug fix, a feature and a refactor, all in the target layout",
+    "Rewrite the prompt in plain prose and describe the plain-text layout the summary should take",
+    "Add examples from the last three bug-fix PRs, since bug fixes make up most of the PR traffic",
+    "Ask for the summary inside <risks> and <changes> XML tags so the channel shows each section"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Example summaries in the target layout, across different kinds of PR, are the most reliable way to make the structure consistent. Markdown in the prompt pulls the output towards markdown, so writing the prompt in plain prose and saying what form to use, rather than only what to avoid, cuts the stray formatting. Repeating the negative instruction leaves the markdown-heavy prompt that is pulling the output, and says nothing about what to produce instead. Examples drawn from one kind of PR give the other kinds nothing to follow. A plain-text channel prints XML tags as raw text, just as it prints asterisks.",
+   "hint": "Think about what the model imitates besides the instructions it is given.",
+   "difficulty": "hard",
+   "tags": [
+    "few-shot",
+    "output-format",
+    "ci"
+   ],
+   "id": "d4-114",
+   "ts": "4.2",
+   "scenario": 5,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "A support router running on Claude Sonnet 5.5 sends each message to exactly one queue. Its five examples are all clear single-issue messages. Messages that combine an angry billing complaint with a cancellation request usually go to billing, though policy says cancellation wins, and the regex that reads the label fails whenever the reply opens with a sentence of analysis. Which changes fix these?",
+   "options": [
+    "Prefill the assistant turn with '<intent>' so that the reply begins with the label for the regex",
+    "Add ten more clear single-issue examples for each queue so each label has better coverage",
+    "Let the model return each queue that applies, so that no part of a mixed message is dropped",
+    "Add examples of mixed messages, each with the queue chosen and a line on why it beats the other",
+    "Ask for analysis in <reasoning> tags and the queue in <intent> tags, and parse only the intent"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "Examples of the hard case, with the reason one queue beats the other, teach the judgement that clear-cut examples never exercise. Asking for the analysis and the label in separate tags lets code pull the label out wherever it sits, the pattern Anthropic's ticket-routing guide uses. Prefilling the last assistant turn isn't supported on Claude 4.6 and later models and returns a 400 error on Sonnet 5.5. More clear-cut examples still don't show the mixed case. Returning several queues breaks the one-queue routing the policy defines.",
+   "hint": "Ask which cases the examples never show, and how the reply can be made easy to parse without losing the analysis.",
+   "difficulty": "core",
+   "tags": [
+    "few-shot",
+    "ambiguous-cases",
+    "classification",
+    "xml-tags"
+   ],
+   "id": "d4-115",
+   "ts": "4.2",
+   "scenario": 0,
+   "src": "https://platform.claude.com/docs/en/about-claude/use-case-guides/ticket-routing"
+  },
+  {
+   "type": "mr",
+   "q": "A claims pipeline on Claude Opus 5, which accepts forced tool use and thinks by default, forces tool_choice to record_claim. Accuracy on complex claims fell after the move from free-text output, and the responses carry no thinking block. To recover, an engineer added a required 'reasoning' property asking for step-by-step reasoning, and some responses now end with stop_reason refusal. What should the team do?",
+   "options": [
+    "Use tool_choice auto with an instruction to call record_claim, so the model can think first",
+    "Turn on manual extended thinking with a budget_tokens value and keep the forced tool choice",
+    "Replace the reasoning property with a field that asks for a short explanation of the decision",
+    "Set tool_choice to any so the model must call a tool but is still free to think before it",
+    "Move the reasoning property to the end of the schema so the model fills in the fields first"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "A forced call skips thinking: the response starts with the tool call, so a model that thinks by default loses its thinking. auto plus an instruction to call record_claim lets it think and then call the tool. A schema property that asks for the model's reasoning can trigger a refusal, and the docs advise asking for a short explanation instead. Manual extended thinking doesn't support any or a forced tool and returns an error. any is also a forced choice, so the response still opens with a tool call. Moving the property later changes neither the refusals nor the missing thinking.",
+   "hint": "Ask what forcing a tool does to the start of a response, and what kind of field the docs warn against.",
+   "difficulty": "hard",
+   "tags": [
+    "tool_choice",
+    "thinking",
+    "structured-output",
+    "refusal"
+   ],
+   "id": "d4-116",
+   "ts": "4.3",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+  },
+  {
+   "type": "mr",
+   "q": "An extraction service moved to structured outputs with output_config.format. Every response now validates, but two consumers broke: a legacy exporter that writes CSV columns in the order the keys appear finds the optional discount and po_number values shifted after all the required fields, and a router that exact-matches the department enum misses some values. Which changes fix these?",
+   "options": [
+    "Move discount and po_number to the top of the schema so they come out ahead of the others",
+    "Have the exporter look up each CSV column by its key name rather than by the key's position",
+    "Switch from JSON outputs to strict tool use, which keeps enum casing exactly as in the schema",
+    "Compare department values case-insensitively in the router instead of by exact string match",
+    "Add additionalProperties: false to the schema so the output keeps its keys in schema order"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "With structured outputs, required properties come first and optional ones follow, so an exporter that relies on key position breaks; reading columns by key (or making every property required) removes that dependence. The docs also say the capitalisation of string enum values isn't guaranteed, so compare them case-insensitively. Moving optional properties up the schema doesn't help, because required ones are still emitted first. The casing caveat applies to strict tool use as well. additionalProperties: false is already required for objects and says nothing about order.",
+   "hint": "Ask what the docs promise about the output beyond its validity against the schema.",
+   "difficulty": "hard",
+   "tags": [
+    "structured-outputs",
+    "json-schema",
+    "enum",
+    "downstream"
+   ],
+   "id": "d4-117",
+   "ts": "4.3",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  },
+  {
+   "type": "mr",
+   "q": "An intake pipeline on Claude Opus 5, a model that accepts forced tool use, offers extract_invoice and extract_receipt with tool_choice auto. About 3% of replies are prose such as 'This looks like a receipt', which crashes the parser, and some tool calls leave out the required total or send it as the string '$1,200'. Which changes fix both problems?",
+   "options": [
+    "Force tool_choice to extract_invoice so a tool call is made for each document that arrives",
+    "Set tool_choice to any so that each reply has to call one of the two extraction tools",
+    "Keep auto and add 'always answer with a tool call' near the top of the system prompt",
+    "Merge both tools into one extract_document tool and make each of its fields optional",
+    "Set strict: true on both tool definitions so tool inputs always match their schemas"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "any requires a call to one of the provided tools while leaving the choice between invoice and receipt to the model, and strict tool use constrains the inputs to the schema, so required fields are present with the right types; the docs pair the two for exactly this guarantee. Forcing extract_invoice pushes receipts through the wrong schema. A prompt line under auto makes a tool call likely, not certain. One tool with all-optional fields still allows prose under auto and makes a missing total valid.",
+   "hint": "Separate the two failures: one is about whether a call happens at all, the other about what goes into it.",
+   "difficulty": "core",
+   "tags": [
+    "tool_choice",
+    "strict",
+    "structured-output"
+   ],
+   "id": "d4-118",
+   "ts": "4.3",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+  },
+  {
+   "type": "mr",
+   "q": "An invoice pipeline flags suspected duplicate charges for the finance team, which dismisses about half of them, but nobody can tell what triggered each flag, so the prompt can't be tuned. Separately, when an invoice's printed total disagrees with its line items, the model returns the sum of the lines as the total, which hides vendor billing errors. Which changes address these?",
+   "options": [
+    "Add a detected_pattern field recording which rule or phrase triggered each duplicate flag",
+    "Retry invoices whose totals disagree, with the mismatch appended, until the two values match",
+    "Have the model give each duplicate flag a confidence score and drop the flags below a cutoff",
+    "Extract stated_total and calculated_total as separate fields, with a flag when they differ",
+    "Tell the model to prefer the printed total and drop line items that make the sum disagree"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Recording the pattern behind each flag lets the team see which triggers produce the dismissed flags and fix those criteria. Keeping the stated and calculated totals apart, with a conflict flag, surfaces the vendor's error instead of silently correcting it. A retry can't reconcile a disagreement that is in the source document itself. A confidence cutoff hides flags without showing why they were raised. Dropping line items to force agreement destroys the evidence finance needs.",
+   "hint": "Ask what each team needs to see in the output, rather than how to make the output look consistent.",
+   "difficulty": "core",
+   "tags": [
+    "validation",
+    "detected_pattern",
+    "stated-vs-calculated"
+   ],
+   "id": "d4-119",
+   "ts": "4.4",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  },
+  {
+   "type": "mr",
+   "q": "A pipeline extracts key findings from papers, each with a supporting quote, and a validator checks that every quote appears verbatim in the source. When a check fails, the whole set is regenerated with the note 'some quotes were not found', and the new set often breaks findings that had passed. Many failures also turn out to be correct quotes that differ only in curly quotes or line breaks. Which changes help?",
+   "options": [
+    "Switch to strict structured outputs so that each quote is constrained to text in the source",
+    "Turn on citations together with output_config.format so quotes come back as cited spans",
+    "Send back only the quotes that failed, naming each one and keeping the passing findings fixed",
+    "Ask the model in the same request to check its quotes against the paper before it replies",
+    "Normalise whitespace and quote characters in both texts before the validator compares them"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "Targeted feedback that names the failed quotes, while holding the passing findings, fixes what's wrong without reopening what was right. Some failures are the validator's own false alarms, so normalising typography and whitespace on both sides removes them. Strict outputs constrain the JSON's shape, not whether a string occurs in the source. Citations can't be combined with output_config.format; the API returns a 400 error. A self-check inside the same request shares the same blind spots and gives no specific error to act on.",
+   "hint": "Ask whether each failed check is really the model's mistake, and how much a retry needs to redo.",
+   "difficulty": "hard",
+   "tags": [
+    "validation",
+    "retry-feedback",
+    "quotes"
+   ],
+   "id": "d4-120",
+   "ts": "4.4",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  },
+  {
+   "type": "mr",
+   "q": "A platform team moved both of its Claude jobs to the Message Batches API: a pre-merge check that must pass before a PR can merge, and a weekly audit of 40,000 config files whose requests all start with the same 30,000-token policy document, cached with the default cache lifetime. Developers now sometimes wait hours to merge, and the audit gets few cache hits. Which changes should the team make?",
+   "options": [
+    "Run the pre-merge check as synchronous Messages API calls and keep only the audit in a batch",
+    "Use the 1-hour cache duration for the shared policy prefix in the audit's batch requests",
+    "Put the pre-merge requests in a batch of their own so they don't queue behind the audit",
+    "Turn off prompt caching for the audit, since batch pricing and cache discounts don't stack",
+    "Poll the pre-merge batch every few seconds so a merge goes ahead as soon as results land"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Batches trade latency for a 50% discount and carry no latency guarantee, so a check someone is waiting on belongs on synchronous calls. Batch requests run asynchronously and can take longer than the default 5-minute cache lifetime, so the docs recommend the 1-hour cache for shared context in batches. A separate batch still has no latency guarantee. Prompt caching does work in batches, on a best-effort basis. Polling more often doesn't make processing any faster.",
+   "hint": "Ask what each job needs from timing, and how a batch's processing time compares with a cache entry's life.",
+   "difficulty": "core",
+   "tags": [
+    "message-batches",
+    "prompt-caching",
+    "sync-vs-batch"
+   ],
+   "id": "d4-121",
+   "ts": "4.5",
+   "scenario": 5,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+  },
+  {
+   "type": "mr",
+   "q": "A team's first 60,000-request extraction batch came back after nine hours with every request errored on an invalid parameter. After the fix, the second run succeeded, but reviewers then found the prompt mislabelled a common document type, and the whole batch had to run again. Before the next large batch, which steps would have prevented both losses?",
+   "options": [
+    "Set stream: true on the batch requests so that errors show up while the batch is running",
+    "Watch results while the batch runs and cancel it as soon as the first errored item shows",
+    "Send one request with the batch's exact params through the Messages API to check its shape",
+    "Run the prompt on a sample of about 50 representative documents and check the outputs",
+    "Resubmit errored requests automatically when the batch ends, so failures recover overnight"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Batch params are validated asynchronously, so a bad parameter shows up only when the whole batch ends; the docs recommend checking a request's shape with the Messages API first. A mislabelling prompt is a quality problem, not an error, and a small representative pilot catches it before 60,000 requests are spent on it. Batch requests can't stream; stream: true is rejected. Results become available only when the batch ends, so there is no first error to react to mid-run. Resubmitting an invalid request unchanged fails again.",
+   "hint": "Ask when each kind of problem becomes visible in a batch, and what could surface it sooner.",
+   "difficulty": "core",
+   "tags": [
+    "message-batches",
+    "validation",
+    "pilot"
+   ],
+   "id": "d4-122",
+   "ts": "4.5",
+   "scenario": 6,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/batch-processing"
+  },
+  {
+   "type": "mr",
+   "q": "A CI job uses one claude -p session to write a fix and then asks it, 'Now review your changes critically.' The review rarely finds anything, yet bugs reach production. The same job reviews teammates' 20-file PRs in a single pass, and comments on files near the end of the diff are thin and miss interface changes that break other files. Which changes should the team make?",
+   "options": [
+    "Run the review in a separate session that sees the diff and the spec, not the writer's context",
+    "Give the reviewer the writing session's reasoning so it knows what each change intended",
+    "Ask the writing session to review twice, the second time in the role of a security expert",
+    "Move to a model with a larger context window so all 20 files fit in a single review pass",
+    "Review each file in its own pass, then run one pass on how the changed files fit together"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "A session reviewing its own work carries the reasoning that produced it and tends to confirm it; a fresh instance that sees only the diff and the requirements judges the result on its own terms. Per-file passes give each file full attention, and a separate integration pass catches cross-file breaks that per-file passes can't see. Handing the reviewer the writer's reasoning recreates the bias. A role change inside the same session keeps the same context. The PR already fits in the window; the problem is how attention spreads across it.",
+   "hint": "Ask what the reviewer already believes when it starts, and how much each pass has to hold at once.",
+   "difficulty": "core",
+   "tags": [
+    "multi-pass",
+    "independent-review",
+    "ci-review"
+   ],
+   "id": "d4-123",
+   "ts": "4.6",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/best-practices"
+  },
+  {
+   "type": "mr",
+   "q": "A CI reviewer posts about 25 findings per pull request, and developers have started to ignore most of them. The team plans to have the reviewer score its confidence, post the confident findings inline, and route the uncertain rest to a separate verification instance rather than posting them. Which design choices does this plan need?",
+   "options": [
+    "Drop findings below the threshold without review, since low-confidence ones are mostly noise",
+    "Have each finding carry its own confidence in the structured output so routing is per finding",
+    "Check the confidence scores against past findings labelled real or false before relying on them",
+    "Have the reviewer re-read its own uncertain findings in the same session and confirm them",
+    "Give each review one overall confidence and post the whole review when that score is high enough"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Routing works per finding, so each finding needs its own confidence (alongside its severity) in the structured output. A model's own confidence is only useful once it has been checked against labelled outcomes; otherwise the threshold may pass false findings and hold back real ones. Dropping low-confidence findings unreviewed throws away real bugs the verifier would have confirmed. A confirmation pass in the same session inherits the original judgement. One score per review can't separate the good findings from the noise inside it.",
+   "hint": "Ask at what grain the routing decision is made, and what makes a model's own score worth trusting.",
+   "difficulty": "hard",
+   "tags": [
+    "multi-pass",
+    "confidence-routing",
+    "calibration"
+   ],
+   "id": "d4-124",
+   "ts": "4.6",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/code-review"
+  },
+  {
+   "type": "mr",
+   "q": "A security gate reviews every PR to an authentication service and must not miss injection or auth-bypass bugs. Re-running the same single reviewer on the same PR shows that it catches different real bugs on different runs. The team expects wider coverage to raise false positives too, and wants those kept off the PR. Which architecture changes fit?",
+   "options": [
+    "Post a finding when three identical reviewer runs each report it on the same lines of code",
+    "Ask the same reviewer, after its first pass, what it might have missed and add those findings",
+    "Merge the vulnerability classes into one longer prompt so a single pass can cover them together",
+    "Run several independent reviewer instances, each on one class of vulnerability, and pool them",
+    "Send each pooled finding to a separate instance that checks it against the code before posting"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "Independent instances each focused on one vulnerability class widen recall, because each catches bugs the others miss, and pooling keeps any bug one of them finds. A verification step by a separate instance then checks each candidate against the code and filters false positives before posting, as Claude's managed Code Review does. Requiring unanimity among runs that miss different bugs discards exactly the catches the team needs. A follow-up in the same session shares the first pass's blind spots. One longer prompt asks a single pass to attend to everything at once.",
+   "hint": "Separate the goal of finding more from the goal of posting less, and ask what each needs.",
+   "difficulty": "hard",
+   "tags": [
+    "multi-instance",
+    "parallelization",
+    "verification",
+    "security-review"
+   ],
+   "id": "d4-125",
+   "ts": "4.6",
+   "scenario": 5,
+   "src": "https://www.anthropic.com/engineering/building-effective-agents"
   }
  ],
  "bank-d2": [
@@ -11116,6 +12072,496 @@ window.BANK = {
    "id": "d2-109",
    "ts": "2.5",
    "scenario": 0,
+   "src": "https://code.claude.com/docs/en/tools-reference"
+  },
+  {
+   "type": "mr",
+   "q": "A support agent has two tools: search_kb, described as \"Searches help-center articles on policies and how-to topics\", and get_order, described as \"Gets order info.\" The system prompt opens with \"Search our knowledge base before answering any customer question.\" When customers ask where their package is, the agent calls search_kb and replies with the generic shipping-times article. Which changes address the misrouting?",
+   "options": [
+    "Move get_order to the front of the tools array so the model considers it before search_kb on each turn",
+    "Shorten both descriptions to a single line each so the choice rests on the tool names and nothing else",
+    "Force tool_choice to get_order on each turn so order questions can no longer fall through to search_kb",
+    "Expand get_order's description: what it returns, its input, sample questions and when to prefer it",
+    "Limit the system prompt's knowledge-base line to policy and how-to questions rather than to all questions"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "The model chooses tools from their descriptions, and a three-word description gives it nothing to match a delivery question against; a detailed one with inputs, outputs, examples and boundaries does. A blanket system-prompt instruction to search the knowledge base for any question pulls every turn toward search_kb, so it needs scoping. Array order is not how Claude picks tools, shorter descriptions make the ambiguity worse, and forcing get_order on every turn breaks the policy questions search_kb exists for.",
+   "hint": "List everything in the request that pulls the model toward one tool or the other, and which of those pulls point the wrong way.",
+   "difficulty": "core",
+   "tags": [
+    "tool-descriptions",
+    "misrouting",
+    "system-prompt"
+   ],
+   "id": "d2-110",
+   "ts": "2.1",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+  },
+  {
+   "type": "mr",
+   "q": "A research system's MCP server exposes fetch_paper and search_archive. When a paper is paywalled, fetch_paper returns a normal result whose only text is \"Operation failed\", and the coordinator retries it over and over. When a search matches nothing, search_archive sets isError: true, and the coordinator reports the archive as down. Which server changes let the coordinator react correctly?",
+   "options": [
+    "Return the paywall case with isError: true, a category such as permission, isRetryable: false and a reason",
+    "Report each tool failure as a JSON-RPC protocol error so the client can tell failures apart from results",
+    "Return a zero-match search as a successful result with an empty list, so it reads as an answer, not a fault",
+    "Retry the paywalled fetch inside the server with backoff before returning, so the coordinator doesn't see it",
+    "Return an empty string for a failed fetch so the coordinator moves on without spending turns on the paper"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "A tool execution failure belongs in the result with isError: true, and saying what kind of failure it is and whether a retry can help (errorCategory and isRetryable are an application convention, not spec fields) stops pointless retries of a permission problem. A search that ran and found nothing succeeded; flagging it as an error makes a valid empty answer look like an outage. Protocol errors are meant for malformed requests and unknown tools, and the spec says execution errors should reach the model in results. Retrying a paywall cannot succeed, and an empty string hides the failure.",
+   "hint": "For each tool, ask whether the call actually failed, and if it did, what the agent needs to know to decide its next move.",
+   "difficulty": "core",
+   "tags": [
+    "mcp",
+    "isError",
+    "error-categories",
+    "empty-results"
+   ],
+   "id": "d2-111",
+   "ts": "2.2",
+   "scenario": 3,
+   "src": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+  },
+  {
+   "type": "mr",
+   "q": "In a multi-agent research system every subagent gets the same 18 tools. The synthesis agent, which should only combine the findings it is handed, often starts its own broad web searches and drifts off topic, yet about a third of its runs do need to confirm a single date or figure before writing. Which changes match how tools should be distributed?",
+   "options": [
+    "Set tool_choice to any for the synthesis agent so that each of its turns has to go through some tool call",
+    "Cut the synthesis agent to the few tools synthesis uses and keep broad web search with the search agents",
+    "Merge search and synthesis into a single agent holding the 18 tools so it can look things up as it writes",
+    "Add a narrow verify_fact tool for quick single-fact checks and send deeper lookups back via the coordinator",
+    "Keep the 18 tools and add a system-prompt line asking the synthesis agent to search sparingly and briefly"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Agents given tools outside their role tend to use them, and selection gets worse as the number of tools grows, so the synthesis agent should get a small role-specific set. Its frequent, simple need (confirming one fact) is best met with a narrow cross-role tool, while open-ended research still goes through the coordinator to the search agents. A prompt request leaves the 18 tools and the temptation in place. Forcing a tool call on every turn adds calls rather than removing misuse. Merging the agents gives up the role separation that keeps synthesis focused.",
+   "hint": "Weigh what too many choices do to an agent's behaviour against what this agent genuinely needs often.",
+   "difficulty": "core",
+   "tags": [
+    "tool-distribution",
+    "least-privilege",
+    "scoped-tools"
+   ],
+   "id": "d2-112",
+   "ts": "2.3",
+   "scenario": 3,
+   "src": "https://code.claude.com/docs/en/agent-sdk/subagents"
+  },
+  {
+   "type": "mr",
+   "q": "A developer connected the team's issue-tracker MCP server with claude mcp add and pasted her API token into the command. It works for her, but teammates who pull the repo don't see the server, and a security review says no token may be committed to git or shared between people. Which changes give every teammate the server while meeting the review?",
+   "options": [
+    "Commit the token in .mcp.json as well, since the repository is private and just the team can read it",
+    "Re-add the server with --scope project so its definition goes into .mcp.json at the repo root, committed",
+    "Describe the server URL and token in the project CLAUDE.md so Claude connects to it as sessions start",
+    "Re-add the server with --scope user so it is stored in ~/.claude.json, which each teammate's setup reads",
+    "Write the token in .mcp.json as ${TRACKER_TOKEN} and have each developer set that variable in their shell"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "claude mcp add defaults to local scope, which is private to one user, so the server has to be added with project scope to land in the committed .mcp.json. Claude Code expands ${VAR} in .mcp.json, so the file can reference a variable each developer sets themselves and no token enters git. User scope lives in that one person's ~/.claude.json and never reaches anyone else. Committing a token to a private repo still breaks the review's rule. CLAUDE.md holds instructions, not server configuration.",
+   "hint": "Separate where shared configuration has to live from where each person's secret has to live.",
+   "difficulty": "core",
+   "tags": [
+    "mcp",
+    "scopes",
+    ".mcp.json",
+    "env-vars"
+   ],
+   "id": "d2-113",
+   "ts": "2.4",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/mcp"
+  },
+  {
+   "type": "mr",
+   "q": "A developer-productivity agent answers questions about production incidents through a list_incidents tool. It returns every incident in the tracker, about 4,000, as records such as {\"id\": \"a7f3c1\", \"svc\": \"9c2e44\", \"sev\": 2}. The agent burns most of its context paging through the list to find one service's incidents, and its answers often name the wrong service for an incident. Which tool changes address both problems?",
+   "options": [
+    "Replace list_incidents with search_incidents, which filters by service, severity and window and caps results",
+    "Return the 4,000 incidents as compact CSV instead of JSON so the full list fits in a single tool response",
+    "Resolve svc to the service's name and owner in each record, keeping IDs just where a follow-up call needs one",
+    "Add input_examples to list_incidents that show well-formed calls, so the agent passes service IDs correctly",
+    "Sort the list newest first so the incidents relevant to recent questions appear on the first page returned"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "A search tool that filters by service and window returns only the records the agent needs, instead of making it read thousands of irrelevant ones, as a list-everything tool does. Resolving opaque IDs into meaningful names stops the agent from guessing which service a hash refers to; Anthropic reports this reduces hallucinated answers. A compact CSV of 4,000 rows still floods the context with irrelevant records. input_examples shape the call's inputs, but this tool's problem is its output. Sorting by date doesn't help when the question is about one service.",
+   "hint": "Think about what the agent must read to find the records it needs, and what it must guess to describe them.",
+   "difficulty": "core",
+   "tags": [
+    "tool-design",
+    "search-vs-list",
+    "high-signal-output"
+   ],
+   "id": "d2-114",
+   "ts": "2.1",
+   "scenario": 4,
+   "src": "https://www.anthropic.com/engineering/writing-tools-for-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A travel support agent on the Claude API makes changes through rebook_flight, whose input has a nested passengers array (name, age band, optional infant_on_lap and seat_preference). About 5% of calls are rejected because passengers arrives as a string such as \"2 adults\". Calls that pass validation have a different problem: for families with a lap infant, the agent lists the infant as a separate passenger instead of setting infant_on_lap on an adult. Which changes fix these?",
+   "options": [
+    "Change passengers to a free-text string the backend parses, so a call can't be rejected for its shape",
+    "Set strict: true on rebook_flight so its inputs are sampled to match the schema, passengers array included",
+    "Force tool_choice to rebook_flight on change requests so the agent produces a complete call each time",
+    "Add input_examples with complete calls, including a family booking setting infant_on_lap on an adult",
+    "Make infant_on_lap and seat_preference required, so the agent must decide on both fields for each passenger"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Strict tool use constrains sampling to the input schema, so a string can no longer arrive where an array is required. The infant calls are schema-valid but use the schema the wrong way; input_examples show Claude concrete well-formed calls, including when to set an optional field and how to structure nested input. Making the optional fields required forces the agent to invent values for every passenger and still doesn't show where an infant belongs. A free-text field removes the schema's protection and moves the parsing problem to the backend. Forcing the tool decides whether it is called, not how its input is shaped.",
+   "hint": "Separate the calls that break the schema from the calls that obey it but use it wrongly; each needs a different lever.",
+   "difficulty": "hard",
+   "tags": [
+    "tool-design",
+    "strict-tool-use",
+    "input-examples"
+   ],
+   "id": "d2-115",
+   "ts": "2.1",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+  },
+  {
+   "type": "mr",
+   "q": "An Agent SDK assistant for engineers connects MCP servers for GitHub, Jira, PagerDuty and an internal deploy system, about 220 tools in all, with tool search on (the default). Many tools have names like query, get and list_items, with one-line descriptions such as \"Query data\". Traces show the agent's tool searches often come back without the tool it needed, so it falls back to Bash and curl. Which changes make the right tools easier to find?",
+   "options": [
+    "Deny Bash in disallowedTools so the agent has to keep searching the catalog until it finds an MCP tool",
+    "Give tools specific names and keyword-rich descriptions, e.g. search_jira_issues: by project, status, date",
+    "Set ENABLE_TOOL_SEARCH to false so that each of the 220 tool definitions is loaded into context on each turn",
+    "Shorten each tool description to a few words so the catalog summary that the agent receives stays small",
+    "Add a system prompt section that lists the tool categories available, such as Jira, PagerDuty and deploys"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "Tool search matches the agent's query against tool names and descriptions, so specific names and descriptions with the words users actually use surface for more requests than query or \"Query data\". A system prompt section listing the categories tells the agent what kinds of tools exist to search for. Loading all 220 definitions on every turn costs a large share of context, and selection accuracy degrades well before that many tools. Shorter descriptions give the search even less to match. Removing Bash doesn't make the search any better at finding the right tool.",
+   "hint": "Ask how the agent decides what to search for, and what its search can match against.",
+   "difficulty": "hard",
+   "tags": [
+    "tool-design",
+    "tool-search",
+    "naming"
+   ],
+   "id": "d2-116",
+   "ts": "2.1",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/agent-sdk/tool-search"
+  },
+  {
+   "type": "mr",
+   "q": "A support agent's change_delivery_date MCP tool returns isError: true with the text \"Request failed\" for every failure. Logs show two patterns. When the carrier API answers 503 (it rejects the request unprocessed and usually works seconds later), the agent tells customers the change is impossible. When a customer asks for a date outside the 14-day window, the agent retries the same call several times, then apologises without offering anything. Which server changes fix this?",
+   "options": [
+    "Retry the carrier's 503 inside the tool with a short bounded backoff before returning any error to the agent",
+    "Report the window case as a JSON-RPC error, not a tool result, so that the agent is unable to retry the call",
+    "Mark each failure isRetryable: true so the agent keeps trying instead of giving up on the customer early",
+    "Return the window case as a non-retryable business error stating the 14-day limit and the latest date",
+    "Book the nearest allowed date when the requested one is out of range, and return that as a success result"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "A brief, unprocessed 503 is a transient error that the tool can recover from locally with a bounded retry, so the agent never sees a failure it can't act on. A date outside the window is a business-rule error: no retry will succeed, and a readable reason with the limit lets the agent offer the latest allowed date. The MCP spec puts business-logic errors in the tool result with isError so the model can use them; JSON-RPC errors are for unknown tools and malformed requests. Marking everything retryable makes the window case loop forever. Booking a different date silently changes the customer's order without asking.",
+   "hint": "For each failure, ask whether trying again could ever succeed, and who is best placed to try.",
+   "difficulty": "core",
+   "tags": [
+    "mcp",
+    "error-categories",
+    "local-retry"
+   ],
+   "id": "d2-117",
+   "ts": "2.2",
+   "scenario": 1,
+   "src": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+  },
+  {
+   "type": "mr",
+   "q": "A returns agent built with the Agent SDK defines create_return as a custom tool in an in-process MCP server, and the handler doesn't catch errors. When the warehouse API answers 409 because a return already exists for the order, Claude sees only \"Request failed with status code 409\" and tells the customer the system is down. Separately, about one call in ten fails because Claude passes reason values such as \"broken\" that the API does not accept. Which changes help?",
+   "options": [
+    "Wrap the query() call in try/catch so that tool exceptions surface there and the whole turn can be retried",
+    "Return the raw 409 response body as a normal success result so that Claude can parse the details from it",
+    "Catch the 409 in the handler and return isError: true with a message naming the existing return and status",
+    "Let the exception propagate, since an uncaught error stops the query and the app can restart the session",
+    "Declare reason as an enum of the API's accepted codes in the tool's input schema, with a line on each code"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "When a handler throws, the SDK's in-process server turns the exception into an error result carrying the raw message, so Claude reads only the bare status; catching it and returning isError with a composed message (a return already exists, its ID and status) gives Claude something to tell the customer. An enum in the input schema, described briefly, shows Claude the accepted reason codes so it stops inventing values. An uncaught handler error doesn't stop the agent loop, and tool exceptions don't surface from query(), so neither try/catch nor restarting addresses it. Returning a failure as a success hides that the call failed.",
+   "hint": "Trace what actually reaches the model in each case, and fix each problem at the earliest point that can.",
+   "difficulty": "hard",
+   "tags": [
+    "agent-sdk",
+    "custom-tools",
+    "isError",
+    "enum"
+   ],
+   "id": "d2-118",
+   "ts": "2.2",
+   "scenario": 1,
+   "src": "https://code.claude.com/docs/en/agent-sdk/custom-tools"
+  },
+  {
+   "type": "mr",
+   "q": "In a research system, a search subagent's MCP tool, search_news, gathers up to 50 articles per query from a slow upstream API. When the upstream times out after 30 articles have arrived, the tool returns isError: true with \"timeout\" and drops the 30. When the subagent writes a query with a NEAR operator the API doesn't support, the tool returns the same bare \"search error\", and the subagent resends the query unchanged. Which tool changes help?",
+   "options": [
+    "Return the 30 articles that arrived, marked partial, noting that the rest timed out and may be retried",
+    "Return the bad-operator case as an isError result that names NEAR as unsupported and shows the valid syntax",
+    "Strip unsupported operators from the query on the server and run the rest, returning the hits as normal",
+    "Return the bad-operator case as a JSON-RPC invalid-params error, since the query is a malformed argument",
+    "Raise the tool's upstream timeout to ten minutes so that each query finishes before any limit is reached"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Partial results with a clear note of what is missing and whether a retry may help let the subagent use the 30 articles and decide about the rest, instead of losing work it already paid for. An input validation error belongs in the tool result with isError and an actionable message (what is unsupported, what syntax works), so the model can correct the query; the spec reserves JSON-RPC errors for unknown tools and malformed requests, which models are less likely to recover from. A ten-minute timeout stalls the run on a slow upstream and still fails on a dead one. Silently stripping operators returns results for a different query than the one the subagent wrote.",
+   "hint": "Ask what the subagent needs in hand to change its next call, and what it loses when a failure discards work.",
+   "difficulty": "hard",
+   "tags": [
+    "mcp",
+    "partial-results",
+    "validation-errors"
+   ],
+   "id": "d2-119",
+   "ts": "2.2",
+   "scenario": 3,
+   "src": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+  },
+  {
+   "type": "mr",
+   "q": "A claims pipeline moved from Claude Opus 5 to Claude Opus 5.5. It sent each document with two tools, record_claim and flag_unprocessable, and tool_choice {\"type\": \"any\"} so every response ended in one of them. On Opus 5.5 those requests now return a 400 error. The team still wants each document to end in a schema-valid decision. Which approaches fit Opus 5.5?",
+   "options": [
+    "Keep tool_choice any and turn off extended thinking, since thinking is what makes the any setting fail",
+    "Force record_claim by name in tool_choice, since the 400 error applies to any and not to a named tool",
+    "Use tool_choice auto with strict: true on both tools, and say in the prompt that each document ends in one",
+    "Drop the tools for this step and request structured outputs with a JSON schema for both outcomes",
+    "Set tool_choice to none and ask for JSON in the reply, then parse whichever of the two shapes appears"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "On Opus 5.5 (and the other newest models) tool_choice any and forced tools return a 400; the docs suggest auto with strict tool use, which guarantees schema-valid inputs while the prompt steers which tool is picked, or structured outputs when the response needs a fixed JSON shape. Turning off thinking doesn't help, because these models reject any outright. A named forced tool is rejected the same way. JSON requested in plain text has no schema guarantee.",
+   "hint": "Ask which settings the newer model rejects outright, and which features still give a guaranteed shape.",
+   "difficulty": "hard",
+   "tags": [
+    "tool-choice",
+    "strict-tool-use",
+    "structured-outputs",
+    "model-drift"
+   ],
+   "id": "d2-120",
+   "ts": "2.3",
+   "scenario": 0,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools"
+  },
+  {
+   "type": "mr",
+   "q": "A support agent on the Claude API needs get_order, get_shipment and get_invoice for most billing questions. The three lookups are independent, yet the agent requests them one per turn, adding seconds of latency. The loop code runs each requested tool and sends each tool_result back to the API in a user message of its own. Which changes should get the three lookups requested together?",
+   "options": [
+    "Send a turn's tool_result blocks together in a single user message instead of one message per result",
+    "Set tool_choice to any so each response must contain tool calls and the agent can't stop between lookups",
+    "Raise max_tokens on each request so that one response has room for several tool_use blocks at once",
+    "Set disable_parallel_tool_use to false in tool_choice so that Claude is allowed to request several tools",
+    "Add a system prompt instruction to call independent tools at the same time rather than one after another"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "The docs warn that returning each tool result in a separate user message teaches Claude to avoid parallel calls; all results for a turn belong together in one user message. If the default still isn't enough, a system prompt section asking Claude to invoke independent tools simultaneously strengthens parallel use. disable_parallel_tool_use already defaults to false, so setting it changes nothing. tool_choice any forces some tool call but not several at once. A few tool_use blocks are short; output length isn't what keeps them apart.",
+   "hint": "Ask what the model learns from how its earlier calls were answered, and what it has been asked to do.",
+   "difficulty": "core",
+   "tags": [
+    "parallel-tool-use",
+    "tool-results"
+   ],
+   "id": "d2-121",
+   "ts": "2.3",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use"
+  },
+  {
+   "type": "mr",
+   "q": "A team defines a read-only code-explorer subagent in .claude/agents/explorer.md with disallowedTools: Write and no tools field. During one investigation it changed a config value in an existing file, and later it rewrote a test fixture by running a shell command. Which statements explain how it could still change files?",
+   "options": [
+    "Denying Write blocks the creation of new files, so it was not meant to cover changes to existing ones",
+    "Edit is a separate tool from Write, so denying Write leaves in-place edits of existing files available",
+    "Bash is still inherited, and shell commands such as sed -i or output redirects can rewrite any file",
+    "disallowedTools is applied when the subagent is invoked by name, but not when Claude delegates to it",
+    "A subagent always runs with the main session's full tool list, so its disallowedTools list is ignored"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "With no tools field the subagent inherits every tool available, and disallowedTools removes only the names it lists. Edit is its own tool, so in-place edits survive; Bash is still there, and shell commands can modify files. A read-only explorer should list its tools (for example Read, Grep, Glob) or disallow Write, Edit and Bash. disallowedTools applies however the subagent is invoked, and it does narrow the inherited list. Write also overwrites existing files, so denying it removes more than file creation.",
+   "hint": "Work out which tools the subagent ends up holding, not only which one it lost.",
+   "difficulty": "hard",
+   "tags": [
+    "subagents",
+    "disallowedTools",
+    "tool-scoping"
+   ],
+   "id": "d2-122",
+   "ts": "2.3",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/sub-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A team's internal code-search MCP server exposes search_code, described as \"Searches code.\" It indexes all 300 company repositories, but Claude Code keeps using grep in the current repo for cross-repo questions. When it does call search_code, broad queries return about 60,000 tokens, far over Claude Code's default limit for MCP output, and answers miss matches. The team wants correct answers without flooding the session's context. Which changes help?",
+   "options": [
+    "Set MAX_MCP_OUTPUT_TOKENS to 80,000 so the whole 60,000-token result reaches Claude without a cutoff",
+    "Move the server from project scope to user scope so it loads earlier than the built-in search tools",
+    "Add a CLAUDE.md line telling Claude to send each code search, in-repo ones too, through search_code",
+    "Rewrite the description: indexes all 300 repos, takes query and repo filters, use it over grep cross-repo",
+    "Add repo, path and max_results parameters to search_code, with a small default and a paging note"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "Claude picks tools from their descriptions, so saying what the index covers, what it takes and when to prefer it over grep is what draws cross-repo questions to it. Filtering parameters and a sensible default with pagination keep each result small and relevant, which the tool-writing guidance recommends over huge dumps (Claude Code limits MCP output to 25,000 tokens by default). Raising MAX_MCP_OUTPUT_TOKENS lets the 60,000 tokens in, which is the flooding the team wants to avoid. Scope decides who gets the server, not how Claude ranks it. Routing in-repo searches to it as well throws away the fast local search that works.",
+   "hint": "Ask what Claude knows about the tool when it chooses one, and what decides how much each call returns.",
+   "difficulty": "core",
+   "tags": [
+    "mcp",
+    "tool-descriptions",
+    "output-limits"
+   ],
+   "id": "d2-123",
+   "ts": "2.4",
+   "scenario": 4,
+   "src": "https://www.anthropic.com/engineering/writing-tools-for-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A nightly research run uses the Agent SDK with a patents MCP server passed in mcpServers and permissionMode set to acceptEdits. Traces show the agent sees the patent tools but its calls to them never go through. On nights when the server's token has expired, the run still finishes and reports \"no relevant patents found\". Which changes fix these problems?",
+   "options": [
+    "Add mcp__patents__* to allowedTools, since acceptEdits approves file edits but not calls to MCP tools",
+    "Treat a pending status in the init message as a failure and abort the run before the first turn begins",
+    "Check each server's status in the init message and fail the run when patents is failed or needs-auth",
+    "Add search_patents to allowedTools, using the tool's own name exactly as the patents server lists it",
+    "Wrap the query() loop in try/catch, since a server that fails to connect raises an error you can catch"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "MCP tools need explicit permission; acceptEdits auto-approves file edits and filesystem commands, not MCP calls, so a wildcard such as mcp__patents__* in allowedTools grants exactly that server. A server with an expired token reports failed or needs-auth in the init message, and the run continues without its tools, so code must check that status rather than trust an empty answer. Servers that fail to connect don't throw from query(). pending can just mean the server is still connecting or was served from a cache, so it isn't a failure on its own. allowedTools needs the full mcp__server__tool name, not the bare tool name.",
+   "hint": "Separate whether the agent may use the tools from whether the server is usable at all.",
+   "difficulty": "hard",
+   "tags": [
+    "agent-sdk",
+    "mcp",
+    "allowedTools",
+    "server-status"
+   ],
+   "id": "d2-124",
+   "ts": "2.4",
+   "scenario": 3,
+   "src": "https://code.claude.com/docs/en/agent-sdk/mcp"
+  },
+  {
+   "type": "mr",
+   "q": "A team's committed .mcp.json defines design-tokens with the url ${TOKENS_URL:-https://tokens.internal/mcp}. One developer still reaches the old server, retired last month; months ago he ran claude mcp add design-tokens with the old URL in this repo. Meanwhile the CI job should use the staging server but reaches production. Which changes fix both problems?",
+   "options": [
+    "Add a second design-tokens entry for staging to .mcp.json, which CI will pick as the later entry listed",
+    "Remove his local-scope design-tokens entry, since it outranks the project entry and fields aren't merged",
+    "Re-add design-tokens at user scope with the new URL so that his personal entry overrides the local one",
+    "Set TOKENS_URL to the staging server's URL in the CI job's environment so the default isn't the one used",
+    "Run his sessions with --strict-mcp-config so that Claude Code reads just the servers in the shared .mcp.json"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "claude mcp add defaults to local scope, and when the same server name is defined in several places Claude Code uses the whole entry from the highest-precedence source: local, then project, then user. His old local entry therefore wins until he removes it. ${VAR:-default} falls back to the default only when the variable is unset, so CI must set TOKENS_URL. A user-scope entry ranks below both local and project. --strict-mcp-config uses only servers passed with --mcp-config, not .mcp.json. Duplicate names are not chosen by order in the file.",
+   "hint": "Work out which definition of a same-named server wins, and where an unset variable takes its value from.",
+   "difficulty": "core",
+   "tags": [
+    "mcp",
+    "scopes",
+    "env-expansion"
+   ],
+   "id": "d2-125",
+   "ts": "2.4",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/mcp"
+  },
+  {
+   "type": "mr",
+   "q": "During a refactor in Claude Code, two Edit calls fail. In orders.ts, old_string \"return null;\" matches three places, and only the one inside validateCart() should change. In routes.ts, the editor's format-on-save reflowed the file after Claude read it, and the Edit fails because old_string no longer matches. Which approaches fix these edits safely?",
+   "options": [
+    "In orders.ts, set replace_all: true so the Edit applies and each match is updated in a single call",
+    "In orders.ts, widen old_string to take in validateCart()'s nearby lines so it matches one place only",
+    "In routes.ts, Write the whole file back from the earlier Read with the change made in that content",
+    "In both files, switch to Bash sed -i with a loose regex, which avoids the old_string match failures",
+    "In routes.ts, Read the file again and copy old_string from its current text before retrying the Edit"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "Edit needs old_string to match exactly once, so adding surrounding lines from validateCart() pins the one occurrence. A stale old_string means the file changed since the read; reading it again and copying the current text makes the match exact. replace_all would change all three returns when only one should change. Writing back content from the earlier read discards the formatter's changes. A loose sed regex can hit unintended lines and bypasses Edit's exact-match safety.",
+   "hint": "Ask what exact text each edit has to target, and what else a broader fix would touch.",
+   "difficulty": "hard",
+   "tags": [
+    "edit-tool",
+    "old-string",
+    "built-in-tools"
+   ],
+   "id": "d2-126",
+   "ts": "2.5",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/tools-reference"
+  },
+  {
+   "type": "mr",
+   "q": "In a session where Claude Code's Grep and Glob tools are enabled, an engineer asks for every caller of chargeCard and a list of all *.contract.test.ts files. chargeCard is re-exported from billing/index.ts as charge and as pay. Claude grepped for chargeCard( and missed half the callers, then grepped file contents for .contract.test.ts and listed only files that import a helper by that name. Which approaches fix these?",
+   "options": [
+    "Read billing/index.ts to list each exported alias, then Grep the codebase for charge and pay as well",
+    "Grep for any identifier ending in charge, which catches each alias and any wrapper built around it",
+    "Read each file under src/ in turn, so that no caller is missed however the function is imported",
+    "Glob for **/*.contract.test.ts, since the request is about file names, not text in the files",
+    "Glob for files whose contents call chargeCard, charge or pay, since Glob matches any text pattern"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Callers that use re-exported names never mention chargeCard, so reading the module that re-exports it gives the aliases to search for. Grep searches contents and Glob matches paths, so a list of files by name pattern is a Glob query. Glob doesn't look inside files. A loose suffix pattern misses pay and pulls in unrelated identifiers. Reading every file wastes context when a targeted search answers the question.",
+   "hint": "For each request, ask whether the answer lives in paths or in contents, and where the extra names come from.",
+   "difficulty": "core",
+   "tags": [
+    "grep",
+    "glob",
+    "tracing-aliases"
+   ],
+   "id": "d2-127",
+   "ts": "2.5",
+   "scenario": 4,
    "src": "https://code.claude.com/docs/en/tools-reference"
   }
  ],
@@ -14326,6 +15772,761 @@ window.BANK = {
    "ts": "1.5",
    "scenario": 0,
    "src": "https://code.claude.com/docs/en/agent-sdk/hooks"
+  },
+  {
+   "type": "mr",
+   "q": "An internal dev-tools agent built directly on the Messages API has two bugs. Sometimes it replies \"I'll run the test suite now\" and the program exits without running anything. When tools do run, Claude calls run_tests again and again as if it never saw the output. The loop decides it is finished whenever the response contains a text block, and each iteration sends only the system prompt plus the user's original request. Which changes fix the loop?",
+   "options": [
+    "Branch on stop_reason: run the requested tools and call again on tool_use, and finish on end_turn",
+    "Append the assistant's tool_use turn and a user turn of matching tool_result blocks before each new call",
+    "Scan the reply text for phrases such as \"I'll run\" and keep looping for as long as one of them shows up",
+    "Set tool_choice to any so that each response has to contain a tool call until the agent has finished",
+    "Cap the loop at three iterations so that repeated run_tests calls stop before they use up the budget"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "A text block often accompanies a tool_use block, so stopping on 'has text' exits mid-task; stop_reason is the signal to continue (tool_use) or stop (end_turn). Claude only knows a tool's output if the assistant's tool_use turn and the matching tool_result turn are in the messages it receives, so the history must accumulate. Matching phrases in the prose is the same fragile text check in another form. Forcing a tool call on every turn means the agent can never end with an answer. An iteration cap hides the missing history instead of fixing it and cuts off legitimate long tasks.",
+   "hint": "Ask what signal the API gives you for 'more work to do', and what Claude can see on the next call.",
+   "difficulty": "core",
+   "tags": [
+    "agent-loop",
+    "stop_reason",
+    "tool_result",
+    "message-history"
+   ],
+   "id": "d1-148",
+   "ts": "1.1",
+   "scenario": 4,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+  },
+  {
+   "type": "mr",
+   "q": "A research coordinator built on the Agent SDK delegates to custom search subagents defined with AgentDefinition (not forks). Each subagent call blocks until its report returns, and the coordinator spawns one, waits, then spawns the next, so a five-source query takes five times as long as the slowest search. The subagents also return papers outside the 2021-2024 window and from the publishers the coordinator agreed with the user to exclude earlier in its conversation. Which changes address both problems?",
+   "options": [
+    "Add the date window and exclusions to the coordinator's system prompt, which subagents inherit at start",
+    "Chain the subagents so each receives the previous one's full transcript and can skip sources it has seen",
+    "Have the coordinator emit the independent Task (Agent) calls in one response so searches run at once",
+    "Write the date window and the publisher exclusions into the prompt of each Task call the coordinator makes",
+    "Raise each subagent's maxTurns so it has room to work out the date window from the sources that it finds"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Several Task calls (named Agent in newer releases) in a single response run the subagents concurrently, so the query takes about as long as the slowest search. A non-fork subagent starts with no parent conversation: the prompt string the coordinator passes is the only content it receives from the coordinator, so constraints agreed earlier must be written into it. The parent's system prompt is not passed to subagents either. Chaining transcripts makes the work sequential again and bloats each context. More turns cannot recover a constraint the subagent was never told.",
+   "hint": "Think about what a newly spawned subagent can actually see, and how to avoid waiting on each search in turn.",
+   "difficulty": "hard",
+   "tags": [
+    "subagents",
+    "parallel",
+    "context-passing",
+    "Task-tool"
+   ],
+   "id": "d1-149",
+   "ts": "1.3",
+   "scenario": 3,
+   "src": "https://code.claude.com/docs/en/agent-sdk/subagents"
+  },
+  {
+   "type": "mr",
+   "q": "A returns agent built with the Agent SDK has two complaints against it. Audits show that in about 2% of conversations it calls issue_refund before verify_customer has succeeded, even though the system prompt says verification must come first. And the human team that receives escalations says each case arrives as a 60-turn transcript, so they re-ask customers for the order number and the amount. Which changes should the team make?",
+   "options": [
+    "Add a PreToolUse hook that denies issue_refund until verify_customer has returned a match in this session",
+    "Attach the full conversation transcript to each escalation so the human reviewer has the whole history at hand",
+    "Lower the temperature to zero so the agent follows the order in the system prompt the same way each time",
+    "Restate the verification rule in capitals at the top and bottom of the system prompt, with two examples",
+    "Escalate through a tool that passes customer ID, order, amount, root cause, steps tried and a recommendation"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "Prompt instructions have a non-zero failure rate, so a required order of tool calls needs a code gate: a PreToolUse hook can deny the refund call until verification has succeeded. Human agents need a structured summary they can act on (who, what, how much, what was tried, what to do next), not a transcript to dig through. Louder prompt wording and temperature zero still leave compliance to the model, and a full transcript is exactly what the team says it cannot use.",
+   "hint": "One problem needs a guarantee rather than a better request; the other is about what a busy human needs to act without starting over.",
+   "difficulty": "core",
+   "tags": [
+    "enforcement",
+    "hooks",
+    "handoff",
+    "escalation"
+   ],
+   "id": "d1-150",
+   "ts": "1.4",
+   "scenario": 1,
+   "src": "https://code.claude.com/docs/en/agent-sdk/hooks"
+  },
+  {
+   "type": "mr",
+   "q": "A developer spent yesterday in a Claude Code session named payment-audit mapping how a legacy payments module works. Overnight a teammate merged changes to ledger.py and refunds.py. Today she wants to keep that analysis and try two refactoring strategies side by side, one per terminal, without the two attempts writing into the same conversation. Which steps fit?",
+   "options": [
+    "Resume payment-audit in both terminals at once, since each terminal keeps its own copy of the conversation",
+    "Resume payment-audit and tell it that ledger.py and refunds.py changed overnight so it re-reads them first",
+    "Start the second attempt with --resume payment-audit --fork-session so it works on its own copy of the history",
+    "Use --continue in the second terminal, which opens a new branch of the most recent session for that work",
+    "Start fresh unnamed sessions and paste in yesterday's last answer, since a named session cannot be branched"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "The resumed history holds tool results from before the merge, so naming the changed files lets Claude re-read them instead of reasoning from stale content. Forking (--fork-session, or /branch inside a session) copies the history into a new session ID, so both strategies start from the same analysis without touching each other. Resuming the same session in two terminals interleaves both into one transcript. --continue reopens the most recent session itself rather than branching it. Named sessions can be forked, so throwing the analysis away is unnecessary.",
+   "hint": "Separate two questions: is the earlier analysis still accurate, and how do two lines of work share one starting point?",
+   "difficulty": "hard",
+   "tags": [
+    "sessions",
+    "resume",
+    "fork-session",
+    "stale-context"
+   ],
+   "id": "d1-151",
+   "ts": "1.7",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/sessions"
+  },
+  {
+   "type": "mr",
+   "q": "A returns agent built on the Messages API often gets one response with three tool_use blocks: lookup_order, get_return_policy and check_warehouse. The loop runs all three but sends back the result for the first one only, and the next request is rejected with an error about tool_use ids that lack tool_result blocks. Separately, when check_warehouse times out, the loop raises an exception and the conversation ends. The team wants to keep the lookups in parallel. Which changes fix the loop?",
+   "options": [
+    "Reply with one user message holding a tool_result for every tool_use block, each with its tool_use_id",
+    "When a tool fails, send its tool_result with is_error set to true and the error text, then call again",
+    "Drop the failed call's tool_use block from the assistant turn and send back the results that succeeded",
+    "Report the timeout as a plain text block placed ahead of the tool_result blocks in the next user turn",
+    "Set disable_parallel_tool_use to true so each response carries one tool_use block and needs one result"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Every tool_use block in a response needs a matching tool_result, by tool_use_id, in the user message that follows, so returning one result of three is rejected. A failed tool should still get a tool_result, marked is_error with a readable message, so Claude can retry, work around it or tell the customer, instead of the loop crashing. Disabling parallel tool use would avoid the first error but gives up the parallel lookups the team wants to keep. Editing the assistant turn to hide the failed call rewrites history and leaves Claude unaware that the stock check never happened. A text block cannot stand in for the missing result, and tool_result blocks must come first in that user message.",
+   "hint": "For each call Claude asked for, what must the next message contain, and how does a failure still count as an answer?",
+   "difficulty": "hard",
+   "tags": [
+    "agent-loop",
+    "parallel-tool-use",
+    "tool_result",
+    "is_error"
+   ],
+   "id": "d1-152",
+   "ts": "1.1",
+   "scenario": 1,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons"
+  },
+  {
+   "type": "mr",
+   "q": "A research coordinator's loop runs one fixed sequence for every question: web_search, then fetch_page on the top three hits, then summarize. Simple factual questions waste calls, and broad questions stop before enough sources are read. The loop also ends as soon as the reply contains the words \"Final report\", which Claude sometimes writes while it is still planning. Which changes should the team make?",
+   "options": [
+    "Set tool_choice to name the next tool in the sequence on each turn so the order is applied reliably",
+    "Ask Claude to end its final reply with a JSON line {\"done\": true}, and stop the loop on that line",
+    "Keep looping while stop_reason is tool_use, and treat end_turn as the sign the research is finished",
+    "Give Claude the tools with clear descriptions and let it pick each next call from what it has found",
+    "Pick one of three fixed tool sequences per question with a classifier call that runs before the loop"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Letting the model choose the next tool from what it has learned fits the work to each question, which a fixed path cannot do. stop_reason is the API's signal: tool_use means run the tools and call again, end_turn means Claude has finished. Choosing among three fixed sequences is still a hard-coded decision tree with fewer branches. Forcing each next tool through tool_choice enforces the rigid order more strictly. A done flag in the reply text is another phrase to parse and fails the same way the \"Final report\" check does.",
+   "hint": "Who should decide the next step in an open-ended task, and what does the API itself tell you about whether a turn is over?",
+   "difficulty": "core",
+   "tags": [
+    "agent-loop",
+    "stop_reason",
+    "model-driven",
+    "decision-tree"
+   ],
+   "id": "d1-153",
+   "ts": "1.1",
+   "scenario": 3,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+  },
+  {
+   "type": "mr",
+   "q": "A developer-productivity agent uses the Messages API with its own client tools plus Anthropic's server-side web_search tool. Its loop runs tools when stop_reason is tool_use and otherwise returns the reply as the final answer. Two bugs show up: long code-generation replies reach users cut off mid-function, and on broad research questions the agent sometimes hands back a half-finished answer right after a burst of web searches. Which changes fix the loop?",
+   "options": [
+    "On max_tokens, treat the reply as cut off: continue it, or retry with a higher limit if a tool call broke",
+    "Treat each stop_reason other than tool_use as a failure and resend the identical request until it passes",
+    "Add stop_sequences for a closing marker so the model wraps up its answer before reaching the limit",
+    "Switch the request to streaming so that long code replies arrive in chunks instead of being truncated",
+    "On pause_turn, append the assistant content as it is and call again so the server-side search resumes"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "max_tokens means the reply hit the length limit, so it is incomplete: continue the response, or raise max_tokens and retry when the cut fell inside a tool_use block. pause_turn means a server-tool turn was paused; sending the assistant content back as-is lets Claude finish the search and the answer. A stop sequence ends output earlier, which does not make long code fit. Resending the identical request drops the paused content and repeats the same cut-off. Streaming changes how tokens arrive, not how many the response may contain.",
+   "hint": "Each non-tool_use stop reason means something different. Which ones say \"not done yet\", and what does each need?",
+   "difficulty": "hard",
+   "tags": [
+    "agent-loop",
+    "stop_reason",
+    "max_tokens",
+    "pause_turn",
+    "server-tools"
+   ],
+   "id": "d1-154",
+   "ts": "1.1",
+   "scenario": 4,
+   "src": "https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons"
+  },
+  {
+   "type": "mr",
+   "q": "A research coordinator spawns eight subagents for every query, so a question like \"when was this company founded?\" takes minutes and costs as much as a market study. On data-heavy studies, each subagent returns a 300-row pricing table that the coordinator retypes into the final report, and audits find transposed digits in the copied tables. Which changes address both problems?",
+   "options": [
+    "Raise the coordinator's max_tokens so it has enough room to copy each table into the report in full",
+    "Have subagents save large tables to a shared store and return a reference plus a short summary of each",
+    "Put scaling rules in the coordinator's prompt: one agent for a fact lookup, more for broad comparisons",
+    "Cap the coordinator at two subagents per query so that simple lookups stay quick and cheap to answer",
+    "Run every subagent inside one shared conversation so their tables are already in the coordinator's view"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Agents judge effort poorly, so explicit rules in the lead prompt (a single agent for simple fact-finding, a few for comparisons, many for complex research) stop overinvestment in easy queries. Letting subagents write outputs to an external store and pass back lightweight references avoids the lossy copy through the coordinator. A flat cap of two starves the complex studies that need more. One shared conversation throws away context isolation and still leaves the coordinator copying. More output room lets the coordinator copy more, but the copying is what introduces the errors.",
+   "hint": "One problem is about matching effort to each question; the other is about whether bulky outputs need to travel through the lead agent.",
+   "difficulty": "hard",
+   "tags": [
+    "coordinator",
+    "effort-scaling",
+    "artifacts",
+    "multi-agent"
+   ],
+   "id": "d1-155",
+   "ts": "1.2",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "Asked to assess climate risk to a manufacturer's supply chain, a coordinator spawns one subagent per factory to study flood exposure, then hands the results straight to the report writer. The report is thorough on flooding but says nothing about heat stress, drought, port closures or supplier regions, and the client notices. Which changes should the team make?",
+   "options": [
+    "Let each subagent widen its own scope to any other risk it happens to notice while it studies its site",
+    "Ask the report writer to fill in the missing hazards from its general knowledge so the report is whole",
+    "Split the work into more subagents, one for each factory and flood scenario, to raise the coverage",
+    "After the first round, compare the findings with the brief and send targeted follow-ups for any gaps",
+    "Before spawning, check the planned subtasks against every part of the question, such as hazards and ports"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "The decomposition was too narrow: every subagent covered one hazard, so whole parts of the question had no owner. Checking the plan against the full question before delegating catches that, and reviewing first-round findings against the brief before synthesis catches whatever still slipped through. Letting subagents wander leaves coverage to chance and causes overlap. Filling gaps from general knowledge produces unsourced claims. More flood subagents add depth to the one hazard already covered and still leave the others out.",
+   "hint": "At which points could the lead agent have noticed that half the brief had no owner?",
+   "difficulty": "core",
+   "tags": [
+    "coordinator",
+    "decomposition",
+    "coverage-gaps",
+    "iterative-refinement"
+   ],
+   "id": "d1-156",
+   "ts": "1.2",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "A coordinator delegates with one-line tasks such as \"research the semiconductor shortage\". Two subagents end up running nearly the same searches on current supply chains, while nobody covers the 2021 auto-chip crisis the user asked about. The subagents also come back with two or three sources each, and their logs show long, very specific queries that match almost nothing. Which changes should the team make?",
+   "options": [
+    "Give each task an objective, an output format, the sources to use and limits such as the time period",
+    "Let subagents pick their own angle on the topic when they start, so the work spreads out by itself",
+    "Prompt the search subagents to open with short, broad queries and narrow them as they see what exists",
+    "Have subagents add each keyword from the user's request to every query so results stay on the topic",
+    "Have the coordinator write the exact query strings for each subagent, to be run in the order it gives"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Vague one-line tasks let subagents misread the job and duplicate each other; each needs an objective, output format, source guidance and clear boundaries such as the period to cover. Agents tend to write overly long, specific queries, so prompting them to start broad and then narrow brings back far more relevant sources. Exact query strings from the coordinator turn subagents into scripts and do nothing about narrow queries. Self-chosen angles are how the duplication happened. Packing every keyword into each query makes queries longer and more specific, which is the cause of the thin results.",
+   "hint": "Two separate failures: what the coordinator tells each subagent, and how a subagent goes about searching.",
+   "difficulty": "hard",
+   "tags": [
+    "coordinator",
+    "delegation",
+    "task-description",
+    "search-strategy"
+   ],
+   "id": "d1-157",
+   "ts": "1.2",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "On multi-hour research jobs, the coordinator's context grows past its limit and older turns are trimmed, after which it re-plans from scratch and re-delegates topics that subagents already covered. Most of that context is taken up by subagent returns, which include every page they read and every query they tried. Which changes should the team make?",
+   "options": [
+    "Run the subagents one after another so that fewer of their returns sit in the coordinator's context",
+    "Ask subagents to return condensed findings with source references, leaving their working notes out",
+    "Store every subagent return in the coordinator's system prompt, where trimming of older turns can't reach",
+    "Have the coordinator save its research plan to external memory and read it back once context is trimmed",
+    "Give each subagent the coordinator's full conversation so that the plan travels along with the work"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Writing the plan to external memory lets the coordinator recover it after trimming instead of starting over, and condensed returns with references keep the coordinator's context from filling with raw working material in the first place. Handing subagents the coordinator's whole conversation bloats their context and does nothing for the coordinator's. Running subagents in sequence changes timing, not how much each return adds. Moving returns into the system prompt still spends the same context window, just in a different place.",
+   "hint": "What must survive when the lead agent loses older turns, and what should never have filled its window?",
+   "difficulty": "hard",
+   "tags": [
+    "coordinator",
+    "context-limits",
+    "memory",
+    "subagent-output"
+   ],
+   "id": "d1-158",
+   "ts": "1.2",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "A developer-tools app built on the Agent SDK defines a test-runner subagent with AgentDefinition, using the description \"Runs things\". When users ask the main agent whether a change broke anything, it usually runs the whole suite itself and floods its own context with output. On the rare runs where test-runner is used, the main agent learns only \"Tests done, some failed\" and cannot say which tests failed. Which changes fix this?",
+   "options": [
+    "Set the subagent's model to opus so that its reports come back longer and more detailed than before",
+    "Rewrite the description to say it runs the test suite and when to use it, such as after code changes",
+    "Have the main agent read the subagent's tool results from its own context after the subagent returns",
+    "Leave the tools field out of the definition so test-runner inherits each tool the main agent has",
+    "Have test-runner's prompt require a final report listing each failing test, its file and its error"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "Claude decides whether to delegate by matching the task to each subagent's description, so \"Runs things\" gives it nothing to match. Only the subagent's final message returns to the parent; its tool calls and output stay in its own context, so the report must carry the failing tests, files and errors. The parent cannot read the subagent's intermediate tool results. A bigger model does not tell the subagent what its report must contain. Omitting tools widens what test-runner can do but fixes neither the routing nor the report.",
+   "hint": "How does the main agent decide to delegate, and what part of a subagent's run does the main agent actually get back?",
+   "difficulty": "hard",
+   "tags": [
+    "subagents",
+    "AgentDefinition",
+    "description",
+    "final-report"
+   ],
+   "id": "d1-159",
+   "ts": "1.3",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/agent-sdk/subagents"
+  },
+  {
+   "type": "mr",
+   "q": "A research coordinator runs twelve scout subagents that each fetch one web page and pull out its date and main claims, plus one synthesis subagent that weighs conflicting evidence. Every agent runs on the largest model, and the scouts make up most of the bill. Last week a scout also obeyed hidden text on a page and ran a shell command, which it could do because its AgentDefinition lists no tools. Which changes fit?",
+   "options": [
+    "Set model to a smaller one such as haiku in the scout definition and keep synthesis on the large one",
+    "Add a line to the scout prompt telling it to disregard instructions that appear inside page text",
+    "Merge the twelve scouts into one scout that fetches every page in turn, which costs less for each page",
+    "List only the fetch and read tools in the scout's tools field so that shell access is no longer there",
+    "Run the scouts in sequence so that one compromised scout cannot pass anything on to the next scout"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "AgentDefinition's model field sets each subagent's model, so the mechanical scout work can run on a small model while synthesis keeps the stronger one. With tools omitted a subagent gets every available tool; listing only what scouts need removes the shell from their session entirely. A prompt line asking scouts to ignore injected text can itself be overridden and does not take the capability away. One scout doing all the fetching still runs on the large model and still has a shell, and it is slower. Running scouts in sequence changes neither cost nor what a scout is able to run.",
+   "hint": "Which settings on a subagent decide what it costs and what it is capable of doing?",
+   "difficulty": "core",
+   "tags": [
+    "subagents",
+    "AgentDefinition",
+    "model",
+    "tool-restriction"
+   ],
+   "id": "d1-160",
+   "ts": "1.3",
+   "scenario": 3,
+   "src": "https://code.claude.com/docs/en/agent-sdk/subagents"
+  },
+  {
+   "type": "mr",
+   "q": "A coordinator passes search findings to a synthesis subagent as one block of prose in which URLs, publication dates and quoted text run together, and the report often pairs a claim with the wrong date. Its Task prompt is also a 12-step script (read item 1, check its date, and so on), so when one source is missing the subagent stalls at that step. Which changes should the team make?",
+   "options": [
+    "Paste the full transcripts of each search subagent into the prompt so that no detail is left out",
+    "Have the synthesis subagent look up each date again with its own web search before citing a claim",
+    "Pass each finding as a record whose URL, date and quoted excerpt sit in fields apart from the claim",
+    "Extend the script with extra steps that cover a missing source and the other edge cases seen so far",
+    "State the goal, the output wanted and the quality bar in the Task prompt instead of numbered steps"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "A subagent sees only what its Task prompt contains, so findings should arrive as structured records that keep source metadata separate from content; then dates cannot drift onto the wrong claim. Subagents work better given a goal and a quality bar than a step-by-step script that breaks on the first surprise. Full transcripts bury the metadata in even more prose. Adding steps patches one edge case and keeps the brittleness. Re-searching every date repeats work and still leaves the original findings tangled.",
+   "hint": "Think about the shape of the data handed over and the kind of instruction that survives surprises.",
+   "difficulty": "core",
+   "tags": [
+    "subagents",
+    "context-passing",
+    "structured-context",
+    "goals-not-scripts"
+   ],
+   "id": "d1-161",
+   "ts": "1.3",
+   "scenario": 3,
+   "src": "https://code.claude.com/docs/en/agent-sdk/subagents"
+  },
+  {
+   "type": "mr",
+   "q": "A customer writes: \"My blender arrived broken, I was charged twice for it, and I'm disputing a $900 charge I don't recognise.\" The agent may refund duplicates and arrange replacements, but fraud disputes over $500 go to a human team. Today it either answers the first concern and ends its turn, or escalates the whole conversation as soon as it sees the dispute. Which changes should the team make?",
+   "options": [
+    "Handle the replacement and the duplicate refund itself, and hand off just the dispute with its details",
+    "Split the message into its concerns at the start and track each one to a stated outcome before replying",
+    "Resolve the concerns in the order written and close each turn by asking whether anything else is needed",
+    "Ask the customer to send each concern in its own message so the agent can resolve them one by one",
+    "Escalate the whole conversation when any concern is out of scope, so a single person owns the case"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Listing the concerns up front and tracking each to an outcome stops the agent ending its turn after the first one. Resolving what is within its authority and escalating only the dispute, with a structured summary, keeps simple fixes fast and gives the fraud team what it needs. Making the customer split the message moves the agent's job onto the customer. Escalating everything sends a broken blender and a duplicate charge to a fraud queue. Working in order and asking \"anything else?\" still drops the concerns the customer already stated.",
+   "hint": "Which parts of this message is the agent allowed to finish on its own, and how does it make sure none get dropped?",
+   "difficulty": "core",
+   "tags": [
+    "multi-concern",
+    "escalation",
+    "handoff",
+    "workflow"
+   ],
+   "id": "d1-162",
+   "ts": "1.4",
+   "scenario": 1,
+   "src": "https://www.anthropic.com/engineering/building-effective-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A support agent's issue_refund tool is gated in code: it refuses unless verify_customer has been called earlier in the session. An audit finds two bad refunds. In one, verify_customer was called and returned \"no match\", and the refund went through anyway. In the other, the caller verified as the holder of account A and then got a refund paid to account B. Which changes close both gaps?",
+   "options": [
+    "Require verify_customer to be the first tool call of the session before any other tool is allowed to run",
+    "Clear the verification flag after each refund so that every new refund needs a fresh identity check",
+    "Store the verified account ID and refuse refunds on any account other than that one for the session",
+    "Open the gate only when verify_customer returned a match, not just when the tool was called",
+    "Add a PostToolUse hook on issue_refund that logs each refund's account and amount for later audit"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "The gate tested that a step happened, not what it found: it must require a successful match. It also never tied verification to an account, so the verified identity has to be recorded and each refund checked against it. Clearing the flag after each refund still lets a failed verification or a different account through on the next refund. Forcing verification to run first fixes ordering, which was never the problem. Logging after the refund records the mistake but does not prevent it.",
+   "hint": "A gate can check that a step ran, what it returned, and whom it was about. Which of these did this gate skip?",
+   "difficulty": "hard",
+   "tags": [
+    "prerequisite-gate",
+    "enforcement",
+    "verification"
+   ],
+   "id": "d1-163",
+   "ts": "1.4",
+   "scenario": 1,
+   "src": "https://code.claude.com/docs/en/agent-sdk/hooks"
+  },
+  {
+   "type": "mr",
+   "q": "A research system's coordinator is told to run every draft through a citation checker before calling publish_report, yet about one report in fifty goes out unchecked. Claims the checker can't confirm go to a human fact-checker, who receives every subagent transcript for the report and spends most of each review hunting for the claim in question. Which changes should the team make?",
+   "options": [
+    "Make publish_report refuse unless a checker record exists for that exact draft, naming what's missing",
+    "Gate publish_report on whether the citation checker was called at any earlier point during that same run",
+    "Let the coordinator skip the checker when it rates its own confidence in the citations above 0.9",
+    "Send the fact-checker a link to the full run log so they can search it for the claims they need",
+    "Send the fact-checker each disputed claim with its sources, URLs, dates and what the checker has tried"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "A prompt instruction fails some of the time, so publishing must be blocked in code until the checker has passed the very draft being published, with a refusal that says what is missing. The human needs a per-claim record, not raw transcripts, to decide quickly. Checking only that the checker ran at some point lets an edited later draft through unchecked. Self-rated confidence is not a reliable reason to skip verification. A searchable log is still the transcript problem in another form.",
+   "hint": "One fix makes a skipped step impossible; the other decides what a human reviewer actually needs in front of them.",
+   "difficulty": "core",
+   "tags": [
+    "prerequisite-gate",
+    "handoff",
+    "human-review",
+    "citations"
+   ],
+   "id": "d1-164",
+   "ts": "1.4",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "type": "mr",
+   "q": "An internal Agent SDK assistant deploys branches to staging. After it skipped check_build in about 1 in 80 runs, the team made deploy_to_staging refuse when no passing check_build exists. Now the agent retries the deploy several times and then tells the user staging is broken, because the refusal just says \"Request denied\". One deploy also went out on a commit newer than the one check_build had tested. Which changes complete the fix?",
+   "options": [
+    "Return the refusal as a normal success result with an empty body so that the agent simply moves on",
+    "Return a refusal that names the missing step and the next action: run check_build on this commit",
+    "Have the gate accept only a passing check_build for the exact commit being deployed, not any older run",
+    "Have the agent call check_build after each deploy and roll the deploy back whenever the check fails",
+    "Remove the code gate now that the prompt states the rule, since the gate is what causes the retries"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "A bare \"Request denied\" gives the agent nothing to act on, so it retries or gives up; naming the unmet prerequisite and the next step lets it recover. The gate must also bind the prerequisite to the thing being deployed, or a build check on an older commit unlocks a newer one. Disguising the refusal as success hides that nothing was deployed. Removing the gate brings back the skipped checks the gate was added to stop. Checking after deploying puts untested code on staging first.",
+   "hint": "Ask what the agent can do with the refusal it receives, and what exactly the gate should prove before it opens.",
+   "difficulty": "core",
+   "tags": [
+    "prerequisite-gate",
+    "error-messages",
+    "enforcement"
+   ],
+   "id": "d1-165",
+   "ts": "1.4",
+   "scenario": 4,
+   "src": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+  },
+  {
+   "type": "mr",
+   "q": "A support agent built on the Agent SDK reads orders from two systems after a merger: one returns dates like 03/04/2026 (month first), the other Unix timestamps, and the agent sometimes tells customers the wrong delivery date. Policy also caps refunds at $250 without a supervisor, and logs show the agent occasionally issuing larger refunds despite the system prompt. Which hooks should the team add?",
+   "options": [
+    "A PostToolUse hook on issue_refund that flags refunds over $250 and asks Claude to reverse them at once",
+    "A PreToolUse hook on both order tools that rewrites the dates in their input to ISO 8601 before they run",
+    "A UserPromptSubmit hook that adds both date formats and the $250 cap to each customer message received",
+    "A PreToolUse hook on issue_refund that denies amounts over $250 and says to route them to supervisors",
+    "A PostToolUse hook on both order tools that rewrites each date to ISO 8601 before Claude reads the result"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "The mixed dates are in what the tools return, so a PostToolUse hook that replaces the result (updatedToolOutput) normalises them before Claude reasons over them. The refund cap must hold before money moves, so a PreToolUse hook denies the call and its reason points Claude to escalation. Rewriting the tools' inputs does not touch the dates they send back. A post-call check on refunds acts after the refund has been paid. Injecting the rules as context is guidance Claude can still misapply, not enforcement or normalisation.",
+   "hint": "For each problem, ask whether it lives in what a tool sends back or in what a tool is about to do.",
+   "difficulty": "hard",
+   "tags": [
+    "hooks",
+    "PostToolUse",
+    "PreToolUse",
+    "normalization",
+    "policy"
+   ],
+   "id": "d1-166",
+   "ts": "1.5",
+   "scenario": 1,
+   "src": "https://code.claude.com/docs/en/agent-sdk/hooks"
+  },
+  {
+   "type": "mr",
+   "q": "A team protects infra/prod/ in Claude Code with a PreToolUse hook on Edit and Write. The script spots the protected path, prints \"Blocked: production config\" and exits with code 1, yet the edits still go through. Their audit logger, registered as a PostToolUse hook on Bash, records successful commands, but compliance notices that failed commands never appear in the log. Which changes fix both problems?",
+   "options": [
+    "Register the audit logger for PostToolUseFailure, since PostToolUse fires after successful calls",
+    "Move the check to a PostToolUse hook that restores the original file once Claude's edit has been made",
+    "Exit the protection script with code 2 and write the reason to stderr, which Claude receives as feedback",
+    "Keep exit code 1 and print the message to stdout as plain text, which Claude Code reads as a denial",
+    "Register the audit logger as a Stop hook so that it records each command once the turn has ended"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Exit code 1 is a non-blocking error, so the edit proceeds; exit code 2 blocks a PreToolUse call and feeds stderr back to Claude as the reason. PostToolUse runs after a tool call succeeds and PostToolUseFailure after one fails, so the logger needs both events. Reverting after the edit lets the change happen first and races anything that reads the file. Plain stdout with exit 1 is still a non-blocking error, not a denial. A Stop hook fires once at the end of a turn and does not receive each failed call's input and error.",
+   "hint": "Look up what each exit code means to Claude Code, and which events fire when a tool call succeeds versus when it fails.",
+   "difficulty": "core",
+   "tags": [
+    "hooks",
+    "exit-code-2",
+    "PostToolUseFailure",
+    "audit"
+   ],
+   "id": "d1-167",
+   "ts": "1.5",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/hooks"
+  },
+  {
+   "type": "mr",
+   "q": "A support agent built on the Agent SDK has two PreToolUse hooks on issue_credit: one looks up the customer's tier and saves it to shared state, the other denies credits above that tier's limit. Sometimes the second hook finds no tier and lets a large credit through. A PostToolUse hook that rewrites raw status codes into plain words was also switched to async output to cut latency, and since then Claude sees the raw codes again. Which changes fix these?",
+   "options": [
+    "Move the tier lookup into a PostToolUse hook so the tier is ready by the time the policy check runs",
+    "Do the tier lookup inside the policy hook itself, since matching hooks run in parallel in no set order",
+    "List the tier-lookup hook ahead of the policy hook in the hooks array so that it is sure to run first",
+    "Make the status-rewriting hook synchronous again, since async output cannot change the tool result",
+    "Give the async hook a longer asyncTimeout so it finishes before Claude reads the result of the call"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "When an event fires, all matching hooks run in parallel and finish in no fixed order, so a policy hook must not depend on another hook having run; it should fetch what it needs itself. An async hook lets the agent move on at once, so its output cannot block, modify or add context to the call; a rewrite of the result has to be synchronous. Array position does not sequence parallel hooks. A longer asyncTimeout only gives the background work more time, after the result has already gone to Claude. PostToolUse runs after the credit has been issued, too late for the check.",
+   "hint": "What does the SDK promise about hook execution order, and what can a background hook still influence?",
+   "difficulty": "hard",
+   "tags": [
+    "hooks",
+    "parallel-hooks",
+    "async-hooks",
+    "PreToolUse",
+    "PostToolUse"
+   ],
+   "id": "d1-168",
+   "ts": "1.5",
+   "scenario": 1,
+   "src": "https://code.claude.com/docs/en/agent-sdk/hooks"
+  },
+  {
+   "type": "mr",
+   "q": "A developer asks an agent to review a 28-file refactor in one prompt. Comments are detailed for the first few files and thin for the rest, and the review misses that a renamed export in utils/date.ts is still imported under its old name in four other files. Which changes to how the review is broken down should the team make?",
+   "options": [
+    "Sort the files so the largest come first, giving the biggest changes the reviewer's best attention",
+    "Add a separate pass over the changed interfaces and their call sites to catch breaks between files",
+    "Have each per-file pass load all 28 files too, so every reviewer can see the cross-file effects",
+    "Ask the same session to review its own findings a second time, looking for anything it may have missed",
+    "Review each file in its own focused pass so attention is not spread thin over all 28 files at once"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "Per-file passes give every file the same depth, and a dedicated integration pass looks at what crosses file boundaries, such as a renamed export and its importers. Loading all 28 files into every pass recreates the diluted attention the split was meant to fix. Self-review in the same session carries the same blind spots. Reordering files only changes which ones get the thin treatment.",
+   "hint": "Two kinds of defects are slipping through: ones inside a single file and ones that span several.",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "per-file-review",
+    "integration-pass"
+   ],
+   "id": "d1-169",
+   "ts": "1.6",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/workflows"
+  },
+  {
+   "type": "mr",
+   "q": "A research team runs two kinds of jobs. A weekly competitor-pricing brief always covers the same five sources and fills the same four sections. Ad-hoc investigations such as \"why did enterprise churn rise last quarter?\" have no known path, and early findings often change what is worth checking next. Today both use one design. Which decomposition choices fit?",
+   "options": [
+    "For the weekly brief, a fixed chain of fetch, summarise and assemble steps with a check between them",
+    "For the weekly brief, a coordinator that decides afresh each week which sources and sections to cover",
+    "For investigations, a fixed list of every plausible cause, each checked in turn by its own chain step",
+    "For investigations, map the problem first, then plan the next subtasks and revise them as findings land",
+    "For both, one adaptive agent design, so a single setup handles predictable and open-ended work alike"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Prompt chaining suits work that splits cleanly into known, repeatable steps, and a gate between steps catches problems early. Open-ended investigations need a plan that adapts, because the next subtasks depend on what has been found. Re-deciding the brief's structure each week adds cost and inconsistency to a predictable task. A fixed list of causes cannot follow leads it did not anticipate. One adaptive design for both gives up the predictability the weekly brief benefits from.",
+   "hint": "Ask, for each job, whether you can write down the steps before it starts.",
+   "difficulty": "core",
+   "tags": [
+    "decomposition",
+    "prompt-chaining",
+    "adaptive-planning"
+   ],
+   "id": "d1-170",
+   "ts": "1.6",
+   "scenario": 3,
+   "src": "https://www.anthropic.com/engineering/building-effective-agents"
+  },
+  {
+   "type": "mr",
+   "q": "One prompt in a support agent handles refunds, technical troubleshooting and account changes, and also screens each message for abuse and for attempts to get another customer's data. After the team tuned it for refund cases, troubleshooting answers got worse, and screening misses rise on long technical threads. Which workflow changes fit?",
+   "options": [
+    "Have the same prompt check its drafted answer for abuse at the end of its reply before it is sent",
+    "Add worked examples for all three categories to the one prompt so each kind is covered equally well",
+    "Classify each message first, then send it to a prompt written for that category of request on its own",
+    "Move refund rules to the end of the prompt so troubleshooting guidance sits where it gets attention",
+    "Run the abuse and data-access screening as its own call beside the call that drafts the answer"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "Routing separates distinct request types so tuning one prompt no longer hurts the others. Running a guardrail as a separate parallel call tends to work better than asking the call that writes the answer to screen as well. A self-check at the end of the same call is the combined design that is already missing abuse. Adding examples to one prompt keeps every category competing in it. Moving text around inside a single prompt does not separate the concerns.",
+   "hint": "Two separate jobs share one call, and three request types share one prompt.",
+   "difficulty": "hard",
+   "tags": [
+    "decomposition",
+    "routing",
+    "parallelization",
+    "guardrails"
+   ],
+   "id": "d1-171",
+   "ts": "1.6",
+   "scenario": 1,
+   "src": "https://www.anthropic.com/engineering/building-effective-agents"
+  },
+  {
+   "type": "mr",
+   "q": "A TypeScript Agent SDK support service calls query() with continue: true on each customer message, so it picks up the most recent session in its working directory. With many customers at once, replies sometimes draw on another customer's history. Separately, when a supervisor approves a credit while a conversation is paused, the resumed agent still tells the customer the credit is pending. Which changes should the team make?",
+   "options": [
+    "On resuming after an approval, add a message stating the credit was approved, with amount and date",
+    "Store each customer's session_id from the result message and pass it as resume on their next message",
+    "Set forkSession: true on each message so that every customer works on a separate copy of the session",
+    "Set persistSession: false on each call so nothing from one customer's session lingers on disk for others",
+    "Call query() with continue: true once more after the approval so the agent reloads the latest case state"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "continue picks the most recent session in the directory, which is wrong when several conversations run at once; resume with a stored session ID returns to the right one. A resumed session holds only its old history, so the approval must be stated in a new message. Forking still starts from whichever session continue would have picked. Turning persistence off throws away the history the service relies on. Continuing again reloads the same stale transcript, which knows nothing of the approval.",
+   "hint": "How does each option find which conversation to load, and where would news from outside that conversation come from?",
+   "difficulty": "hard",
+   "tags": [
+    "sessions",
+    "resume",
+    "session_id",
+    "stale-state"
+   ],
+   "id": "d1-172",
+   "ts": "1.7",
+   "scenario": 1,
+   "src": "https://code.claude.com/docs/en/agent-sdk/sessions"
+  },
+  {
+   "type": "mr",
+   "q": "A nightly job uses the Agent SDK in two steps. Step one audits licences and records its session ID; step two asks follow-up questions that need that audit. When both steps ran on the same runner, step two worked. Since the pipeline moved step two to a fresh container, resuming by that ID fails to find the session. Which approaches let step two build on the audit?",
+   "options": [
+    "Name the session in step one so that step two can resume it by its name from any machine in the run",
+    "Pass forkSession: true with the recorded ID so the SDK copies the session over to the new container",
+    "Copy step one's .jsonl transcript to the same ~/.claude/projects/ path in the new container, then resume",
+    "Export the audit findings as structured data and pass them into a fresh session's prompt in step two",
+    "Pass continue: true in step two so the SDK finds the most recent session without needing the ID"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Session transcripts are files local to the machine that wrote them. Restoring the .jsonl file under ~/.claude/projects/ on the new host, at the path the first run used, makes it resumable there, and passing the results into a fresh session's prompt avoids depending on transcripts at all. continue looks for the most recent session on the new host, where none exists. Forking needs the original session on the same host and copies nothing between machines. A name is a label for a local session, not a way to reach one stored elsewhere.",
+   "hint": "Where does a session actually live, and what has to be on the new machine for step two to use it?",
+   "difficulty": "hard",
+   "tags": [
+    "sessions",
+    "resume",
+    "cross-host",
+    "ci"
+   ],
+   "id": "d1-173",
+   "ts": "1.7",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/agent-sdk/sessions"
+  },
+  {
+   "type": "mr",
+   "q": "A team's rule of thumb is to resume a named Claude Code session when they come back to a task, unless the tool results it holds can no longer be trusted, in which case they start a fresh session seeded with a summary of the conclusions. In which of these situations should they start fresh rather than resume?",
+   "options": [
+    "A three-week-old research session read web pages and API docs that have since had several new releases",
+    "The developer closed the laptop mid-task last night, and nothing in the repository has changed since",
+    "A teammate edited one config file the session had read, and the developer knows exactly what changed",
+    "The developer wants to try a second design from the same analysis without losing the first attempt",
+    "The feature branch was rebased overnight, rewriting most of the 200 files the session had read"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "When most of what a session read has changed, such as a rebase that rewrote its files or sources that have moved on, its stored tool results mislead more than they help, so a fresh session with a summary that re-reads what it needs is safer. One known change is better handled by resuming and telling the session exactly what changed. With nothing changed, resuming keeps all the useful context. Trying a second design from the same baseline is what forking is for.",
+   "hint": "Ask how much of what was read earlier still holds today.",
+   "difficulty": "hard",
+   "tags": [
+    "sessions",
+    "resume",
+    "fresh-session",
+    "stale-results"
+   ],
+   "id": "d1-174",
+   "ts": "1.7",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/sessions"
   }
  ],
  "bank-d3": [
@@ -16642,6 +18843,563 @@ window.BANK = {
    "ts": "3.6",
    "scenario": 5,
    "src": "https://code.claude.com/docs/en/github-actions"
+  },
+  {
+   "type": "mr",
+   "q": "A team lead wrote the repo's testing conventions in ~/.claude/CLAUDE.md on her laptop and the staging deploy checklist in CLAUDE.local.md at the repo root, which the .gitignore excludes. The committed ./CLAUDE.md holds only build commands. A new teammate clones the repo, and Claude Code follows neither the testing conventions nor the checklist for him. Which facts explain what he is missing?",
+   "options": [
+    "A user-level ~/.claude/CLAUDE.md is read on the machine where it lives and does not reach teammates",
+    "Memory files load after each developer runs /memory once to register them for that particular project",
+    "Memory files load after the developer runs /init, which sets the project up for Claude Code on his machine",
+    "CLAUDE.local.md is for personal project notes; kept out of git, it is missing from his clone",
+    "The committed ./CLAUDE.md takes precedence and stops the other memory files from loading once it exists"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "The user-level file is personal and loads only on the lead's own machine. CLAUDE.local.md is meant for private per-project preferences and is kept out of version control, so a fresh clone does not contain it. Both sets of rules belong in committed project files. Memory files are concatenated rather than overriding one another, /memory lists and opens memory files but is not needed to load them, and /init only drafts a starting CLAUDE.md; existing memory files load without it.",
+   "hint": "Trace where each file physically lives and who else can ever see it.",
+   "difficulty": "core",
+   "tags": [
+    "CLAUDE.md",
+    "memory-hierarchy",
+    "CLAUDE.local.md",
+    "onboarding"
+   ],
+   "id": "d3-109",
+   "ts": "3.1",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/memory"
+  },
+  {
+   "type": "mr",
+   "q": "A team's /audit-deps skill walks every dependency and prints a long report. There are two complaints: the tool output it produces floods the main conversation and pushes earlier work out of context, and people run it without a package name because nothing tells them it expects one. Which SKILL.md frontmatter changes fix both?",
+   "options": [
+    "Add disable-model-invocation: true so the report stays out of the conversation until someone asks for it",
+    "Move the skill into ~/.claude/skills so its output is held in a personal context outside the session",
+    "Add context: fork so the skill runs in a forked subagent and just its result returns to the main session",
+    "Add allowed-tools: Read, Grep so the skill is limited to fewer tools and the report it writes comes out shorter",
+    "Add argument-hint: [package-name] so autocomplete shows the expected argument when /audit-deps is typed"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "context: fork runs the skill in a forked subagent context, so its verbose tool calls stay there and only the result comes back. argument-hint is the autocomplete hint that shows which argument a skill expects. allowed-tools pre-approves tools for the skill's turn (in current docs it does not block others) and does not shorten output. disable-model-invocation only stops Claude from loading the skill automatically. Moving a skill to the personal folder changes who has it, not where its output goes.",
+   "hint": "Match each complaint to the frontmatter field whose documented job is exactly that.",
+   "difficulty": "core",
+   "tags": [
+    "skills",
+    "frontmatter",
+    "context-fork",
+    "argument-hint"
+   ],
+   "id": "d3-110",
+   "ts": "3.2",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/skills"
+  },
+  {
+   "type": "mr",
+   "q": "A monorepo's React testing conventions apply to files matching **/*.test.tsx, which sit in a dozen packages. Today they live in the root CLAUDE.md and load into every session, even backend-only work. An earlier attempt to move them into packages/web/CLAUDE.md meant tests in other packages were written without them. Which steps load the conventions only when relevant, wherever the test files live?",
+   "options": [
+    "Move the conventions out of the root CLAUDE.md into a markdown file of their own under .claude/rules/",
+    "Give the rule file frontmatter with paths: [\"**/*.test.tsx\"] so it loads when matching files are used",
+    "Keep a copy in a CLAUDE.md inside each package that has tests so that each of those directories gets the rules",
+    "@import the conventions file from the root CLAUDE.md so that it loads once a test file is opened",
+    "Add paths: [\"**/*.test.tsx\"] frontmatter to packages/web/CLAUDE.md so it loads for test files in any package"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "Files in .claude/rules/ are project memory, and a paths glob in their frontmatter makes them load only when Claude reads or edits a matching file; a rule without paths loads unconditionally, so both steps are needed. paths frontmatter is a rules feature: a subdirectory CLAUDE.md loads when Claude works in that directory, so packages/web/CLAUDE.md never reaches tests in other packages. Per-package CLAUDE.md copies drift apart and are tied to directories, not to the test-file pattern. An @import loads together with the file that imports it, so it would still load in every session.",
+   "hint": "Think about a mechanism keyed to file patterns rather than to directories, and what makes it conditional rather than always on.",
+   "difficulty": "core",
+   "tags": [
+    "path-rules",
+    ".claude/rules",
+    "glob",
+    "context-cost"
+   ],
+   "id": "d3-111",
+   "ts": "3.3",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/memory"
+  },
+  {
+   "type": "mr",
+   "q": "A CI job runs Claude Code to review each pull request. At first the job hung until it timed out because Claude Code opened its interactive interface on the runner; once that was worked around, the step that posts comments failed because it received free-form prose instead of the findings object it parses. Which changes fix the job?",
+   "options": [
+    "Add --verbose so Claude Code logs each step and the CI runner can tell when the review has finished",
+    "Add \"reply only in valid JSON\" to the project CLAUDE.md so that the review comes back in a parseable form",
+    "Run Claude Code with -p so it handles the prompt non-interactively and exits once the review is done",
+    "Add --output-format json with --json-schema and read the findings from the structured_output field",
+    "Pass --continue on each run so the job reuses the previous review session instead of opening a new one"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "-p (--print) runs Claude Code non-interactively and exits when done, which is what a CI step needs. --output-format json with --json-schema returns schema-conforming output in structured_output (the schema flag works only with -p). An instruction in CLAUDE.md asks for JSON but does not guarantee it. --continue carries an earlier PR's review into the next one and does nothing about interactivity. --verbose adds logging but does not stop the interactive interface.",
+   "hint": "One failure is about how the process runs; the other is about whether the output's shape is guaranteed or merely requested.",
+   "difficulty": "core",
+   "tags": [
+    "ci",
+    "print-mode",
+    "output-format",
+    "json-schema"
+   ],
+   "id": "d3-112",
+   "ts": "3.6",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/headless"
+  },
+  {
+   "type": "mr",
+   "q": "A team's root CLAUDE.md grew to 850 lines: 60 lines of repo-wide standards, long sections for the React app (web/**) and the Go services (svc/**), and a 200-line release runbook used once a quarter. Last sprint a developer moved each long section into its own file under docs/claude/ and left an @import line in its place, yet a token check shows sessions load about as much as before. Which changes would cut what a typical session loads?",
+   "options": [
+    "Keep the @import lines but move them to the end, so the imports load after the core standards",
+    "Move the React and Go sections into .claude/rules/ files whose paths match web/** and svc/**",
+    "Turn the release runbook into a skill, so its body loads when someone asks to cut a release",
+    "Move the React and Go sections into CLAUDE.local.md, so they sit outside the project memory",
+    "Move the release runbook into ~/.claude/CLAUDE.md, so it loads from user scope, not project"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Path-scoped rules load only when Claude works with files matching their globs, so React and Go guidance stays out of sessions that never touch those areas. A skill's body loads only when it is invoked or judged relevant, which suits a runbook used once a quarter. Imported files load together with the CLAUDE.md that imports them wherever the @ line sits, so moving the imports saves nothing. CLAUDE.local.md loads at launch like CLAUDE.md and also stops the guidance reaching teammates. A user-level CLAUDE.md loads in every session too, and only on one machine.",
+   "hint": "Ask what decides whether each file enters context at all, not where its text happens to be stored.",
+   "difficulty": "hard",
+   "tags": [
+    "CLAUDE.md",
+    "@import",
+    ".claude/rules",
+    "skills",
+    "context-cost"
+   ],
+   "id": "d3-113",
+   "ts": "3.1",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/memory: imports \"don't reduce its context cost, because imported files load together with the CLAUDE.md that imports them\"; path-scoped rules \"load only when Claude works with matching files\". https://code.claude.com/docs/en/best-practices: for workflows only relevant sometimes, use skills, which load on demand."
+  },
+  {
+   "type": "mr",
+   "q": "Dana's clone of payments-api lives at ~/work/payments-api. Only in her sessions does Claude Code write tests with unittest instead of pytest; teammates get pytest, the repo's CLAUDE.md never mentions a test framework, and she always launches Claude from the repo root. She suspects a memory file outside the committed project is the source. Which files could be adding the unittest instruction to her sessions?",
+   "options": [
+    "~/work/billing-api/CLAUDE.md, in a sibling repo she cloned right beside payments-api last month",
+    "A teammate's CLAUDE.local.md at the payments-api root, kept out of git by the .gitignore",
+    "payments-api/legacy/CLAUDE.md, a committed folder-level file loaded at launch from the root",
+    "~/.claude/CLAUDE.md on her laptop, the user-level file loaded in her sessions in any project",
+    "~/work/CLAUDE.md, a file one folder above the repo, loaded when she launches inside the repo"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "Claude Code loads the user-level ~/.claude/CLAUDE.md in every session on that machine, and it loads CLAUDE.md files from the launch directory and every directory above it, so ~/work/CLAUDE.md reaches her sessions and not teammates' (unless they keep the same layout). A sibling repo is not an ancestor of her working directory, so its file never loads. A teammate's gitignored CLAUDE.local.md exists only in his own clone. A CLAUDE.md in a subdirectory loads on demand when Claude touches files there, and being committed it would affect teammates too.",
+   "hint": "Trace how discovery walks the folders at startup, and which file exists on her machine alone.",
+   "difficulty": "hard",
+   "tags": [
+    "CLAUDE.md",
+    "memory-hierarchy",
+    "user-scope",
+    "debugging"
+   ],
+   "id": "d3-114",
+   "ts": "3.1",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/memory: \"Claude Code loads CLAUDE.md and CLAUDE.local.md from your current working directory and every directory above it\"; subdirectory files load on demand; ~/.claude/CLAUDE.md applies to all your projects."
+  },
+  {
+   "type": "mr",
+   "q": "An engineer launches Claude Code at the root of a monorepo and asks for a plan to change refund handling in the billing service. The plan ignores conventions in services/billing/CLAUDE.md, such as storing amounts as integer cents, though Claude follows them later once it starts editing billing files. She wants them applied from the first planning prompt. Which changes would achieve that?",
+   "options": [
+    "Launch Claude Code from services/billing, so the billing CLAUDE.md is read when the session starts",
+    "Run /memory once in the root session, so the billing CLAUDE.md is registered and loads at launch",
+    "Have Claude read a file in services/billing before planning, so the billing CLAUDE.md loads",
+    "Rename the billing file CLAUDE.local.md, so it loads at launch beside the root project memory file",
+    "Move the billing rules to .claude/rules/billing.md with paths set to services/billing/**/* instead"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Claude Code loads CLAUDE.md files from the launch directory and its ancestors at startup, so launching in services/billing loads the billing file (and the root file above it) before the first prompt. CLAUDE.md files in subdirectories load once Claude reads or edits a file there, so a deliberate read before planning brings the rules in. /memory lists and opens memory files; it does not change what loads. A CLAUDE.local.md in a subdirectory is discovered the same on-demand way as a CLAUDE.md there. A path-scoped rule also waits for a matching file to be touched, so it has the same gap during planning.",
+   "hint": "Separate the files read at startup from those that wait for Claude to work in their folder.",
+   "difficulty": "core",
+   "tags": [
+    "CLAUDE.md",
+    "directory-level",
+    "on-demand-loading",
+    "monorepo"
+   ],
+   "id": "d3-115",
+   "ts": "3.1",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/memory: files above the working directory load at launch; subdirectory CLAUDE.md and CLAUDE.local.md load \"once Claude reads, writes, or edits another file in that subdirectory\"; path-scoped rules load on matching file use."
+  },
+  {
+   "type": "mr",
+   "q": "An engineer wrote a deploy-staging skill in ~/.claude/skills/deploy-staging/ on her laptop. Two complaints follow: teammates who pull the repo can't run /deploy-staging at all, and twice Claude began a staging deploy on its own right after she remarked that the branch looked ready. Which changes fix both complaints?",
+   "options": [
+    "Set user-invocable: false in its frontmatter, so a deploy can't start without a person present",
+    "Move the skill folder into the repo's .claude/skills/ directory and commit it with the code",
+    "Add context: fork to its frontmatter, so the deploy runs in a subagent away from the main chat",
+    "Set disable-model-invocation: true in its frontmatter, so it runs only when someone types it",
+    "Copy the skill into ~/.claude/commands/, so the command is listed for anyone who opens the project"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "Skills under ~/.claude/skills/ are personal to one machine; committing the folder under the project's .claude/skills/ shares it with everyone who clones the repo (moving it also avoids her personal copy overriding the project one). disable-model-invocation: true stops Claude from triggering the skill itself, which is what a deploy with side effects needs. user-invocable: false does the opposite: it hides the skill from the / menu and leaves only Claude able to invoke it. context: fork isolates the run in a subagent but does not change who can start it. ~/.claude/commands/ is a personal location too.",
+   "hint": "Two complaints, two levers: one is about visibility to teammates, the other about who may trigger a run.",
+   "difficulty": "core",
+   "tags": [
+    "skills",
+    "disable-model-invocation",
+    "project-vs-personal",
+    "frontmatter"
+   ],
+   "id": "d3-116",
+   "ts": "3.2",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/skills: disable-model-invocation \"Use this for workflows with side effects ... like /deploy\"; personal skills in ~/.claude/skills/ cover your projects on this machine, project skills live in .claude/skills/."
+  },
+  {
+   "type": "mr",
+   "q": "A platform team is trimming a 600-line project CLAUDE.md. Each item below sits in it today. The team's rule of thumb is that content Claude needs in nearly every session stays always-on, behaviour that must happen every time without fail is automated, and the rest should load only when the task calls for it. Which items should become skills?",
+   "options": [
+    "Prefer pnpm over npm or yarn for each install and script command run in this repository",
+    "A 180-line template and tone guide for incident postmortems, used about twice a month",
+    "Run the formatter on each file right after Claude edits it, without relying on a reminder",
+    "The commands to build, lint and run one test file, which Claude needs in most of its work",
+    "The steps to cut a release: bump versions, update the changelog, tag, and trigger the build"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "The postmortem guide and the release steps are long, task-specific workflows used occasionally, which is what skills are for: only their descriptions sit in context until someone invokes them or asks for that task. The package-manager rule and the build and test commands apply in almost every session, so they belong in CLAUDE.md. Formatting after every edit must happen each time without Claude choosing to, so it belongs in a PostToolUse hook; a skill is loaded only when invoked or judged relevant.",
+   "hint": "Sort each item by when it is needed and whether Claude may decide to skip it.",
+   "difficulty": "hard",
+   "tags": [
+    "skills",
+    "CLAUDE.md",
+    "hooks",
+    "feature-choice"
+   ],
+   "id": "d3-117",
+   "ts": "3.2",
+   "scenario": 0,
+   "src": "https://code.claude.com/docs/en/features-overview: CLAUDE.md loads every session, skills load on demand; \"Use a hook when the action must happen the same way every time\", e.g. format on save. https://code.claude.com/docs/en/best-practices: workflows only relevant sometimes belong in skills."
+  },
+  {
+   "type": "mr",
+   "q": "A team's .claude/skills/schema-migrate/SKILL.md works when someone types /schema-migrate users, but Claude never uses it on its own when a developer asks to add a column or backfill a table. Its frontmatter is: description: \"Helper.\", disable-model-invocation: true, argument-hint: [table], allowed-tools: Bash(psql *). Which settings explain why Claude doesn't pick the skill up unprompted?",
+   "options": [
+    "The description doesn't mention migrations, so Claude can't match a request about one to it",
+    "argument-hint makes the skill wait for a table name, so Claude can't start it without one",
+    "allowed-tools names just psql, so Claude passes over it when a request may need other tools",
+    "disable-model-invocation: true stops Claude from loading the skill unless a person types it",
+    "The skill sits in the project folder; Claude starts skills unprompted only from ~/.claude/skills"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Claude decides whether to apply a skill from its description, and \"Helper.\" gives it nothing to match against a migration request. disable-model-invocation: true reserves the skill for manual /name use, so Claude never invokes it even with a good description; both need fixing. argument-hint only shows the expected argument in autocomplete. allowed-tools pre-approves the listed tools while the skill runs; it does not hide the skill. Project and personal skills can both be invoked by Claude.",
+   "hint": "Look for the fields that govern whether Claude may and can choose the skill, not how it runs once started.",
+   "difficulty": "hard",
+   "tags": [
+    "skills",
+    "description",
+    "disable-model-invocation",
+    "debugging"
+   ],
+   "id": "d3-118",
+   "ts": "3.2",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/skills: description is what \"Claude uses ... to decide when to apply the skill\"; disable-model-invocation: true \"prevent[s] Claude from automatically loading this skill\"; argument-hint is an autocomplete hint."
+  },
+  {
+   "type": "mr",
+   "q": "A team has two rule files. .claude/rules/api.md begins with frontmatter globs: \"src/api/**/*.ts\", and its API conventions show up in every session, even frontend-only ones. .claude/rules/ui/components.md has paths: [\"src/components/*.tsx\"]; it is followed when Claude edits src/components/Button.tsx but ignored for src/components/forms/DatePicker.tsx. Which explain both problems?",
+   "options": [
+    "Rules with a glob in frontmatter load at launch and stay loaded until the first /compact",
+    "Rule files in a subfolder of .claude/rules/ match files at that folder's depth and no other",
+    "api.md has no paths key, so its glob is ignored and the file loads as an unscoped rule",
+    "A YAML list in paths is read per folder, so it matches the first folder level and no deeper",
+    "In components.md a single * matches one level, so files in deeper subfolders do not match"
+   ],
+   "correct": [
+    2,
+    4
+   ],
+   "explanation": "Claude Code scopes a rule only through a paths field; a rule without one, such as a file using another tool's globs key, loads unconditionally. In src/components/*.tsx the single * matches file names directly in that folder, so src/components/**/*.tsx is needed for nested files. Path-scoped rules are not loaded at launch; they load when a matching file is used. .claude/rules/ is searched recursively, and the subfolder name has nothing to do with matching. paths accepts a list of globs, each matched in full.",
+   "hint": "Check each file twice: does Claude Code recognise its scoping at all, and if so, what does the pattern match?",
+   "difficulty": "hard",
+   "tags": [
+    ".claude/rules",
+    "paths",
+    "glob",
+    "debugging"
+   ],
+   "id": "d3-119",
+   "ts": "3.3",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/memory: \"Rules without a paths field are loaded unconditionally\"; .md files in .claude/rules/ \"are discovered recursively\"; ** patterns match at any depth."
+  },
+  {
+   "type": "mr",
+   "q": "A team keeps React conventions in .claude/rules/frontend/react.md with paths: [\"src/**/*.tsx\"]. Developers report that Claude sometimes ignores those conventions, though at other times it follows them closely. In which of these moments is the rule most likely missing from Claude's context?",
+   "options": [
+    "Claude is asked to plan a new component before it has opened or edited any .tsx file in src/",
+    "Right after /compact in a long React session, before Claude has touched another .tsx file",
+    "Claude edits src/features/cart/ui/CartLine.tsx, a file five folders below the src/ directory",
+    "Claude creates src/hooks/useCart.tsx, a new file that did not exist when the session started",
+    "Claude edits src/App.tsx while the rule lives in .claude/rules/frontend/ instead of rules/"
+   ],
+   "correct": [
+    0,
+    1
+   ],
+   "explanation": "A path-scoped rule loads when Claude works with a matching file, so before any .tsx file has been opened or edited the conventions are not in context, and a plan drafted then misses them. Path-scoped rules also drop out at compaction and come back only when a matching file is touched again. src/**/*.tsx matches files at any depth, writing a new matching file loads the rule like editing one, and rule files in subfolders of .claude/rules/ are discovered recursively.",
+   "hint": "Trace when a scoped rule enters context, and whether it stays there for the rest of the session.",
+   "difficulty": "hard",
+   "tags": [
+    ".claude/rules",
+    "paths",
+    "compaction",
+    "on-demand-loading"
+   ],
+   "id": "d3-120",
+   "ts": "3.3",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/memory: \"A path-scoped rule loads when Claude uses the Read, Write, or Edit tool on a matching file\"; rules are discovered recursively. https://code.claude.com/docs/en/context-window: path-scoped rules are lost at compaction until a matching file is read again."
+  },
+  {
+   "type": "mr",
+   "q": "A lead wants plan mode used where it pays for itself and skipped where reviewing a plan would only slow the team down. This week's Claude Code queue has the five tasks below, and the team knows the codebase unevenly. Which tasks should start in plan mode rather than direct execution?",
+   "options": [
+    "Rename the log field user_id to account_id in 60 files, which log-output tests already cover",
+    "Fix the null check in parseInvoiceDate; a failing test and stack trace point to one line",
+    "Move session storage from cookies to Redis across 18 files, with two schemes still in debate",
+    "Change retry handling in a payments client nobody here has read, spread over a dozen modules",
+    "Raise the HTTP timeout in one config file from 30s to 60s and update the test that pins it"
+   ],
+   "correct": [
+    2,
+    3
+   ],
+   "explanation": "Plan mode pays off when the approach is uncertain, the change spans many files, or the code is unfamiliar: the Redis move has competing designs across 18 files, and the retry change touches a dozen modules nobody knows. The rename touches many files but is mechanical with a one-sentence diff and tests that check it, so direct execution fits. The null-check fix and the timeout bump are small, clear and well-scoped, where a plan adds only overhead.",
+   "hint": "Could you describe the whole diff in one sentence before Claude starts? If yes, a plan adds little.",
+   "difficulty": "hard",
+   "tags": [
+    "plan-mode",
+    "direct-execution",
+    "task-sizing"
+   ],
+   "id": "d3-121",
+   "ts": "3.4",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/best-practices: \"Planning is most useful when you're uncertain about the approach, when the change modifies multiple files, or when you're unfamiliar with the code ... If you could describe the diff in one sentence, skip the plan.\""
+  },
+  {
+   "type": "mr",
+   "q": "An engineer asked Claude Code to change how a research platform attaches citations, logic spread over about 25 modules she has never read. In the first attempt the main session filled with grep and file-read output until it compacted and lost earlier findings, and Claude began editing three modules before she had agreed on an approach; she reverted them. Which changes address these problems?",
+   "options": [
+    "Have the Explore subagent map the citation code, so only its summary enters the main session",
+    "Run /compact after each batch of searches, so the main session keeps room for later results",
+    "Switch to acceptEdits mode, so the early edits are batched and she can review them at the end",
+    "List the 25 modules in the project CLAUDE.md, so every session loads the module map at start",
+    "Work in plan mode until she approves an approach, so no source file changes before she agrees"
+   ],
+   "correct": [
+    0,
+    4
+   ],
+   "explanation": "Delegating discovery to the Explore subagent keeps the verbose search and read output in its own context and returns a summary, so the main session stays focused. Plan mode lets Claude read and propose without editing source until she approves a plan. Compacting more often keeps discarding the very findings she needs. acceptEdits approves edits automatically, the opposite of holding them back. Putting a module list in CLAUDE.md loads it into every session and does nothing to keep exploration output out of context.",
+   "hint": "One problem is about where exploration output lands, the other about when edits are allowed to start.",
+   "difficulty": "hard",
+   "tags": [
+    "plan-mode",
+    "Explore-subagent",
+    "context-management"
+   ],
+   "id": "d3-122",
+   "ts": "3.4",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/sub-agents: Explore \"keeps exploration results out of your main conversation context\". https://code.claude.com/docs/en/permission-modes: plan mode \"research[es] and propose[s] changes without making them\" until you approve a plan."
+  },
+  {
+   "type": "mr",
+   "q": "A platform team wants Claude Code in CI to propose dependency upgrades across 12 services, and an engineer must approve the approach before any file changes. The first attempt ran one claude -p job whose prompt said to describe its plan and wait for approval; it printed a plan and then edited files in the same run. Which changes give the team a real approval gate?",
+   "options": [
+    "Pass --max-turns 1 to the proposal job, so it stops as soon as it has printed a plan for review",
+    "Run the proposal job with --permission-mode plan, so it can read and plan but not edit files",
+    "Start a separate execution job only once an engineer approves the plan the first job published",
+    "Add --output-format json to the proposal job, so the plan is parsed before Claude makes edits",
+    "Run the proposal job with --permission-mode acceptEdits, so changes need a reviewer's sign-off"
+   ],
+   "correct": [
+    1,
+    2
+   ],
+   "explanation": "Plan mode blocks source edits, so the proposal job can only read and publish a plan, which a prompt request could not guarantee. A non-interactive run can't pause for a human mid-session, so the execution has to be a second job gated on the engineer's approval. --max-turns caps agentic turns and could still let edits happen within them. JSON output formats the result after the run ends and does not stop edits during it. acceptEdits auto-approves file edits rather than holding them for review.",
+   "hint": "Ask which setting the runtime enforces rather than the model obeys, and how a person gets between two steps.",
+   "difficulty": "core",
+   "tags": [
+    "plan-mode",
+    "CI",
+    "headless",
+    "approval"
+   ],
+   "id": "d3-123",
+   "ts": "3.4",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/permission-modes: plan mode \"blocks edits until you approve a plan\" and can be started with claude --permission-mode plan; acceptEdits auto-approves file edits."
+  },
+  {
+   "type": "mr",
+   "q": "After Claude Code builds a CSV importer, a review lists five problems. The developer wants to send problems whose fixes interact in one message and work through the independent ones one at a time, checking each fix. Which problems belong together in a single message?",
+   "options": [
+    "The parser trims spaces inside quoted values in the free-text notes column of each row",
+    "The row validator's error message misspells 'column' as 'colum' when it rejects a row",
+    "The importer writes each rejected row to the audit log twice, once per validation pass",
+    "The parser drops the last field of any row whose final quoted value contains a comma",
+    "The row validator was loosened to accept 9 or 10 fields so the short rows would pass"
+   ],
+   "correct": [
+    3,
+    4
+   ],
+   "explanation": "The dropped field and the loosened validator interact: fixing the parser makes every row 10 fields, and the workaround that accepts 9 would then hide future parsing errors, so both must be changed together. The whitespace trimming, the typo in the error message and the duplicate audit entries sit in the same components but don't depend on either fix, so each can be handled and verified on its own.",
+   "hint": "Ask whether fixing one problem changes the right fix for another, not whether they share a file.",
+   "difficulty": "hard",
+   "tags": [
+    "iterative-refinement",
+    "interacting-issues",
+    "debugging"
+   ],
+   "id": "d3-124",
+   "ts": "3.5",
+   "scenario": 2,
+   "src": "https://code.claude.com/docs/en/best-practices: course-correct early and verify each change."
+  },
+  {
+   "type": "mr",
+   "q": "A developer asks Claude Code to write normalize_phone() for a CRM import. After three rounds of rewording her request (\"handle international numbers properly\"), the function still mangles numbers with extensions and treats empty strings inconsistently, and each fix breaks a case that worked before. She already knows the exact result every input should give. Which techniques should she switch to?",
+   "options": [
+    "List the problem inputs, such as '+44 20 7946 0958 x12' and '', with the exact output each needs",
+    "Have Claude interview her about phone formats before it writes another version of the code",
+    "Have Claude write those cases as tests, confirm they fail, then change code until they pass",
+    "Switch to plan mode, so Claude writes a plan for phone handling before it edits the function",
+    "Add 'handle every international format and edge case' to the project CLAUDE.md for each run"
+   ],
+   "correct": [
+    0,
+    2
+   ],
+   "explanation": "Concrete input and output pairs remove the ambiguity that prose like \"properly\" leaves, and failing tests give Claude a check it can run after each change, so a fix that breaks an earlier case shows up at once. An interview helps when requirements are unclear, but she already knows every expected result. Plan mode would produce a plan from the same vague description. Another prose instruction in CLAUDE.md repeats the approach that has already failed three times.",
+   "hint": "When she already knows the answers, what form lets Claude check its own work against them?",
+   "difficulty": "core",
+   "tags": [
+    "iterative-refinement",
+    "examples",
+    "test-first"
+   ],
+   "id": "d3-125",
+   "ts": "3.5",
+   "scenario": 4,
+   "src": "https://code.claude.com/docs/en/best-practices: give verification criteria, e.g. \"example test cases: user@example.com is true, invalid is false ... run the tests after implementing\"; interview Claude-style \"for larger features\" with open requirements."
+  },
+  {
+   "type": "mr",
+   "q": "A pipeline has one claude -p session implement a ticket and then, in the same session, review its own diff before the PR opens; human reviewers keep finding bugs that self-review passed. A second job re-reviews the PR on every push and reposts findings that were already raised or fixed, so developers have muted it. Which changes address both problems?",
+   "options": [
+    "Use --resume on the implementing session, so the reviewer knows why each of the changes was made",
+    "Run the review as its own claude -p call, given only the diff and the team's review criteria",
+    "Run the re-review with --bare, so it skips CLAUDE.md and judges each push on its own merits",
+    "Pass the previous review's findings into each re-review and ask it to report new or unfixed ones",
+    "Add a CLAUDE.md line telling the reviewer never to repeat comments it has posted on the PR before"
+   ],
+   "correct": [
+    1,
+    3
+   ],
+   "explanation": "A separate invocation reviews without the reasoning that produced the code, so it is not biased toward accepting it. Giving each re-review the earlier findings lets it skip what was already raised and check whether those issues were fixed. Resuming the implementing session brings back exactly the context that biases the review. --bare skips hooks, plugins and CLAUDE.md but gives the run no knowledge of earlier comments. A fresh CI run has no memory of its past comments, so an instruction not to repeat them has nothing to work from.",
+   "hint": "For each problem, ask what context the reviewer has and what it is missing.",
+   "difficulty": "hard",
+   "tags": [
+    "CI",
+    "code-review",
+    "fresh-session",
+    "claude -p"
+   ],
+   "id": "d3-126",
+   "ts": "3.6",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/best-practices: \"A fresh context improves code review since Claude won't be biased toward code it just wrote\" (Writer/Reviewer pattern)."
+  },
+  {
+   "type": "mr",
+   "q": "A nightly script runs claude -p \"fix the lint errors in src/ and add tests for any function you change\" with no other flags. The morning log shows Claude found every fix, yet no file changed and the tests it wrote about were never run. The team wants the job to edit files and run npm test unattended, and to allow nothing broader. Which additions to the command do that?",
+   "options": [
+    "--permission-mode plan, so Claude lays out each change first and then applies it on its own",
+    "--permission-mode acceptEdits, so file writes go through with nobody there to approve them",
+    "--allowedTools \"Bash\", so any command Claude needs, tests included, runs with no prompt",
+    "--verbose, so each permission request is written to the log and the runner can answer it",
+    "--allowedTools \"Bash(npm test *)\", so Claude can run the test command and no other shell one"
+   ],
+   "correct": [
+    1,
+    4
+   ],
+   "explanation": "In a non-interactive run, calls that need approval are denied unless something approves them. acceptEdits approves file edits and common filesystem commands, and an allow rule scoped to Bash(npm test *) lets Claude run the tests without opening the rest of the shell. Plan mode blocks edits altogether. A bare Bash entry approves every shell command, broader than the team wants. --verbose adds logging but nothing answers a prompt in -p mode.",
+   "hint": "Ask what a -p run does when a call needs approval and nobody is there, then weigh how much each fix opens up.",
+   "difficulty": "core",
+   "tags": [
+    "headless",
+    "claude -p",
+    "permissions",
+    "allowedTools"
+   ],
+   "id": "d3-127",
+   "ts": "3.6",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/headless: in a -p run \"a call that needs approval is denied unless something approves it\"; acceptEdits \"writes files without prompting\" but other shell commands \"still need an --allowedTools entry\", e.g. Bash(npm test)."
+  },
+  {
+   "type": "mr",
+   "q": "A claude-code-action job writes unit tests for each PR's changed files. Within a month the suite holds dozens of tests that repeat existing ones, and new tests build objects inline instead of using tests/factories/ and are named *.spec.ts where the team uses *.test.ts. The standards live on a wiki page developers paste into local prompts. Which changes address both problems?",
+   "options": [
+    "Give the job the existing tests for the changed modules, so it adds cases they don't cover",
+    "Run the generator with --bare, so it starts the same way on each runner and writes alike",
+    "Put the standards in the tech lead's ~/.claude/CLAUDE.md, which loads in each of her sessions",
+    "Commit the factory and naming standards to the repo's CLAUDE.md, which the CI session reads",
+    "Run the generator with --continue, so it remembers the tests it wrote for the earlier PRs"
+   ],
+   "correct": [
+    0,
+    3
+   ],
+   "explanation": "Showing the job the tests that already exist lets it target gaps instead of rewriting covered cases. Standards committed in the project CLAUDE.md load in the CI session like any other, so factories and naming apply there. --bare skips CLAUDE.md altogether, removing the standards from the run. A user-level file on the lead's laptop never reaches the CI runner. --continue resumes the latest session in that directory, which a fresh runner doesn't have, and earlier sessions would not cover tests people wrote by hand.",
+   "hint": "Think about what a fresh runner has on disk before the job begins.",
+   "difficulty": "core",
+   "tags": [
+    "CI",
+    "test-generation",
+    "CLAUDE.md",
+    "claude-code-action"
+   ],
+   "id": "d3-128",
+   "ts": "3.6",
+   "scenario": 5,
+   "src": "https://code.claude.com/docs/en/github-actions: \"Create a CLAUDE.md file in your repository root to define code style guidelines ... Claude follows these guidelines\". https://code.claude.com/docs/en/headless: --bare skips CLAUDE.md. https://code.claude.com/docs/en/common-workflows: Claude examines existing test files to match their patterns."
   }
  ]
 };
