@@ -172,10 +172,10 @@ const Learn = {
     const weak = this.weakTs().slice(0, 4);
     if (!weak.length) {
       const seen = Object.keys(Game.s.qstats || {}).length;
-      return `<div class="bp-focus"><h4>🧭 Not sure where to start?</h4><div class="focus-row"><span>Take a 15-question placement check across all five domains, weighted like the exam. Afterwards this panel lists the lessons for the task statements you missed.${seen ? '' : ' Or start at Stage 1 below.'}</span>
+      return `<div class="bp-focus"><h3>🧭 Not sure where to start?</h3><div class="focus-row"><span>Take a 15-question placement check across all five domains, weighted like the exam. Afterwards this panel lists the lessons for the task statements you missed.${seen ? '' : ' Or start at Stage 1 below.'}</span>
         <button class="btn small primary" onclick="Learn.placement()">Placement check</button></div></div>`;
     }
-    return `<div class="bp-focus"><h4>🎯 Lessons for your weak spots</h4>` + weak.map(w => {
+    return `<div class="bp-focus"><h3>🎯 Lessons for your weak spots</h3>` + weak.map(w => {
       const id = this.forTs(w.ts), l = id && this.byId(id), t = GUIDE.taskStatements.find(x => x.id === w.ts);
       return `<div class="focus-row"><span><b>${w.ts}</b> ${this.esc(t ? t.title : '')}<br><span class="muted">right on last try ${w.right} of ${w.seen} seen${l && this.isDone(id) ? ' · lesson done, worth a re-watch' : ''}</span></span>
         ${l ? `<button class="btn small primary" onclick="Learn.open('${id}')">Lesson</button>` : ''}<button class="btn small ghost" onclick="Learn.drill('ts','${w.ts}')">Drill</button></div>`;
@@ -234,7 +234,7 @@ const Learn = {
     if (!groups.length) return '';
     return `<section class="ln-stage"><h3>Official courses and reading</h3>
       <p>Free material from Anthropic that goes deeper than these lessons, grouped by stage. Links open the official sites.</p>
-      <div class="ln-res">${groups.map(g => `<div class="box"><h4>${this.esc(g.title)}</h4><ul>${g.items.map(li).join('')}</ul></div>`).join('')}</div></section>`;
+      <div class="ln-res">${groups.map(g => `<div class="box"><h3>${this.esc(g.title)}</h3><ul>${g.items.map(li).join('')}</ul></div>`).join('')}</div></section>`;
   },
 
   open(id) {
@@ -353,7 +353,7 @@ const Learn = {
   renderLab(l) {
     const b = l.lab;
     if (!b) return '';
-    return `<div class="ls-section"><h4>🛠️ Try it yourself${b.minutes ? ` <span class="muted small">· about ${b.minutes} min</span>` : ''}</h4>
+    return `<div class="ls-section"><h3>🛠️ Try it yourself${b.minutes ? ` <span class="muted small">· about ${b.minutes} min</span>` : ''}</h3>
       <div class="ls-lab"><b>${this.rich(b.title)}</b><ol>${b.steps.map(x => `<li>${this.rich(x)}</li>`).join('')}</ol>
       ${b.expect ? `<p><strong>What to look for:</strong> ${this.rich(b.expect)}</p>` : ''}</div>
       <p class="muted small">The exam rewards people who have built these things. Ten minutes of hands-on time beats another read-through.</p></div>`;
@@ -361,7 +361,7 @@ const Learn = {
 
   renderGlossary(l) {
     if (!l.glossary || !l.glossary.length) return '';
-    return `<div class="ls-section"><h4>📖 Words to know</h4><div class="ls-gloss">${l.glossary.map(g => `<div><b>${this.rich(g.term)}</b>${this.rich(g.def)}</div>`).join('')}</div></div>`;
+    return `<div class="ls-section"><h3>📖 Words to know</h3><div class="ls-gloss">${l.glossary.map(g => `<div><b>${this.rich(g.term)}</b>${this.rich(g.def)}</div>`).join('')}</div></div>`;
   },
 
   videosFor(l) {
@@ -373,8 +373,8 @@ const Learn = {
   renderVideos(l) {
     const vs = this.videosFor(l);
     if (!vs.length) return '';
-    return `<div class="ls-section"><h4>📺 Talks from Anthropic</h4><div class="ls-vids">${vs.map(v => `
-      <div class="ls-vid"><button class="frame" style="background-image:url('https://i.ytimg.com/vi/${v.id}/hqdefault.jpg')" onclick="Learn.embed(this,'${v.id}')" aria-label="Play ${this.esc(v.title)}"><span>▶ Play here</span></button>
+    return `<div class="ls-section"><h3>📺 Talks from Anthropic</h3><div class="ls-vids">${vs.map(v => `
+      <div class="ls-vid"><button class="frame" style="background-image:url('https://i.ytimg.com/vi/${v.id}/hqdefault.jpg')" onclick="Learn.embed(this,'${v.id}')" aria-label="Play here: ${this.esc(v.title)}"><span>▶ Play here</span></button>
       <div class="cap"><b>${this.esc(v.title)}</b><span class="muted">${this.esc(v.channel)}${v.minutes ? ` · ${v.minutes} min` : ''}${v.why ? ` · ${this.esc(v.why)}` : ''} · <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">YouTube ↗</a></span></div></div>`).join('')}</div>
       <p class="muted small mt">Talks by Anthropic staff, on Anthropic's channel or the AI Engineer conference channel. Embedded from YouTube (privacy-enhanced mode) only when you press play.</p></div>`;
   },
@@ -392,7 +392,7 @@ const Learn = {
     const all = src.concat(more);
     const courses = l.courses || [];
     if (!all.length && !courses.length) return '';
-    return `<div class="ls-section"><h4>📚 Go deeper</h4><ul class="ls-src">${all.map(x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a></li>`).join('')}
+    return `<div class="ls-section"><h3>📚 Go deeper</h3><ul class="ls-src">${all.map(x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a></li>`).join('')}
       ${courses.map(x => `<li>🎓 <a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a>${x.note ? ` <span class="muted small">· ${this.esc(x.note)}</span>` : ''}</li>`).join('')}</ul></div>`;
   },
 
