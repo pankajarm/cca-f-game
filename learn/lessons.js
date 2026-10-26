@@ -1557,7 +1557,7 @@ window.LESSONS = [
     "note": "To recap. If an order of steps must always hold, enforce it in code. Block the risky tools until the prerequisite has really happened. Break multi-part requests into items and close each one. And when a person takes over, give them a structured summary with the customer, the cause, the amounts and a recommended action."
    }
   ],
-  "docsToday": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides.",
+  "docsToday": "PreToolUse hooks can now return permissionDecision \"defer\", which pauses the run with stop_reason tool_deferred until a human decides (headless -p runs only, one tool call per turn; the calling app resumes the session).",
   "check": [
    {
     "q": "A pharmacy agent may call submit_refill only when the prescription is still valid. The gate in code checks a prescription_verified flag that Claude passes in the submit_refill arguments. Audits find refills on expired prescriptions where Claude set the flag to true. What is the fix?",
