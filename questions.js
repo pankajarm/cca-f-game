@@ -1,5 +1,5 @@
 /* ARCHITECT'S ASCENT — question bank
- * 745 scenario questions for the Claude Certified Architect — Foundations exam (2026).
+ * 765 scenario questions for the Claude Certified Architect — Foundations exam (2026).
  * Generated and adversarially verified June 2026; 548 added Oct 2026 (each batch independently reviewed). Single source of truth:
  * the markdown practice tests are built from this file by scripts/build_tests.py. */
 window.BANK = {
@@ -6023,6 +6023,497 @@ window.BANK = {
    "ts": "5.3",
    "scenario": 0,
    "src": "https://www.anthropic.com/engineering/multi-agent-research-system"
+  },
+  {
+   "q": "A research lead agent built on the Claude API runs for hours and calls web_fetch hundreds of times. The team turned on context editing with the clear_tool_uses strategy, so old fetch results are cleared once input passes 80k tokens. Runs no longer hit the context limit, but after each clearing the agent re-fetches pages it already read, and its interim notes drop figures it had pulled from them. What should the team add?",
+   "options": [
+    "The memory tool, so Claude can write findings to memory files when warned that clearing is near and read them back afterwards",
+    "A higher keep value, so the 50 most recent fetch results stay in context and the older findings survive a good while longer",
+    "clear_tool_inputs set to true, so the cleared calls vanish as well and the agent stops trying to revisit those pages",
+    "A model with a larger context window and no clearing, so each fetched page stays available until the run ends"
+   ],
+   "correct": 0,
+   "explanation": "Context editing frees the window by removing raw results, so what the agent learned from them has to live outside the window. Anthropic pairs it with the memory tool: as context nears the clearing threshold, Claude gets a warning and can save what matters to memory files, then consult them later. Keeping more results only delays the loss and takes back the space clearing was meant to free. Clearing the inputs too erases the record of what was fetched, so the agent loses its trail rather than its duplicates. A bigger window without clearing brings back context rot: recall falls as the window fills.",
+   "hint": "Clearing decides what leaves the window. Ask where the knowledge drawn from those results should live once they are gone.",
+   "difficulty": "hard",
+   "tags": [
+    "context-editing",
+    "memory",
+    "long-running-agents"
+   ],
+   "id": "d5-080",
+   "ts": "5.1",
+   "scenario": 3,
+   "src": [
+    "https://platform.claude.com/docs/en/build-with-claude/context-editing",
+    "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+   ]
+  },
+  {
+   "q": "A support agent on the Claude API calls get_entitlements once at the start of each chat to load which services and credits the customer's plan includes, then calls get_order_history many times. To control context, the team enabled clear_tool_uses with keep set to 3. In long chats the agent starts offering credits the plan does not include. The team wants to keep clearing the bulky order-history results. Which change fits best?",
+   "options": [
+    "Add get_entitlements to exclude_tools so its result survives clearing, while order-history results are still cleared",
+    "Lower the trigger so clearing runs earlier and more often, keeping the context small enough that the plan details stay prominent",
+    "Raise keep to 20 tool uses so the entitlement lookup usually survives, as few chats make over twenty calls",
+    "Set clear_tool_inputs to true so the agent no longer sees a cleared entitlement call and stops assuming it knows the plan"
+   ],
+   "correct": 0,
+   "explanation": "exclude_tools lists tool names whose uses and results are never cleared, which gives exactly the split needed: the one small result the whole chat depends on stays, the bulky ones go. Clearing earlier removes the entitlement result sooner, not later. A bigger keep only makes survival likely in shorter chats and holds far more order history than needed. Clearing the inputs as well removes the evidence that the lookup happened; it does not give the agent back the plan details it is missing.",
+   "hint": "Some lookups matter for the whole conversation and others for a moment. Which setting respects that difference?",
+   "difficulty": "hard",
+   "tags": [
+    "context-editing",
+    "case-facts",
+    "tool-results"
+   ],
+   "id": "d5-081",
+   "ts": "5.1",
+   "scenario": 1,
+   "src": [
+    "https://platform.claude.com/docs/en/build-with-claude/context-editing"
+   ]
+  },
+  {
+   "q": "A team builds its own compaction step for a long-running coding agent on the Claude API: when context reaches 150k tokens, a separate call summarises the history and the agent continues from that summary. The summarisation prompt was tuned to produce very short summaries, and after compaction the agent keeps reopening bugs it had already diagnosed and forgets design decisions. How should the team rework the summarisation prompt?",
+   "options": [
+    "Keep the short summaries but compact twice as often, so each summary covers fewer turns and loses less from each stretch",
+    "Ask the summariser to keep just the last ten turns verbatim and discard everything older, since recent turns matter most",
+    "Tune it on real long traces to capture everything relevant first, such as decisions and open bugs, then trim what is redundant",
+    "Ask the summariser to rate each turn's importance from 1 to 10 and keep the turns rated 8 or higher, dropping the others"
+   ],
+   "correct": 2,
+   "explanation": "Anthropic's context-engineering guidance is to start by maximising recall, so the compaction prompt keeps architectural decisions, unresolved bugs and implementation details, and only then improve precision by cutting redundant content such as old tool outputs. A prompt tuned for brevity throws away the state the agent needs. Compacting more often still runs the same lossy prompt. Keeping only recent turns discards early decisions wholesale. Self-rated importance is an unreliable filter that silently loses whatever it under-rates.",
+   "hint": "When tuning a lossy step, decide up front which kind of mistake costs the agent most.",
+   "difficulty": "core",
+   "tags": [
+    "compaction",
+    "summarisation",
+    "long-running-agents"
+   ],
+   "id": "d5-082",
+   "ts": "5.1",
+   "scenario": 0,
+   "src": [
+    "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+   ]
+  },
+  {
+   "q": "In one chat, a customer of an electronics retailer raises three problems: a duplicate charge, a cracked screen on delivery and a wrong billing address. The agent works on the duplicate charge for 30 turns, older turns get summarised, and the agent then closes the chat after issuing the refund, never returning to the screen or the address. Which design change prevents this?",
+   "options": [
+    "Record each raised problem as its own entry with a status in case facts kept outside the summary, and check them before closing",
+    "Summarise older turns less aggressively, so the opening message that listed the three problems stays visible in the history for much longer",
+    "Tell the agent in its system prompt to resolve the most urgent problem first and open a new chat for each remaining one",
+    "Ask the customer at the end of each chat whether anything else is needed, and rely on them to repeat any open problems"
+   ],
+   "correct": 0,
+   "explanation": "Summaries tend to keep the thread that dominated the conversation and blur the rest, so the list of open problems belongs in a structured block that is never summarised, with one entry and status per problem, checked before wrap-up. Asking the customer pushes the tracking onto them and fails when they assume the agent remembers. Gentler summarisation only delays the loss. Splitting into new chats makes the customer start over and still loses problems nobody recorded.",
+   "hint": "Ask which part of the agent's state is immune to summarising, and what it would need to hold here.",
+   "difficulty": "core",
+   "tags": [
+    "case-facts",
+    "multi-issue",
+    "summarisation"
+   ],
+   "id": "d5-083",
+   "ts": "5.1",
+   "scenario": 1,
+   "src": [
+    "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+    "https://platform.claude.com/docs/en/about-claude/use-case-guides/customer-support-chat"
+   ]
+  },
+  {
+   "q": "A broadband support agent's prompt says 'escalate to a human if you are not making progress.' Logs show chats where it calls run_line_test, gets the same failure, suggests another router restart and repeats this cycle for 25 turns before the customer gives up. The team wants escalation in these cases to happen reliably. What should they change?",
+   "options": [
+    "Rewrite the instruction in capitals marked IMPORTANT, and add that the agent must count its own attempts before each reply",
+    "Track repeated identical tool failures in code and hand the chat to a human with the steps tried once a set limit is hit",
+    "Have the agent rate its own progress from 0 to 10 after each turn and escalate automatically whenever the score drops below 4",
+    "Escalate when a sentiment model detects rising frustration, since customers stuck in these loops eventually become annoyed"
+   ],
+   "correct": 1,
+   "explanation": "No progress is a valid escalation trigger, but a prompt-only rule fails at some rate, and here the model is clearly not applying it. Detecting the loop from observable facts in code (the same tool failing the same way, again and again) and handing off with what was tried makes the trigger dependable. Louder wording is still a prompt rule. Self-rated progress is poorly calibrated; the agent apparently believes each restart might help. Sentiment measures mood, not progress, and fires late or never for patient customers.",
+   "hint": "When a rule must fire every time, ask what can observe the situation without relying on the model's own judgment.",
+   "difficulty": "core",
+   "tags": [
+    "escalation",
+    "no-progress",
+    "enforcement"
+   ],
+   "id": "d5-084",
+   "ts": "5.2",
+   "scenario": 1,
+   "src": [
+    "https://www.anthropic.com/engineering/building-effective-agents",
+    "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+   ]
+  },
+  {
+   "q": "A research app built on the Agent SDK runs interactively: a coordinator spawns subagents through the Agent tool. When a subagent hits a fork only the user can settle (for example, whether 'battery costs' means cell or pack level), the team wants the user asked. They added AskUserQuestion to the subagent's tools, but no question ever reaches the user. Under current Agent SDK docs, what is the right design?",
+   "options": [
+    "Run the subagent with bypassPermissions so its AskUserQuestion calls skip the approval flow and are shown to the user directly",
+    "Tell the subagent to pick the most common interpretation and continue, since subagents are meant to finish without stopping",
+    "Have the subagent return the open choice and what depends on it, and let the coordinator ask the user and re-dispatch the task",
+    "List AskUserQuestion in the coordinator's allowedTools too, so the subagent's calls are pre-approved and reach the user"
+   ],
+   "correct": 2,
+   "explanation": "The SDK docs list a limitation: AskUserQuestion is not currently available in subagents spawned through the Agent tool. Clarifying questions therefore belong to the main agent, whose canUseTool callback surfaces them: the subagent reports the ambiguity and the options, the coordinator asks, then sends a new task with the answer. A permission mode doesn't make an unavailable tool available, and neither does pre-approving it on the coordinator. Guessing silently is the behaviour the team is trying to avoid.",
+   "hint": "Check which agent in the hierarchy is actually connected to the person.",
+   "difficulty": "hard",
+   "tags": [
+    "ambiguity",
+    "AskUserQuestion",
+    "subagents",
+    "drift"
+   ],
+   "id": "d5-085",
+   "ts": "5.2",
+   "scenario": 3,
+   "src": [
+    "https://code.claude.com/docs/en/agent-sdk/user-input"
+   ]
+  },
+  {
+   "q": "A team's Claude Code setup tells Claude to 'always confirm with the developer before choosing between approaches.' Developers now get asked whether to name a variable count or total, whether to put a helper above or below its caller, and whether to add a test, which they always want. They still want questions when a choice really matters. How should the instruction change?",
+   "options": [
+    "Remove the instruction and deny AskUserQuestion, so Claude decides everything itself and developers review the diff",
+    "Ask Claude to state its confidence in each choice and ask the developer just when its confidence is below 70 percent",
+    "Require plan mode for each task, so the choices come up at once in a plan the developer approves before any edits",
+    "Ask only when valid options lead to materially different results the code and context can't settle; otherwise pick and say why"
+   ],
+   "correct": 3,
+   "explanation": "Clarifying questions pay off when several options are valid, their outcomes differ materially (behaviour, data, public APIs, invalidation) and the answer can't be found in the repo or conversation. Trivial or already-settled choices should be made with the assumption stated. Banning questions brings back silent guesses on choices that matter. Self-reported confidence is poorly calibrated, so it makes a weak gate. Plan mode on every task adds overhead to small changes and still doesn't say which choices deserve a question.",
+   "hint": "Think about what makes a question worth interrupting a developer for.",
+   "difficulty": "core",
+   "tags": [
+    "ambiguity",
+    "clarifying-questions",
+    "criteria"
+   ],
+   "id": "d5-086",
+   "ts": "5.2",
+   "scenario": 2,
+   "src": [
+    "https://code.claude.com/docs/en/agent-sdk/user-input",
+    "https://code.claude.com/docs/en/best-practices"
+   ]
+  },
+  {
+   "q": "An internal platform agent on the Claude API has tools to read and edit repositories and CI config. Engineers ask things like 'why is the staging build so slow?' and the agent goes ahead and rewrites shared pipeline files, which nobody asked it to change. When engineers say 'speed up the staging build', they do want edits. What system-prompt guidance fits best?",
+   "options": [
+    "Tell it that when intent is unclear it should investigate and recommend, and edit only when the request clearly asks for changes",
+    "Tell it to estimate a confidence score that edits are wanted, and to edit whenever that score is above 0.8 and explain otherwise",
+    "Tell it to ask the engineer for confirmation before every tool call, reads included, so nothing happens without approval",
+    "Tell it to infer the most useful likely action by default and make changes rather than merely suggest them, using tools to fill gaps"
+   ],
+   "correct": 0,
+   "explanation": "Anthropic's prompting guide shows two opposite defaults. For an agent that should not jump into changes, it suggests: when intent is ambiguous, default to information, research and recommendations, and make edits only when explicitly asked. The default-to-action prompt is the opposite and would make this worse. A self-rated confidence threshold is not a calibrated signal. Confirming every call, even reads, buries engineers in prompts and treats a clear 'speed it up' the same as a question.",
+   "hint": "The agent must tell an inquiry from an instruction. What should it fall back on when it can't?",
+   "difficulty": "hard",
+   "tags": [
+    "ambiguity",
+    "intent",
+    "autonomy"
+   ],
+   "id": "d5-087",
+   "ts": "5.2",
+   "scenario": 0,
+   "src": [
+    "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+   ]
+  },
+  {
+   "q": "A support agent on the Claude API often requests three tools in one turn: get_order, get_shipment and get_refund_status. When the refund service throws an exception, the loop code sends back only the two successful tool_result blocks, and the API rejects the next request with a 400 error about tool_use ids without results. How should the loop handle the failed call?",
+   "options": [
+    "Send back the two successful results and add a text block before them explaining that the refund lookup failed this time",
+    "Return the three results in one user message, the failed one marked is_error with a short note on what went wrong",
+    "Retry the whole batch of three calls until each succeeds, then send the results back to the model together",
+    "Return each result in its own user message, with the failed refund result placed last, so Claude can handle the error separately"
+   ],
+   "correct": 1,
+   "explanation": "Every tool_use block needs a matching tool_result, all in the next user message, with tool_result blocks before any text. A failed call gets its own tool_result with is_error set and an instructive message, so Claude can retry, try another route or tell the customer accurately. Leaving a result out is what triggers the 400, and text placed before tool results breaks the ordering rule. Retrying the whole batch repeats calls that already worked and can stall on an outage. Splitting results across messages is a pattern the docs say teaches Claude to stop making parallel calls.",
+   "hint": "Every request the model made is owed a reply, even an unhappy one.",
+   "difficulty": "core",
+   "tags": [
+    "error-propagation",
+    "parallel-tools",
+    "is_error"
+   ],
+   "id": "d5-088",
+   "ts": "5.3",
+   "scenario": 1,
+   "src": [
+    "https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use",
+    "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+   ]
+  },
+  {
+   "q": "A research coordinator fans out 12 subagents per report, and most of them query the same patent database. During an outage, each subagent retries five times with backoff and then returns a structured error marking the source unavailable, so every report now takes 40 minutes longer and the database owner complains about the retry storm. How should error handling change?",
+   "options": [
+    "Raise each subagent's retry count and backoff ceiling, so the subagents keep trying until the database recovers mid-run",
+    "Have subagents skip the patent database silently whenever a call fails, so reports finish on time from the other sources",
+    "Once the first structured error marks the source down, have the coordinator tell other subagents to skip it and record the gap",
+    "Abort the whole report as soon as any subagent reports the outage, and rerun everything once the database is back up"
+   ],
+   "correct": 2,
+   "explanation": "Structured errors exist so the coordinator can act on them. After one subagent reports a non-transient outage, the coordinator knows something the others don't: it should stop sending work at that source (or point it at an alternative) and annotate the report with the missing coverage. More retries make the storm and the delay worse. Silent skipping hides the gap from readers. Aborting throws away all the work that doesn't depend on the patent database.",
+   "hint": "One subagent's failure is information the others could use. Who is in a position to share it?",
+   "difficulty": "hard",
+   "tags": [
+    "error-propagation",
+    "coordinator",
+    "coverage-gaps"
+   ],
+   "id": "d5-089",
+   "ts": "5.3",
+   "scenario": 3,
+   "src": [
+    "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+   ]
+  },
+  {
+   "q": "A research subagent built on the Claude API works through a 60-step investigation. The orchestration code wraps every tool call, and when any call raises an exception (a timeout from one site, a parse error on one PDF) it kills the subagent and starts it again from step one. Runs often never finish. What change follows Anthropic's guidance for agents whose errors compound?",
+   "options": [
+    "Have the subagent pre-check each site and file before it starts and drop any that fail, so no call can raise an error mid-run",
+    "Keep restarting on failure but lower the temperature, so each fresh run takes the same path and is less likely to hit errors",
+    "Catch each exception and return an empty tool result instead, so the subagent carries on without being distracted by failures",
+    "Return the failure to the subagent as an is_error result so it can adapt, and resume crashed runs from saved progress"
+   ],
+   "correct": 3,
+   "explanation": "Anthropic's multi-agent write-up notes that agents are stateful and errors compound, so restarting from the beginning is costly. Letting the agent know a tool is failing and allowing it to adapt works well, combined with deterministic safeguards such as retries and checkpoints so a real crash resumes from where it was. Lower temperature doesn't stop sites from timing out. Empty results disguise failures as valid answers. Pre-checks can't predict failures that happen later in the run, and they drop sources needlessly.",
+   "hint": "Consider who is best placed to work around one failed step, and what a restart throws away.",
+   "difficulty": "core",
+   "tags": [
+    "error-propagation",
+    "is_error",
+    "resumption"
+   ],
+   "id": "d5-090",
+   "ts": "5.3",
+   "scenario": 3,
+   "src": [
+    "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls"
+   ]
+  },
+  {
+   "q": "A Go monorepo checks in 400 MB of generated protobuf code and a vendored cloud SDK, and neither is in .gitignore. When developers ask Claude Code where something is defined, its searches return hundreds of hits in those folders and it reads several, filling context before it reaches the real code. The team wants these folders kept out of Claude's reads for everyone. What should they do?",
+   "options": [
+    "Add Read deny rules for those folders under permissions.deny in the project's committed .claude/settings.json",
+    "List the generated and vendor folders in claudeMdExcludes in the project settings, so Claude skips them when searching",
+    "Add a line to the root CLAUDE.md asking Claude to ignore generated and vendored code when it searches",
+    "Run /compact after each search so the irrelevant hits are summarised away before Claude reads the real code"
+   ],
+   "correct": 0,
+   "explanation": "For checked-in paths that .gitignore doesn't cover, the large-codebase guide recommends Read deny rules in permissions.deny; committed in .claude/settings.json they apply to everyone and block Claude's file tools from opening those files (and Claude Code tries to leave them out of Grep and Glob results). claudeMdExcludes only stops CLAUDE.md and rules files from loading; it doesn't affect searches or reads. A CLAUDE.md line is advisory, so the files can still be opened. Compacting afterwards cleans up the damage but doesn't prevent the reads.",
+   "hint": "Separate what Claude is told from what it is allowed to open.",
+   "difficulty": "core",
+   "tags": [
+    "large-codebases",
+    "permissions",
+    "context"
+   ],
+   "id": "d5-091",
+   "ts": "5.4",
+   "scenario": 2,
+   "src": [
+    "https://code.claude.com/docs/en/large-codebases"
+   ]
+  },
+  {
+   "q": "In a large TypeScript monorepo, each 'who calls this function?' question costs Claude Code a grep followed by reads of a dozen candidate files, many of them false matches on similar names. The team wants fewer file reads overall, not just the same reads moved somewhere else. Which change does that?",
+   "options": [
+    "Send every lookup to a subagent so the grep and file reads happen in its own context and only the answer comes back",
+    "Install a code intelligence plugin so that Claude can find definitions and references through a language server",
+    "Raise the auto-compact window so the main session can hold more file reads before older ones are summarised",
+    "Add a file-by-file description of the codebase to CLAUDE.md so Claude knows where each function already lives"
+   ],
+   "correct": 1,
+   "explanation": "A code intelligence plugin connects Claude to a language server, so one go-to-definition or find-references call replaces a grep plus reads of candidate files, and type errors surface after edits. A subagent keeps the main context clean but does the same reads, which the team explicitly doesn't want. A larger compaction window holds more noise instead of reducing it. File-by-file descriptions are on Anthropic's list of things to leave out of CLAUDE.md: they cost context every session and go stale.",
+   "hint": "Text search guesses at symbols. Is there something that actually knows them?",
+   "difficulty": "core",
+   "tags": [
+    "large-codebases",
+    "code-intelligence",
+    "context"
+   ],
+   "id": "d5-092",
+   "ts": "5.4",
+   "scenario": 2,
+   "src": [
+    "https://code.claude.com/docs/en/large-codebases",
+    "https://code.claude.com/docs/en/costs"
+   ]
+  },
+  {
+   "q": "Claude Code runs the project's test suite many times while fixing a service, and each run prints about 8,000 lines, nearly all of them passing tests. Within an hour the session is compacting repeatedly and losing details. The team wants every test run in every session to put only the failures into Claude's context, without anyone having to remember. What should they set up?",
+   "options": [
+    "A CLAUDE.md note asking Claude to skim test output and focus on just the failing tests when it reads the results",
+    "A habit of running /compact right after each test run, with an instruction to keep just the failing test names",
+    "A PreToolUse hook on Bash that rewrites test-runner commands so their output is filtered down to failures",
+    "A higher auto-compact threshold, so the session holds more test output before it summarises the history"
+   ],
+   "correct": 2,
+   "explanation": "Claude Code's cost guide shows this pattern: a PreToolUse hook detects test-runner commands and returns updatedInput that filters the output to failures, so the passing noise never enters context, on every run. Asking Claude to focus doesn't help once the full output is already in context. Manual /compact depends on someone remembering and pays for the output first. A higher threshold just stores more noise.",
+   "hint": "The cheapest tokens are the ones that never reach the conversation. Where can you step in every time?",
+   "difficulty": "core",
+   "tags": [
+    "hooks",
+    "context",
+    "test-output"
+   ],
+   "id": "d5-093",
+   "ts": "5.4",
+   "scenario": 2,
+   "src": [
+    "https://code.claude.com/docs/en/costs"
+   ]
+  },
+  {
+   "q": "A warranty-claim extraction pipeline routes fields to review using the model's self-reported confidence, but a labelled audit shows that confidence barely separates right from wrong values for the serial-number and purchase-date fields. The team needs a better signal for which of those fields a person should check. Which approach is best?",
+   "options": [
+    "Ask the model to explain its reasoning before giving each confidence score, and keep routing on that score",
+    "Set temperature to zero so each extraction is deterministic, which makes the model's reported confidence scores more reliable",
+    "Route each claim of the noisiest document type to review and auto-approve the fields on the other document types",
+    "Run the extraction several times and route values that differ across runs, once labelled data shows this tracks errors"
+   ],
+   "correct": 3,
+   "explanation": "Anthropic's hallucination guidance describes best-of-N verification: run the same prompt several times and compare, since inconsistencies point to likely errors. Disagreement across runs is an observable signal, and like any routing signal it should be validated against labelled data before it decides what humans see. Reasoning before a score doesn't make self-reported confidence calibrated. Routing whole document types ignores errors elsewhere and spends review on correct fields. Determinism makes runs repeatable, not confidence accurate.",
+   "hint": "Look for a signal you can observe and test, not one the model simply asserts about itself.",
+   "difficulty": "hard",
+   "tags": [
+    "confidence",
+    "review-routing",
+    "calibration"
+   ],
+   "id": "d5-094",
+   "ts": "5.5",
+   "scenario": 6,
+   "src": [
+    "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+    "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests"
+   ]
+  },
+  {
+   "q": "An expense pipeline set its auto-approve threshold using 2,000 labelled receipts, all clean PDF exports from the company card portal. In production, 35% of receipts are phone photos, and auto-approved fields from photos are wrong far more often than the calibration predicted. What should the team fix first?",
+   "options": [
+    "Build a labelled set that mirrors production, phone photos included, and calibrate per source type",
+    "Add more clean PDF receipts to the labelled set, so the calibration estimate gets a tighter confidence interval",
+    "Raise the global auto-approve threshold until the overall production error rate matches what the calibration predicted",
+    "Send the phone-photo receipts to human review permanently, since photos are inherently too noisy to calibrate"
+   ],
+   "correct": 0,
+   "explanation": "Calibration only holds for the distribution it was measured on; Anthropic's eval guidance is to mirror the real task distribution, edge cases included. With a representative labelled sample for each source type, the team can set thresholds where each segment meets the target. Raising one global threshold over-reviews PDFs and may still under-protect photos. More PDFs sharpen an estimate of the wrong population. Reviewing every photo forever is a costly guess made without measuring photo accuracy.",
+   "hint": "Ask which receipts the original measurement actually describes.",
+   "difficulty": "core",
+   "tags": [
+    "calibration",
+    "labelled-data",
+    "sampling"
+   ],
+   "id": "d5-095",
+   "ts": "5.5",
+   "scenario": 6,
+   "src": [
+    "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests"
+   ]
+  },
+  {
+   "q": "A marketplace uses Claude to screen seller listings for prohibited items. Each listing gets a yes/no 'violates policy' flag, and every yes is removed automatically. Sellers successfully appeal many removals of borderline listings, while human reviewers see none of the cases before removal. How should the screening output and routing change?",
+   "options": [
+    "Keep the yes/no flag but add a second Claude call that re-checks each yes, and remove a listing only when both agree",
+    "Have Claude assign risk levels: auto-remove high risk, send medium risk to reviewers, and track precision per level",
+    "Make the prompt less sensitive so fewer listings are flagged, accepting that some prohibited items will get through",
+    "Have reviewers audit a random 5% of removals each week, and leave the automatic yes/no removal in place for the rest"
+   ],
+   "correct": 1,
+   "explanation": "Anthropic's moderation guide recommends graded risk levels over a binary decision, so the system can act automatically on clearly high-risk content and send the uncertain middle to human review, while precision and recall are tracked to tune the levels. A second binary check still forces borderline cases into yes or no. A less sensitive prompt trades wrongful removals for missed violations without routing anything to people. Random audits measure the problem but leave borderline listings removed automatically.",
+   "hint": "A binary output gives the router nothing to work with for in-between cases.",
+   "difficulty": "core",
+   "tags": [
+    "review-routing",
+    "risk-levels",
+    "moderation"
+   ],
+   "id": "d5-096",
+   "ts": "5.5",
+   "scenario": 0,
+   "src": [
+    "https://platform.claude.com/docs/en/about-claude/use-case-guides/content-moderation"
+   ]
+  },
+  {
+   "q": "A research system's synthesizer is prompted to support each claim with a quotation and the source document's name. Auditors find that about 8% of the quotations don't appear word for word in the cited document; some are paraphrases, some stitch two sentences together. The team wants quotations that reliably come from the source text. What should change?",
+   "options": [
+    "Strengthen the prompt with an IMPORTANT rule that each quotation must be copied verbatim, plus a few examples of good quotes",
+    "Add page numbers to the required citation format, so reviewers can find each passage and correct inaccurate quotations",
+    "Pass the sources as documents with citations enabled, so the API returns cited text extracted from the documents themselves",
+    "Have a second Claude call rewrite each quotation to match its source more closely before the report is published"
+   ],
+   "correct": 2,
+   "explanation": "With the Citations feature, the API parses citations and extracts cited_text directly from the provided documents, so citations are guaranteed to point to real passages. Anthropic also reports they pick more relevant quotes than prompt-based citing, and cited_text doesn't count toward output tokens. A stronger prompt lowers the misquote rate but doesn't remove it. Page numbers help humans check but don't make the quotes accurate. A rewriting pass is one more generation step that can drift from the source.",
+   "hint": "Consider whether each fix relies on the model behaving better or on how the request itself is built.",
+   "difficulty": "core",
+   "tags": [
+    "citations",
+    "provenance",
+    "quotes"
+   ],
+   "id": "d5-097",
+   "ts": "5.6",
+   "scenario": 3,
+   "src": [
+    "https://platform.claude.com/docs/en/build-with-claude/citations"
+   ]
+  },
+  {
+   "q": "In a multi-agent research system, search subagents often cite SEO-driven aggregator pages over the primary filings and peer-reviewed studies those pages summarise, and the synthesizer weighs all sources alike. Secondary sources must stay usable when no primary one exists. What change best fixes the report's evidence base?",
+   "options": [
+    "A PreToolUse hook that denies fetches from any domain outside an allowlist of filing sites and academic journals",
+    "A rule that a claim counts as confirmed once three or more pages repeat it, whatever kind of site those pages are",
+    "A synthesis step that drops every claim backed only by secondary sources, so the report rests on primary evidence",
+    "Source-quality heuristics in the subagent prompts that favour primary sources, with each finding tagged by source type"
+   ],
+   "correct": 3,
+   "explanation": "Anthropic's research system found early agents chose SEO-optimised content farms over authoritative sources and fixed it with source-quality heuristics in the prompts; recording the source type on each finding lets synthesis weight and label claims by evidence quality. A domain allowlist blocks the secondary sources the team still needs. Counting repeated pages rewards derivative copies of one claim. Dropping all secondary-only claims loses information where no primary source exists.",
+   "hint": "Read the constraint carefully: which options would break it, and which would leave the original problem in place?",
+   "difficulty": "hard",
+   "tags": [
+    "provenance",
+    "source-quality",
+    "synthesis"
+   ],
+   "id": "d5-098",
+   "ts": "5.6",
+   "scenario": 3,
+   "src": [
+    "https://www.anthropic.com/engineering/multi-agent-research-system"
+   ]
+  },
+  {
+   "q": "A market report says 'the two leading vendors together hold 47% of the market' and cites one analyst report. In fact the synthesizer added a 2024 figure (28%) from that report to a 2026 figure (19%) from a different one. Reviewers want computed figures to be traceable and honest about their inputs. How should synthesis handle claims it derives?",
+   "options": [
+    "Mark it as derived, list each input with its source and date, and flag that the inputs are from different years",
+    "Leave combined figures out of the report and present only figures that appear verbatim in a single source document",
+    "Round the combined figure and add 'approximately', so readers understand it is an estimate rather than a reported value",
+    "Cite whichever input source is more authoritative for the combined figure, so every number in the report keeps one source"
+   ],
+   "correct": 0,
+   "explanation": "A computed figure has no single source, so provenance means carrying each input's source and date with it and labelling the result as derived. That also exposes the mismatch: adding shares from different years can mislead, and readers need to see it. Citing one source misattributes the number. Banning derived figures loses useful analysis instead of making it traceable. 'Approximately' hides the method and the date gap instead of showing them.",
+   "hint": "A number that no source states still has a history. What would a reader need to rebuild it?",
+   "difficulty": "hard",
+   "tags": [
+    "provenance",
+    "derived-claims",
+    "temporal"
+   ],
+   "id": "d5-099",
+   "ts": "5.6",
+   "scenario": 3,
+   "src": [
+    "https://www.anthropic.com/engineering/multi-agent-research-system",
+    "https://platform.claude.com/docs/en/build-with-claude/citations"
+   ]
   }
  ],
  "bank-d4": [
