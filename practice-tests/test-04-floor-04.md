@@ -1,7 +1,7 @@
 # Practice Test 04: The Tool Armory
 **D2: Tool Design & MCP Integration** (18% of the exam) · task statements 2.1, 2.2, 2.3, 2.4, 2.5
 
-136 questions. Exam pace is 2 minutes per question.
+154 questions. Exam pace is 2 minutes per question.
 
 ---
 
@@ -82,8 +82,8 @@ A developer-productivity agent's list_services tool returns entries like {"svc":
 
 A) Return high-signal fields such as service_name and owner_name, keeping an ID only where a follow-up call needs one, so the model reasons over meaningful values
 B) Raise the model's effort setting so it reads each returned row more carefully and becomes less likely to transpose identifiers between neighbouring rows in long result sets
-C) Add a verify_owner tool that the agent must call after list_services to double-check every owner it reports before giving any answer back to the engineer
-D) Return the same rows as XML instead of JSON, since tags make it clearer to the model which value belongs to which field in every row of a long result
+C) Add a verify_owner tool that the agent must call after list_services to double-check each owner it reports before giving any answer back to the engineer
+D) Return the same rows as XML instead of JSON, since tags make it clearer to the model which value belongs to which field in each row of a long result
 
 <details>
 <summary>Answer & explanation</summary>
@@ -242,10 +242,10 @@ D) Remove the since parameter entirely and have the tool return the full deploy 
 ## Question 14
 In a research system, the search subagent's search_papers tool returns full metadata for every hit: abstract, all authors, affiliations, DOIs and internal record IDs. Most calls only need titles and one-line summaries to decide relevance, but a follow-up call to fetch_paper needs the record ID. Context is filling up quickly. Which design best balances these needs?
 
-A) Strip record IDs from all search results to save space, and have fetch_paper look papers up by exact title whenever the agent needs the full text of a paper
+A) Strip record IDs from the search results to save space, and have fetch_paper look papers up by their exact title whenever the agent needs the full text of a paper
 B) Add a response_format parameter: a concise mode returning titles, summaries and record IDs, and a detailed mode returning full metadata when it is needed
-C) Cap search_papers at three results per call so that the full metadata always fits, and have the agent run many narrower searches to cover the topic
-D) Keep the full output but move search into a separate subagent per query so that each one's context window only ever has to hold a single result set
+C) Cap search_papers at three results per call so that the full metadata fits, and have the agent run many narrower searches to cover the topic
+D) Keep the full output but move search into a separate subagent per query so that each one's context window holds a single result set
 
 <details>
 <summary>Answer & explanation</summary>
@@ -278,8 +278,8 @@ D) Merge the policy text for every product category into the system prompt so th
 ## Question 16
 A help-desk agent uses update_ticket(ticket_id, fields), described as 'Updates a ticket.' The backend replaces the whole record with the fields provided, so when the agent only means to add a note, it sends {"notes": "..."} and wipes the status, assignee and priority. Which change is the best fix?
 
-A) Add a sentence to the description warning that every field must be resent on each call, and include an example call that shows a full ticket being sent
-B) Have the agent call get_ticket immediately before every update and merge the fields itself, as required by a new rule in the agent's system prompt for ticket updates
+A) Add a sentence to the description warning that the full record must be resent on each call, and include an example call that shows a full ticket being sent
+B) Have the agent call get_ticket immediately before each update and merge the fields itself, as required by a new rule in the agent's system prompt for ticket updates
 C) Keep update_ticket as is but add a nightly job that restores any status, assignee or priority fields that were cleared during the previous day
 D) Replace it with narrow tools such as add_ticket_note and set_ticket_status that change only their own fields, each with a description stating what it changes
 
@@ -314,9 +314,9 @@ D) Add a custom slash command, /semantic, that engineers type before a conceptua
 ## Question 18
 A CI review job gives Claude Code an MCP tool run_tests, described as 'Runs the test suite and returns results.' It actually runs only unit tests; integration tests run in a later pipeline stage. Review comments have started saying 'all tests pass, including the database migration paths', and engineers merge on that basis. What is the best fix?
 
-A) Change the CI prompt to forbid Claude from making any statement about test results at all, so review comments only discuss the code changes
+A) Change the CI prompt to forbid Claude from making any statement about test results, so review comments discuss the code changes alone
 B) State the scope in the tool's description and output: unit tests only, integration tests not run here, so Claude knows what a passing result does and does not cover
-C) Have run_tests also run the full integration suite, even though that adds about forty minutes to every review job and duplicates the later pipeline stage that already runs them
+C) Have run_tests also run the full integration suite, even though that adds about forty minutes to each review job and duplicates the later pipeline stage that already runs them
 D) Add a reviewer step in which a second Claude call checks each review comment for overconfident language before it is posted to the pull request
 
 <details>
@@ -386,10 +386,10 @@ D) Remove snippets from web_search entirely and return only titles and URLs, so 
 ## Question 22
 A platform team is writing a review checklist for every new tool definition submitted to their internal agent catalogue. One draft entry has a clear verb-noun name and a typed input schema, but its description is a single line: 'Gets customer orders.' Which addition to the checklist would most improve how reliably agents pick and use these tools?
 
-A) Require that every tool name be fewer than twenty characters and use a standard verb from an approved list, such as get, list, create or delete
+A) Require that each tool name be fewer than twenty characters and use a standard verb from an approved list, such as get, list, create or delete
 B) Require that descriptions cover what the tool does, what each input means and its format, what it returns, edge cases, and when not to use it
 C) Require that descriptions stay under one sentence so that they take less context when an agent has many tools loaded at the same time
-D) Require that every tool be accompanied by a matching system-prompt paragraph that tells agents in which situations the tool should be used
+D) Require that each tool be accompanied by a matching system-prompt paragraph that tells agents in which situations the tool should be used
 
 <details>
 <summary>Answer & explanation</summary>
@@ -420,6 +420,82 @@ D) Hard-code CA to mean California in the tool, since most receipts processed by
 ---
 
 ## Question 24
+A support agent has two tools: search_kb, described as "Searches help-center articles on policies and how-to topics", and get_order, described as "Gets order info." The system prompt opens with "Search our knowledge base before answering any customer question." When customers ask where their package is, the agent calls search_kb and replies with the generic shipping-times article. Which changes address the misrouting? (Choose two.)
+
+A) Move get_order to the front of the tools array so the model considers it before search_kb on each turn
+B) Shorten both descriptions to a single line each so the choice rests on the tool names and nothing else
+C) Force tool_choice to get_order on each turn so order questions can no longer fall through to search_kb
+D) Expand get_order's description: what it returns, its input, sample questions and when to prefer it
+E) Limit the system prompt's knowledge-base line to policy and how-to questions rather than to all questions
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** The model chooses tools from their descriptions, and a three-word description gives it nothing to match a delivery question against; a detailed one with inputs, outputs, examples and boundaries does. A blanket system-prompt instruction to search the knowledge base for any question pulls every turn toward search_kb, so it needs scoping. Array order is not how Claude picks tools, shorter descriptions make the ambiguity worse, and forcing get_order on every turn breaks the policy questions search_kb exists for.
+
+*Hint if stuck: List everything in the request that pulls the model toward one tool or the other, and which of those pulls point the wrong way.*
+</details>
+
+---
+
+## Question 25
+A developer-productivity agent answers questions about production incidents through a list_incidents tool. It returns every incident in the tracker, about 4,000, as records such as {"id": "a7f3c1", "svc": "9c2e44", "sev": 2}. The agent burns most of its context paging through the list to find one service's incidents, and its answers often name the wrong service for an incident. Which tool changes address both problems? (Choose two.)
+
+A) Replace list_incidents with search_incidents, which filters by service, severity and window and caps results
+B) Return the 4,000 incidents as compact CSV instead of JSON so the full list fits in a single tool response
+C) Resolve svc to the service's name and owner in each record, keeping IDs just where a follow-up call needs one
+D) Add input_examples to list_incidents that show well-formed calls, so the agent passes service IDs correctly
+E) Sort the list newest first so the incidents relevant to recent questions appear on the first page returned
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** A search tool that filters by service and window returns only the records the agent needs, instead of making it read thousands of irrelevant ones, as a list-everything tool does. Resolving opaque IDs into meaningful names stops the agent from guessing which service a hash refers to; Anthropic reports this reduces hallucinated answers. A compact CSV of 4,000 rows still floods the context with irrelevant records. input_examples shape the call's inputs, but this tool's problem is its output. Sorting by date doesn't help when the question is about one service.
+
+*Hint if stuck: Think about what the agent must read to find the records it needs, and what it must guess to describe them.*
+</details>
+
+---
+
+## Question 26
+A travel support agent on the Claude API makes changes through rebook_flight, whose input has a nested passengers array (name, age band, optional infant_on_lap and seat_preference). About 5% of calls are rejected because passengers arrives as a string such as "2 adults". Calls that pass validation have a different problem: for families with a lap infant, the agent lists the infant as a separate passenger instead of setting infant_on_lap on an adult. Which changes fix these? (Choose two.)
+
+A) Change passengers to a free-text string the backend parses, so a call can't be rejected for its shape
+B) Set strict: true on rebook_flight so its inputs are sampled to match the schema, passengers array included
+C) Force tool_choice to rebook_flight on change requests so the agent produces a complete call each time
+D) Add input_examples with complete calls, including a family booking setting infant_on_lap on an adult
+E) Make infant_on_lap and seat_preference required, so the agent must decide on both fields for each passenger
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** Strict tool use constrains sampling to the input schema, so a string can no longer arrive where an array is required. The infant calls are schema-valid but use the schema the wrong way; input_examples show Claude concrete well-formed calls, including when to set an optional field and how to structure nested input. Making the optional fields required forces the agent to invent values for every passenger and still doesn't show where an infant belongs. A free-text field removes the schema's protection and moves the parsing problem to the backend. Forcing the tool decides whether it is called, not how its input is shaped.
+
+*Hint if stuck: Separate the calls that break the schema from the calls that obey it but use it wrongly; each needs a different lever.*
+</details>
+
+---
+
+## Question 27
+An Agent SDK assistant for engineers connects MCP servers for GitHub, Jira, PagerDuty and an internal deploy system, about 220 tools in all, with tool search on (the default). Many tools have names like query, get and list_items, with one-line descriptions such as "Query data". Traces show the agent's tool searches often come back without the tool it needed, so it falls back to Bash and curl. Which changes make the right tools easier to find? (Choose two.)
+
+A) Deny Bash in disallowedTools so the agent has to keep searching the catalog until it finds an MCP tool
+B) Give tools specific names and keyword-rich descriptions, e.g. search_jira_issues: by project, status, date
+C) Set ENABLE_TOOL_SEARCH to false so that each of the 220 tool definitions is loaded into context on each turn
+D) Shorten each tool description to a few words so the catalog summary that the agent receives stays small
+E) Add a system prompt section that lists the tool categories available, such as Jira, PagerDuty and deploys
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, E** Tool search matches the agent's query against tool names and descriptions, so specific names and descriptions with the words users actually use surface for more requests than query or "Query data". A system prompt section listing the categories tells the agent what kinds of tools exist to search for. Loading all 220 definitions on every turn costs a large share of context, and selection accuracy degrades well before that many tools. Shorter descriptions give the search even less to match. Removing Bash doesn't make the search any better at finding the right tool.
+
+*Hint if stuck: Ask how the agent decides what to search for, and what its search can match against.*
+</details>
+
+---
+
+## Question 28
 A travel-booking support agent exposes search_bookings, described as "Look up customer records," and search_refund_requests, described as "Look up customer requests." In 14% of billing conversations the agent calls search_bookings when it actually needs refund status. What is the most effective fix?
 
 A) Add a keyword-based pre-classifier that picks the right tool before the model sees the conversation
@@ -437,7 +513,7 @@ D) Force tool_choice to search_refund_requests whenever the conversation is tagg
 
 ---
 
-## Question 25
+## Question 29
 An internal deployment tool, schedule_rollout, takes a nested input: a list of stages, each with a region code, a percentage and an optional ISO 8601 hold window. Its description is clear and its schema is complete, yet Claude often leaves out hold windows that a request implies and writes percentages as strings like '10%'. Which change to the tool definition targets this most directly?
 
 A) Lengthen the description with a paragraph on the company's rollout philosophy and the history of incidents behind each of the rules
@@ -455,7 +531,7 @@ D) Remove the optional hold window from the schema, so Claude has fewer fields t
 
 ---
 
-## Question 26
+## Question 30
 In a multi-agent research system, the analysis subagent has two tools: analyze_content ('Analyzes content and returns insights') and analyze_document ('Analyzes a document and returns insights'). Web search results are frequently routed to analyze_document, which expects a PDF and returns poor output. What is the most effective fix?
 
 A) Rename analyze_content and rewrite both descriptions to say which input each one handles and when to use it
@@ -473,7 +549,7 @@ D) Remove analyze_content so every input goes through analyze_document, which th
 
 ---
 
-## Question 27
+## Question 31
 A support agent's tools have detailed, well-differentiated descriptions. Yet whenever a customer mentions the word 'order', even in 'I can't log in to place an order', the agent calls lookup_order first. The system prompt contains: 'Always check the customer's ORDER history before anything else.' What is the most likely cause and fix?
 
 A) The tool descriptions are still too short; add more usage examples to lookup_order so it is chosen more carefully
@@ -491,7 +567,7 @@ D) Force tool_choice to get_customer on every turn so the agent can no longer op
 
 ---
 
-## Question 28
+## Question 32
 A support agent's ticketing integration exposes nine tools: create_ticket, update_ticket, close_ticket, reopen_ticket, assign_ticket, tag_ticket, merge_tickets, escalate_ticket and comment_on_ticket. Each description is accurate, but traces show the agent often picks a near-miss, such as update_ticket when it meant to reassign. Which redesign do Anthropic's tool-definition guidelines favour?
 
 A) Split the nine tools further so that each one changes a single field, giving the agent one precise tool for every possible edit
@@ -509,7 +585,7 @@ D) Force tool_choice to the most frequently used ticket tool, and let the agent 
 
 ---
 
-## Question 29
+## Question 33
 A retail support agent calls lookup_order with an order_id extracted from the customer's message. When a customer types "#A-1234" the tool fails, because IDs must be ten digits, and the agent tells the customer the order does not exist. What should the tool integration return so the agent can recover?
 
 A) Return an empty result so the agent proceeds as if no order was found and offers the customer the standard next steps
@@ -527,7 +603,7 @@ D) Return a tool_result with is_error set and a specific message that the ID mus
 
 ---
 
-## Question 30
+## Question 34
 A support agent can issue refunds up to $200; larger ones need a supervisor. When it calls issue_refund for $650, the tool returns isError with the text 'Refund could not be processed.' The agent retries three times, then tells the customer the system is down. What should the tool return instead?
 
 A) A transient error marked retryable, so the agent waits a few seconds and tries the same refund again before it gives the customer any update
@@ -545,7 +621,7 @@ D) A structured business error: category policy_limit, isRetryable false, and a 
 
 ---
 
-## Question 31
+## Question 35
 A Claude Code user's internal MCP server exposes create_ticket with a priority field. When Claude passes 'urgent', the server returns isError with the message 'Invalid input.' Claude tries 'high', then 'critical', then gives up and tells the developer the ticket system is broken. The valid values are P1 to P4. Which change best fixes this?
 
 A) Return a validation error that names the field, the value received and the allowed values P1 to P4, and declare those values as an enum in the input schema
@@ -563,7 +639,7 @@ D) Have the server map any unrecognised priority to P3 so tickets are always cre
 
 ---
 
-## Question 32
+## Question 36
 A team's MCP server for a feature-flag service rejects bad arguments, such as a date in the past for a scheduled rollout, by returning a JSON-RPC error object. In Claude Code, these surface to the model as a terse failure without the server's explanation, and Claude repeats the same bad call. How should the server report these failures?
 
 A) As a JSON-RPC error with a longer message field, since clients pass protocol error messages to the model in full whenever the error code is -32602
@@ -581,12 +657,12 @@ D) As a server-side log entry only, with the tool returning an empty result so t
 
 ---
 
-## Question 33
+## Question 37
 In a research system, the search subagent's tool occasionally times out when a news API is briefly overloaded; a second attempt a few seconds later almost always succeeds. Today each timeout goes straight back to the coordinator, which re-plans the whole research task. Where should these failures be handled?
 
 A) At the coordinator, which should keep a log of each timeout and decide case by case whether the search is worth repeating in a later round of work
 B) By raising the API timeout from 10 seconds to 120 seconds so that slow responses are given enough time to finish and no longer count as failures
-C) Inside the search subagent or its tool, with a few bounded retries and backoff, escalating to the coordinator only if retries are exhausted and including what was tried
+C) Inside the search subagent or its tool, with a few bounded retries and backoff, escalating to the coordinator once retries are exhausted and including what was tried
 D) In the synthesis subagent, which should notice any missing news sources in the material it receives and request them again from the search agent directly
 
 <details>
@@ -599,7 +675,7 @@ D) In the synthesis subagent, which should notice any missing news sources in th
 
 ---
 
-## Question 34
+## Question 38
 A research coordinator asks a subagent to search a medical database. The database credentials have expired, every query fails, and the subagent's wrapper catches the exceptions and returns {"results": []}. The final report states that 'no peer-reviewed studies exist on this intervention.' What is the root-cause fix?
 
 A) Tell the synthesis subagent to word any no-results finding cautiously, saying that studies may exist but were not found, in every report it writes
@@ -617,10 +693,10 @@ D) Make the subagent return an access failure as a structured error, distinct fr
 
 ---
 
-## Question 35
+## Question 39
 An extraction agent submits each extracted record through a save_record tool. When the downstream API rejects a record, the tool returns isError with 'Save failed (422).' The agent re-extracts the whole document from scratch and often hits the same rejection. The API's response body lists the exact fields that failed and why. What should change?
 
-A) Return the field-level details in the error, such as invoice_date must be YYYY-MM-DD, marked as a validation error, so the agent fixes only those fields
+A) Return the field-level details in the error, such as invoice_date must be YYYY-MM-DD, marked as a validation error, so the agent fixes just those fields
 B) Have save_record retry the same payload up to five times with backoff, since 422 responses are often caused by short-lived load on the downstream API under heavy traffic
 C) Have save_record drop any fields that fail validation and save the rest of the record, logging the dropped fields so they can be reviewed later
 D) Raise the model's effort level for the extraction step, so its first extraction is more careful and fewer records are rejected by the downstream API
@@ -635,7 +711,7 @@ D) Raise the model's effort level for the extraction step, so its first extracti
 
 ---
 
-## Question 36
+## Question 40
 A support agent's charge_card tool maps every gateway failure to {"isError": true, "isRetryable": true}. When a customer's card is declined for insufficient funds, the agent retries the charge four times in a row, and the bank flags the card for suspected fraud. Which change fixes the root cause?
 
 A) Add a system-prompt rule that the agent must never retry a charge more than once, no matter what the tool reports back after the first failure
@@ -653,7 +729,7 @@ D) Insert a fixed thirty-second delay between charge attempts so that repeated r
 
 ---
 
-## Question 37
+## Question 41
 A developer-productivity agent's get_repo_info tool, when a repository does not exist, returns the text 'ERROR: repository acme/payments-v3 not found' with isError false. The agent goes on to summarise the 'repository description' as 'ERROR: repository acme/payments-v3 not found' in its report on service ownership. What is the correct fix?
 
 A) Add a system-prompt rule telling the agent to ignore any tool output that contains the word ERROR when it writes its summaries for engineers
@@ -671,7 +747,7 @@ D) Return an empty string for missing repositories, so that no misleading text r
 
 ---
 
-## Question 38
+## Question 42
 A support agent for a multi-region bank calls get_statements for a customer whose account is held by the EU entity; the agent's credentials only cover US accounts. The tool returns 'Error 403.' The agent retries, then tries get_transactions and get_balance, each failing the same way, before apologising vaguely. What should the tool return?
 
 A) A transient error marked retryable, since the EU entity's access controls may be updated soon and a later attempt could well succeed for this customer
@@ -689,7 +765,7 @@ D) A structured permission error: category permission, not retryable, explaining
 
 ---
 
-## Question 39
+## Question 43
 A CI job asks Claude Code to review pull requests and report test coverage using an MCP tool, get_coverage. When the coverage artifact from the test stage is missing, the tool catches the exception and returns {"line_coverage": 0}. Review comments then tell authors their change 'drops coverage to 0%' and block the merge. What is the best fix?
 
 A) Return a structured error when the artifact is missing, such as dependency_missing, not retryable within the job, so the review says coverage was unavailable
@@ -707,13 +783,13 @@ D) Make the CI pipeline fail the whole job whenever the coverage artifact is mis
 
 ---
 
-## Question 40
+## Question 44
 A research team is defining error handling for subagents. Searches can fail with rate-limit blips, malformed queries the subagent wrote itself, paywalled sources, and a topic the coordinator was told not to research. Which policy best fits structured error handling?
 
-A) Every failure goes straight to the coordinator with the raw error text, so that one agent makes every recovery decision for the whole system of subagents
+A) Each failure goes straight to the coordinator with the raw error text, so that a single agent makes the recovery decisions for the whole system of subagents
 B) Retry rate limits and fix its own malformed queries locally; propagate paywall and out-of-scope failures as structured errors with any partial results
-C) Subagents report only successful results and leave failed searches out of their output, so the coordinator's context stays focused on usable material
-D) Subagents retry every failure up to five times with backoff before reporting anything, since most errors resolve if given enough attempts to succeed
+C) Subagents report successful results and leave failed searches out of their output, so the coordinator's context stays focused on usable material
+D) Subagents retry each failure up to five times with backoff before reporting anything, since most errors resolve if given enough attempts to succeed
 
 <details>
 <summary>Answer & explanation</summary>
@@ -725,7 +801,7 @@ D) Subagents retry every failure up to five times with backoff before reporting 
 
 ---
 
-## Question 41
+## Question 45
 An internal developer agent's run_query tool returns the database driver's full Python traceback, often 150 lines, whenever a query fails. The agent's context fills with stack frames, and it frequently guesses at the cause, for example rewriting a correct query when the real problem was a connection timeout. What should the tool return instead?
 
 A) Nothing extra; instead give the agent a larger context window so that full tracebacks fit comfortably and never crowd out the rest of the session
@@ -743,7 +819,7 @@ D) A generic 'query failed, please try again' message, so that the agent is not 
 
 ---
 
-## Question 42
+## Question 46
 A document-extraction tool processes batches of 50 scanned forms. When 3 forms fail OCR, the tool returns isError true for the whole batch with 'Batch processing failed', and the agent resubmits all 50, paying for the 47 good extractions again. Often the same 3 fail again. Which redesign is best?
 
 A) Return isError false with only the 47 successful extractions, so the batch completes and the three failed forms can be picked up in a later run
@@ -761,7 +837,7 @@ D) Return per-document results: the 47 extractions as successes plus a structure
 
 ---
 
-## Question 43
+## Question 47
 A utilities support agent's update_address tool returns isError with the message 'ERR_FK_CONSTRAINT_2291' when the postcode is not in the service area. The agent passes this on to customers, telling them 'there was an error ERR_FK_CONSTRAINT_2291, please try again later.' Which change fixes this best?
 
 A) Translate it into a business error, not retryable, with a readable message that the postcode is outside the service area, so the agent can offer options
@@ -779,13 +855,13 @@ D) Keep the code but add a lookup tool that maps database error codes to explana
 
 ---
 
-## Question 44
+## Question 48
 A platform team runs a dozen internal MCP servers used by support and research agents. Each server reports failures differently: some throw, some return strings, some return {"ok": false}. Agents handle failures inconsistently across tools. What should the team standardise on?
 
-A) A rule that every server must throw an exception on any failure, so the agent framework catches it centrally and stops the agent run immediately
-B) Failures returned as tool results with isError true, plus an agreed errorCategory, isRetryable and readable message in the content
-C) A convention that all failures return an empty result, so that agents treat every failure the same way and simply move on to the next step
-D) A shared error-code table of numeric codes that every server must use, published as a document that agents can read through a lookup tool
+A) A rule that each server must throw an exception on any failure, so the agent framework catches it centrally and stops the agent run immediately
+B) Failures returned as tool results with isError true, plus an agreed errorCategory, isRetryable and a readable message
+C) A convention that failures return an empty result, so that agents treat failures the same way and simply move on to the next step
+D) A shared error-code table of numeric codes that each server must use, published as a document that agents can read through a lookup tool
 
 <details>
 <summary>Answer & explanation</summary>
@@ -797,7 +873,7 @@ D) A shared error-code table of numeric codes that every server must use, publis
 
 ---
 
-## Question 45
+## Question 49
 A developer agent opens a database session with open_session, which returns a handle used by later run_query calls. Handles expire after 30 minutes idle. After a long code-reading detour, run_query returns isError with 'invalid argument: session', and the agent keeps re-sending the same handle with small changes to the query. What should the tool do?
 
 A) Extend the handle lifetime to 24 hours so that expiry never occurs during a working session, however long the agent spends reading other code
@@ -815,7 +891,7 @@ D) Return a JSON-RPC protocol error, since an unknown handle means the request i
 
 ---
 
-## Question 46
+## Question 50
 A research coordinator runs five subagents in parallel. The patents subagent returns a structured error: category access_denied, not retryable, with two patents found before the failure. The coordinator currently aborts the whole job whenever any subagent errors. What should the coordinator do instead?
 
 A) Retry the patents subagent repeatedly until it succeeds, since the report cannot be considered complete until every planned source type has been covered by a subagent
@@ -833,10 +909,10 @@ D) Continue with the other four subagents' results, include the two partial pate
 
 ---
 
-## Question 47
+## Question 51
 An insurance-claims extraction agent calls an OCR tool that fails about 5% of the time with a transient service error. Each failure goes back to the model, which spends a turn reasoning about it and re-calling the tool; on long claim files this pushes runs over their turn budget. What is the best design change?
 
-A) Put bounded retries with backoff for transient errors inside the tool wrapper, and surface a structured error to the model only if those retries are exhausted
+A) Put bounded retries with backoff for transient errors inside the tool wrapper, and surface a structured error to the model once those retries are exhausted
 B) Add a system-prompt instruction telling the model to re-call the OCR tool immediately on failure without writing out any reasoning about it
 C) Switch the OCR tool to return an empty page on failure, so the agent continues with the remaining pages and the run finishes within budget
 D) Raise the agent's turn budget so that runs have enough headroom to absorb several transient OCR failures on even the longest claim files
@@ -851,12 +927,12 @@ D) Raise the agent's turn budget so that runs have enough headroom to absorb sev
 
 ---
 
-## Question 48
+## Question 52
 A CI job has Claude Code call an MCP lint tool on changed files. The tool returns isError true whenever it finds lint violations, with the violations listed in the message. Claude has started reporting 'linting could not be run' on PRs that actually have violations, and skips commenting on them. What is the correct fix?
 
 A) Tell Claude in the CI prompt that lint errors with isError true still contain useful findings, and that it should read them before deciding what to post
 B) Return violations as a normal successful result, and use isError only when the linter itself could not run, for example on a crash or a missing config
-C) Have the tool return isError true only when there are more than ten violations, so that small numbers of findings are reported as normal results
+C) Have the tool set isError true when there are more than ten violations, so that small numbers of findings are reported as normal results
 D) Split the tool into run_lint and get_lint_violations, so that the second call fetches the findings separately once the first call has reported an error
 
 <details>
@@ -869,7 +945,7 @@ D) Split the tool into run_lint and get_lint_violations, so that the second call
 
 ---
 
-## Question 49
+## Question 53
 A support agent's create_return tool fails for orders delivered more than 30 days ago. It returns isError with 'Return window closed', and the agent ends the conversation with 'Sorry, we can't help.' Policy allows store credit up to 60 days, and the CSAT team says these customers would usually accept it. What should the tool return?
 
 A) A transient error marked retryable, so that the agent tries the return again later in the conversation in case the policy check produced the wrong answer
@@ -887,7 +963,7 @@ D) A protocol-level error that triggers automatic escalation to a human agent, w
 
 ---
 
-## Question 50
+## Question 54
 A developer agent's search_commits tool times out when asked for every commit touching 'src/' across a ten-year monorepo. The tool returns isError with isRetryable true, so the agent repeats the same query five times, each timing out. Narrower queries by path and date return in under a second. What should the error say?
 
 A) Nothing different; instead the tool should use a much longer timeout, so that very broad queries across the full history are able to complete in the end
@@ -905,7 +981,83 @@ D) That the query was too broad to complete, that repeating it will not help, an
 
 ---
 
-## Question 51
+## Question 55
+A research system's MCP server exposes fetch_paper and search_archive. When a paper is paywalled, fetch_paper returns a normal result whose only text is "Operation failed", and the coordinator retries it over and over. When a search matches nothing, search_archive sets isError: true, and the coordinator reports the archive as down. Which server changes let the coordinator react correctly? (Choose two.)
+
+A) Return the paywall case with isError: true, a category such as permission, isRetryable: false and a reason
+B) Report each tool failure as a JSON-RPC protocol error so the client can tell failures apart from results
+C) Return a zero-match search as a successful result with an empty list, so it reads as an answer, not a fault
+D) Retry the paywalled fetch inside the server with backoff before returning, so the coordinator doesn't see it
+E) Return an empty string for a failed fetch so the coordinator moves on without spending turns on the paper
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** A tool execution failure belongs in the result with isError: true, and saying what kind of failure it is and whether a retry can help (errorCategory and isRetryable are an application convention, not spec fields) stops pointless retries of a permission problem. A search that ran and found nothing succeeded; flagging it as an error makes a valid empty answer look like an outage. Protocol errors are meant for malformed requests and unknown tools, and the spec says execution errors should reach the model in results. Retrying a paywall cannot succeed, and an empty string hides the failure.
+
+*Hint if stuck: For each tool, ask whether the call actually failed, and if it did, what the agent needs to know to decide its next move.*
+</details>
+
+---
+
+## Question 56
+A support agent's change_delivery_date MCP tool returns isError: true with the text "Request failed" for every failure. Logs show two patterns. When the carrier API answers 503 (it rejects the request unprocessed and usually works seconds later), the agent tells customers the change is impossible. When a customer asks for a date outside the 14-day window, the agent retries the same call several times, then apologises without offering anything. Which server changes fix this? (Choose two.)
+
+A) Retry the carrier's 503 inside the tool with a short bounded backoff before returning any error to the agent
+B) Report the window case as a JSON-RPC error, not a tool result, so that the agent is unable to retry the call
+C) Mark each failure isRetryable: true so the agent keeps trying instead of giving up on the customer early
+D) Return the window case as a non-retryable business error stating the 14-day limit and the latest date
+E) Book the nearest allowed date when the requested one is out of range, and return that as a success result
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** A brief, unprocessed 503 is a transient error that the tool can recover from locally with a bounded retry, so the agent never sees a failure it can't act on. A date outside the window is a business-rule error: no retry will succeed, and a readable reason with the limit lets the agent offer the latest allowed date. The MCP spec puts business-logic errors in the tool result with isError so the model can use them; JSON-RPC errors are for unknown tools and malformed requests. Marking everything retryable makes the window case loop forever. Booking a different date silently changes the customer's order without asking.
+
+*Hint if stuck: For each failure, ask whether trying again could ever succeed, and who is best placed to try.*
+</details>
+
+---
+
+## Question 57
+A returns agent built with the Agent SDK defines create_return as a custom tool in an in-process MCP server, and the handler doesn't catch errors. When the warehouse API answers 409 because a return already exists for the order, Claude sees only "Request failed with status code 409" and tells the customer the system is down. Separately, about one call in ten fails because Claude passes reason values such as "broken" that the API does not accept. Which changes help? (Choose two.)
+
+A) Wrap the query() call in try/catch so that tool exceptions surface there and the whole turn can be retried
+B) Return the raw 409 response body as a normal success result so that Claude can parse the details from it
+C) Catch the 409 in the handler and return isError: true with a message naming the existing return and status
+D) Let the exception propagate, since an uncaught error stops the query and the app can restart the session
+E) Declare reason as an enum of the API's accepted codes in the tool's input schema, with a line on each code
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** When a handler throws, the SDK's in-process server turns the exception into an error result carrying the raw message, so Claude reads only the bare status; catching it and returning isError with a composed message (a return already exists, its ID and status) gives Claude something to tell the customer. An enum in the input schema, described briefly, shows Claude the accepted reason codes so it stops inventing values. An uncaught handler error doesn't stop the agent loop, and tool exceptions don't surface from query(), so neither try/catch nor restarting addresses it. Returning a failure as a success hides that the call failed.
+
+*Hint if stuck: Trace what actually reaches the model in each case, and fix each problem at the earliest point that can.*
+</details>
+
+---
+
+## Question 58
+In a research system, a search subagent's MCP tool, search_news, gathers up to 50 articles per query from a slow upstream API. When the upstream times out after 30 articles have arrived, the tool returns isError: true with "timeout" and drops the 30. When the subagent writes a query with a NEAR operator the API doesn't support, the tool returns the same bare "search error", and the subagent resends the query unchanged. Which tool changes help? (Choose two.)
+
+A) Return the 30 articles that arrived, marked partial, noting that the rest timed out and may be retried
+B) Return the bad-operator case as an isError result that names NEAR as unsupported and shows the valid syntax
+C) Strip unsupported operators from the query on the server and run the rest, returning the hits as normal
+D) Return the bad-operator case as a JSON-RPC invalid-params error, since the query is a malformed argument
+E) Raise the tool's upstream timeout to ten minutes so that each query finishes before any limit is reached
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** Partial results with a clear note of what is missing and whether a retry may help let the subagent use the 30 articles and decide about the rest, instead of losing work it already paid for. An input validation error belongs in the tool result with isError and an actionable message (what is unsupported, what syntax works), so the model can correct the query; the spec reserves JSON-RPC errors for unknown tools and malformed requests, which models are less likely to recover from. A ten-minute timeout stalls the run on a slow upstream and still fails on a dead one. Silently stripping operators returns results for a different query than the one the subagent wrote.
+
+*Hint if stuck: Ask what the subagent needs in hand to change its next call, and what it loses when a failure discards work.*
+</details>
+
+---
+
+## Question 59
 A healthcare intake agent keeps hitting its 25-iteration safety cap. Traces show check_eligibility being called repeatedly with valid arguments; the executor wraps tool calls in a try/except that catches a flaky upstream timeout and appends a tool_result with empty content, after which the model calls the same tool again. The cap is the only thing stopping the loop. What is the right fix?
 
 A) Return a structured error in the tool_result — what failed, whether it is retryable, suggested alternatives — so the model can adapt or escalate
@@ -923,7 +1075,7 @@ D) Have the executor silently retry the upstream service with exponential backof
 
 ---
 
-## Question 52
+## Question 60
 A fintech extraction agent's query_transactions tool returns the string "Operation failed" whenever the data warehouse times out. The model retries the identical query four times, burns its remaining turns, and gives up without producing output. How should the tool be redesigned?
 
 A) Cap the agentic loop at three iterations so failed retries terminate the run quickly
@@ -941,7 +1093,7 @@ D) Return a structured error with errorCategory timeout, an isRetryable flag, th
 
 ---
 
-## Question 53
+## Question 61
 A support team's MCP server answers every failed tools/call with a JSON-RPC error, code -32602: unknown tool names, but also a refund amount above the order total and a return date outside the 30-day window. Claude sees only a terse failure for the refund and date cases and keeps retrying near-identical calls. Under the current MCP spec, how should the server report failures?
 
 A) Keep -32602 for all of them but put the reason in the error's data field, since clients always forward protocol error details to the model
@@ -959,7 +1111,7 @@ D) Return every failure, unknown tool names included, as an isError result, sinc
 
 ---
 
-## Question 54
+## Question 62
 In a multi-agent research system, a subagent's web_search tool hits a provider rate limit after retrieving 3 of 5 requested sources and currently returns {"error": "request failed"}, discarding everything. The coordinator restarts the entire research task from zero each time. How should the tool respond instead?
 
 A) Return the 3 retrieved sources as partial results along with errorCategory rate_limit and isRetryable true
@@ -977,13 +1129,13 @@ D) Raise an exception so the subagent terminates and the coordinator reassigns t
 
 ---
 
-## Question 55
+## Question 63
 A support team's MCP server returns failures as isError results whose JSON text includes errorCategory and isRetryable fields. A developer expects Claude Code to retry automatically whenever isRetryable is true, the way an HTTP client retries a 503, and is surprised that nothing in the client acts on the field. How should the architect explain this?
 
 A) The fields are the team's own convention inside the result; MCP defines only isError, so the agent or its instructions must act on them
 B) The client ignores them because they belong in the JSON-RPC error's data field, where MCP clients read retry hints and act on them
 C) The client ignores them because MCP requires them to be declared as tool annotations, which clients use to decide when to retry a tool
-D) The client ignores them only for tools that are not idempotent; marking the tool idempotent in its annotations makes the client retry it
+D) The client ignores them for tools that are not idempotent; marking the tool idempotent in its annotations makes the client retry it
 
 <details>
 <summary>Answer & explanation</summary>
@@ -995,7 +1147,7 @@ D) The client ignores them only for tools that are not idempotent; marking the t
 
 ---
 
-## Question 56
+## Question 64
 An invoice extraction agent calls a lookup_vendor tool to match extracted names against the vendor master database. When a vendor is missing, the tool returns the bare string "Operation failed", and the agent retries the identical lookup five times before abandoning the whole document. New vendors appear daily, so a missing match is a routine outcome. What should change?
 
 A) Return zero-match lookups as successes with an empty result set, and reserve errors for real failures with errorCategory, isRetryable, the attempted query, and alternatives
@@ -1013,7 +1165,7 @@ D) Have the tool raise a typed VendorNotFound exception so the SDK surfaces a fu
 
 ---
 
-## Question 57
+## Question 65
 In a market-research system, the synthesis subagent was given the same web_search and fetch_page tools as the search subagents 'so it can fill gaps'. Reports now take three times longer because synthesis keeps launching fresh research tangents, yet about a third of its tool calls are just quick checks that a cited statistic matches its source. What should the architect change?
 
 A) Keep the full search toolkit but add a system prompt rule limiting synthesis to five searches per report
@@ -1031,12 +1183,12 @@ D) Remove web_search and fetch_page from synthesis and give it a narrow verify_c
 
 ---
 
-## Question 58
+## Question 66
 A research coordinator was configured with the Task tool plus every tool its four subagents use: web_search, fetch_page, run_statistics, and format_citations. In traces, the coordinator increasingly runs searches and statistics itself, its context fills with raw pages, and the specialist subagents are invoked on fewer than half of queries. Which configuration fixes this?
 
 A) Give the coordinator the Task tool and only the aggregation tools it needs, leaving search and statistics tools on the subagents
-B) Add a system prompt instruction telling the coordinator it must always delegate searching and analysis to subagents
-C) Set tool_choice to any on every coordinator request so that it is always obliged to call one of the registered tools
+B) Add a system prompt instruction telling the coordinator it must delegate searching and analysis to subagents
+C) Set tool_choice to any on each coordinator request so that it is obliged to call one of the registered tools
 D) Move the coordinator to a model with a larger context window so the raw pages it fetches itself no longer crowd out its reasoning
 
 <details>
@@ -1049,13 +1201,13 @@ D) Move the coordinator to a model with a larger context window so the raw pages
 
 ---
 
-## Question 59
+## Question 67
 A team adds .claude/agents/dependency-auditor.md to their repo so Claude Code can audit third-party packages for licence and CVE issues. The frontmatter has a name and description but no tools field. During one audit, the subagent ran a package upgrade through Bash and edited the lockfile. What is the right fix?
 
-A) Add a line to the subagent's prompt saying it must only report its findings and must never modify files or run package installs
+A) Add a line to the subagent's prompt saying it must report its findings and must not modify files or run package installs
 B) Add a tools field listing only read-only tools such as Read, Grep and Glob, since an omitted field inherits everything
-C) Require plan mode for the whole repository so every Claude Code session asks for approval before any file change
-D) Rename the subagent to dependency-reader so that its description signals read-only intent to the main agent
+C) Require plan mode for the whole repository so each Claude Code session asks for approval before any file change
+D) Rename the subagent to dependency-reader so that its description signals to the main agent that it does not modify code
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1067,12 +1219,12 @@ D) Rename the subagent to dependency-reader so that its description signals read
 
 ---
 
-## Question 60
+## Question 68
 A support system routes conversations to billing, returns, and account subagents. Roughly 15% of conversations in every specialty need a human handoff, but only the coordinator holds escalate_to_human, so each specialist must return control, and the coordinator often escalates with a thin summary that loses the specialist's findings. What is the best change?
 
 A) Have each specialist return its full conversation transcript to the coordinator so it can write a richer escalation summary
-B) Merge the three specialists into one agent that holds every billing, returns, account, and escalation tool together
-C) Give each specialist a small escalate_to_human tool with a structured summary schema, keeping all other cross-role tools off
+B) Merge the three specialists into one agent that holds the billing, returns, account, and escalation tools together
+C) Give each specialist a small escalate_to_human tool with a structured summary schema, keeping other cross-role tools off
 D) Add an escalation subagent that the coordinator invokes, which re-interviews the customer before passing the case on
 
 <details>
@@ -1085,13 +1237,13 @@ D) Add an escalation subagent that the coordinator invokes, which re-interviews 
 
 ---
 
-## Question 61
+## Question 69
 To ship faster, a support team gave its refunds agent one tool, admin_api, which accepts any HTTP method and path on the internal commerce API. In a recent incident the agent 'resolved' a complaint by calling a PATCH endpoint that changed a customer's subscription tier. What should the architect do?
 
 A) Keep admin_api but add a detailed description listing the endpoints the agent is permitted to call for refunds
 B) Move admin_api behind a second reviewer agent that approves or rejects each call the refunds agent proposes
 C) Keep admin_api but require the agent to explain its intended call in plain text before each request so that reviewers can audit it
-D) Replace admin_api with purpose-built tools such as get_order and issue_refund whose parameters cover only refund actions
+D) Replace admin_api with purpose-built tools such as get_order and issue_refund whose parameters cover refund actions and nothing else
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1103,12 +1255,12 @@ D) Replace admin_api with purpose-built tools such as get_order and issue_refund
 
 ---
 
-## Question 62
+## Question 70
 A support coordinator, running on a model that supports forced tool use, must begin every conversation with classify_request, whose output drives routing. The team set tool_choice to any on the opening request, but in 9% of conversations the model instead opens with lookup_order because the customer mentioned an order number, and routing then runs without a classification. Which change fixes this?
 
 A) Force classify_request by name on the opening request, then use auto for the requests that follow it
-B) Keep any but rewrite the classify_request description to say it must always be called before any other tool
-C) Remove lookup_order from the coordinator so that classify_request is the only plausible tool on its opening turn
+B) Keep any but rewrite the classify_request description to say it must be called before any other tool
+C) Remove lookup_order from the coordinator so that classify_request is the one plausible tool on its opening turn
 D) Switch the opening request to auto and add a code check that retries the turn when no classification was produced
 
 <details>
@@ -1121,10 +1273,10 @@ D) Switch the opening request to auto and add a code check that retries the turn
 
 ---
 
-## Question 63
+## Question 71
 An expense-processing pipeline, running on a model that supports forced tool use, sends each scanned receipt to Claude with a single tool, record_receipt, whose input schema holds merchant, date, total, and tax lines. With tool_choice left at auto, about 6% of responses are a prose description of the receipt, which the downstream parser rejects. What is the most direct fix?
 
-A) Append 'Respond only by calling record_receipt' to the user message and lower the temperature to zero
+A) Append 'Respond by calling record_receipt, with no prose' to the user message and lower the temperature to zero
 B) Set tool_choice to force record_receipt on these requests so every response is a call to that tool
 C) Add a regex fallback that extracts merchant, date and totals from prose whenever no tool call is returned
 D) Retry each prose response up to three times with auto and fail the receipt if no tool call appears
@@ -1139,13 +1291,13 @@ D) Retry each prose response up to three times with auto and fail the receipt if
 
 ---
 
-## Question 64
+## Question 72
 A claims-intake pipeline, running on a model that supports forced tool use, forces extract_claim on every uploaded document. Auditors find that for faxes that are badly smudged or are not claims at all, the pipeline still returns complete-looking extractions with invented policy numbers. The team needs a guaranteed structured response but not a fabricated one. Which configuration should they use?
 
 A) Keep forcing extract_claim and add a confidence field to its schema so downstream code can discard low-confidence extractions
 B) Switch to auto so the model can reply in prose when a document is unreadable, and route prose to manual review
 C) Add a flag_unprocessable tool beside extract_claim and set tool_choice to any so one of the two is always called
-D) Keep forcing extract_claim but make every field nullable so the model can leave unknown values empty
+D) Keep forcing extract_claim but make each field nullable so the model can leave unknown values empty
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1157,12 +1309,12 @@ D) Keep forcing extract_claim but make every field nullable so the model can lea
 
 ---
 
-## Question 65
+## Question 73
 A purchase-order extraction agent must confirm that each extracted vendor ID exists, which it needs on nearly every document. Today it holds a general run_sql tool against the procurement database for this purpose, and a review found queries that joined payroll tables while 'investigating' a vendor. What is the best tool design?
 
 A) Keep run_sql but restrict its description to the vendors table and add a prompt rule against reading other tables
 B) Keep run_sql but have a validation subagent review each query the extraction agent writes before it is executed
-C) Remove database access and let the agent mark every vendor ID as unverified for a human to check afterwards
+C) Remove database access and let the agent mark each vendor ID as unverified for a human to check afterwards
 D) Replace run_sql with a read-only lookup_vendor tool that takes a vendor ID and returns only the registry record
 
 <details>
@@ -1175,13 +1327,13 @@ D) Replace run_sql with a read-only lookup_vendor tool that takes a vendor ID an
 
 ---
 
-## Question 66
+## Question 74
 A developer-productivity agent connects to five MCP servers (GitHub, Jira, Confluence, Sentry, and an internal deploy server), exposing 31 tools. It has a code-exploration subagent and a release-notes subagent, both defined without tool restrictions. The exploration subagent now regularly files Jira tickets and triggers preview deploys while 'investigating'. Which change best addresses this?
 
 A) Give the exploration subagent an explicit tool list of Read, Grep, Glob and the GitHub read tools it actually needs
-B) Add to the exploration subagent's prompt that it must never call Jira or deploy tools while exploring code
-C) Disconnect the Jira and deploy servers from the project so that no agent in the system can call them at all
-D) Add a PreToolUse hook that blocks deploy calls from every agent but leaves the Jira tools available to the exploration subagent
+B) Add to the exploration subagent's prompt that it must not call Jira or deploy tools while exploring code
+C) Disconnect the Jira and deploy servers from the project so that no agent in the system can call them
+D) Add a PreToolUse hook that blocks deploy calls from any agent but leaves the Jira tools available to the exploration subagent
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1193,10 +1345,10 @@ D) Add a PreToolUse hook that blocks deploy calls from every agent but leaves th
 
 ---
 
-## Question 67
+## Question 75
 An internal assistant helps engineers understand a 15-year-old billing monolith. It runs one general subagent holding Read, Grep, Glob, Edit, Write and Bash for both exploration and later refactors. Engineers complain that during pure exploration it sometimes 'tidies' files it was only asked to explain. What design should the architect adopt?
 
-A) Keep one subagent and add a mode flag in its prompt that switches it between exploring-only and editing behaviour on each request
+A) Keep one subagent and add a mode flag in its prompt that switches it between exploring and editing behaviour on each request
 B) Split it into a read-only explorer with Read, Grep and Glob and a separate modifier subagent with editing tools
 C) Keep one subagent and turn on Git hooks that reject any commit made while the assistant is in exploration
 D) Keep one subagent but cap it at ten tool calls per explanation so it has no budget left for unrequested edits
@@ -1211,13 +1363,13 @@ D) Keep one subagent but cap it at ten tool calls per explanation so it has no b
 
 ---
 
-## Question 68
+## Question 76
 A boilerplate-generator subagent looks up the company's service templates on almost every request. The templates live behind an internal platform MCP server that also exposes 13 other tools, including rotate_credentials and scale_service. Right now the subagent is granted mcp__platform__* and has occasionally called scale_service. What is the right configuration?
 
-A) Keep mcp__platform__* and add a system prompt section explaining that the subagent may only read templates
-B) Remove the platform server entirely and paste the current template files into the subagent's system prompt
+A) Keep mcp__platform__* and add a system prompt section explaining that the subagent may read templates and nothing else
+B) Remove the platform server and paste the current template files into the subagent's system prompt
 C) Grant the subagent only mcp__platform__get_template rather than the whole server's wildcard
-D) Keep the wildcard but set tool_choice to force get_template on every request the subagent makes
+D) Keep the wildcard but set tool_choice to force get_template on each request the subagent makes
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1229,11 +1381,11 @@ D) Keep the wildcard but set tool_choice to force get_template on every request 
 
 ---
 
-## Question 69
+## Question 77
 A pull-request review job runs Claude Code in CI. Its job is to post inline comments, but it was configured with the default tool set, and on two occasions it pushed 'fix' commits directly to contributors' branches. The team wants reviewers to stay advisory. What should they change?
 
-A) Tell the reviewer in its prompt that it must never commit and should only post comments on the pull request
-B) Run the reviewer on a forked copy of the branch so that any commits it makes never reach the contributor
+A) Tell the reviewer in its prompt that it must not commit and should restrict itself to posting comments on the pull request
+B) Run the reviewer on a forked copy of the branch so that any commits it makes do not reach the contributor
 C) Let the reviewer keep committing but require a human to approve the CI run before its commits are pushed
 D) Restrict the job to read-only tools plus the comment-posting tool, removing Edit, Write and git-capable Bash
 
@@ -1247,7 +1399,7 @@ D) Restrict the job to read-only tools plus the comment-posting tool, removing E
 
 ---
 
-## Question 70
+## Question 78
 A CI review bot calls the API directly. To make sure every response produces a post_review tool call, the team set tool_choice to force post_review. Reviewers now complain that the bot no longer writes the short reasoning paragraph it used to emit before its findings, even though the prompt still asks for it. The post_review schema is shared with other bots and cannot change. What should the team do?
 
 A) Go back to auto and instruct the model in the user message to explain its reasoning and then call post_review
@@ -1265,7 +1417,7 @@ D) Keep forcing post_review and send a second request afterwards asking the mode
 
 ---
 
-## Question 71
+## Question 79
 An HR helpdesk assistant has tools for leave balances, payslips and policy search. To stop it from occasionally answering policy questions from memory, the team set tool_choice to any on every request. Now even 'thanks, that's all' triggers a pointless policy search before the goodbye, and employees notice the delay. What should the architect do?
 
 A) Keep any and add a lightweight end_conversation tool the model can call when the user is simply signing off
@@ -1283,7 +1435,7 @@ D) Switch to forcing policy_search by name so that at least every forced call re
 
 ---
 
-## Question 72
+## Question 80
 In a cited-report pipeline, the report-writing subagent needs author, year and venue for every source it cites, typically 30 to 50 per report. It currently asks the coordinator for each one, which spawns a search subagent per lookup and doubles total runtime. The metadata already sits in the run's citation store. What is the best fix?
 
 A) Give the report subagent the search subagent's full web_search and fetch_page tools so it can find metadata itself
@@ -1301,7 +1453,7 @@ D) Have the report subagent write placeholder citations and let a final formatti
 
 ---
 
-## Question 73
+## Question 81
 A research system uses a search subagent with 4 tools and an analysis subagent with 5. To cut one handoff and reduce latency, an engineer proposes merging them into one 'research' subagent holding all 9 tools plus 3 new ones for the next quarter. Tool-selection accuracy is currently high in both agents. How should the architect respond?
 
 A) Approve the merge, since 12 tools is still well within the range a single capable agent can handle without any measurable degradation
@@ -1319,7 +1471,7 @@ D) Keep the agents separate with their focused toolsets and reduce latency elsew
 
 ---
 
-## Question 74
+## Question 82
 In a telecom support system, the account-changes subagent occasionally needs to issue a refund, in about 1% of its conversations, while the dedicated refunds subagent handles thousands daily with fraud checks built into its prompt and tools. A product manager asks to add issue_refund to the account-changes agent 'for convenience'. What should the architect recommend?
 
 A) Leave refunds with the refunds subagent and have the coordinator route those rare cases there
@@ -1337,13 +1489,13 @@ D) Merge the account-changes and refunds subagents so every conversation has acc
 
 ---
 
-## Question 75
+## Question 83
 A shipping-manifest extraction request includes six tools: extract_manifest, lookup_port_code, web_search, send_email, create_ticket, and summarize_text, with tool_choice set to any. On ambiguous manifests the model calls web_search or summarize_text instead of extracting, and the pipeline stalls. Which change addresses the root cause?
 
-A) Keep all six tools and rewrite every description to stress that extraction is the main goal of the request
-B) Send this request only the tools the extraction step needs, extract_manifest and lookup_port_code
+A) Keep the six tools and rewrite each description to stress that extraction is the main goal of the request
+B) Send this request the two tools the extraction step needs, extract_manifest and lookup_port_code
 C) Change tool_choice from any to auto so that the model can explain in prose why a manifest is ambiguous
-D) Force extract_manifest on every request in the loop, including any follow-ups that need port code lookups
+D) Force extract_manifest on each request in the loop, including any follow-ups that need port code lookups
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1355,10 +1507,10 @@ D) Force extract_manifest on every request in the loop, including any follow-ups
 
 ---
 
-## Question 76
+## Question 84
 A support agent, running on a model that supports forced tool use, is required to finish every resolved conversation with a call to log_resolution, which feeds compliance reporting. The prompt says so, yet 4% of resolved conversations end with a friendly goodbye and no log. Forcing the tool on every request is not possible because the agent cannot know in advance which turn is the last. What should the architect do?
 
-A) Move the log_resolution requirement to the top of the system prompt and mark it as mandatory in capitals
+A) Move the log_resolution requirement to the top of the system prompt and mark it as mandatory in capital letters
 B) Have code parse the goodbye message and write a compliance log entry from that text whenever none is called
 C) When the loop ends without a log, have code send one more request with tool_choice forcing log_resolution
 D) Set tool_choice to any on every request so that the agent is always obliged to call some tool before finishing
@@ -1373,7 +1525,7 @@ D) Set tool_choice to any on every request so that the agent is always obliged t
 
 ---
 
-## Question 77
+## Question 85
 A CI test-generation agent writes unit tests and needs to run the suite on almost every iteration to see if they pass. It was given unrestricted Bash for this, and in one run it installed a new testing framework and changed the CI config. What is the best way to meet its frequent need?
 
 A) Keep unrestricted Bash but add to the prompt that only the test command may be run and nothing else
@@ -1391,7 +1543,7 @@ D) Replace general Bash with a run_tests tool that runs the project's test comma
 
 ---
 
-## Question 78
+## Question 86
 A research system runs its claim-assessment step on Claude Opus 5, which thinks by default. To be sure every response records a verdict, the team forces tool_choice to the record_verdict tool. Verdicts on hard, ambiguous claims are noticeably worse than in an earlier prototype that let the model choose, and the responses contain no thinking blocks. What explains this, and what should change?
 
 A) A forced call skips thinking, so the reply opens with the call; use auto and tell the model to record each verdict with that tool
@@ -1409,11 +1561,87 @@ D) The tool's schema is too loose, so add strict: true and keep forcing record_v
 
 ---
 
-## Question 79
+## Question 87
+In a multi-agent research system every subagent gets the same 18 tools. The synthesis agent, which should only combine the findings it is handed, often starts its own broad web searches and drifts off topic, yet about a third of its runs do need to confirm a single date or figure before writing. Which changes match how tools should be distributed? (Choose two.)
+
+A) Set tool_choice to any for the synthesis agent so that each of its turns has to go through some tool call
+B) Cut the synthesis agent to the few tools synthesis uses and keep broad web search with the search agents
+C) Merge search and synthesis into a single agent holding the 18 tools so it can look things up as it writes
+D) Add a narrow verify_fact tool for quick single-fact checks and send deeper lookups back via the coordinator
+E) Keep the 18 tools and add a system-prompt line asking the synthesis agent to search sparingly and briefly
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** Agents given tools outside their role tend to use them, and selection gets worse as the number of tools grows, so the synthesis agent should get a small role-specific set. Its frequent, simple need (confirming one fact) is best met with a narrow cross-role tool, while open-ended research still goes through the coordinator to the search agents. A prompt request leaves the 18 tools and the temptation in place. Forcing a tool call on every turn adds calls rather than removing misuse. Merging the agents gives up the role separation that keeps synthesis focused.
+
+*Hint if stuck: Weigh what too many choices do to an agent's behaviour against what this agent genuinely needs often.*
+</details>
+
+---
+
+## Question 88
+A claims pipeline moved from Claude Opus 5 to Claude Opus 5.5. It sent each document with two tools, record_claim and flag_unprocessable, and tool_choice {"type": "any"} so every response ended in one of them. On Opus 5.5 those requests now return a 400 error. The team still wants each document to end in a schema-valid decision. Which approaches fit Opus 5.5? (Choose two.)
+
+A) Keep tool_choice any and turn off extended thinking, since thinking is what makes the any setting fail
+B) Force record_claim by name in tool_choice, since the 400 error applies to any and not to a named tool
+C) Use tool_choice auto with strict: true on both tools, and say in the prompt that each document ends in one
+D) Drop the tools for this step and request structured outputs with a JSON schema for both outcomes
+E) Set tool_choice to none and ask for JSON in the reply, then parse whichever of the two shapes appears
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, D** On Opus 5.5 (and the other newest models) tool_choice any and forced tools return a 400; the docs suggest auto with strict tool use, which guarantees schema-valid inputs while the prompt steers which tool is picked, or structured outputs when the response needs a fixed JSON shape. Turning off thinking doesn't help, because these models reject any outright. A named forced tool is rejected the same way. JSON requested in plain text has no schema guarantee.
+
+*Hint if stuck: Ask which settings the newer model rejects outright, and which features still give a guaranteed shape.*
+</details>
+
+---
+
+## Question 89
+A support agent on the Claude API needs get_order, get_shipment and get_invoice for most billing questions. The three lookups are independent, yet the agent requests them one per turn, adding seconds of latency. The loop code runs each requested tool and sends each tool_result back to the API in a user message of its own. Which changes should get the three lookups requested together? (Choose two.)
+
+A) Send a turn's tool_result blocks together in a single user message instead of one message per result
+B) Set tool_choice to any so each response must contain tool calls and the agent can't stop between lookups
+C) Raise max_tokens on each request so that one response has room for several tool_use blocks at once
+D) Set disable_parallel_tool_use to false in tool_choice so that Claude is allowed to request several tools
+E) Add a system prompt instruction to call independent tools at the same time rather than one after another
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, E** The docs warn that returning each tool result in a separate user message teaches Claude to avoid parallel calls; all results for a turn belong together in one user message. If the default still isn't enough, a system prompt section asking Claude to invoke independent tools simultaneously strengthens parallel use. disable_parallel_tool_use already defaults to false, so setting it changes nothing. tool_choice any forces some tool call but not several at once. A few tool_use blocks are short; output length isn't what keeps them apart.
+
+*Hint if stuck: Ask what the model learns from how its earlier calls were answered, and what it has been asked to do.*
+</details>
+
+---
+
+## Question 90
+A team defines a read-only code-explorer subagent in .claude/agents/explorer.md with disallowedTools: Write and no tools field. During one investigation it changed a config value in an existing file, and later it rewrote a test fixture by running a shell command. Which statements explain how it could still change files? (Choose two.)
+
+A) Denying Write blocks the creation of new files, so it was not meant to cover changes to existing ones
+B) Edit is a separate tool from Write, so denying Write leaves in-place edits of existing files available
+C) Bash is still inherited, and shell commands such as sed -i or output redirects can rewrite any file
+D) disallowedTools is applied when the subagent is invoked by name, but not when Claude delegates to it
+E) A subagent always runs with the main session's full tool list, so its disallowedTools list is ignored
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, C** With no tools field the subagent inherits every tool available, and disallowedTools removes only the names it lists. Edit is its own tool, so in-place edits survive; Bash is still there, and shell commands can modify files. A read-only explorer should list its tools (for example Read, Grep, Glob) or disallow Write, Edit and Bash. disallowedTools applies however the subagent is invoked, and it does narrow the inherited list. Write also overwrites existing files, so denying it removes more than file creation.
+
+*Hint if stuck: Work out which tools the subagent ends up holding, not only which one it lost.*
+</details>
+
+---
+
+## Question 91
 An e-commerce assistant has accumulated 18 tools spanning catalog search, inventory, refunds, shipping, and loyalty promotions. After the last batch of tools shipped, wrong-tool calls climbed from 3% to 19% of sessions. What should the architect do?
 
-A) Split the assistant into focused roles, each agent exposing only the 4-5 tools its job requires
-B) Expand every tool description with full parameter documentation so the model can disambiguate all 18
+A) Split the assistant into focused roles, each agent exposing the 4-5 tools its job requires
+B) Expand each tool description with full parameter documentation so the model can tell the 18 tools apart
 C) Add a system prompt table that maps each customer intent to the tool that should handle it
 D) Switch the assistant to a larger model that can keep track of more tools at once
 
@@ -1427,11 +1655,11 @@ D) Switch the assistant to a larger model that can keep track of more tools at o
 
 ---
 
-## Question 80
+## Question 92
 A refund-processing subagent in a support system shares a tool registry that includes adjust_loyalty_points and send_marketing_email. Despite a system prompt line saying "NEVER use marketing tools," the subagent sends a promotional email in about 2% of sessions. What is the right fix?
 
 A) Repeat the prohibition at the top and bottom of the system prompt with stronger wording
-B) Remove the marketing tools from the refund subagent's tool list entirely
+B) Remove the marketing tools from the refund subagent's tool list so it cannot call them
 C) Add a PreToolUse hook that blocks send_marketing_email and returns an error to the model
 D) Lower the sampling temperature so the model follows the written prohibition more consistently
 
@@ -1445,11 +1673,11 @@ D) Lower the sampling temperature so the model follows the written prohibition m
 
 ---
 
-## Question 81
+## Question 93
 An insurance claims extraction pipeline, running on a model that supports forced tool use, must begin every conversation by calling fetch_claim_document, and on multi-page claims the agent later needs fetch_supporting_exhibits before emitting the final extraction. The team set tool_choice to {"type": "tool", "name": "fetch_claim_document"} on every request, and now the agent fetches the same document repeatedly and never finishes. What is the fix?
 
-A) Switch every request to tool_choice "any" so the model can choose freely among all the tools
-B) Keep the forced setting but add a prompt instruction telling the model to fetch each document only once
+A) Switch each request to tool_choice "any" so the model can choose freely among the tools
+B) Keep the forced setting but add a prompt instruction telling the model to fetch each document once
 C) Force the tool on the first request only, then send all follow-up requests with tool_choice "auto"
 D) Switch to tool_choice "none" after the first call so the model is pushed straight to the extraction
 
@@ -1463,13 +1691,13 @@ D) Switch to tool_choice "none" after the first call so the model is pushed stra
 
 ---
 
-## Question 82
+## Question 94
 A healthcare intake triage step, running on a model that supports forced tool use, must always act through one of four tools: schedule_appointment, request_records, verify_insurance, or escalate_to_nurse. In about 8% of turns the model replies with prose suggestions and calls nothing. Which change guarantees an action without over-constraining the choice?
 
-A) Force tool_choice to escalate_to_nurse so every triage turn is guaranteed to produce an action
-B) Set tool_choice to "any" on the triage request so the model must call one of the four tools
-C) Add a system prompt instruction stating that the model must always respond by calling a tool
-D) Keep tool_choice "auto" and retry the request whenever the response comes back as text only
+A) Force tool_choice to escalate_to_nurse so each triage turn is certain to produce an action
+B) Set tool_choice to "any" on the triage request so the model must call one of the tools
+C) Add a system prompt instruction stating that the model must respond by calling one of the tools
+D) Keep tool_choice "auto" and retry the request whenever the response contains no tool_use block
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1481,25 +1709,25 @@ D) Keep tool_choice "auto" and retry the request whenever the response comes bac
 
 ---
 
-## Question 83
-A retail-banking assistant already carries 17 tools, and the product team wants to add 2 more for mortgage pre-qualification. Wrong-tool selection is already measurably rising. What should the architect recommend?
+## Question 95
+A mortgage pre-qualification agent on Opus 5.5 has check_credit and quote_rate tools. Traces show Claude often emits both calls in one response, so quote_rate runs on a guessed credit tier before the credit result exists. The team still wants Claude free to answer simple questions in plain text. Which request change fits?
 
-A) Add the two tools but write extra-detailed descriptions for all 19 so they stay distinguishable to the model at selection time
-B) Split the assistant into focused agents — accounts, cards, mortgage — each carrying 4-5 tools behind a coordinator
-C) Add the tools but prefix every tool name with its category, such as mortgage_check_rate
-D) Add a decision tree to the system prompt that maps each request type to exactly one tool
+A) Set tool_choice to {"type": "any"} so that Claude makes exactly one tool call in each response
+B) Set tool_choice to {"type": "auto", "disable_parallel_tool_use": true} to cap each response at one call
+C) Add disable_parallel_tool_use: true as a top-level request parameter, beside the tools array
+D) Keep parallel calls and have the agent loop run the returned tool_use blocks in order, check_credit first
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Selection accuracy degrades as the number of tools an agent weighs grows, and this assistant is already showing it, so adding two more makes it worse. Splitting into role-focused agents with a handful of tools each shrinks every decision space. Better descriptions are normally the first lever, but here the problem is the size of the choice set rather than any one description. Name prefixes and a prompt decision tree leave all 19 candidates in play on every turn.
+**B)** disable_parallel_tool_use belongs inside the tool_choice object; with type auto it limits Claude to at most one tool call per response while still letting it reply in text, so quote_rate waits until the credit result is back. tool_choice any forces a call on each turn and returns a 400 on Opus 5.5. The flag is not a top-level request parameter. Running both blocks in order does not help, because the tier inside the quote_rate call was guessed when Claude wrote it.
 
-*Hint if stuck: Past a certain tool count, better wording stops compensating — think about what actually shrinks the decision space.*
+*Hint if stuck: Look for the setting that caps calls per turn without forcing a tool, and notice where that setting has to be placed.*
 </details>
 
 ---
 
-## Question 84
+## Question 96
 A nightly reporting agent gathers metrics through several tools, and its final request is supposed to produce a prose executive summary. In 12% of runs the model issues yet another tool call on that final request instead of writing the summary. What is the cleanest fix?
 
 A) Add a prompt line to the final request: "You have all the data you need; do not call any more tools"
@@ -1517,13 +1745,13 @@ D) Set tool_choice to "any" on the final request so the model finishes its remai
 
 ---
 
-## Question 85
+## Question 97
 In an Agent SDK research system, the analysis subagent's AgentDefinition has no tools field. The session also connects a cms MCP server whose tools publish articles, and last week the analysis subagent published a half-finished draft. The team wants that subagent to keep every other tool it has today but never be able to reach the CMS. Which change achieves this?
 
 A) Give the analysis subagent an allowedTools list that leaves out the CMS tools, so the tools it does not list become unavailable to it
-B) Add a sentence to the analysis subagent's prompt saying it must never publish anything, since it is an analyst and not an editor
+B) Add a sentence to the analysis subagent's prompt saying it must not publish anything, since it is an analyst and not an editor
 C) Add disallowedTools: ["mcp__cms__*"] to the analysis AgentDefinition, which removes every tool from that server from its tool set
-D) Move the cms server to user scope so that its tools load only for the coordinator and stay hidden from every subagent it spawns
+D) Move the cms server to user scope so that its tools load for the coordinator and stay hidden from the subagents it spawns
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1535,7 +1763,7 @@ D) Move the cms server to user scope so that its tools load only for the coordin
 
 ---
 
-## Question 86
+## Question 98
 A platform engineer ran `claude mcp add --transport http sentry https://mcp.sentry.example/mcp` in the team's service repo and the Sentry tools work for her. A week later, none of her five teammates see the server after pulling main, and there is no .mcp.json in the repository. What should she do?
 
 A) Re-add the server with --scope project so it is written to .mcp.json, then commit that file for the team
@@ -1553,7 +1781,7 @@ D) Copy her ~/.claude.json into the repository root so the team inherits her com
 
 ---
 
-## Question 87
+## Question 99
 A team's .mcp.json defines a server named design-tokens that was moved to a new URL last sprint. Everyone else picked up the change, but one developer's Claude Code still calls the old, decommissioned endpoint. `claude mcp list` shows design-tokens, and months ago he had added a server with that same name while testing. What is the most likely cause and fix?
 
 A) His Claude Code cached the old tool list, so he should clear the cache and restart the session to reconnect
@@ -1571,11 +1799,11 @@ D) Claude Code merges the two entries field by field, so he should delete the ur
 
 ---
 
-## Question 88
+## Question 100
 In a research system, search subagents query an internal archive MCP server that holds 60 curated collections. Traces show each subagent runs several broad search calls just to learn which collections exist and what they cover, and the coordinator cannot plan scopes because it does not know either. Which change best reduces this exploratory overhead?
 
-A) Merge all 60 collections into a single index so that the subagents never need to know which collection they search
-B) Paste the full list of 60 collections and their descriptions into the coordinator's and every subagent's system prompt
+A) Merge the 60 collections into a single index so that the subagents do not need to know which collection they search
+B) Paste the full list of 60 collections and their descriptions into the coordinator's and each subagent's system prompt
 C) Add a cap of two discovery searches per subagent and let the coordinator retry any subagent that comes back empty
 D) Expose the collection index as an MCP resource the coordinator and subagents read when planning searches
 
@@ -1589,7 +1817,7 @@ D) Expose the collection index as an MCP resource the coordinator and subagents 
 
 ---
 
-## Question 89
+## Question 101
 A support agent answers questions using a policy MCP server with a get_policy(policy_id) tool. Because it does not know which policies exist, it often guesses IDs, gets not-found errors, and retries, averaging four failed calls per conversation. The policy set changes weekly. Which design should the architect choose?
 
 A) Have the server expose a policy catalog resource listing IDs and summaries that the agent consults first
@@ -1607,11 +1835,11 @@ D) Let the agent keep guessing IDs but raise its tool-call budget so it does not
 
 ---
 
-## Question 90
+## Question 102
 A developer-tools team plans a sprint to build their own GitHub MCP server for Claude Code (issues, pull requests, code search) and a second server for their in-house deployment orchestrator, which has no public integration. Which plan should the architect recommend?
 
-A) Build both custom servers so that the team controls every tool name, schema and description across all their integrations
-B) Adopt an existing community or vendor GitHub MCP server, and build a custom server only for the deploy orchestrator
+A) Build both custom servers so that the team controls each tool name, schema and description across its integrations
+B) Adopt an existing community or vendor GitHub MCP server, and build a custom one for the deploy orchestrator
 C) Skip MCP for GitHub and the orchestrator and have the agent call both APIs through curl commands in Bash
 D) Build the GitHub server now and postpone the orchestrator, since a standard integration is the safer start
 
@@ -1625,7 +1853,7 @@ D) Build the GitHub server now and postpone the orchestrator, since a standard i
 
 ---
 
-## Question 91
+## Question 103
 A support organisation runs a 20-year-old in-house ticketing system with a quirky REST API and no existing MCP integration. An engineer proposes connecting the agent to a generic community HTTP-fetch server and teaching it the API through a long prompt. The alternative is a thin custom MCP server with tools like get_ticket and add_internal_note. What should the architect choose?
 
 A) The generic HTTP-fetch server, because community servers should always be preferred over building custom ones
@@ -1643,7 +1871,7 @@ D) Neither: export tickets nightly into a shared folder and let the agent read t
 
 ---
 
-## Question 92
+## Question 104
 A team builds a literature-review agent with the Agent SDK and passes a papers MCP server in mcpServers. The system init message shows the server as connected and lists its mcp__papers__ tools, yet the agent never calls them in headless runs and falls back to web search. allowedTools contains only Read and WebSearch. What should they change?
 
 A) Set permissionMode to bypassPermissions so that every tool, including the MCP ones, runs without approval
@@ -1661,12 +1889,12 @@ D) Add mcp__papers__* to allowedTools so the server's tools are approved for use
 
 ---
 
-## Question 93
+## Question 105
 A support agent built on the Agent SDK registers an orders MCP server under the key orders in mcpServers. To auto-approve its search tool, the developer added search_orders to allowedTools, but every call still stops for a permission decision in the headless service. What is wrong?
 
 A) The allowedTools entry must use the full name mcp__orders__search_orders rather than the bare tool name
-B) MCP tools cannot be auto-approved at all, so the service must handle permission requests in a callback
-C) The server must be moved into a project .mcp.json file, because allowedTools only applies to file-based servers
+B) MCP tools cannot be auto-approved, so the service must handle permission requests in a callback
+C) The server must be moved into a project .mcp.json file, because allowedTools does not apply to servers registered in code
 D) The tool needs to be renamed on the server to orders_search_orders so the SDK can match it to its server
 
 <details>
@@ -1679,7 +1907,7 @@ D) The tool needs to be renamed on the server to orders_search_orders so the SDK
 
 ---
 
-## Question 94
+## Question 106
 A nightly competitive-intelligence run uses the Agent SDK with an internal filings MCP server. Last week the server's credentials expired; the init message reported it as needs-auth, the run carried on without it, and the published report cited only public web sources with no sign that internal filings were missing. What should the architect add?
 
 A) A prompt instruction telling the agent to mention in the report whenever it cannot reach the filings tools
@@ -1697,13 +1925,13 @@ D) A larger MCP_TIMEOUT so the filings server has more time to connect before th
 
 ---
 
-## Question 95
+## Question 107
 An open-source project runs Claude Code headlessly with claude -p to review every pull request, including PRs from forks. A maintainer notices that a fork PR could add a new server to the repository's .mcp.json, and that in non-interactive runs project-scoped servers load without the approval prompt developers see locally. How should the CI job be configured?
 
 A) Add an instruction to the review prompt telling Claude to ignore any MCP server that a pull request introduces
 B) Keep loading .mcp.json but require a maintainer to approve each PR before the CI review job is allowed to run
 C) Run with --strict-mcp-config and pass only a CI-owned MCP config, so servers in the PR's .mcp.json are ignored
-D) Delete the repository's .mcp.json and ask every contributor to configure the shared servers at local scope
+D) Delete the repository's .mcp.json and ask each contributor to configure the shared servers at local scope
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1715,7 +1943,7 @@ D) Delete the repository's .mcp.json and ask every contributor to configure the 
 
 ---
 
-## Question 96
+## Question 108
 A team's committed .mcp.json configures a code-quality server with headers set to Bearer ${QUALITY_TOKEN}. Locally it works for everyone, but in the CI review job the server rejects every request as unauthorized, and `claude mcp list` in the job prints a warning about an unresolved variable. What is the right fix?
 
 A) Commit a CI-only copy of .mcp.json that contains the literal token value so the job never depends on expansion
@@ -1733,7 +1961,7 @@ D) Expose the token to the CI job as an environment variable named QUALITY_TOKEN
 
 ---
 
-## Question 97
+## Question 109
 A team's shared .mcp.json points a feature-flags MCP server at the production flags API. Developers want local sessions to hit staging by default, while the release pipeline must keep using production. Today two engineers edit the URL by hand before each session and occasionally commit the change. What configuration should the team adopt?
 
 A) Set the url to ${FLAGS_API_URL:-https://staging.flags.internal}/mcp, with the release pipeline setting FLAGS_API_URL
@@ -1751,12 +1979,12 @@ D) Point the shared file at staging and have the pipeline run sed over .mcp.json
 
 ---
 
-## Question 98
+## Question 110
 A developer-productivity team plans to connect Claude Code to eight MCP servers exposing about 150 tools in total. One engineer argues that all those tool definitions will fill the context window at session start, so the team should cut down to two servers. On a current model with default settings, what should the architect tell the team?
 
-A) Keep the servers but set ENABLE_TOOL_SEARCH=false, so that every definition loads upfront and Claude can see each tool before choosing
+A) Keep the servers but set ENABLE_TOOL_SEARCH=false, so that each definition loads upfront and Claude can see each tool before choosing
 B) Tool search defers MCP tool definitions until Claude needs them, so keep the servers and put search terms early in descriptions
-C) Cut down to two servers as proposed, since Claude Code loads the full definition of every tool from every server when a session starts
+C) Cut down to two servers as proposed, since Claude Code loads the full definition of each tool from each server when a session starts
 D) Merge the eight servers into one server with 150 tools, since Claude Code charges context per connected server rather than per tool
 
 <details>
@@ -1769,11 +1997,11 @@ D) Merge the eight servers into one server with 150 tools, since Claude Code cha
 
 ---
 
-## Question 99
+## Question 111
 An invoice-extraction pipeline uses a community Postgres MCP server so the agent can check extracted vendor and PO numbers against the ERP database. The server's single execute_sql tool runs any statement, and the prompt says 'only SELECT queries'. Security wants a guarantee that the agent can never change ERP data. What should the team do?
 
 A) Strengthen the prompt with examples of forbidden statements and a warning that write attempts will be audited
-B) Add a validation subagent that reviews each SQL statement and approves it only when it begins with SELECT
+B) Add a validation subagent that reviews each SQL statement and approves it when it begins with SELECT
 C) Configure the server in its read-only mode and connect it with a database role that has only SELECT rights
 D) Replace the database server with nightly CSV exports of the vendor and PO tables that the agent reads as files
 
@@ -1787,12 +2015,12 @@ D) Replace the database server with nightly CSV exports of the vendor and PO tab
 
 ---
 
-## Question 100
+## Question 112
 After a team rewrote their monorepo-search MCP tool's description to be detailed, Claude Code now calls it for everything, including searching a single file the user has open, where a local Grep would answer in milliseconds. Cross-repo queries work well. What is the best adjustment?
 
 A) Revert to the short description, since the old Grep-first behaviour was faster for most everyday questions
-B) Add a CLAUDE.md rule telling Claude to try Grep first and fall back to the MCP tool only when Grep finds nothing
-C) Remove Grep from Claude Code's allowed tools so that every search goes consistently through the MCP server
+B) Add a CLAUDE.md rule telling Claude to try Grep first and fall back to the MCP tool when Grep finds nothing
+C) Remove Grep from Claude Code's allowed tools so that each search goes consistently through the MCP server
 D) Extend the description to say when not to use the tool, such as searches within the current repo or an open file
 
 <details>
@@ -1805,13 +2033,13 @@ D) Extend the description to say when not to use the tool, such as searches with
 
 ---
 
-## Question 101
+## Question 113
 A research coordinator built with the Agent SDK has search, analysis and report subagents. Only the analysis subagent should query the internal data-warehouse MCP server, which exposes sensitive revenue tables, but today every subagent inherits the server's tools and the report writer has run ad hoc warehouse queries. Which configuration fits best?
 
 A) Give the analysis subagent the warehouse tools in its definition and list explicit tools for the others that exclude them
-B) Keep the warehouse on the main session and tell the search and report subagents in their own prompts never to query it
-C) Run the warehouse server only during the analysis phase and shut it down before the report subagent is spawned
-D) Let every subagent keep access but log each warehouse query so that the data team can review any misuse weekly
+B) Keep the warehouse on the main session and tell the search and report subagents in their own prompts not to query it
+C) Start the warehouse server for the analysis phase and shut it down before the report subagent is spawned
+D) Let each subagent keep access but log each warehouse query so that the data team can review any misuse weekly
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1823,13 +2051,13 @@ D) Let every subagent keep access but log each warehouse query so that the data 
 
 ---
 
-## Question 102
+## Question 114
 A team's design-docs MCP server exposes each architecture decision record as a resource. A developer refactoring the payments module wants Claude Code to follow ADR-042 exactly, but when she says 'check our ADRs' the agent calls a search tool, gets several partial matches, and sometimes follows the wrong record. What should she do?
 
 A) Paste the full text of ADR-042 from the wiki into her prompt each time she asks Claude to work on payments
 B) Reference the resource directly with an @ mention of ADR-042 so its contents are attached to her request
-C) Ask the server team to remove the search tool so the agent has no choice but to read all of the ADR resources
-D) Add a CLAUDE.md line saying that ADR-042 always applies to the payments module and should be searched for first
+C) Ask the server team to remove the search tool so the agent has no choice but to read the ADR resources one by one
+D) Add a CLAUDE.md line saying that ADR-042 applies to the payments module and should be searched for first
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1841,7 +2069,7 @@ D) Add a CLAUDE.md line saying that ADR-042 always applies to the payments modul
 
 ---
 
-## Question 103
+## Question 115
 A CI job that runs Claude Code to generate tests uses a stdio MCP server for coverage data. The server spends about 40 seconds loading a coverage index at startup, and roughly half of CI runs report the server as failed and proceed without coverage data, producing redundant tests. Which change addresses this most directly?
 
 A) Add an instruction asking Claude to wait for the coverage server before generating any tests in the job
@@ -1859,13 +2087,13 @@ D) Retry the whole CI job automatically whenever the generated tests duplicate t
 
 ---
 
-## Question 104
+## Question 116
 A developer wants to try an experimental build of the team's code-review MCP server, which is defined in the shared .mcp.json as review-bot, for a week on his own machine. He must not affect teammates, the shared file, or CI. What is the cleanest way to do this?
 
-A) Edit the url in the shared .mcp.json locally and be careful never to stage that file while the experiment runs
-B) Create a branch whose .mcp.json points at the experimental build and work only on that branch for the week
-C) Add the experimental build at user scope under the same name, since user scope outranks project scope on every machine
-D) Add a local-scope entry named review-bot pointing at the experimental build, which overrides the project entry only for him
+A) Edit the url in the shared .mcp.json locally and be careful not to stage that file while the experiment runs
+B) Create a branch whose .mcp.json points at the experimental build and stay on that branch for the week
+C) Add the experimental build at user scope under the same name, since user scope outranks project scope
+D) Add a local-scope entry named review-bot for the experimental build, overriding the project entry for him alone
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1877,25 +2105,101 @@ D) Add a local-scope entry named review-bot pointing at the experimental build, 
 
 ---
 
-## Question 105
-A 12-person platform team wants a shared Jira MCP server available to everyone who clones their monorepo, but the Jira API token must never appear in version control. How should they configure it?
+## Question 117
+A developer connected the team's issue-tracker MCP server with claude mcp add and pasted her API token into the command. It works for her, but teammates who pull the repo don't see the server, and a security review says no token may be committed to git or shared between people. Which changes give every teammate the server while meeting the review? (Choose two.)
 
-A) Have each engineer register the server individually in ~/.claude.json so the token stays on their own machine only
-B) Commit .mcp.json with the literal token in it, then add the file to .gitignore for safety
-C) Use local scope for the server so the config stays project-specific but is never committed
-D) Commit a project-scoped .mcp.json that references the token as ${JIRA_API_TOKEN} from each engineer's environment
+A) Commit the token in .mcp.json as well, since the repository is private and just the team can read it
+B) Re-add the server with --scope project so its definition goes into .mcp.json at the repo root, committed
+C) Describe the server URL and token in the project CLAUDE.md so Claude connects to it as sessions start
+D) Re-add the server with --scope user so it is stored in ~/.claude.json, which each teammate's setup reads
+E) Write the token in .mcp.json as ${TRACKER_TOKEN} and have each developer set that variable in their shell
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Project scope (.mcp.json) is the version-controlled, team-shared configuration, and ${ENV_VAR} expansion keeps the secret out of the repo while each engineer supplies their own token locally. User scope and local scope both fail the sharing requirement — every engineer would have to configure the server independently. Committing a literal token and then gitignoring the file is self-contradictory: gitignored files are not shared, and the token would still be exposed wherever the file exists.
+**B, E** claude mcp add defaults to local scope, which is private to one user, so the server has to be added with project scope to land in the committed .mcp.json. Claude Code expands ${VAR} in .mcp.json, so the file can reference a variable each developer sets themselves and no token enters git. User scope lives in that one person's ~/.claude.json and never reaches anyone else. Committing a token to a private repo still breaks the review's rule. CLAUDE.md holds instructions, not server configuration.
 
-*Hint if stuck: One MCP scope is version-controlled for the whole team, and env expansion keeps secrets out of it.*
+*Hint if stuck: Separate where shared configuration has to live from where each person's secret has to live.*
 </details>
 
 ---
 
-## Question 106
+## Question 118
+A team's internal code-search MCP server exposes search_code, described as "Searches code." It indexes all 300 company repositories, but Claude Code keeps using grep in the current repo for cross-repo questions. When it does call search_code, broad queries return about 60,000 tokens, far over Claude Code's default limit for MCP output, and answers miss matches. The team wants correct answers without flooding the session's context. Which changes help? (Choose two.)
+
+A) Set MAX_MCP_OUTPUT_TOKENS to 80,000 so the whole 60,000-token result reaches Claude without a cutoff
+B) Move the server from project scope to user scope so it loads earlier than the built-in search tools
+C) Add a CLAUDE.md line telling Claude to send each code search, in-repo ones too, through search_code
+D) Rewrite the description: indexes all 300 repos, takes query and repo filters, use it over grep cross-repo
+E) Add repo, path and max_results parameters to search_code, with a small default and a paging note
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** Claude picks tools from their descriptions, so saying what the index covers, what it takes and when to prefer it over grep is what draws cross-repo questions to it. Filtering parameters and a sensible default with pagination keep each result small and relevant, which the tool-writing guidance recommends over huge dumps (Claude Code limits MCP output to 25,000 tokens by default). Raising MAX_MCP_OUTPUT_TOKENS lets the 60,000 tokens in, which is the flooding the team wants to avoid. Scope decides who gets the server, not how Claude ranks it. Routing in-repo searches to it as well throws away the fast local search that works.
+
+*Hint if stuck: Ask what Claude knows about the tool when it chooses one, and what decides how much each call returns.*
+</details>
+
+---
+
+## Question 119
+A nightly research run uses the Agent SDK with a patents MCP server passed in mcpServers and permissionMode set to acceptEdits. Traces show the agent sees the patent tools but its calls to them never go through. On nights when the server's token has expired, the run still finishes and reports "no relevant patents found". Which changes fix these problems? (Choose two.)
+
+A) Add mcp__patents__* to allowedTools, since acceptEdits approves file edits but not calls to MCP tools
+B) Treat a pending status in the init message as a failure and abort the run before the first turn begins
+C) Check each server's status in the init message and fail the run when patents is failed or needs-auth
+D) Add search_patents to allowedTools, using the tool's own name exactly as the patents server lists it
+E) Wrap the query() loop in try/catch, since a server that fails to connect raises an error you can catch
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** MCP tools need explicit permission; acceptEdits auto-approves file edits and filesystem commands, not MCP calls, so a wildcard such as mcp__patents__* in allowedTools grants exactly that server. A server with an expired token reports failed or needs-auth in the init message, and the run continues without its tools, so code must check that status rather than trust an empty answer. Servers that fail to connect don't throw from query(). pending can just mean the server is still connecting or was served from a cache, so it isn't a failure on its own. allowedTools needs the full mcp__server__tool name, not the bare tool name.
+
+*Hint if stuck: Separate whether the agent may use the tools from whether the server is usable at all.*
+</details>
+
+---
+
+## Question 120
+A team's committed .mcp.json defines design-tokens with the url ${TOKENS_URL:-https://tokens.internal/mcp}. One developer still reaches the old server, retired last month; months ago he ran claude mcp add design-tokens with the old URL in this repo. Meanwhile the CI job should use the staging server but reaches production. Which changes fix both problems? (Choose two.)
+
+A) Add a second design-tokens entry for staging to .mcp.json, which CI will pick as the later entry listed
+B) Remove his local-scope design-tokens entry, since it outranks the project entry and fields aren't merged
+C) Re-add design-tokens at user scope with the new URL so that his personal entry overrides the local one
+D) Set TOKENS_URL to the staging server's URL in the CI job's environment so the default isn't the one used
+E) Run his sessions with --strict-mcp-config so that Claude Code reads just the servers in the shared .mcp.json
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** claude mcp add defaults to local scope, and when the same server name is defined in several places Claude Code uses the whole entry from the highest-precedence source: local, then project, then user. His old local entry therefore wins until he removes it. ${VAR:-default} falls back to the default only when the variable is unset, so CI must set TOKENS_URL. A user-scope entry ranks below both local and project. --strict-mcp-config uses only servers passed with --mcp-config, not .mcp.json. Duplicate names are not chosen by order in the file.
+
+*Hint if stuck: Work out which definition of a same-named server wins, and where an unset variable takes its value from.*
+</details>
+
+---
+
+## Question 121
+A platform team commits a project-scoped .mcp.json that adds their Jira server. One engineer, unsure what it was, declined the prompt Claude Code showed the first time, and since then the Jira tools are missing from her sessions while teammates have them. What should she do?
+
+A) Copy the server entry into her ~/.claude/CLAUDE.md so Claude Code picks the server up at session start
+B) Set ENABLE_TOOL_SEARCH=false so that the Jira tool definitions load upfront instead of on demand
+C) Restart the Jira server process, because a declined prompt stops the server until it is relaunched
+D) Run claude mcp reset-project-choices, then approve the server when Claude Code asks again
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** In interactive sessions Claude Code asks for approval before using project-scoped servers from .mcp.json, and her earlier choice was to decline. claude mcp reset-project-choices clears those choices so she can approve the server. CLAUDE.md holds instructions, not server configuration; turning off tool search changes when definitions load, not whether a declined server is used; and her choice was stored by Claude Code, not by the server process.
+
+*Hint if stuck: Her teammates' setup works, so think about what Claude Code remembered from her own earlier answer.*
+</details>
+
+---
+
+## Question 122
 A developer is prototyping a personal MCP server for their note-taking app and wants it available in every repository they open on their laptop, without teammates ever seeing it in any shared project. Where should it be configured?
 
 A) Register the server at user scope in ~/.claude.json
@@ -1913,12 +2217,12 @@ D) Put the server launch command in the project settings.json env block
 
 ---
 
-## Question 107
+## Question 123
 A six-engineer research swarm team uses an internal papers-search MCP server. Each engineer configured it by hand in ~/.claude.json, the nightly CI runner has no MCP config at all, and one teammate just pasted the literal API token into a draft .mcp.json to share it. What is the correct way to share this server across the team and CI?
 
 A) Commit each engineer's ~/.claude.json into the repository so the CI runner and new teammates inherit identical MCP server settings automatically
 B) Use local scope for the server in every clone, and circulate the API token through the team password manager for each person to enter manually
-C) Check a project-scope .mcp.json into the repository with the token referenced via ${ENV_VAR} expansion, supplied separately by each environment
+C) Check a project-scope .mcp.json into the repository with the token referenced via ${ENV_VAR} expansion, set separately in each environment
 D) Keep the user-scope configs but add a SessionStart hook that downloads the latest server definition and current token from an internal wiki page
 
 <details>
@@ -1931,7 +2235,7 @@ D) Keep the user-scope configs but add a SessionStart hook that downloads the la
 
 ---
 
-## Question 108
+## Question 124
 A developer-productivity team ships an internal cross-repo code-search MCP server whose only tool is named search with the description: Searches the index. Engineers report that Claude Code keeps reaching for the built-in Grep instead, missing results from other repositories. What should the team fix first?
 
 A) Rewrite the description to state the index coverage, query format, and when to use it instead of Grep
@@ -1949,7 +2253,7 @@ D) Rename the MCP tool to grep so the model selects it out of long-standing habi
 
 ---
 
-## Question 109
+## Question 125
 A platform team is writing a shared .mcp.json entry for an incident-tracker MCP server. The vendor offers two remote endpoints, a streamable HTTP one and an older SSE one, and an engineer proposes the SSE endpoint because an old internal wiki page shows that setup working. Which entry should the team commit?
 
 A) An entry with type sse pointing at the SSE endpoint, since SSE is the transport Claude Code recommends for remote servers
@@ -1967,13 +2271,13 @@ D) An entry with type http pointing at the HTTP endpoint, since Claude Code trea
 
 ---
 
-## Question 110
+## Question 126
 A platform engineer at a logistics company asks Claude Code which of the repository's 300 Kubernetes manifests still set the deprecated key legacy_queue_url. The agent's plan is to list every .yaml file and then Read them one at a time to look for the key. What should the agent do instead?
 
 A) Use Glob with the pattern **/*legacy_queue_url*.yaml to collect the manifests that use the key
-B) Run Grep for legacy_queue_url restricted to YAML files, then Read only the files that match
+B) Run Grep for legacy_queue_url restricted to YAML files, then Read the files that match
 C) Read the manifests in batches of twenty so the context stays small while it scans each one
-D) Ask the engineer to export the manifests into one combined file so a single Read covers all of them
+D) Ask the engineer to export the manifests into one combined file so a single Read covers the whole set
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1985,7 +2289,7 @@ D) Ask the engineer to export the manifests into one combined file so a single R
 
 ---
 
-## Question 111
+## Question 127
 A developer-productivity agent is asked where the PAYMENT_TIMEOUT_MS environment variable is consumed in a 900-file Node service. It starts reading src/ file by file, and after 45 full-file reads the session is near its context limit with no answer yet. Which change to the agent's approach fixes this?
 
 A) Have the agent summarize each file after reading it and then discard the raw contents from its notes
@@ -2003,7 +2307,7 @@ D) Use Glob to list files whose names contain config or env, and Read those file
 
 ---
 
-## Question 112
+## Question 128
 While refactoring a 700-line billing module, Claude Code must rename the constant MAX_RETRY_MS to MAX_RETRY_DELAY_MS. The constant appears 31 times in that file, and every occurrence should change. Edit refuses the change because old_string is not unique. What is the best way to complete the rename?
 
 A) Expand old_string with surrounding lines and issue 31 separate Edit calls, one for each of the occurrences in turn
@@ -2021,7 +2325,7 @@ D) Call Edit once with old_string MAX_RETRY_MS, new_string MAX_RETRY_DELAY_MS an
 
 ---
 
-## Question 113
+## Question 129
 Claude Code tries to change a timeout in a Python file but Edit keeps failing with a no-match error. The agent wrote old_string from memory of what the code probably looks like, using four-space indentation, while the file actually uses tabs. What should the agent do next?
 
 A) Read the relevant lines first, then copy the exact text, tabs included, into old_string for the Edit
@@ -2039,7 +2343,7 @@ D) Switch to Write and regenerate the whole file from memory with the new timeou
 
 ---
 
-## Question 114
+## Question 130
 An engineer exploring an event-driven order service asks Claude Code what triggers handleInvoiceCreated. Grep for that name finds only its definition and one line: bus.on('invoice.created', handleInvoiceCreated). The agent is about to report that nothing calls the handler. What is the right next step?
 
 A) Report that the handler is effectively dead code, since Grep found no direct call sites anywhere in the repository
@@ -2057,29 +2361,29 @@ D) Read the bus implementation end to end, because the dispatch logic there must
 
 ---
 
-## Question 115
-In a multi-agent research system, an analysis subagent works over a local mirror of 3,000 Markdown notes. To find notes that mention the compound name tirzepatide, it runs cat on every file through Bash and scans the combined output, which overflows its context. Which tool approach should the subagent use?
+## Question 131
+In a multi-agent research system, an analysis subagent must pull the methods and results sections from a 140-page clinical trial report saved as a PDF. Today it converts the whole file to text through Bash and loads the output, which floods its context. What should it do instead?
 
-A) Use Glob for **/*tirzepatide*.md so only notes with the compound in their file names are opened
-B) Keep cat but pipe the output through head so only the opening lines of each note are returned
-C) Grep for tirzepatide with output listing matching files, then Read only the notes that match
-D) Ask the coordinator to split the corpus so each of ten subagents can cat three hundred notes
+A) Read the PDF in one call with no parameters, since the Read tool takes in a long PDF as a whole
+B) Grep the PDF for the words Methods and Results, then read just the lines that match those words
+C) Call Read with the pages parameter, starting at the contents pages, then the sections it needs
+D) Ask the coordinator to split the PDF into ten files and hand each part to a separate subagent
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Grep searches contents without loading every file into context, and a files-with-matches result gives the short list to Read. Name-based Glob misses notes that mention the compound only in their body. Truncating with head drops mentions further down each note, and splitting the cat job across ten subagents multiplies the same waste.
+**C)** Read handles PDFs longer than 10 pages in page ranges through its pages parameter, up to 20 pages per call, so the subagent can check the contents first and then load the methods and results pages. A single call without a range is not how long PDFs are read, Grep searches text rather than rendered PDF pages, and splitting the file across subagents multiplies the work without narrowing what each one loads.
 
-*Hint if stuck: Search first, read second: let a content search narrow the set before anything is loaded.*
+*Hint if stuck: Find a way to load a slice of the document rather than a converted copy of the whole thing.*
 </details>
 
 ---
 
-## Question 116
+## Question 132
 Claude Code needed to change one port number in a 600-line docker-compose.yml. It read the file, then used Write to output the entire file with the new port. The commit also reverted three service definitions that a teammate's sync script had written to the file between the read and the write. Which practice would have prevented this?
 
-A) Re-read the file immediately before each Write so that the regenerated copy always reflects the latest disk state
-B) Ask Claude to diff its rewritten output against the original file and confirm the only change was the port
+A) Re-read the file immediately before each Write so that the regenerated copy reflects the latest disk state
+B) Ask Claude to diff its rewritten output against the original file and confirm the port was the single change
 C) Lock the file through a Bash flock command while Claude regenerates it, so other processes cannot change it
 D) Use Edit with a unique old_string around the port line, so only that span changes and nothing else is touched
 
@@ -2093,7 +2397,7 @@ D) Use Edit with a unique old_string around the port line, so only that span cha
 
 ---
 
-## Question 117
+## Question 133
 A new hire at an insurance firm asks Claude Code to explain how a refund request moves through a legacy Java service with 2,000 files. The agent has begun reading every file under src/ in alphabetical order. Which approach should it take instead?
 
 A) Grep for the refund route string to locate the entry point, then Read it and follow each call it makes
@@ -2111,12 +2415,12 @@ D) Glob for every *Controller.java file and Read all of them in full, since cont
 
 ---
 
-## Question 118
+## Question 134
 A CI job runs claude -p before merge to check that no test file in a 400-file suite still contains a focused test such as it.only( or describe.only(. The current prompt tells Claude to Read every test file and report any it finds, and the job takes 14 minutes. What is the better tool instruction?
 
 A) Use Glob for **/*.only.test.ts, since focused tests are normally kept in separately named files
 B) Grep the test directories for the regex \.only\( and report every file and line that matches
-C) Read only the test files changed in the PR and trust that unchanged files were checked earlier
+C) Read just the test files changed in the PR and trust that unchanged files were checked earlier
 D) Split the Read work across four parallel claude -p jobs so each one reads a quarter of the suite
 
 <details>
@@ -2129,7 +2433,7 @@ D) Split the Read work across four parallel claude -p jobs so each one reads a q
 
 ---
 
-## Question 119
+## Question 135
 Claude Code must change return cachedValue; to return freshValue; inside getPrice() in pricing.ts. The same statement also appears inside getDiscount(), which must not change. Edit fails because the string occurs twice. What is the best way to make the change?
 
 A) Set replace_all to true, then manually restore the getDiscount() occurrence with a second Edit afterwards
@@ -2147,12 +2451,12 @@ D) Use Bash with sed and a line number to replace the statement only on the getP
 
 ---
 
-## Question 120
+## Question 136
 A data-platform team keeps Protocol Buffer definitions in schemas/ directories scattered across 60 services. Claude Code is asked to list them all. Its plan is to Grep for the line syntax = "proto3" across the repository and treat the matches as the full list. What is the problem with that plan, and what should it do?
 
 A) The plan is fine; Grep is the right tool for any discovery task across a large repository
-B) It should Read every file under each schemas/ folder, since only reading guarantees completeness
-C) It should Grep for the keyword message instead, since every proto file declares at least one message type
+B) It should Read each file under each schemas/ folder, since reading them is the sure way to be complete
+C) It should Grep for the keyword message instead, since each proto file declares at least one message type
 D) It should Glob for **/schemas/**/*.proto, because the task is about file paths, not content markers
 
 <details>
@@ -2165,12 +2469,12 @@ D) It should Glob for **/schemas/**/*.proto, because the task is about file path
 
 ---
 
-## Question 121
+## Question 137
 A retailer's support agent, built on the Agent SDK, needs to look up return-policy rules stored as 80 Markdown files in a policies/ folder. The prototype gives the agent Bash so it can run cat and grep. Security review objects that one tool can modify files or reach the network. Which tool configuration best meets the need?
 
 A) Give the agent Read and Grep only, which cover searching and reading the policies without side effects
-B) Keep Bash but add a system-prompt rule telling the agent to run only cat and grep commands
-C) Remove file tools entirely and paste all 80 policy files into the system prompt at session start
+B) Keep Bash but add a system-prompt rule telling the agent to run nothing except cat and grep commands
+C) Remove file tools and paste the 80 policy files into the system prompt at session start
 D) Give the agent Write and Edit as well, so it can annotate policies it finds unclear for later review
 
 <details>
@@ -2183,7 +2487,7 @@ D) Give the agent Write and Edit as well, so it can annotate policies it finds u
 
 ---
 
-## Question 122
+## Question 138
 In a multi-agent research system, the report subagent builds a 3,000-word Markdown report by running Bash commands like echo "..." >> report.md for each paragraph. Quotes and backticks in the text keep breaking the shell commands, leaving the report with missing sections. How should the subagent produce the file?
 
 A) Escape every quote and backtick in each paragraph before passing it to echo through Bash
@@ -2201,7 +2505,7 @@ D) Switch the Bash commands from echo to printf, which handles special character
 
 ---
 
-## Question 123
+## Question 139
 An on-call engineer asks Claude Code why a nightly batch failed. The job's log is a 90 MB, 1.2-million-line text file. The agent reads the first few thousand lines, sees nothing alarming, and concludes the log shows no errors. What should the agent do?
 
 A) Ask the engineer to delete the older half of the log so the remaining file fits in one Read call
@@ -2219,7 +2523,7 @@ D) Accept the partial view as representative, since batch failures are usually l
 
 ---
 
-## Question 124
+## Question 140
 Claude Code is asked to update an import path from @acme/legacy-ui to @acme/ui in a monorepo. The old path appears in about 25 files, each with slightly different surrounding code. Which approach is most reliable?
 
 A) Glob for every .ts and .tsx file in the repo, Read each one, and Write back any file containing the path
@@ -2237,7 +2541,7 @@ D) Grep for @acme/legacy-ui to list the affected files, then Edit each import li
 
 ---
 
-## Question 125
+## Question 141
 A CI job asks claude -p to fix a failing unit test in a payments service. Claude edits the code, re-reads the changed function, says the logic now looks correct, and ends. The pipeline then fails on the same test. The job's tool list includes Read, Edit and Bash restricted to npm test. What should the prompt instruct Claude to do?
 
 A) Run npm test through Bash after each edit and keep iterating until the failing test actually passes
@@ -2255,7 +2559,7 @@ D) Re-read the edited function a second time and compare it line by line with th
 
 ---
 
-## Question 126
+## Question 142
 A developer-productivity agent must report which packages in a 70-package JavaScript monorepo define their own lint configuration, saved as .eslintrc.json, .eslintrc.js or eslint.config.js. Which approach answers this most directly?
 
 A) Grep every JSON and JS file for the word rules and treat each matching directory as having a config
@@ -2273,7 +2577,7 @@ D) Ask the agent to Read the root ESLint config, which lists every package-level
 
 ---
 
-## Question 127
+## Question 143
 Claude Code read config/routes.ts, then the editor's format-on-save reflowed the file. When Claude tries to Edit a route using the text it read earlier, the edit fails because old_string no longer matches. What is the right recovery?
 
 A) Disable format-on-save for the rest of the session so the cached copy of the file stays accurate
@@ -2291,12 +2595,12 @@ D) Shorten old_string to the route's path string alone so formatting differences
 
 ---
 
-## Question 128
+## Question 144
 A legal-operations team at a software company needs to know every source file that still carries the old GPL-2.0 license header before a relicensing deadline. The repo has 12,000 files across 15 languages and the headers sit inside comments. Which tool approach should their Claude Code session use?
 
 A) Glob for files named LICENSE or COPYING in each directory and treat their folders as GPL-2.0 code
-B) Ask Claude to recall which languages usually use GPL-2.0 and Glob for those file extensions only
-C) Read the top 20 lines of every file in the repo, since license headers always sit at the very start
+B) Ask Claude to recall which languages usually use GPL-2.0 and Glob for just those file extensions
+C) Read the top 20 lines of each file in the repo, since license headers sit at the very start
 D) Grep for GPL-2.0 across the repo with a file list output, then Read samples to confirm the header form
 
 <details>
@@ -2309,13 +2613,13 @@ D) Grep for GPL-2.0 across the repo with a file list output, then Read samples t
 
 ---
 
-## Question 129
+## Question 145
 A research coordinator spawns a search subagent to find relevant passages in a local cache of downloaded papers. The subagent was given Read, Grep, Glob, Write and Bash for convenience. In one run it rewrote two cached papers while trying to clean up their formatting. What change best prevents this?
 
 A) Restrict the search subagent's tools to Read, Grep and Glob, since its role never requires writing
 B) Keep the full tool set but have the coordinator diff the cache after each run and restore any changes
-C) Add a line to the subagent's prompt saying the cached papers are read-only and must not be modified
-D) Mark the cached papers read-only on disk, while leaving the subagent's tool list exactly as it is
+C) Add a line to the subagent's prompt saying the cached papers are reference copies that must not be modified
+D) Remove write permission on the cached paper files, while leaving the subagent's tool list exactly as it is
 
 <details>
 <summary>Answer & explanation</summary>
@@ -2327,7 +2631,7 @@ D) Mark the cached papers read-only on disk, while leaving the subagent's tool l
 
 ---
 
-## Question 130
+## Question 146
 Claude Code found the entry point of a legacy order pipeline in orders/main.py using Grep. To follow the flow, it now Greps the whole repo for each function main.py calls, such as process and validate, and gets hundreds of unrelated matches for those common names. What should it do instead?
 
 A) Grep with case-sensitive whole-word matching so that process only matches exact function names
@@ -2345,7 +2649,7 @@ D) Glob for files named process.py and validate.py and assume those contain the 
 
 ---
 
-## Question 131
+## Question 147
 A developer asks Claude Code to add a test file for a new RefundCalculator class. The team's existing test files follow a strict layout with shared fixtures and a naming convention, but Claude writes the new test from scratch and it uses different fixture helpers and naming. What workflow should Claude follow?
 
 A) Write the test from scratch as before, then run the linter through Bash to fix any naming problems
@@ -2363,7 +2667,7 @@ D) Generate the test from scratch and ask the developer to point out which conve
 
 ---
 
-## Question 132
+## Question 148
 A CI job asks Claude Code to estimate the blast radius of removing the logAudit helper. Claude runs Grep in content mode, sees 12 matching lines shown before the output was cut off by its result limit, and reports that logAudit is used in only 12 places. The real number is over 300. Which change to the tool usage fixes this?
 
 A) Ask Claude to estimate the total from the visible sample, scaling by the fraction of files it searched
@@ -2381,7 +2685,45 @@ D) Run Grep in count mode or files-with-matches mode first to get the full scope
 
 ---
 
-## Question 133
+## Question 149
+During a refactor in Claude Code, two Edit calls fail. In orders.ts, old_string "return null;" matches three places, and only the one inside validateCart() should change. In routes.ts, the editor's format-on-save reflowed the file after Claude read it, and the Edit fails because old_string no longer matches. Which approaches fix these edits safely? (Choose two.)
+
+A) In orders.ts, set replace_all: true so the Edit applies and each match is updated in a single call
+B) In orders.ts, widen old_string to take in validateCart()'s nearby lines so it matches one place only
+C) In routes.ts, Write the whole file back from the earlier Read with the change made in that content
+D) In both files, switch to Bash sed -i with a loose regex, which avoids the old_string match failures
+E) In routes.ts, Read the file again and copy old_string from its current text before retrying the Edit
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, E** Edit needs old_string to match exactly once, so adding surrounding lines from validateCart() pins the one occurrence. A stale old_string means the file changed since the read; reading it again and copying the current text makes the match exact. replace_all would change all three returns when only one should change. Writing back content from the earlier read discards the formatter's changes. A loose sed regex can hit unintended lines and bypasses Edit's exact-match safety.
+
+*Hint if stuck: Ask what exact text each edit has to target, and what else a broader fix would touch.*
+</details>
+
+---
+
+## Question 150
+In a session where Claude Code's Grep and Glob tools are enabled, an engineer asks for every caller of chargeCard and a list of all *.contract.test.ts files. chargeCard is re-exported from billing/index.ts as charge and as pay. Claude grepped for chargeCard( and missed half the callers, then grepped file contents for .contract.test.ts and listed only files that import a helper by that name. Which approaches fix these? (Choose two.)
+
+A) Read billing/index.ts to list each exported alias, then Grep the codebase for charge and pay as well
+B) Grep for any identifier ending in charge, which catches each alias and any wrapper built around it
+C) Read each file under src/ in turn, so that no caller is missed however the function is imported
+D) Glob for **/*.contract.test.ts, since the request is about file names, not text in the files
+E) Glob for files whose contents call chargeCard, charge or pay, since Glob matches any text pattern
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** Callers that use re-exported names never mention chargeCard, so reading the module that re-exports it gives the aliases to search for. Grep searches contents and Glob matches paths, so a list of files by name pattern is a Glob query. Glob doesn't look inside files. A loose suffix pattern misses pay and pulls in unrelated identifiers. Reading every file wastes context when a targeted search answers the question.
+
+*Hint if stuck: For each request, ask whether the answer lives in paths or in contents, and where the extra names come from.*
+</details>
+
+---
+
+## Question 151
 A CI workflow prompt for claude -p instructs: "Use Grep to collect every file matching *.integration.test.ts under services/, then run them." The step is slow and intermittently misses test files. A reviewer flags the instruction. What should it say instead?
 
 A) Keep Grep but anchor the regular expression so it matches the file names more precisely
@@ -2399,7 +2741,7 @@ D) Use Bash with find piped through xargs, because the built-in tools cannot enu
 
 ---
 
-## Question 134
+## Question 152
 On a Linux workstation, a team defines a read-only code-explorer subagent for Claude Code. It must search file names and contents but never run shell commands. The team worries it cannot search at all, because Glob and Grep are not in Claude Code's default tool set on Linux. How should they configure the subagent's tools?
 
 A) List Read and Bash in its tools field, and add a prompt line telling it to run only find and grep commands in the shell
@@ -2417,7 +2759,7 @@ D) List Read, Grep and Glob in its tools field and leave out Bash, which brings 
 
 ---
 
-## Question 135
+## Question 153
 A developer-productivity agent must change one specific 'return null;' line inside a 900-line file. The statement appears 14 times, several of them inside near-identical blocks, so even old_string values widened with surrounding lines still match more than once. What is the reliable fallback?
 
 A) Use Bash with sed to replace every occurrence of 'return null;' in the file
@@ -2435,11 +2777,11 @@ D) Read the full file, make the change in that content, and Write the whole file
 
 ---
 
-## Question 136
+## Question 154
 An agent must find every caller of formatCurrency. The function is defined in utils/money.ts but re-exported from a wrapper module, src/lib/index.ts, under the names fmtMoney and toCurrency, and most of the codebase imports those names. A Grep for formatCurrency found only 3 callers. What should the agent do next?
 
-A) Read every file in src/ from start to finish so that no caller of the function is missed
-B) Read the wrapper to list each exported alias, then Grep the codebase for every one of them
+A) Read each file in src/ from start to finish so that no caller of the function is missed
+B) Read the wrapper to list each exported alias, then Grep the codebase for each of them
 C) Glob for files whose names contain currency and treat each of them as a caller of the function
 D) Accept the three results as complete, since a single Grep already covers the whole codebase
 

@@ -10,7 +10,7 @@
 &nbsp;
 ![No install](https://img.shields.io/badge/no_install-runs_in_browser-4E8F83?style=for-the-badge)
 &nbsp;
-![Questions](https://img.shields.io/badge/745_questions-reviewed-5B7FA6?style=for-the-badge)
+![Questions](https://img.shields.io/badge/865_questions-reviewed-5B7FA6?style=for-the-badge)
 
 <br>
 
@@ -29,10 +29,9 @@ built from the ground up and current as of **June 2026**. Instead of grinding a
 PDF of flashcards, you climb a ten-floor tower, fight a boss made of each way
 real agent systems break, and finish against **The Proctor** — a timed mock exam
 built to the official blueprint: 60 questions, 120 minutes, 4 of the 6 official
-scenarios (single-answer only for now; the real exam also has multiple-response
-items). **The
+scenarios, with about one choose-two (multiple-response) item in ten. **The
 Blueprint** maps the question bank to the official exam guide's 30 task statements
-so you can study the guide line by line. All **745 questions** were written to the
+so you can study the guide line by line. All **865 questions** were written to the
 exam blueprint and checked by an adversarial reviewer.
 
 It's one folder of static files. Nothing to build, nothing to install.
@@ -90,8 +89,8 @@ until you submit. Close the tab and it resumes, with the clock still running, as
 would on exam day. The result gives an **estimated scaled-score range** next to your
 raw score (72% raw maps to the 720 line; the real scaling isn't published) plus
 breakdowns by domain and by scenario, and points you at the task statements to drill
-next. Every item is single-answer: the real exam also has multiple-response items
-("select 2"), which this bank doesn't have yet. Prefer to learn as you go? The
+next. About 6 of the 60 items are choose-two (5 options, pick 2, all or nothing); the real
+exam has multiple-response items too, but doesn't publish their share. Prefer to learn as you go? The
 **Practice Exam** uses the same build with a 2-minute timer per question and the
 answer after each one.
 
@@ -113,7 +112,7 @@ The home screen opens on **Exam readiness**: for each domain, how much you've co
 | 🎓 **Learn** | 43 lessons in three stages: domain primers, one per task statement, scenario walkthroughs. Slides, narrated video, lab, quick check, drill. |
 | 🗼 **The Tower** | The campaign. Ten floors, ten bosses with banter and grudges. Each floor covers a group of task statements and serves 10 questions you haven't seen yet. Clear at 7/10 to ascend; ★ for a perfect 10. |
 | 📘 **The Blueprint** | The official exam guide as a map: 5 domains → 30 task statements → key ideas, your coverage, links to the official docs, and a drill of up to 10 questions for each. Also by scenario. |
-| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled-score range, single-answer items only) or Practice exam (2 min per question, instant feedback). Each new exam prefers questions you haven't had in an earlier one: the bank holds a dozen fully separate mocks. |
+| 📋 **The Proctor** | Mock exam (60 Qs, 120 min, 4 of 6 scenarios, resumable, estimated scaled-score range, about 6 choose-two items) or Practice exam (2 min per question, instant feedback). Each new exam prefers questions you haven't had in an earlier one: the bank holds a dozen fully separate mocks. |
 | ⚡ **Recall Sprint** | 90 seconds over questions you've already studied (the whole bank until you've seen 20); combos multiply your score. Builds recall, doesn't count toward readiness. |
 | 🔦 **Anti-Pattern Hunt** | Twelve monsters, each an anti-pattern the exam's wrong answers are built from. Hunt one through the task statements it haunts: 6 of 8 right captures it. |
 | 🩹 **Mistake Clinic** | Every question you miss checks in here. Get it right twice in a row to discharge it — spaced repetition aimed at your weak spots. |
@@ -130,13 +129,20 @@ The home screen opens on **Exam readiness**: for each domain, how much you've co
 
 ## 🧠 The question bank is the point
 
-`questions.js` holds **745 scenario questions**, split by the exam's weights
-(D1 203 · D2 135 · D3 147 · D4 146 · D5 114) with at least 18 on every one of the
+`questions.js` holds **865 scenario questions** (100 of them choose-two), split by the exam's weights
+(D1 229 · D2 154 · D3 168 · D4 166 · D5 148) with at least 18 on every one of the
 30 task statements. Every question has a stable `id`, the task statement (`ts`) and
 scenario it tests, and new ones carry the official doc page (`src`) that backs the
 answer. `scripts/check_bank.py` keeps the bank honest: valid tags, no retired ids,
 answer positions balanced, and the correct option is the longest one only about as
-often as chance (so "pick the longest answer" doesn't work). The first 197 were authored
+often as chance (so "pick the longest answer" doesn't work). It validates both item
+types: single-answer (4 options, one key) and multiple-response (`type: 'mr'`, 5 options,
+two keys, each option index a key in 25–55% of MR items, the two keys being the two
+longest options in at most 20%). `scripts/check_cues.py` is a separate gate: it
+scores test-taking strategies (follow or avoid the hint, absolute words, the longest
+or shortest option) by how far they beat chance, separately for single-answer
+(max +2 points) and multiple-response (max +3 points), and `--list` names the items
+that leak. `scripts/test_tooling.py` self-tests the checkers on fixtures. The first 197 were authored
 against a June-2026 brief of the real exam — `stop_reason` loop mechanics, hooks
 vs prompts, MCP config scopes, the `CLAUDE.md` hierarchy, skills frontmatter,
 `claude -p` CI patterns, batch API economics, schema design, context management,

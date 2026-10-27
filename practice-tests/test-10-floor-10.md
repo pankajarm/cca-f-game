@@ -1,24 +1,24 @@
 # Practice Test 10: Synthesis Chamber
 **D5: Context Management & Reliability** (15% of the exam) · task statements 5.4, 5.5, 5.6
 
-58 questions. Exam pace is 2 minutes per question.
+73 questions. Exam pace is 2 minutes per question.
 
 ---
 
 ## Question 1
-A developer has spent two hours with Claude Code tracing a flaky checkout test across a 900-file Rails app, and the context is nearly full of log dumps and file reads. Next she wants Claude to implement the fix for the race condition they finally isolated in the order-lock service. What should she do before starting the implementation?
+Early in a long Claude Code session, a code-reviewer subagent spent many tool calls reviewing the authentication module and returned a summary. The main conversation has since compacted, and the developer now wants that review extended to the authorization logic, with the earlier file-level detail available. What should she do?
 
-A) Raise the auto-compact threshold with /autocompact so the window can hold more of the debugging transcript while the implementation phase gets underway
-B) Run /clear so the implementation starts from a fresh window, then paste the last few assistant messages back in by hand so the conclusions carry over
-C) Let automatic compaction trigger whenever the window fills, since the automatic pass already decides which parts of the debugging history are worth keeping
-D) Run /compact with an instruction to keep the isolated root cause, the affected files and the agreed fix, so the summary preserves what the next phase needs
+A) Re-run the code-reviewer subagent on authentication and authorization together so it rebuilds its findings
+B) Paste the subagent's earlier summary back into the main session and ask the main agent to carry on the review
+C) Run /clear and start the authorization review fresh, since compaction removed the subagent's earlier history
+D) Ask Claude to resume that code-reviewer subagent and continue its review into the authorization logic
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Compacting at the phase boundary with focus instructions keeps exactly the conclusions the implementation needs and drops the noisy logs. Letting the automatic pass decide may keep the wrong details, and raising the threshold keeps more of the very noise that is crowding the window. Clearing and pasting a few messages back by hand risks losing the specifics the earlier messages held.
+**D)** Subagent transcripts are stored separately from the main conversation, so compaction leaves them untouched, and a resumed subagent keeps its full history of tool calls, results and reasoning. Re-running starts a new instance that repeats the work, the summary lacks the file-level detail she wants, and /clear rests on the mistaken belief that compaction erased the subagent's history.
 
-*Hint if stuck: Ask who should decide what carries over when one phase of work ends and the next begins.*
+*Hint if stuck: Consider where the reviewer's working history is kept and whether compaction reached it.*
 </details>
 
 ---
@@ -26,9 +26,9 @@ D) Run /compact with an instruction to keep the isolated root cause, the affecte
 ## Question 2
 An engineer joining a platform team asks Claude Code, in her main session, how feature flags are evaluated across 30 microservices in a monorepo. Claude starts reading service after service, and after twelve services the context is already 60% full before she has written any code. What change gives her the answer without consuming her working context?
 
-A) Ask Claude to read only the first 200 lines of each service file so that more of the thirty services fit into the session before it fills up
-B) Switch the session to a 1M-token model variant so all thirty services can be read in full into the main conversation before any coding begins
-C) Add every service's directory to CLAUDE.md with a one-line description so Claude can answer the question from memory without opening the code
+A) Ask Claude to read just the first 200 lines of each service file so that more of the thirty services fit into the session before it fills up
+B) Switch the session to a 1M-token model variant so the thirty services can be read in full into the main conversation before any coding begins
+C) Add each service's directory to CLAUDE.md with a one-line description so Claude can answer the question from memory without opening the code
 D) Delegate the question to a subagent that explores the services in its own context and returns a short summary with the relevant file paths
 
 <details>
@@ -47,7 +47,7 @@ After finishing a payments refactor in Claude Code, a developer switches to an u
 A) Run /compact with an instruction to focus on the documentation work so that the payments history is condensed but still available if needed
 B) Keep going and correct Claude each time it brings up payments conventions, since the stale history will scroll out of the window soon enough
 C) Add a line to CLAUDE.md telling Claude to ignore payment-module conventions whenever it is working on files under the marketing site directory
-D) Run /clear before starting the documentation task, because the old conversation is unrelated and only crowds out what the new task needs
+D) Run /clear before starting the documentation task, because the old conversation is unrelated and just crowds out what the new task needs
 
 <details>
 <summary>Answer & explanation</summary>
@@ -81,9 +81,9 @@ D) Require each subagent to return a condensed, structured findings list with cl
 A CI job runs Claude Code headlessly on every pull request in a 12,000-file monorepo to flag risky changes. The prompt is 'review this repository for problems introduced by the PR', and runs regularly take 25 minutes, read hundreds of untouched files and sometimes time out. What is the most effective fix?
 
 A) Give the job a longer timeout and a bigger runner so that the review can finish even when it reads large parts of the repository on each pull request
-B) Pre-load the entire repository into the prompt with a concatenation script so that Claude never has to spend time searching for files itself
+B) Pre-load the entire repository into the prompt with a concatenation script so that Claude does not have to spend time searching for files itself
 C) Split the repository into four parallel CI jobs that each review a quarter of the codebase, then merge their findings into one comment
-D) Scope the prompt to the PR diff and the changed files, and let Claude pull in nearby callers only when the diff calls for it
+D) Scope the prompt to the PR diff and the changed files, and let Claude pull in nearby callers when the diff calls for them
 
 <details>
 <summary>Answer & explanation</summary>
@@ -99,8 +99,8 @@ D) Scope the prompt to the PR diff and the changed files, and let Claude pull in
 A team uses Claude Code for a three-phase job on a legacy billing system: map every place tax is calculated, design a single tax module, then migrate callers. Phase one takes a full session and produces dozens of findings, but by the design phase Claude is recommending changes that contradict call sites it found earlier. What working pattern should the team adopt?
 
 A) Repeat the full list of call sites inside each design prompt, typing them from the team's notes so Claude cannot lose track of any of them
-B) Keep all three phases in one continuous session so that Claude retains direct memory of every call site it found, and avoid compacting at any point
-C) Ask Claude at the start of the design phase to re-read every file it opened during mapping, so its findings are fresh in context again
+B) Keep the three phases in one continuous session so that Claude retains direct memory of each call site it found, and avoid compacting at any point
+C) Ask Claude at the start of the design phase to re-read each file it opened during mapping, so its findings are fresh in context again
 D) Have Claude write phase-one findings to a scratchpad file with file paths and notes, then begin the design phase in a fresh session that reads that file
 
 <details>
@@ -154,8 +154,8 @@ A developer needs three separate facts before refactoring a service in a large G
 
 A) Ask the three questions one after another in the main session, running /compact after each answer to recover the context they used up
 B) Spawn three subagents in parallel, each with one question, and have each return the answer with file paths and line references
-C) Have one subagent answer all three questions in sequence so that it can reuse whatever it learns about the codebase between the questions
-D) Write the three questions into CLAUDE.md so that every future session already knows to look for retries, config loading and payment tests
+C) Have one subagent answer the three questions in sequence so that it can reuse whatever it learns about the codebase between the questions
+D) Write the three questions into CLAUDE.md so that future sessions already know to look for retries, config loading and payment tests
 
 <details>
 <summary>Answer & explanation</summary>
@@ -171,7 +171,7 @@ D) Write the three questions into CLAUDE.md so that every future session already
 A weekly CI job uses Claude Code to find unused exports across 340 packages in a TypeScript monorepo. The run takes about six hours, and when the runner is preempted at package 260 the next run starts over from package 1. What should the architect add?
 
 A) A larger, non-preemptible runner and a retry wrapper that restarts the job from the beginning automatically whenever the runner is lost
-B) A step that commits the partial report to the repository every hour, so the team at least sees some of the findings when a run fails
+B) A step that commits the partial report to the repository each hour, so the team at least sees some of the findings when a run fails
 C) A manifest file recording each package's status and findings as it finishes, which a restarted run reads to process only the remaining packages
 D) An instruction in the prompt telling Claude to skip packages that it remembers having analyzed in a previous run of the job
 
@@ -206,10 +206,10 @@ D) Run /context to see what is taking up the window, then target the biggest cat
 ## Question 12
 A senior engineer onboarding to a 5,000-file Java codebase asks Claude Code to 'read everything under src/ first so you fully understand the system, then we will plan the caching layer'. The read-through fills the context before planning begins. What should the architect recommend instead?
 
-A) Start from the entry points and the code paths that caching would touch, and use searches for specific symbols to pull in only relevant files
-B) Generate a full architectural summary of the codebase once, save it in CLAUDE.md, and load it into every session so the system is always understood
+A) Start from the entry points and the code paths that caching would touch, and use searches for specific symbols to pull in relevant files
+B) Generate a full architectural summary of the codebase once, save it in CLAUDE.md, and load it into each session so the system is understood up front
 C) Read the src/ tree in alphabetical batches of 200 files, running /compact between batches so that Claude builds up a summary of the whole system
-D) Have Claude list every class name in the codebase first and then decide which of the listed classes are worth reading in full for the caching layer
+D) Have Claude list each class name in the codebase first and then decide which of the listed classes are worth reading in full for the caching layer
 
 <details>
 <summary>Answer & explanation</summary>
@@ -224,10 +224,10 @@ D) Have Claude list every class name in the codebase first and then decide which
 ## Question 13
 A research coordinator keeps a running list of findings only in its conversation history. During a long run its context is compacted, and the final report omits two key findings from early subagents that the summary dropped. What design keeps findings safe from compaction?
 
-A) Have the coordinator re-request all early subagent results just before writing the report, so they are back in context at the right time
+A) Have the coordinator re-request the early subagent results just before writing the report, so they are back in context at the right time
 B) Have the coordinator append each finding to an external findings store as it arrives and build the report from that store
 C) Instruct the coordinator to mark important findings with a special tag so the summarizer is more likely to keep them during compaction
-D) Turn off compaction for the coordinator so that its conversation history always keeps every finding exactly as each subagent first returned it
+D) Turn off compaction for the coordinator so that its conversation history keeps each finding exactly as each subagent first returned it
 
 <details>
 <summary>Answer & explanation</summary>
@@ -240,6 +240,98 @@ D) Turn off compaction for the coordinator so that its conversation history alwa
 ---
 
 ## Question 14
+A Go monorepo checks in 400 MB of generated protobuf code and a vendored cloud SDK, and neither is in .gitignore. When developers ask Claude Code where something is defined, its searches return hundreds of hits in those folders and it reads several, filling context before it reaches the real code. The team wants these folders kept out of Claude's reads for everyone. What should they do?
+
+A) Add Read deny rules for those folders under permissions.deny in the project's committed .claude/settings.json
+B) List the generated and vendor folders in claudeMdExcludes in the project settings, so Claude skips them when searching
+C) Add a line to the root CLAUDE.md asking Claude to ignore generated and vendored code when it searches
+D) Run /compact after each search so the irrelevant hits are summarised away before Claude reads the real code
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** For checked-in paths that .gitignore doesn't cover, the large-codebase guide recommends Read deny rules in permissions.deny; committed in .claude/settings.json they apply to everyone and block Claude's file tools from opening those files (and Claude Code tries to leave them out of Grep and Glob results). claudeMdExcludes only stops CLAUDE.md and rules files from loading; it doesn't affect searches or reads. A CLAUDE.md line is advisory, so the files can still be opened. Compacting afterwards cleans up the damage but doesn't prevent the reads.
+
+*Hint if stuck: Separate what Claude is told from what it is allowed to open.*
+</details>
+
+---
+
+## Question 15
+In a large TypeScript monorepo, each 'who calls this function?' question costs Claude Code a grep followed by reads of a dozen candidate files, many of them false matches on similar names. The team wants fewer file reads overall, not just the same reads moved somewhere else. Which change does that?
+
+A) Send every lookup to a subagent so the grep and file reads happen in its own context and only the answer comes back
+B) Install a code intelligence plugin so that Claude can find definitions and references through a language server
+C) Raise the auto-compact window so the main session can hold more file reads before older ones are summarised
+D) Add a file-by-file description of the codebase to CLAUDE.md so Claude knows where each function already lives
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** A code intelligence plugin connects Claude to a language server, so one go-to-definition or find-references call replaces a grep plus reads of candidate files, and type errors surface after edits. A subagent keeps the main context clean but does the same reads, which the team explicitly doesn't want. A larger compaction window holds more noise instead of reducing it. File-by-file descriptions are on Anthropic's list of things to leave out of CLAUDE.md: they cost context every session and go stale.
+
+*Hint if stuck: Text search guesses at symbols. Is there something that actually knows them?*
+</details>
+
+---
+
+## Question 16
+Claude Code runs the project's test suite many times while fixing a service, and each run prints about 8,000 lines, nearly all of them passing tests. Within an hour the session is compacting repeatedly and losing details. The team wants every test run in every session to put only the failures into Claude's context, without anyone having to remember. What should they set up?
+
+A) A CLAUDE.md note asking Claude to skim test output and focus on just the failing tests when it reads the results
+B) A habit of running /compact right after each test run, with an instruction to keep just the failing test names
+C) A PreToolUse hook on Bash that rewrites test-runner commands so their output is filtered down to failures
+D) A higher auto-compact threshold, so the session holds more test output before it summarises the history
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** Claude Code's cost guide shows this pattern: a PreToolUse hook detects test-runner commands and returns updatedInput that filters the output to failures, so the passing noise never enters context, on every run. Asking Claude to focus doesn't help once the full output is already in context. Manual /compact depends on someone remembering and pays for the output first. A higher threshold just stores more noise.
+
+*Hint if stuck: The cheapest tokens are the ones that never reach the conversation. Where can you step in every time?*
+</details>
+
+---
+
+## Question 17
+A developer has spent five hours in one Claude Code session mapping a legacy billing system. Its recent answers drift to generic claims ("in a typical Rails app, callbacks handle this") that contradict specifics it found earlier, and after several auto-compactions it no longer knows which modules it already traced. Which changes would keep the investigation grounded? (Choose two.)
+
+A) Have Claude record confirmed findings, with file paths and call chains, in a notes file as it works
+B) Add "answer from this codebase, not from typical patterns" to CLAUDE.md, marked as an IMPORTANT rule
+C) Delegate each narrow question to a subagent that explores in its own context and returns a short answer
+D) Raise the auto-compact threshold so that more of the detailed earlier history stays in the session
+E) Resume this same session each morning with --continue so that its earlier findings stay in context
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** Performance degrades as context fills, and long sessions slide toward generic patterns; findings written to a file survive compaction and can seed a fresh session. Subagents read files in their own context and return summaries, keeping the main session lean. A later compaction keeps even more stale detail in an already overfull context. Resuming the same session carries the clutter forward. A louder rule doesn't restore findings the context has lost.
+
+*Hint if stuck: Ask where findings should live so they outlast the conversation, and where the heavy reading should happen.*
+</details>
+
+---
+
+## Question 18
+Claude Code is migrating 600 test files to a new assertion library over several days. On day two the terminal crashed mid-file. After the developer ran claude --continue, the compacted session redid about 40 files and skipped others it believed were finished. Which practices would make the work resumable? (Choose two.)
+
+A) Rely on Claude Code's checkpoints to restore progress, since they record each change made in a session
+B) Keep a manifest file that lists each file with its status, which Claude updates after each one
+C) Ask Claude to restate the full list of finished files in chat after each file so it stays in context
+D) Commit after each migrated file, so the git log shows what is done and gives points to restore
+E) Turn off auto-compaction for the migration so the session keeps a complete record of files done
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** A structured state file outside the conversation tells any new session exactly what is done and what is pending, and git commits give a log of completed work plus checkpoints to restore. Claude Code checkpoints track only changes made through its file tools, not Bash or external changes, and the docs say they are no replacement for git. A list kept in chat is lost or blurred at compaction. Without compaction the session runs out of context instead.
+
+*Hint if stuck: Ask where progress should be recorded so a brand-new session can find it without the old conversation.*
+</details>
+
+---
+
+## Question 19
 A team's .claude/rules/money.md has paths: src/payments/** and says amounts must use the Money type, never floats. Early in a long session Claude edits payment files and follows it. After an automatic compaction, Claude works in src/billing/ helpers that call into payments and writes float arithmetic. The team wants this rule in effect for the whole session, whatever files Claude has opened lately. What should they change?
 
 A) Move the rule into a CLAUDE.md inside src/payments/ so it sits next to the code it governs and loads with it
@@ -257,7 +349,7 @@ D) Remove the paths: frontmatter or move the rule into the root CLAUDE.md, which
 
 ---
 
-## Question 15
+## Question 20
 A developer has been working with Claude Code on a 40-package monorepo for five hours straight. Early in the session the agent cited exact file paths and line numbers; now it says things like "this service typically follows the standard repository pattern" and proposes an edit to a helper function that does not exist. What is the most likely explanation?
 
 A) Anthropic silently routed the session to a smaller model under load, reducing answer quality and recall of specifics midway through the session
@@ -275,7 +367,7 @@ D) The developer's recent prompts have grown too short, leaving the model withou
 
 ---
 
-## Question 16
+## Question 21
 An engineer spent the first 20 messages of a Claude Code session giving a precise spec for migrating analytics reports. Then came a 90-minute detour fixing a broken local database, with thousands of log lines. The detour is over; she wants the spec kept word for word, a brief record of what the database fix was, and the detour's bulk out of context. What should she do?
 
 A) Run /rewind, pick the message where the detour began, and choose Summarize from here
@@ -293,13 +385,13 @@ D) Run /rewind to where the detour began and choose Restore conversation, droppi
 
 ---
 
-## Question 17
+## Question 22
 An overnight multi-agent research coordinator fans out 60 subagent tasks over roughly seven hours. A crash at hour five currently forces rerunning everything, wasting about $90 of API spend per incident. The team is debating recovery designs. Which is best?
 
 A) Enable 1-hour prompt caching on the coordinator's stable prefix so a restarted run reuses the cached work and skips already-completed reasoning
 B) Append each completed subagent's task id, status, and structured findings to a manifest; a restarted coordinator loads it and dispatches only incomplete tasks
-C) Persist the coordinator's full message history to disk every 10 minutes and on restart replay the conversation from the most recent snapshot to continue work
-D) Wrap every subagent call in retry-with-backoff so transient failures never surface and coordinator crashes become effectively impossible to hit
+C) Persist the coordinator's full message history to disk at 10-minute intervals and on restart replay the conversation from the most recent snapshot to continue work
+D) Wrap each subagent call in retry-with-backoff so transient failures do not surface and coordinator crashes become effectively impossible to hit
 
 <details>
 <summary>Answer & explanation</summary>
@@ -311,7 +403,7 @@ D) Wrap every subagent call in retry-with-backoff so transient failures never su
 
 ---
 
-## Question 18
+## Question 23
 During a multi-hour Claude Code migration of 140 modules, a script keeps migration-progress.json up to date. After each automatic compaction, Claude loses track of which modules are already done and re-migrates some of them. The team wants the current progress back in Claude's context right after every compaction, with no manual steps. What should they set up?
 
 A) A copy of the progress list in the project CLAUDE.md, which engineers update by hand after each module
@@ -329,7 +421,7 @@ D) A path-scoped rule matching the migrated modules that holds the progress list
 
 ---
 
-## Question 19
+## Question 24
 A logistics company extracts data from bills of lading, customs declarations and delivery receipts. Every document currently gets full human review. After a month the dashboard shows 98% field accuracy overall, and operations wants to stop reviewing anything above a confidence of 0.85. What should the architect insist on first?
 
 A) Approve the change, since 98% accuracy across thousands of documents already proves the extraction is reliable enough to need less review
@@ -347,12 +439,12 @@ D) Ask the model to report its own accuracy for each document type, and stop rev
 
 ---
 
-## Question 20
+## Question 25
 An invoice extraction pipeline attaches a confidence score to each field, and the team plans to auto-approve anything above 0.9. A labelled check of 2,000 fields shows that fields scored 0.9 to 1.0 are correct only 84% of the time, while the team's target is 97%. What should they do?
 
 A) Add a sentence to the prompt asking the model to be more conservative with its scores, then auto-approve fields above 0.9 as planned
-B) Drop confidence scores entirely and send every field to human review, since the scores have shown they cannot be trusted at all
-C) Keep the 0.9 threshold and add a second model that re-scores each field, auto-approving only when both models report a score above 0.9
+B) Drop confidence scores and send each field to human review, since the scores have shown they cannot be trusted
+C) Keep the 0.9 threshold and add a second model that re-scores each field, auto-approving when both models report a score above 0.9
 D) Calibrate the threshold on labelled data, choosing the score cut-off where observed accuracy actually reaches 97% for each field
 
 <details>
@@ -365,7 +457,7 @@ D) Calibrate the threshold on labelled data, choosing the score cut-off where ob
 
 ---
 
-## Question 21
+## Question 26
 A support team wants to audit its resolution agent each week with 150 human-reviewed conversations. The current plan samples only conversations the agent marked 'unresolved' or that customers rated poorly, and the audit has found few problems for two months. Which sampling plan gives a truer picture of quality?
 
 A) Draw a stratified random sample across issue categories, including conversations the agent closed as resolved with high confidence
@@ -383,7 +475,7 @@ D) Sample only conversations the agent marked 'unresolved', because those are wh
 
 ---
 
-## Question 22
+## Question 27
 A receipts extraction system returns a 'total' field and line items. On one receipt the line items sum to 48.20 but the extracted total is 84.20, and the model reports 0.97 confidence for both. The review queue is ordered by lowest confidence. How should this case be handled?
 
 A) Trust the high confidence for this receipt, since both values were extracted cleanly and the mismatch is probably a rounding difference
@@ -401,11 +493,11 @@ D) Ask the model to re-extract the receipt with a prompt that stresses accuracy,
 
 ---
 
-## Question 23
+## Question 28
 A policy research team has 10 reviewer-hours a week to fact-check reports from its multi-agent system, which typically produce about 400 claims each week. Most claims cite two or more agreeing sources, some cite one, and some cite sources that disagree. How should reviewer time be allocated?
 
-A) Spend all reviewer time on the single-source and conflicting claims, since claims with agreeing sources can be assumed correct
-B) Review claims in report order from the top until the hours run out each week, so that the opening findings readers see first are always verified
+A) Spend the reviewer time on the single-source and conflicting claims, since claims with agreeing sources can be assumed correct
+B) Review claims in report order from the top until the hours run out each week, so that the opening findings readers see first are verified
 C) Review single-source and conflicting claims first, and also check a random sample of well-supported claims to measure their real error rate
 D) Review the claims the synthesis agent rates as least confident, since its self-assessment is the best guide to where its errors are
 
@@ -419,12 +511,12 @@ D) Review the claims the synthesis agent rates as least confident, since its sel
 
 ---
 
-## Question 24
+## Question 29
 A mortgage-document extraction service handles 12 document types; handwritten gift letters make up 2% of volume. The team draws a uniform random sample of 300 extractions a month to estimate accuracy, which yields about six gift letters, and has concluded those letters are fine. What is the problem, and the fix?
 
-A) The sample is too small overall, so it should grow to 3,000 random extractions a month to make every estimate precise enough
+A) The sample is too small overall, so it should grow to 3,000 random extractions a month to make each estimate precise enough
 B) The model should be asked to report extra-careful confidence on gift letters so that low scores flag any problems with that type
-C) Gift letters are only 2% of volume, so their accuracy barely affects the overall number and can be safely left out of monthly QA
+C) Gift letters are 2% of volume, so their accuracy barely affects the overall number and can be safely left out of monthly QA
 D) Six samples cannot support a reliable estimate for the rare type, so stratify and oversample gift letters to get a meaningful per-type measure
 
 <details>
@@ -437,13 +529,13 @@ D) Six samples cannot support a reliable estimate for the rare type, so stratify
 
 ---
 
-## Question 25
+## Question 30
 A CI review bot built on Claude Code leaves comments in four categories: security, performance, style and test gaps. The platform team wants to let style and test-gap comments block merges automatically. Developers complain that some categories are noisy. What should the architect do before enabling auto-blocking?
 
-A) Have engineers label a sample of the bot's comments in each category, and enable blocking only for categories whose measured precision meets the bar
-B) Enable blocking for all four categories at once and let developers override false positives, which will also generate useful feedback
-C) Ask the bot to rate its own certainty on each comment and block merges only when it reports being highly certain of the finding
-D) Enable blocking for style comments only, because style is the most objective category and is unlikely to produce false positives
+A) Measure each category's precision on a labelled sample of comments, and enable blocking for categories that meet the bar
+B) Enable blocking for the four categories at once and let developers override false positives, which will also generate useful feedback
+C) Ask the bot to rate its own certainty on each comment and block merges when it reports being highly certain of the finding
+D) Enable blocking for style comments first, because style is the most objective category and is unlikely to produce false positives
 
 <details>
 <summary>Answer & explanation</summary>
@@ -455,7 +547,7 @@ D) Enable blocking for style comments only, because style is the most objective 
 
 ---
 
-## Question 26
+## Question 31
 A team uses Claude Code to generate API reference docs and an LLM judge to score them for accuracy; the judge rates 94% as 'accurate'. When two senior engineers read 50 docs, they judge only 70% accurate, mostly due to wrong parameter defaults the judge missed. What should the team do?
 
 A) Replace the judge with a larger, more capable model, since a stronger grader will catch the wrong parameter defaults without any further changes
@@ -473,13 +565,13 @@ D) Trust the judge's 94% for reporting, since 50 docs is too small a sample to o
 
 ---
 
-## Question 27
+## Question 32
 An insurance claims pipeline extracts 20 fields per claim but returns a single document-level confidence. Any claim below 0.8 goes to a reviewer, who then re-checks all 20 fields by hand, and review costs are rising. Which change makes human review more efficient without losing accuracy?
 
 A) Lower the document-level threshold to 0.7 so that fewer claims are sent to reviewers, while keeping the full 20-field check for each one
 B) Have the model write a summary of each claim so that reviewers can skim it instead of checking the individual extracted fields
 C) Produce calibrated confidence for each field and have reviewers check only the fields flagged as low confidence
-D) Split the 20 fields across two reviewers who each check ten, so that every flagged claim moves through the review queue twice as fast
+D) Split the 20 fields across two reviewers who each check ten, so that each flagged claim moves through the review queue twice as fast
 
 <details>
 <summary>Answer & explanation</summary>
@@ -491,11 +583,11 @@ D) Split the 20 fields across two reviewers who each check ten, so that every fl
 
 ---
 
-## Question 28
+## Question 33
 Human agents review every refund the support agent approves. Overall, reviewers agree with the agent 96% of the time, so leadership wants to stop reviewing refunds. A breakdown shows 99% agreement on full refunds for damaged goods but only 78% on partial refunds involving promotional credits. What should the architect recommend?
 
-A) Stop reviewing all refunds, since 96% agreement is high and the partial-refund cases are a small minority of the total volume
-B) Keep reviewing everything until agreement reaches 99% in every category, since any reduction before then puts customers at risk
+A) Stop reviewing refunds, since 96% agreement is high and the partial-refund cases are a small minority of the total volume
+B) Keep reviewing everything until agreement reaches 99% in each category, since any reduction before then puts customers at risk
 C) Add stronger instructions about promotional credits to the prompt and stop reviewing refunds once that prompt change has been deployed
 D) Reduce review for damaged-goods full refunds, keep full review for partial refunds with promotional credits, and keep sampling both
 
@@ -509,13 +601,13 @@ D) Reduce review for damaged-goods full refunds, keep full review for partial re
 
 ---
 
-## Question 29
+## Question 34
 Reviewers correct about 300 extracted fields a week in a purchase-order pipeline, but their corrections are only used to fix the individual records. Six months on, the confidence thresholds set at launch still drive routing even though vendors have changed their templates. What improvement should the architect make?
 
 A) Store reviewer corrections as labelled data and use them to re-check calibration and adjust per-field thresholds on a regular schedule
 B) Have reviewers leave comments explaining each correction so that prompt engineers can read them whenever they next update the prompt
-C) Lower every threshold by 0.05 each quarter to compensate for template drift, so more fields reach reviewers as vendor formats change
-D) Retrain reviewers every quarter so their corrections stay consistent as vendors change, keeping the launch thresholds unchanged
+C) Lower each threshold by 0.05 at the end of each quarter to compensate for template drift, so more fields reach reviewers as vendor formats change
+D) Retrain reviewers each quarter so their corrections stay consistent as vendors change, keeping the launch thresholds unchanged
 
 <details>
 <summary>Answer & explanation</summary>
@@ -527,7 +619,7 @@ D) Retrain reviewers every quarter so their corrections stay consistent as vendo
 
 ---
 
-## Question 30
+## Question 35
 A team has a labelled set of 5,000 extractions with model confidence scores. It must decide whether outputs above 0.92 can be auto-approved under a 98% accuracy requirement. Which measurement answers that question?
 
 A) The overall accuracy of all 5,000 extractions, since it reflects how the model performs across the full range of real inputs
@@ -545,11 +637,11 @@ D) The share of extractions that score above 0.92, since a larger share means mo
 
 ---
 
-## Question 31
+## Question 36
 A team used Claude Code to generate 420 unit-test files for a legacy inventory service. Reviewing every file would take weeks, but merging them unreviewed worries the tech lead, since past generated tests sometimes asserted buggy behavior. What is the sound review approach?
 
-A) Merge all of them, since generated tests that pass on the current code are by definition correct descriptions of how it behaves
-B) Review the first 40 files in alphabetical order, and merge the rest if those 40 all look correct to the reviewing engineers
+A) Merge them, since generated tests that pass on the current code are by definition correct descriptions of how it behaves
+B) Review the first 40 files in alphabetical order, and merge the rest if those 40 look correct to the reviewing engineers
 C) Review a stratified random sample across modules and complexity, measure the defect rate per stratum, and review fully where it is high
 D) Ask Claude Code to review its own generated tests in the same session and flag any tests that it believes might be asserting buggy behavior
 
@@ -563,7 +655,7 @@ D) Ask Claude Code to review its own generated tests in the same session and fla
 
 ---
 
-## Question 32
+## Question 37
 To calibrate confidence thresholds for a contract-clause classifier, a team has two lawyers label 1,000 clauses. They disagree on 20% of clauses for the 'limitation of liability' category, mostly where indemnity language overlaps. The team plans to use the first lawyer's labels and proceed. What should happen first?
 
 A) Proceed with the first lawyer's labels, since any single qualified expert is a reasonable gold standard and calibration will absorb the remaining noise
@@ -581,7 +673,7 @@ D) Reconcile the disagreements and tighten the labelling guideline for the overl
 
 ---
 
-## Question 33
+## Question 38
 An expense-receipt pipeline passes 97 percent of extractions through schema and business-rule validation. A quarterly audit then finds that some passing records have the merchant and the payment processor swapped, which no current rule checks. What is the best way to close this gap going forward?
 
 A) Ask the model to add a self-reported confidence to every record and send all records under a fixed threshold to auditors
@@ -599,11 +691,11 @@ D) Wait for the next quarterly audit and fix whichever error types it finds, sin
 
 ---
 
-## Question 34
+## Question 39
 Claims reviewers can check 400 of the 3,000 extractions the pipeline produces each day, and today they take them in arrival order. Each extraction carries calibrated field confidence and the results of consistency checks, such as line items that do not sum to the total or a loss date before the policy start. How should the review queue be built?
 
-A) Keep arrival order so every document has the same chance of review, and add reviewers when budget allows
-B) Send reviewers only the highest-value claims, since dollar amount is the clearest sign of where errors matter
+A) Keep arrival order so each document has the same chance of review, and add reviewers when budget allows
+B) Send reviewers the highest-value claims first, since dollar amount is the clearest sign of where errors matter
 C) Spread the 400 reviews evenly across document types so each type gets the same number of checks per day
 D) Put items with failed consistency checks or low calibrated confidence first, ordered by the payout at stake
 
@@ -617,7 +709,118 @@ D) Put items with failed consistency checks or low calibrated confidence first, 
 
 ---
 
-## Question 35
+## Question 40
+A warranty-claim extraction pipeline routes fields to review using the model's self-reported confidence, but a labelled audit shows that confidence barely separates right from wrong values for the serial-number and purchase-date fields. The team needs a better signal for which of those fields a person should check. Which approach is best?
+
+A) Ask the model to explain its reasoning before giving each confidence score, and keep routing on that score
+B) Set temperature to zero so each extraction is deterministic, which makes the model's reported confidence scores more reliable
+C) Route each claim of the noisiest document type to review and auto-approve the fields on the other document types
+D) Run the extraction several times and route values that differ across runs, once labelled data shows this tracks errors
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Anthropic's hallucination guidance describes best-of-N verification: run the same prompt several times and compare, since inconsistencies point to likely errors. Disagreement across runs is an observable signal, and like any routing signal it should be validated against labelled data before it decides what humans see. Reasoning before a score doesn't make self-reported confidence calibrated. Routing whole document types ignores errors elsewhere and spends review on correct fields. Determinism makes runs repeatable, not confidence accurate.
+
+*Hint if stuck: Look for a signal you can observe and test, not one the model simply asserts about itself.*
+</details>
+
+---
+
+## Question 41
+An expense pipeline set its auto-approve threshold using 2,000 labelled receipts, all clean PDF exports from the company card portal. In production, 35% of receipts are phone photos, and auto-approved fields from photos are wrong far more often than the calibration predicted. What should the team fix first?
+
+A) Build a labelled set that mirrors production, phone photos included, and calibrate per source type
+B) Add more clean PDF receipts to the labelled set, so the calibration estimate gets a tighter confidence interval
+C) Raise the global auto-approve threshold until the overall production error rate matches what the calibration predicted
+D) Send the phone-photo receipts to human review permanently, since photos are inherently too noisy to calibrate
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Calibration only holds for the distribution it was measured on; Anthropic's eval guidance is to mirror the real task distribution, edge cases included. With a representative labelled sample for each source type, the team can set thresholds where each segment meets the target. Raising one global threshold over-reviews PDFs and may still under-protect photos. More PDFs sharpen an estimate of the wrong population. Reviewing every photo forever is a costly guess made without measuring photo accuracy.
+
+*Hint if stuck: Ask which receipts the original measurement actually describes.*
+</details>
+
+---
+
+## Question 42
+A marketplace uses Claude to screen seller listings for prohibited items. Each listing gets a yes/no 'violates policy' flag, and every yes is removed automatically. Sellers successfully appeal many removals of borderline listings, while human reviewers see none of the cases before removal. How should the screening output and routing change?
+
+A) Keep the yes/no flag but add a second Claude call that re-checks each yes, and remove a listing only when both agree
+B) Have Claude assign risk levels: auto-remove high risk, send medium risk to reviewers, and track precision per level
+C) Make the prompt less sensitive so fewer listings are flagged, accepting that some prohibited items will get through
+D) Have reviewers audit a random 5% of removals each week, and leave the automatic yes/no removal in place for the rest
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Anthropic's moderation guide recommends graded risk levels over a binary decision, so the system can act automatically on clearly high-risk content and send the uncertain middle to human review, while precision and recall are tracked to tune the levels. A second binary check still forces borderline cases into yes or no. A less sensitive prompt trades wrongful removals for missed violations without routing anything to people. Random audits measure the problem but leave borderline listings removed automatically.
+
+*Hint if stuck: A binary output gives the router nothing to work with for in-between cases.*
+</details>
+
+---
+
+## Question 43
+A claims-extraction pipeline reports 97% field accuracy across 20,000 documents, and leadership wants to stop human review of any extraction the model marks high-confidence. The documents are mostly typed forms, with a small share of handwritten claims and faxed attachments. Which steps should come before reducing review? (Choose two.)
+
+A) Use the model's own confidence labels as the review cut-off without checking them on labelled data
+B) Audit a fixed 1% of documents drawn from the typed forms, since they make up most of the volume
+C) Break accuracy down by document type and by field to find weak segments the overall 97% can hide
+D) Remove review for the high-confidence output once overall accuracy has stayed above 95% for two weeks in a row
+E) Keep auditing a stratified random sample of high-confidence output to measure its real error rate
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** An aggregate dominated by typed forms can hide poor accuracy on handwritten claims or particular fields, so accuracy must be checked per type and field first. Once review is reduced, a stratified sample of high-confidence output is how you keep measuring the error you are no longer catching. A sustained overall figure has the same blind spot, model confidence must be calibrated against labelled data before it drives routing, and sampling only typed forms skips exactly the risky segments.
+
+*Hint if stuck: Ask what an average over a lopsided mix can hide, and how you would know whether the model's confidence label means what it says.*
+</details>
+
+---
+
+## Question 44
+An invoice pipeline has a second Claude call grade each extraction pass or fail, and only failures go to human review. Nobody has checked the grader against human judgment; a spot check finds it passes about a quarter of the extractions humans mark wrong. On faded or illegible scans it still returns a confident pass or fail. Which changes should come before trusting the grader to skip review? (Choose two.)
+
+A) Have the extractor check its own output in the same conversation instead of using a separate grader
+B) Measure the grader's agreement with human labels on a sample, by document type, and fix it until it aligns
+C) Ask the grader for a 1-10 confidence score and skip human review whenever the score comes back above 8
+D) Run the grader twice on each extraction and treat the result as correct whenever the two verdicts agree
+E) Give the grader an unknown verdict for input it cannot read, and send those documents to human review
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, E** Model graders need to be calibrated against human experts before their verdicts replace review, and checking by document type shows where they fail. Letting the grader answer unknown when it lacks information stops forced, hallucinated verdicts and sends those cases to people. Two runs of an uncalibrated grader can agree and both be wrong. Self-review in the same conversation shares the extractor's blind spots. An unvalidated confidence score is no better than the unvalidated verdict.
+
+*Hint if stuck: Ask how you would know its verdicts are right, and what it should do when it can't tell.*
+</details>
+
+---
+
+## Question 45
+In a receipts pipeline, human reviewers correct about 400 extracted values a week, mostly tax amounts on foreign receipts. They overwrite the value and close the item, so nothing about the correction is kept, and the same errors recur month after month. The team wants the corrections to improve the system. Which changes should it make? (Choose two.)
+
+A) Log each correction with field, document type and original value, and add the cases to the labelled set
+B) Have reviewers just mark items approve or reject, which is quicker than typing in the corrected value
+C) Fine-tune the model on the corrected receipts each month so that it learns the right tax values itself
+D) Turn recurring patterns into prompt fixes, such as few-shot examples, and test them on that set first
+E) Lower the auto-approve threshold a step each time a reviewer corrects a value in that kind of field
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** Recording what was corrected, where and from what turns review effort into labelled production failures, which belong in the eval set. Recurring patterns can then be fixed in the prompt, for example with targeted examples, and the change measured on that set before it ships. Fine-tuning is outside what this system controls and doesn't give a measured fix. Moving the threshold on every correction reacts to noise without measuring accuracy. Approve or reject alone throws away the right value the next fix needs.
+
+*Hint if stuck: Ask what a reviewer's fix can teach if it is kept, and how you'd know a change helped.*
+</details>
+
+---
+
+## Question 46
 An expense-report extraction system shows 97% field-level accuracy on its aggregate dashboard, but the finance team keeps escalating wrong totals from handwritten receipts, which make up 4% of volume. Engineering points out that 97% comfortably exceeds the 95% SLA. What is the flaw in that reasoning?
 
 A) The SLA threshold is simply set too low; raising the aggregate accuracy target from 95% to 99% would force the handwritten receipt problem to surface on the dashboard
@@ -635,7 +838,7 @@ D) The finance team is anchoring on rare anecdotes; at 97% field accuracy some v
 
 ---
 
-## Question 36
+## Question 47
 A healthcare patient-intake system extracts 14 fields from 6,000 faxed forms daily; medication dosage and allergy fields are safety-critical. Reviewing every form by hand costs too much, and a 5% random spot-check let a dosage error through last month. How should human review be routed?
 
 A) Route forms to human review whenever the model's overall document-level confidence score falls below a fixed 0.8 threshold
@@ -653,7 +856,7 @@ D) Re-extract every form a second time with the same model and prompt, and route
 
 ---
 
-## Question 37
+## Question 48
 To cut human review of insurance-claim extractions, a team adds a second Claude call that grades each extraction 'correct' or 'incorrect' and sends only 'incorrect' ones to people. In a demo the grader looks sensible. What should happen before the team relies on it to decide which extractions humans see?
 
 A) Run the grader with the same prompt as the extractor so its judgments match how the fields were first extracted
@@ -671,7 +874,7 @@ D) Trust the grader once it marks over 95% of extractions correct, since that ma
 
 ---
 
-## Question 38
+## Question 49
 A legal-contracts extraction service runs monthly QA by reviewing the 200 extractions where the model reported the lowest confidence; sampled accuracy has held steady near 91% for three quarters. A client audit then finds a 22% error rate on a new contract template introduced in March — which the model processes with high confidence. Why did QA miss it, and what fixes it?
 
 A) Confidence-based sampling never inspects high-confidence outputs, so confidently wrong work stays invisible; switch to stratified random sampling by contract type
@@ -689,11 +892,11 @@ D) Add the new template to the regression evaluation set and gate future deploym
 
 ---
 
-## Question 39
+## Question 50
 An invoice-extraction pipeline outputs a confidence score for every field, and the team wants to auto-accept fields scoring 0.90 or higher without human review. Before setting that threshold, the architect wants evidence that the scores mean what they say. What check gives that evidence?
 
 A) Check that the average confidence across all fields is close to the dashboard's overall accuracy figure
-B) On a labelled set, bucket each field's scores and compare each bucket's observed accuracy with its score
+B) On a labelled set, bucket each field's scores and compare each bucket's observed accuracy to its score
 C) Ask the model to explain each high-confidence field and accept the threshold if the reasons read as sound
 D) Track the share of fields scoring 0.90 or higher each week and treat a stable share as proof of calibration
 
@@ -707,13 +910,13 @@ D) Track the share of fields scoring 0.90 or higher each week and treat a stable
 
 ---
 
-## Question 40
+## Question 51
 A research system's report on microplastics in drinking water blends everything into confident prose. Reviewers find that some statements rest on five independent studies while others rest on one disputed preprint, but the report reads them all the same way. How should synthesis be changed?
 
 A) Have the synthesizer separate established findings from contested or single-source ones, with attribution for each claim
 B) Add a sentence at the end of the report noting that some findings are less certain than others and that readers should check the sources
-C) Have the synthesizer drop any finding supported by fewer than three sources so that the report contains only well-established conclusions
-D) Ask the synthesizer to soften every sentence with hedging words such as 'may' or 'suggests' so that no claim is ever overstated
+C) Have the synthesizer drop any finding supported by fewer than three sources so that the report keeps to well-established conclusions
+D) Ask the synthesizer to soften each sentence with hedging words such as 'may' or 'suggests' so that no claim is overstated
 
 <details>
 <summary>Answer & explanation</summary>
@@ -725,7 +928,7 @@ D) Ask the synthesizer to soften every sentence with hedging words such as 'may'
 
 ---
 
-## Question 41
+## Question 52
 A market-research system reports that a startup's funding figure is 'confirmed by three independent sources'. An analyst finds that two of the three news articles simply quote the company's own press release, which is the third source. What design change prevents this overstatement?
 
 A) Require at least four sources before any claim can be described as confirmed, so that echoed sources are diluted by the larger count
@@ -743,12 +946,12 @@ D) Prefer press releases over news articles whenever both are found, since the o
 
 ---
 
-## Question 42
+## Question 53
 A contract extraction pipeline reads a master services agreement and a later amendment for the same customer. The agreement gives a termination notice period of 90 days and the amendment gives 60 days, and the pipeline currently outputs whichever value it saw last. What should the extraction output instead?
 
 A) Output only the value from the longest document, since the master agreement is the primary contract and amendments are secondary
 B) Average the two values to 75 days so that the record reflects both documents without favoring either one over the other
-C) Record each value with its source document and effective date, so the amended value is shown as superseding the original
+C) Record each value with its source document and effective date, so the amended value shows as superseding the original
 D) Output the shorter notice period, since shorter notice periods are the more conservative choice for the customer's legal team
 
 <details>
@@ -761,7 +964,7 @@ D) Output the shorter notice period, since shorter notice periods are the more c
 
 ---
 
-## Question 43
+## Question 54
 A support agent looks up a customer's plan: the CRM tool says 'Gold' and the billing tool says 'Silver'. The customer is asking whether a premium feature is included. The agent currently picks the CRM value because it was called first. What should the agent do?
 
 A) Tell the customer the plan is Gold, since the CRM is the system the support team uses most and is therefore likely to be the most current
@@ -779,7 +982,7 @@ D) Note the conflict with both sources in its response, avoid a firm answer on t
 
 ---
 
-## Question 44
+## Question 55
 A research pipeline passes source documents to Claude with citations enabled, and also sets output_config.format so the answer comes back as JSON. The request fails with a 400 error. The team still needs both cited claims and a structured findings record. Which design works?
 
 A) Get cited claims from a citation-enabled call, then map the citations into the findings schema in code or a separate structuring step
@@ -797,12 +1000,12 @@ D) Keep both settings and wrap the documents in a tool result instead of a user 
 
 ---
 
-## Question 45
+## Question 56
 A report on regional housing markets includes median prices for eight cities over five years, quotes from three economists and a narrative on policy changes. The current synthesizer writes everything as paragraphs, and readers cannot compare prices across cities or tell which economist said what. How should the report be rendered?
 
-A) Put all content in one large table so that every fact in the report, including the quotes and narrative, is laid out in a single format
+A) Put the content in one large table so that each fact in the report, including the quotes and narrative, is laid out in a single format
 B) Use a table with source and date columns for the prices, attributed quotes for the economists, and prose for the narrative
-C) Keep the paragraphs but bold every number so that readers can find the prices quickly when they skim through the narrative sections
+C) Keep the paragraphs but bold each number so that readers can find the prices quickly when they skim through the narrative sections
 D) Write everything as bullet points so that each fact stands alone, which makes the whole report easier to skim than paragraphs
 
 <details>
@@ -815,7 +1018,7 @@ D) Write everything as bullet points so that each fact stands alone, which makes
 
 ---
 
-## Question 46
+## Question 57
 A developer asks an internal Claude assistant how request timeouts are set in a service. The wiki page, last edited 18 months ago, says 30 seconds; the current config file in the repository says 10 seconds. The assistant answers '30 seconds' because the wiki explains it more clearly. What should the assistant do instead?
 
 A) Answer 30 seconds, since the wiki is the official documentation and should be treated as the source of truth for configuration questions
@@ -833,12 +1036,12 @@ D) Average the two values and recommend 20 seconds as a reasonable default, noti
 
 ---
 
-## Question 47
+## Question 58
 A search subagent retrieves passages from an internal knowledge base and returns them to the agent as plain text in tool results. The final answers cite 'internal docs' generically, and auditors cannot tell which article supports which claim. What change gives claim-level attribution?
 
 A) Prepend each passage with a line reading 'Source:' and the article title, and instruct the agent to repeat that line next to claims
-B) Concatenate all passages into one document per query so that the agent has a single source to cite whenever it answers a question
-C) Ask the agent to list every article it consulted at the end of each answer, so that auditors at least know which articles were used
+B) Concatenate the passages into one document per query so that the agent has a single source to cite whenever it answers a question
+C) Ask the agent to list each article it consulted at the end of each answer, so that auditors at least know which articles were used
 D) Return each passage as a search_result block with its source identifier and title, with citations enabled so claims point to the passage
 
 <details>
@@ -851,7 +1054,7 @@ D) Return each passage as a search_result block with its source identifier and t
 
 ---
 
-## Question 48
+## Question 59
 An extraction job pulls revenue, headcount and debt figures from 50 annual reports into a comparison spreadsheet. A reviewer finds an implausible headcount for one company but cannot tell which report, page or passage it came from, so checking it means re-reading the whole filing. What should the extraction schema include?
 
 A) For each value, the source document ID, page number and the exact quoted passage it came from
@@ -869,13 +1072,13 @@ D) A summary of each annual report so that reviewers can skim the summary rather
 
 ---
 
-## Question 49
+## Question 60
 A developer asks Claude Code to write an incident postmortem from 14 log files, six Jira tickets and a Slack export. The draft is readable, but the on-call lead cannot verify statements like 'the cache failed first' because nothing points back to the evidence. How should the developer change the request?
 
-A) Ask Claude to add a 'Sources' section at the end of the postmortem listing every log file, ticket and export it read while writing
+A) Ask Claude to add a 'Sources' section at the end of the postmortem listing each log file, ticket and export it read while writing
 B) Ask Claude to tie each factual statement to its evidence, such as the log file and timestamp or the ticket ID it came from
 C) Ask Claude to write more cautiously and mark any statement it is unsure of with a question mark so that readers know to check it
-D) Ask Claude to re-read all the inputs and confirm that the draft is accurate before the developer hands the postmortem to the on-call lead
+D) Ask Claude to re-read the inputs and confirm that the draft is accurate before the developer hands the postmortem to the on-call lead
 
 <details>
 <summary>Answer & explanation</summary>
@@ -887,12 +1090,12 @@ D) Ask Claude to re-read all the inputs and confirm that the draft is accurate b
 
 ---
 
-## Question 50
+## Question 61
 A scout subagent finds a single trade-blog post claiming a major chipmaker will exit the memory market; no other source mentions it. The synthesizer is currently prompted to 'include only verified facts', so it drops the claim, and the client later says they would have wanted to know. How should the system handle such claims?
 
 A) State the claim as a finding in the main report body, since the scout found it during research and the client wants complete coverage
 B) Keep dropping such claims, since including unverified information in a research report is always worse than leaving it out
-C) Include the claim with its source, and label it clearly as single-source and unverified in a separate section of the report
+C) Include the claim with its source, and label it as single-source and unverified in a separate section of the report
 D) Have another subagent search until it finds a second source, and keep the claim out of the report unless one is eventually found
 
 <details>
@@ -905,7 +1108,7 @@ D) Have another subagent search until it finds a second source, and keep the cla
 
 ---
 
-## Question 51
+## Question 62
 When a support agent hands a disputed charge to a human specialist, its summary says 'the customer was charged twice on 3 March and never received the replacement'. The specialist later finds the double charge in billing records, but the non-delivery was only the customer's statement; the shipping tool showed a delivered status. What should the handoff summary do?
 
 A) Give the specialist the full conversation transcript instead of a summary, so they can work out for themselves which statements were verified
@@ -923,7 +1126,7 @@ D) Mark each fact as verified by a named system or reported by the customer, and
 
 ---
 
-## Question 52
+## Question 63
 To keep a coordinator's context small, a team compresses each subagent's findings into a short paragraph before passing it up. Final reports now contain claims that cannot be traced to any source, even though the subagents had recorded sources. What fix keeps the context benefit without losing traceability?
 
 A) Compress the claim text but make source ID and date required fields on every finding, so compression cannot drop them
@@ -941,12 +1144,85 @@ D) Have the compressing step write its paragraphs more carefully so that the imp
 
 ---
 
-## Question 53
+## Question 64
+A research system's synthesizer is prompted to support each claim with a quotation and the source document's name. Auditors find that about 8% of the quotations don't appear word for word in the cited document; some are paraphrases, some stitch two sentences together. The team wants quotations that reliably come from the source text. What should change?
+
+A) Strengthen the prompt with an IMPORTANT rule that each quotation must be copied verbatim, plus a few examples of good quotes
+B) Add page numbers to the required citation format, so reviewers can find each passage and correct inaccurate quotations
+C) Pass the sources as documents with citations enabled, so the API returns cited text extracted from the documents themselves
+D) Have a second Claude call rewrite each quotation to match its source more closely before the report is published
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** With the Citations feature, the API parses citations and extracts cited_text directly from the provided documents, so citations are guaranteed to point to real passages. Anthropic also reports they pick more relevant quotes than prompt-based citing, and cited_text doesn't count toward output tokens. A stronger prompt lowers the misquote rate but doesn't remove it. Page numbers help humans check but don't make the quotes accurate. A rewriting pass is one more generation step that can drift from the source.
+
+*Hint if stuck: Consider whether each fix relies on the model behaving better or on how the request itself is built.*
+</details>
+
+---
+
+## Question 65
+In a multi-agent research system, search subagents often cite SEO-driven aggregator pages over the primary filings and peer-reviewed studies those pages summarise, and the synthesizer weighs all sources alike. Secondary sources must stay usable when no primary one exists. What change best fixes the report's evidence base?
+
+A) A PreToolUse hook that denies fetches from any domain outside an allowlist of filing sites and academic journals
+B) A rule that a claim counts as confirmed once three or more pages repeat it, whatever kind of site those pages are
+C) A synthesis step that drops every claim backed only by secondary sources, so the report rests on primary evidence
+D) Source-quality heuristics in the subagent prompts that favour primary sources, with each finding tagged by source type
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Anthropic's research system found early agents chose SEO-optimised content farms over authoritative sources and fixed it with source-quality heuristics in the prompts; recording the source type on each finding lets synthesis weight and label claims by evidence quality. A domain allowlist blocks the secondary sources the team still needs. Counting repeated pages rewards derivative copies of one claim. Dropping all secondary-only claims loses information where no primary source exists.
+
+*Hint if stuck: Read the constraint carefully: which options would break it, and which would leave the original problem in place?*
+</details>
+
+---
+
+## Question 66
+A market report says 'the two leading vendors together hold 47% of the market' and cites one analyst report. In fact the synthesizer added a 2024 figure (28%) from that report to a 2026 figure (19%) from a different one. Reviewers want computed figures to be traceable and honest about their inputs. How should synthesis handle claims it derives?
+
+A) Mark it as derived, list each input with its source and date, and flag that the inputs are from different years
+B) Leave combined figures out of the report and present only figures that appear verbatim in a single source document
+C) Round the combined figure and add 'approximately', so readers understand it is an estimate rather than a reported value
+D) Cite whichever input source is more authoritative for the combined figure, so every number in the report keeps one source
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** A computed figure has no single source, so provenance means carrying each input's source and date with it and labelling the result as derived. That also exposes the mismatch: adding shares from different years can mislead, and readers need to see it. Citing one source misattributes the number. Banning derived figures loses useful analysis instead of making it traceable. 'Approximately' hides the method and the date gap instead of showing them.
+
+*Hint if stuck: A number that no source states still has a history. What would a reader need to rebuild it?*
+</details>
+
+---
+
+## Question 67
+A market report from a research system turns quarterly revenue for five companies over eight quarters into long paragraphs of prose. It also states as fact that the market grew 12% last year, although one credible analyst source says 12% and another says 7%, using different market definitions. Which changes should the synthesis step make? (Choose two.)
+
+A) Average the two growth estimates to 9.5% and cite both sources, so the report states a single figure
+B) Keep the figure from the more recent source and drop the other, so readers get one clear growth number
+C) Show the quarterly figures as a table by company and quarter, and keep prose for the narrative findings
+D) Convert the whole report into bullet points so each figure and finding appears in the same format
+E) Report both growth figures, each with its source and market definition, marked as a contested finding
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** Forty data points compare far better in a table than in prose, while narrative findings read better as text. Two credible figures that disagree should both appear with their sources and the definitions behind them, marked as contested rather than settled. An average of figures measured on different definitions describes neither source. Dropping one source hides a real disagreement. One format for everything ignores what each kind of content needs.
+
+*Hint if stuck: Match each kind of content to a form that fits it, and ask what readers lose when a disagreement is smoothed over.*
+</details>
+
+---
+
+## Question 68
 A due-diligence system spawns one subagent per source type — SEC filings, news coverage, earnings-call transcripts — and each returns a free-prose summary. The coordinator's final memo asserts 'revenue grew 40%', but analysts cannot trace which source said it, and the filings and a news article actually disagreed. What design change fixes this?
 
 A) Require subagents to return structured outputs that map each claim to its source and date
-B) Prompt the coordinator to always cite sources when it writes the final memo
-C) Have the coordinator re-fetch all the underlying documents itself and verify every figure before the memo is published
+B) Prompt the coordinator to cite sources for each figure when it writes the final memo
+C) Have the coordinator re-fetch the underlying documents itself and verify each figure before the memo is published
 D) Pass the subagents' full raw transcripts into the coordinator's context instead of summaries
 
 <details>
@@ -959,12 +1235,12 @@ D) Pass the subagents' full raw transcripts into the coordinator's context inste
 
 ---
 
-## Question 54
+## Question 69
 A research swarm gathering electric-vehicle market data flags a "source conflict": one finding says global EV sales were 10.5M units, another says 17.3M. Investigation shows the first comes from a 2023 report and the second from a 2025 report — and the synthesizer had discarded both figures as unreliable. What fixes this?
 
 A) Add a reconciliation step that averages the numeric claims whenever any two sources disagree by more than 20%, then report the blended figure
-B) Rank the sources by domain authority and keep only the figure that comes from the higher-authority publication, discarding the other
-C) Tighten the scout prompts so they only collect market figures published within the last 12 months, keeping the dataset current
+B) Rank the sources by domain authority and keep the figure that comes from the higher-authority publication, discarding the other
+C) Tighten the scout prompts so they collect market figures published within the last 12 months, keeping the dataset current
 D) Capture publication dates as temporal metadata on every claim, so figures from different years read as a time series, not contradictions
 
 <details>
@@ -977,7 +1253,7 @@ D) Capture publication dates as temporal metadata on every claim, so figures fro
 
 ---
 
-## Question 55
+## Question 70
 A research system passes 40 earnings-call transcripts to Claude as plain-text documents with citations enabled. Analysts complain that citations often cover a single sentence that splits an executive's multi-sentence answer, so the quoted text misses the context they need. They want each citation to point to one complete speaker turn. What should change?
 
 A) Send each transcript as a custom content document whose content blocks are individual speaker turns
@@ -995,10 +1271,10 @@ D) Keep plain text but tell the model in the prompt to cite only whole speaker t
 
 ---
 
-## Question 56
+## Question 71
 A synthesis step deduplicates findings that state the same fact. When two scouts reported 'the plant closed in May 2026', one citing a regulator filing and one a trade-press article, the merged claim kept only the trade-press source. That article was later corrected, and reviewers now cannot tell whether the claim still stands. How should merging work?
 
-A) Keep only the most authoritative source on the merged claim and drop the rest to keep records simple
+A) Keep the most authoritative source on the merged claim and drop the others to keep records simple
 B) Skip deduplication and publish both claims separately, so readers see that two sources said the same thing
 C) Merge the matching claims into one record that keeps every supporting source with its id and date
 D) Keep the first source that arrived, but add a note to the claim saying it was also reported elsewhere
@@ -1013,7 +1289,7 @@ D) Keep the first source that arrived, but add a note to the claim saying it was
 
 ---
 
-## Question 57
+## Question 72
 In a research system, scouts already return structured findings with claim text, source id, and retrieval date. Yet the final report — written by a synthesizer prompted to produce "a polished executive narrative, citing sources" — regularly contains untraceable claims: about 30% of spot-checked statements match no source id in any scout's output. What is the root-cause fix?
 
 A) Strengthen the synthesizer prompt so that every sentence must include a bracketed source id and nothing may be stated without a matching citation
@@ -1031,7 +1307,7 @@ D) Add a final Haiku pass over the narrative that deletes any sentence lacking a
 
 ---
 
-## Question 58
+## Question 73
 A healthcare-policy research agent finds two 2026 peer-reviewed studies reporting different readmission rates for the same procedure: 11% and 19%. The synthesis step currently outputs "approximately 15%", and a clinician reviewer has called the report untrustworthy. What should the synthesis do instead?
 
 A) Output a range of 11-19% without naming the individual studies, since a range communicates the uncertainty more honestly than any single point estimate

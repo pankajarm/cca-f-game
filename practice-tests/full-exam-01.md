@@ -9,528 +9,262 @@ Set a timer. No notes, no docs. For the interactive version with the clock, flag
 ---
 
 ## Question 1
-Despite a project CLAUDE.md rule saying never delete anything under fixtures/golden, a headless claude -p run in CI executed rm -rf on that directory last Tuesday, breaking 30 snapshot tests. The team needs a guarantee this cannot recur. What should they add?
+A developer-productivity team wants three automated behaviors in Claude Code: (1) load the current sprint's ticket list once when a session opens, (2) strip ANSI color codes out of every Bash result before the model reads it, and (3) prevent any edit to files under vendor/. Which hook events implement these behaviors?
 
-A) A deny rule in settings.json permissions matching destructive Bash patterns on fixtures/golden
-B) A rewritten warning at the very top of CLAUDE.md using stronger and more explicit language
-C) A PostToolUse hook that detects deletions under fixtures/golden and pages the on-call engineer
-D) A plan-mode requirement so destructive steps in the pipeline wait for human approval first
+A) (1) UserPromptSubmit, (2) PreToolUse, (3) Stop
+B) (1) SessionStart, (2) PreToolUse, (3) PostToolUse
+C) (1) UserPromptSubmit, (2) PostToolUse, (3) SessionStart
+D) (1) SessionStart, (2) PostToolUse, (3) PreToolUse
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** CLAUDE.md instructions are probabilistic, so no rewording produces a guarantee; settings.json deny rules are deterministic — the harness refuses matching calls outright, including in headless runs. The PostToolUse hook fires after the files are already gone, and pausing a headless CI run for human approval defeats the purpose of running headless.
+**D)** SessionStart runs once when the session opens, which is the right place for one-time context like the sprint ticket list. PostToolUse fires after a tool runs and is where outputs get normalized, such as stripping ANSI codes from Bash results. PreToolUse gates calls before they execute, so it is where vendor/ edits get blocked with exit code 2. Pairing (2) with PreToolUse and (3) with PostToolUse reverses the last two events: PreToolUse cannot clean a result that does not exist yet, and PostToolUse fires only after the edit has already happened.
 
-*Hint if stuck: Ask which mechanism stops the command before it runs instead of asking nicely or reacting afterwards.*
+*Hint if stuck: For each behaviour, ask whether the thing it acts on exists yet at the moment the hook fires.*
 </details>
 
 ---
 
 ## Question 2
-To cut request size, a CI test-generation agent includes the tools array only on the first request of each run; follow-up requests that carry tool results omit it. Runs now fail or stall right after the first tool call. What is the right fix?
+An internal assistant helps engineers understand a 15-year-old billing monolith. It runs one general subagent holding Read, Grep, Glob, Edit, Write and Bash for both exploration and later refactors. Engineers complain that during pure exploration it sometimes 'tidies' files it was only asked to explain. What design should the architect adopt?
 
-A) Describe the available tools in plain text inside the system prompt so follow-up requests stay small without the array
-B) Keep sending the same tools array on every request in the loop, including the requests that return tool results
-C) Split the run so that every tool call starts a new conversation that includes the tools array on its first request
-D) Ask Claude to request every tool call it will need in the first response, so later requests never require tools at all
+A) Keep one subagent and add a mode flag in its prompt that switches it between exploring and editing behaviour on each request
+B) Split it into a read-only explorer with Read, Grep and Glob and a separate modifier subagent with editing tools
+C) Keep one subagent and turn on Git hooks that reject any commit made while the assistant is in exploration
+D) Keep one subagent but cap it at ten tool calls per explanation so it has no budget left for unrequested edits
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Each Messages API request is stateless, so the tools array must be sent again on every request of the loop, including those that return tool results; without it the history refers to tools the request does not define. Describing tools in prose does not give Claude callable tools, and starting a new conversation per call discards the history the loop depends on. Asking for every call up front defeats the point of letting each result shape the next step.
+**B)** Separating roles lets the exploration agent carry only read tools, so it cannot modify code no matter how it interprets a request, while refactors go to an agent built for editing. A prompt mode flag is a soft switch over the same capabilities. Commit hooks catch changes after files are already altered, and a tool-call cap is a budget, not a role boundary.
 
-*Hint if stuck: Think about what the server has to work with when it validates a request whose history contains tool calls.*
+*Hint if stuck: Give the explaining role only the capabilities explaining requires.*
 </details>
 
 ---
 
 ## Question 3
-A developer resumes yesterday's Claude Code session on a caching refactor. Since then, only one thing changed: a teammate edited `cache-config.yaml` to lower the default TTL from 300 to 60 seconds. The rest of the session's analysis is still accurate. What is the best way to continue?
+A developer asks Claude to migrate a large repository from one HTTP client library to another. Nobody knows how many files use the old library or how many wrap it in custom helpers. A teammate drafts a fixed 12-step plan listing the folders to change in order. What approach should the developer use instead?
 
-A) Start a fresh session and have Claude re-explore the whole caching layer, since any change makes the old session unsafe
-B) Resume the session without mentioning the change, since Claude will notice the new TTL value the next time it happens to read that file
-C) Resume the session and tell it that `cache-config.yaml` changed, giving the new TTL, so it re-reads that file before editing
-D) Resume the session and run /compact first so that the outdated configuration details are summarised away automatically
+A) Ask the agent to rewrite every file in the repository in one pass, since a single pass guarantees that no usage of the old library is missed
+B) Follow the 12-step plan exactly, and if a step fails, add a new step to the end of the plan and rerun the whole migration from scratch
+C) Have the agent first search for usages and wrappers to map the scope, then let it plan and assign file batches based on what it found
+D) Split the repository into equal-sized chunks by directory and give each chunk to a separate subagent with identical migration instructions
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** When the change is small and known, resuming keeps the valid context, and naming the exact file that changed lets the agent re-verify it. A full fresh start throws away accurate work, staying silent leaves the agent reasoning from a stale tool result it may never re-read, and /compact can preserve the stale value inside its summary.
+**C)** When the number and location of subtasks cannot be known in advance, the plan should come from exploring first, which is the orchestrator-workers pattern. A fixed list encodes guesses about scope, a single pass over the whole repository dilutes attention, and equal directory chunks ignore where the usages actually are.
 
-*Hint if stuck: Keep what is still true; point precisely at what is not.*
+*Hint if stuck: Who knows how many files are involved before anyone has looked?*
 </details>
 
 ---
 
 ## Question 4
-A developer-productivity Slack bot built on the Claude API answers questions like 'who owns the payments service?'. The loop calls Claude, sees stop_reason tool_use, executes the ownership-lookup tool, appends the assistant message and tool_result correctly — and then posts the raw tool_result JSON to Slack as the answer. Users complain the output is unreadable. What step is missing?
+A team uses Claude Code to generate database migration files. Their convention is a timestamped filename, an up and down function, and a comment linking the ticket. Generated migrations follow the convention about half the time, often omitting the down function. The team wants a prompt-level fix before adding any tooling. What is most likely to make the output consistent?
 
-A) A post-processing step in code that reformats the lookup JSON into readable prose before it gets posted
-B) A second formatting call to a separate Claude session that rewrites the JSON into a friendly answer
-C) Calling the API again with the updated history so the model can turn the tool result into its answer
-D) Changing the tool itself to return prose instead of JSON so no later formatting step is ever needed
+A) Paste the internal wiki page that describes the migration convention into the prompt so the model has the full written policy
+B) Include two complete existing migrations, one simple and one with a data backfill, as examples of exactly what a finished file looks like
+C) Ask the model to list the convention's rules before writing each migration, then check its own output against that list
+D) Tell Claude Code to read the entire migrations directory on each request so it can infer the convention from hundreds of files for reference
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Executing a tool is the midpoint of a loop iteration, not the end: after appending the assistant message and tool_result, the loop must resend the full history so the model can interpret the data and compose its final answer, terminating on end_turn. Reformatting the JSON in code or in the tool still skips the model's interpretation of the result against the user's actual question, and a separate formatting session duplicates what the existing loop does for free while discarding the conversation context the answer depends on.
+**B)** A couple of complete, varied migrations show the filename, both functions and the ticket comment together, which is the most reliable way to make output consistent. The wiki is more prose of the kind already failing, reading hundreds of files floods context with noise and inconsistent legacy files, and restating rules then self-checking in the same pass shares the same blind spot.
 
-*Hint if stuck: Tool execution is the middle of one loop iteration — what closes the iteration?*
+*Hint if stuck: A small number of complete, well-chosen files says more than a long policy.*
 </details>
 
 ---
 
 ## Question 5
-A long-running support session for a business customer was resumed after the company changed its refund policy from 30 to 14 days. Earlier in the session the agent fetched the old policy with a tool call and cited 30 days to the customer. The customer now asks whether a 20-day-old order can be refunded. What should the system do before the agent answers?
+A research coordinator spawns eight subagents for every query, so a question like "when was this company founded?" takes minutes and costs as much as a market study. On data-heavy studies, each subagent returns a 300-row pricing table that the coordinator retypes into the final report, and audits find transposed digits in the copied tables. Which changes address both problems? (Choose two.)
 
-A) Nothing extra, since the agent will fetch the policy again automatically whenever the customer asks a policy question
-B) Start a brand-new session for the customer, so that the agent can no longer see any of its earlier statements about the refund window
-C) Inject a message into the resumed session stating that the refund policy changed to 14 days and the earlier result is outdated
-D) Run /compact on the session so that the earlier policy lookup is condensed and no longer appears in the agent's context
+A) Raise the coordinator's max_tokens so it has enough room to copy each table into the report in full
+B) Have subagents save large tables to a shared store and return a reference plus a short summary of each
+C) Put scaling rules in the coordinator's prompt: one agent for a fact lookup, more for broad comparisons
+D) Cap the coordinator at two subagents per query so that simple lookups stay quick and cheap to answer
+E) Run every subagent inside one shared conversation so their tables are already in the coordinator's view
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** The earlier tool result is now stale, and the agent will tend to reuse it rather than re-fetch; telling it precisely what changed keeps the case context while correcting the fact. Assuming a re-fetch is wishful, a brand-new session loses the case history, and compaction can preserve the outdated 30-day figure inside its summary.
+**B, C** Agents judge effort poorly, so explicit rules in the lead prompt (a single agent for simple fact-finding, a few for comparisons, many for complex research) stop overinvestment in easy queries. Letting subagents write outputs to an external store and pass back lightweight references avoids the lossy copy through the coordinator. A flat cap of two starves the complex studies that need more. One shared conversation throws away context isolation and still leaves the coordinator copying. More output room lets the coordinator copy more, but the copying is what introduces the errors.
 
-*Hint if stuck: An agent trusts what it already read unless told otherwise.*
+*Hint if stuck: One problem is about matching effort to each question; the other is about whether bulky outputs need to travel through the lead agent.*
 </details>
 
 ---
 
 ## Question 6
-A content team's prompt says "summarise each meeting in five bullet points", but all three examples show three-bullet summaries because they were written for an older template. The model returns three bullets most of the time. A teammate proposes adding "IMPORTANT: always use five bullets" at the top. What should the architect recommend?
+In a cited-report pipeline, the report-writing subagent needs author, year and venue for every source it cites, typically 30 to 50 per report. It currently asks the coordinator for each one, which spawns a search subagent per lookup and doubles total runtime. The metadata already sits in the run's citation store. What is the best fix?
 
-A) Rewrite the examples so they show five-bullet summaries, because the examples are the stronger signal and currently contradict the rule
-B) Add the IMPORTANT line and also repeat the five-bullet rule at the end of the prompt, so the model sees the instruction twice
-C) Remove the bullet count from the instruction and accept three bullets, since the model has evidently settled on that format
-D) Add a post-processing step that asks the model to expand any summary with fewer than five bullets into a five-bullet version
+A) Give the report subagent the search subagent's full web_search and fetch_page tools so it can find metadata itself
+B) Have the coordinator batch all metadata requests and spawn one search subagent per report to answer them together
+C) Give the report subagent a narrow get_citation_metadata tool that reads entries from the run's citation store
+D) Have the report subagent write placeholder citations and let a final formatting pass fill in author, year and venue
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Examples steer format more strongly than instructions, so when they conflict the examples tend to win; making the examples match the rule removes the conflict at its source. Shouting or repeating the instruction keeps fighting the stronger signal, dropping the requirement abandons the goal, and an expansion pass adds a second call and padded bullets to repair a problem the prompt created.
+**C)** A frequent, simple, cross-role need is best met with a small scoped tool, so the report agent reads metadata directly from the store without coordinator round trips. Handing it the full search toolkit invites off-role research. Batching still re-searches for data that already exists, and placeholders push the problem to a later pass that can mismatch citations.
 
-*Hint if stuck: When an instruction and its examples disagree, ask which one the model is copying.*
+*Hint if stuck: The data exists already; ask what the smallest tool is that reaches it.*
 </details>
 
 ---
 
 ## Question 7
-A telecom support agent runs on a model with a 1M-token context window. To 'never miss anything', the team now loads the full 600-page product and policy manual into every conversation, which fits with plenty of room to spare. Since the change, answers about specific plan terms have become less accurate, not more. What best explains this, and what should the team do?
+A research system's report subagent drafts a 20-page market analysis. The coordinator wants a quality gate before publishing that catches unsupported claims. Budget allows one extra model call per report section. How should the gate be designed?
 
-A) The manual still sits too close to the token limit; move to a larger context tier so the model has more headroom to reason
-B) The model needs firmer instructions; add a system-prompt rule that it must read the entire manual before every single answer
-C) Recall degrades as the window fills, even below the limit; load only the policy sections a case needs, retrieved on demand
-D) The repeated manual confuses the prompt cache; turn caching off so every turn re-reads the manual fresh from the beginning
+A) Send each section and its cited sources to a separate reviewer instance that flags claims the sources do not support
+B) Ask the report subagent to append a self-assessment section rating how well each claim is supported by its sources
+C) Have the coordinator reread the whole report in its own context window and approve it for publishing if nothing looks inconsistent overall
+D) Have the report subagent regenerate each section once and publish whichever version cites the larger number of sources
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Anthropic's docs call this context rot: as the token count grows, accuracy and recall degrade, so curating what is in context matters as much as how much fits. Pulling in only the relevant policy sections when a case needs them keeps the context small and high-signal. A bigger window does not help because the drop appears well below the limit. A rule to read everything adds instructions without removing any noise. Caching changes cost and latency, not what the model attends to.
+**A)** An independent reviewer per section, given the section and its sources but not the drafting context, can check claims against evidence without the writer's bias, and section-sized inputs keep its attention focused. A writer's self-assessment inherits its own blind spots, a single whole-report reread dilutes attention across 20 pages, and more citations is not the same as supported claims.
 
-*Hint if stuck: Ask whether fitting inside the context limit is the same thing as being used well.*
+*Hint if stuck: Combine independence from the writer with a scope small enough to check carefully.*
 </details>
 
 ---
 
 ## Question 8
-A team designing a review pipeline asks whether the reviewer instance should also be allowed to edit and push fixes for what it finds, to save a round trip. The repository has strict change-control requirements. What should the architect recommend?
+A developer-tools team plans a sprint to build their own GitHub MCP server for Claude Code (issues, pull requests, code search) and a second server for their in-house deployment orchestrator, which has no public integration. Which plan should the architect recommend?
 
-A) Keep the reviewer read-only and posting findings; any fixes go through a separate change that is itself reviewed
-B) Let the reviewer push fixes, but only for findings it rates as high confidence, and leave the rest as review comments
-C) Let the reviewer fix issues in the same session and then review its own fixes, so that every change is still reviewed once
-D) Let the reviewer push fixes directly, since it already understands the issues and fixing them in the same pass is fastest
+A) Build both custom servers so that the team controls each tool name, schema and description across its integrations
+B) Adopt an existing community or vendor GitHub MCP server, and build a custom one for the deploy orchestrator
+C) Skip MCP for GitHub and the orchestrator and have the agent call both APIs through curl commands in Bash
+D) Build the GitHub server now and postpone the orchestrator, since a standard integration is the safer start
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** A reviewer that also writes and pushes fixes becomes an unreviewed author, which breaks both independence and change control. Anthropic's Code Review is read-only and never approves or pushes for this reason. Self-rated confidence is not a safe gate for unreviewed pushes, and having it review its own fixes reintroduces self-review.
+**B)** For standard integrations like GitHub, an existing community or vendor server is maintained and proven, so custom work should be reserved for systems with no existing integration, such as the in-house orchestrator. Building both spends effort recreating a solved problem. Raw curl through Bash loses typed tools and descriptions, and postponing the orchestrator invests in the wrong half.
 
-*Hint if stuck: A reviewer that writes code has become an author.*
+*Hint if stuck: Spend custom-build effort where nothing already exists.*
 </details>
 
 ---
 
 ## Question 9
-A developer asks an internal Claude assistant how request timeouts are set in a service. The wiki page, last edited 18 months ago, says 30 seconds; the current config file in the repository says 10 seconds. The assistant answers '30 seconds' because the wiki explains it more clearly. What should the assistant do instead?
+A CI workflow prompt for claude -p instructs: "Use Grep to collect every file matching *.integration.test.ts under services/, then run them." The step is slow and intermittently misses test files. A reviewer flags the instruction. What should it say instead?
 
-A) Answer 30 seconds, since the wiki is the official documentation and should be treated as the source of truth for configuration questions
-B) Answer 10 seconds without mentioning the wiki, since the code is what runs and mentioning older documents would only confuse the developer
-C) Give both values with their sources and dates, and note that the config file reflects current behavior while the wiki may be out of date
-D) Average the two values and recommend 20 seconds as a reasonable default, noting that the sources disagree on the exact number
+A) Keep Grep but anchor the regular expression so it matches the file names more precisely
+B) Tell Claude to Read the services/ directory listing and filter the entries itself
+C) Use Glob with services/**/*.integration.test.ts, because Glob matches file paths while Grep searches file contents
+D) Use Bash with find piped through xargs, because the built-in tools cannot enumerate files by a name pattern across directories
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Attribution and dates let the developer see that the code is current and the wiki is likely stale, and they also reveal the outdated page that needs fixing. Trusting the clearer source ignores which one is current, and dropping the wiki silently hides a discrepancy worth knowing about. Averaging makes up a number neither source supports.
+**C)** Glob matches file paths while Grep searches file contents, so using Grep to enumerate file names searches the wrong dimension and explains the misses. (Current Claude Code on macOS, Linux and WSL leaves Glob and Grep out by default and searches with find/grep through Bash unless a job names them in --tools or --allowedTools; the path-versus-content choice is the same either way.) The find/xargs option rests on a false premise, since path-pattern enumeration is exactly what Glob does. Anchoring a content regex still searches the wrong dimension, and filtering a directory listing by hand does not recurse through the service tree.
 
-*Hint if stuck: Show where each answer came from and when.*
+*Hint if stuck: Ask whether the instruction is looking for something in file names or in file text.*
 </details>
 
 ---
 
 ## Question 10
-After a runaway agent burned $400 in API calls overnight, an e-commerce team's incident review proposes capping the order-management agent at 3 loop iterations as the primary termination mechanism. A week later, 30% of legitimate multi-step tasks (check inventory, apply discount, create shipment) fail half-finished. What should the architecture look like?
+A nightly job sends 40,000 document-classification requests through the Message Batches API. The team's code matches results to documents by line position, and some labels end up on the wrong documents. About 300 requests come back errored, mostly invalid_request_error from documents over the size limit, and the job then resubmits the whole batch. Which changes should they make? (Choose two.)
 
-A) Keep the cap at 3 but prompt the model to plan ahead so every task finishes within three tool calls
-B) Let stop_reason end_turn drive termination, investigate why the runaway loop never reached it, and keep a generous iteration cap only as a safety fallback
-C) Raise the cap to exactly the longest observed legitimate task length, currently measured at 6 iterations, so real tasks finish while runaway loops are still cut off early
-D) Replace the loop with a fixed three-step pipeline so the iteration count becomes fully deterministic
+A) Give each request a unique custom_id and join each result to its document on that ID, not on position
+B) Sort the results file by creation time before matching, so that it lines up with the order of submission
+C) Resubmit just the errored custom_ids, after fixing those requests, e.g. by chunking big documents
+D) Resubmit the errored requests unchanged in a new batch, since errors in a batch are usually transient
+E) Split the job into 40 batches of 1,000 so that each smaller results file stays in submission order
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Iteration caps are safety fallbacks against pathological loops, never the primary control; genuine completion is signaled by stop_reason end_turn. Tuning the cap to the longest observed task just moves the failure boundary — any task one step longer still truncates — and neither tuned cap explains or fixes whatever caused the original runaway. A fixed pipeline throws away the adaptive sequencing the order workflows need.
+**A, C** Batch results can come back in any order, so custom_id is the way to correlate each result with its request. Only the failed requests need resubmitting, and an invalid_request_error means the request body must be fixed (here, chunking oversize documents) before it can succeed. Sorting by time or using smaller batches still relies on an order the API does not guarantee. Resending invalid requests unchanged fails the same way again.
 
-*Hint if stuck: Ask what mechanism should normally end the loop, and what role a hard cap is actually meant to play.*
+*Hint if stuck: Ask what the API promises about result order, and what an invalid request needs before it can succeed.*
 </details>
 
 ---
 
 ## Question 11
-A developer-tools team keeps build, test and release commands in README.md for humans. Their CLAUDE.md also holds Claude-specific guidance that does not belong in the README, plus a pasted copy of those commands that goes stale every time someone updates the README. What is the best way to keep a single source of truth?
+A customer support coordinator agent has already looked up the customer's account ID, plan tier, and the disputed invoice number through earlier tool calls. It then spawns a billing-investigator subagent with the Task prompt 'Investigate why this customer was double-charged.' The subagent responds that it cannot proceed without knowing which customer or invoice is involved. What is the root cause?
 
-A) Replace CLAUDE.md with a symlink to README.md, so Claude reads exactly the same file humans do
-B) Reference the README from CLAUDE.md with an @README.md import so its content loads with the file
-C) Add a line to CLAUDE.md asking Claude to read README.md at the start of each session before working
-D) Add a CI check that fails when the README and the CLAUDE.md copy differ, and keep both files in sync
+A) The billing-investigator is running on Haiku, which cannot retain account details; switch its model to Opus
+B) Project CLAUDE.md was never set up, so subagents load no memory at startup; create one containing the account details
+C) Subagents start with isolated context; the coordinator must pack the account ID, plan tier, and invoice number directly into the Task prompt
+D) Subagents need a shared-memory flag enabled in settings.json before they can read the coordinator's full conversation history, including the account details
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** An @import pulls the README into context alongside CLAUDE.md, so there is one maintained copy and no drift. A symlink throws away any Claude-specific guidance the CLAUDE.md needs. Asking Claude to read the file is a probabilistic instruction, and a CI diff check keeps duplication alive while adding a chore.
+**C)** Subagents do not inherit the coordinator's conversation — each starts with an isolated context, so any fact the subagent needs must be explicitly written into its task prompt. Packing the account ID, tier, and invoice number into the Task prompt fixes the root cause. CLAUDE.md is version-controlled project memory for stable standards, not a channel for per-ticket runtime facts, and no shared-memory flag exists in settings.json.
 
-*Hint if stuck: There is a way for CLAUDE.md to pull in another file instead of copying it.*
+*Hint if stuck: Consider what a freshly spawned subagent can and cannot see of its parent's conversation.*
 </details>
 
 ---
 
 ## Question 12
-A nightly job runs claude -p with --output-format json to scan a repo for deprecated API usage and must hand a dashboard importer records shaped like {file, line, severity}. The JSON envelope always parses, but the result field inside is free-form text, and the importer rejects roughly one run in five. What gives the importer a typed guarantee?
+An engineer asks Claude Code to generate unit tests for a date-parsing utility it wrote earlier in the same session. All tests pass, but production fails on leap-day inputs. The team wants the tests to act as a real check on the code. What is the best change?
 
-A) Add three correctly formatted example records to the prompt and rerun any failures
-B) Pin the model version so the formatting stays stable from run to run
-C) Chain a second claude -p call that reformats the first run's output into the expected record shape
-D) Pass the record schema to the job with --json-schema so the response carries validated records
+A) Ask the same session to list the edge cases it considered before writing tests, then add any it marks as untested
+B) Tell the same session to write tests that try their hardest to break the code, with heavy emphasis on adversarial edge cases such as leap years
+C) Require a code coverage target of 100 percent so the session is forced to write a test for each branch in the parser
+D) Generate the tests in a separate session that receives only the function signature and the spec, not the implementation
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** --output-format json only structures the envelope; adding --json-schema makes the run return output validated against the supplied schema, in the response's structured_output field, which is the typed contract the importer needs. Few-shot examples improve the odds but stay probabilistic, pinning the model leaves the content free-form, and a second reformatting call adds cost with no guarantee.
+**D)** Tests written by the context that wrote the code tend to encode the same assumptions, so the leap-day gap appears in both. A separate session working from the spec tests the intended behaviour instead. Adversarial wording and self-listed edge cases come from the same blind context, and branch coverage does not reveal a missing branch.
 
-*Hint if stuck: Separate what makes the wrapper parseable from what constrains the content inside it.*
+*Hint if stuck: Tests share the blind spots of whoever designed them.*
 </details>
 
 ---
 
 ## Question 13
-A batch of 15,000 warranty-claim extractions finishes with 14,700 succeeded and 300 errored. Of the errors, 220 are invalid_request_error because their attachments were sent in a malformed content block, and 80 are server errors. What is the right recovery?
+An automated PR reviewer posts about 30 comments per pull request. Developers say the security and correctness findings are mostly real, but the style and naming comments are wrong or trivial most of the time, and now they skip every comment. Adding "be conservative and only flag important issues" to the prompt changed nothing. Which changes should the team make? (Choose two.)
 
-A) Resubmit all 300 errored requests unchanged as a new batch, since one retry usually clears transient batch errors
-B) Fix the 220 invalid requests and send them synchronously, and drop the 80 server errors as an acceptable loss
-C) Resubmit the whole batch of 15,000 with the fix applied so that every result comes from the same run and prompt
-D) Fix the content block for the 220 invalid requests and resubmit them with the 80 server errors in a new batch
+A) Switch off the style and naming category for now while its prompt is reworked and measured on real PRs
+B) Have the model give each finding a confidence score and post just the findings it rates at 0.8 or above
+C) Strengthen the line to "be extremely conservative" and repeat it at both the start and end of the prompt
+D) Lower the temperature so the reviewer produces the same set of comments each time a PR is reviewed again
+E) Replace the vague instruction with explicit criteria: which issue types to report and skip, with examples
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** invalid_request_error means the body must be fixed before resending, while other errors can usually be retried as-is, and custom_ids let you resubmit only those 300. Resending the invalid ones unchanged fails again, rerunning all 15,000 pays twice for good results, and dropping retryable server errors loses data for no reason.
+**A, E** A noisy category drags down trust in the accurate ones, so pausing it while it is fixed restores the value of the real findings. Vague calls for caution do not raise precision; explicit criteria for what to report and what to skip, with examples, do. Self-rated confidence is not calibrated, so a 0.8 cut-off filters unpredictably. Repeating a stronger vague instruction is the approach that already failed, and a lower temperature makes the same false positives more consistent rather than fewer.
 
-*Hint if stuck: Not every errored request needs the same treatment.*
+*Hint if stuck: Ask what is eroding developers' trust right now, and what kind of prompt wording actually changes what the model reports.*
 </details>
 
 ---
 
 ## Question 14
-On a Linux workstation, a team defines a read-only code-explorer subagent for Claude Code. It must search file names and contents but never run shell commands. The team worries it cannot search at all, because Glob and Grep are not in Claude Code's default tool set on Linux. How should they configure the subagent's tools?
+An engineer asked Claude Code to change how a research platform attaches citations, logic spread over about 25 modules she has never read. In the first attempt the main session filled with grep and file-read output until it compacted and lost earlier findings, and Claude began editing three modules before she had agreed on an approach; she reverted them. Which changes address these problems? (Choose two.)
 
-A) List Read and Bash in its tools field, and add a prompt line telling it to run only find and grep commands in the shell
-B) List only Read in its tools field, since without Bash the subagent has no way to search and must open files one by one
-C) Leave out the tools field so it inherits Bash from the main session and searches with find and grep like the main agent
-D) List Read, Grep and Glob in its tools field and leave out Bash, which brings both search tools back for that subagent
+A) Have the Explore subagent map the citation code, so only its summary enters the main session
+B) Run /compact after each batch of searches, so the main session keeps room for later results
+C) Switch to acceptEdits mode, so the early edits are batched and she can review them at the end
+D) List the 25 modules in the project CLAUDE.md, so every session loads the module map at start
+E) Work in plan mode until she approves an approach, so no source file changes before she agrees
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** On macOS, Linux and WSL, Claude Code leaves Glob and Grep out of the default set and searches with find and grep through Bash. The tools come back when a subagent lists them in its tools field and leaves out Bash, which gives a search-capable explorer with no shell. Granting Bash with a prompt rule leaves the shell open to anything, a Read-only explorer has to open files blindly, and inheriting the main session's tools brings Bash along.
+**A, E** Delegating discovery to the Explore subagent keeps the verbose search and read output in its own context and returns a summary, so the main session stays focused. Plan mode lets Claude read and propose without editing source until she approves a plan. Compacting more often keeps discarding the very findings she needs. acceptEdits approves edits automatically, the opposite of holding them back. Putting a module list in CLAUDE.md loads it into every session and does nothing to keep exploration output out of context.
 
-*Hint if stuck: The requirement is about what the subagent can do, not what it is told; check how its own tool list interacts with the default tool set.*
+*Hint if stuck: One problem is about where exploration output lands, the other about when edits are allowed to start.*
 </details>
 
 ---
 
 ## Question 15
-A developer-productivity tool extracts breaking API changes from PR descriptions into a JSON changelog. On validation failure, the retry sends only the failed JSON and the error message, to save tokens. Retried outputs fix the reported field but often change other fields to values that are not in the PR at all. What is the most likely fix?
-
-A) Include the original PR description in the retry along with the failed output and the specific validation error
-B) Add an instruction to keep every field unchanged except the one named in the error message from the validator
-C) Send only the failed field and its error, so the model cannot touch any of the other fields in the changelog entry
-D) Run a second validator that rejects changes to any field other than the failed one, and retry again when it fires
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** Without the source document, the model has no grounding for the corrected output and fills gaps from guesses; the retry needs the original input, the failed output and the specific error together. Sending only the failed field loses cross-field context, an instruction not to change fields still leaves the model ungrounded, and a second validator stacks more retries on a request missing its source.
-
-*Hint if stuck: A correction is only as good as the material the model can check it against.*
-</details>
-
----
-
-## Question 16
-A travel-booking agent receives a response with four parallel tool_use blocks: two flight searches and two hotel searches. The calls run on an async worker pool and finish out of order. The developer sends each tool_result back as its own user message the moment it completes, and the API rejects the second request. What is the correct handling?
-
-A) Buffer the results and send four consecutive user messages arranged in the original tool_use order
-B) Re-run the workers sequentially so results arrive in exactly the order the model requested them
-C) Send all four results together in one user message, each matched to its call by tool_use_id
-D) Restrict the agent to one tool_use block per response using tool_choice so ordering never arises
-
-<details>
-<summary>Answer & explanation</summary>
-
-**C)** All tool_results answering a parallel batch belong in the single next user message, where each is paired with its call by tool_use_id rather than by position or arrival time. Splitting results across multiple user messages leaves unanswered tool_use blocks at each intermediate step, which the API rejects regardless of ordering, and forcing sequential execution throws away the latency benefit of parallel calls.
-
-*Hint if stuck: Consider what the API expects to see right after an assistant turn that made several calls at once.*
-</details>
-
----
-
-## Question 17
-A support agent's refund-cap check is a PreToolUse shell hook defined in the repository's .claude/settings.json, and it worked in every test run. To stop the production Agent SDK service from picking up stray settings files, an engineer set settingSources to an empty list. Since that release, over-cap refunds have gone through and the hook's log is empty. What should the team do?
-
-A) Move the check into a PostToolUse hook in the same settings file, since PostToolUse hooks still load when setting sources are restricted
-B) Register the refund check as a PreToolUse callback in the query's hooks option, which runs no matter which settings files load
-C) Put the cap in the system prompt as a hard rule, since an SDK service cannot run hooks of any kind once settings files are skipped
-D) Set permissionMode to bypassPermissions, so that hooks are evaluated before every tool call no matter which settings were loaded
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** The SDK runs callback hooks passed in options plus shell hooks from settings files only when the matching settingSources entry is enabled; with an empty list, .claude/settings.json and its hooks are never read. A callback registered in code keeps the deterministic check without reopening the settings files the engineer wanted to ignore. A PostToolUse hook in the same file would not load either and would fire after the refund. The prompt fallback rests on a false premise and is probabilistic, and bypassPermissions loosens approval rather than loading any hooks.
-
-*Hint if stuck: Ask where this check was defined, and what has to happen for the SDK to read that file at all.*
-</details>
-
----
-
-## Question 18
-A team wants to make sure Claude Code never runs `npm publish` from developer machines. They wrote a PostToolUse hook on Bash that detects publish commands and alerts the security channel. In the first week, two internal packages were accidentally published to the public registry, and the alerts fired after both. What should they change?
-
-A) Make the PostToolUse hook also run `npm unpublish` right after it detects a publish, so the package is withdrawn within seconds
-B) Lower the alert hook's timeout so the security channel hears about publish commands faster than it does today
-C) Add `npm publish` to the team's CLAUDE.md as a forbidden command, alongside the existing alert from the hook
-D) Use a PreToolUse hook on Bash that denies publish commands with a reason, so the command never runs at all
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** PostToolUse runs after the tool has executed, so it can only react; blocking an action requires a PreToolUse hook that denies the call before it runs. Auto-unpublishing still exposes the package and may not be allowed by the registry. A CLAUDE.md rule is best-effort, and faster alerts do not prevent anything.
-
-*Hint if stuck: The alerts fired every time, yet the harm still happened. What does that say about timing?*
-</details>
-
----
-
-## Question 19
-A research coordinator keeps running new rounds of subagents until it hits a hard limit of eight rounds, because nothing tells it when the research is good enough. Simple questions burn all eight rounds; hard ones are cut off. Which change gives the loop a sensible stopping point?
-
-A) Lower the hard limit to four rounds so that simple questions finish sooner and hard ones are cut off less often
-B) Stop as soon as a round returns fewer new sources than the round before it, regardless of what the original brief asked for
-C) Have the coordinator check the findings against explicit success criteria after each round and stop when they are met
-D) Let each subagent decide on its own whether more research is needed and spawn the next round when it thinks so
-
-<details>
-<summary>Answer & explanation</summary>
-
-**C)** Stopping should come from evaluating findings against the brief's success criteria: coverage of the required sub-questions and evidence quality. A different round limit is the same blunt cap tuned differently, and source-count deltas measure activity, not whether the question is answered. Letting each subagent spawn further rounds removes the coordinator's control over scope and cost.
-
-*Hint if stuck: What would 'done' mean for this brief, and who is placed to judge it?*
-</details>
-
----
-
-## Question 20
-When a support agent hands a disputed charge to a human specialist, its summary says 'the customer was charged twice on 3 March and never received the replacement'. The specialist later finds the double charge in billing records, but the non-delivery was only the customer's statement; the shipping tool showed a delivered status. What should the handoff summary do?
-
-A) Give the specialist the full conversation transcript instead of a summary, so they can work out for themselves which statements were verified
-B) Present the customer's account in full and trust it, since the specialist will check the details again during the investigation anyway
-C) Include only facts confirmed by internal systems, leaving out the customer's account so the specialist works from verified data alone
-D) Mark each fact as verified by a named system or reported by the customer, and note where the two disagree
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** Labelling each fact by where it came from, and flagging where the customer and the systems disagree, lets the specialist start from the real dispute. A raw transcript pushes the sorting work onto the specialist, dropping the customer's account hides the disagreement, and treating customer statements as fact repeats the original error.
-
-*Hint if stuck: Who said it matters as much as what was said.*
-</details>
-
----
-
-## Question 21
-A support resolution agent escalates hard cases to human specialists. Specialists complain that each escalation arrives as a raw 150-message transcript and they spend twenty minutes reconstructing what happened before they can act. What should each escalation carry instead?
-
-A) A sentiment trajectory chart plus the customer's last five messages
-B) A structured summary: customer id, the issue, what was already tried, and a recommended next action
-C) The full transcript with a one-line subject added so specialists can skim it faster
-D) A live link back into the agent session so the specialist can question the agent directly about the case
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** Canonical human handoffs carry a structured summary covering the customer id, the issue, what was attempted, and a recommended action, so the specialist can act in minutes without replaying the conversation. The full transcript with a subject line is the strongest distractor, but it preserves the exact problem: the reconstruction burden stays on the human. Sentiment data does not tell the specialist what was tried or what to do next, and a live session link makes the specialist interrogate the agent instead of acting.
-
-*Hint if stuck: Think about what a human needs in order to act in two minutes instead of twenty.*
-</details>
-
----
-
-## Question 22
-A research coordinator runs five subagents in parallel. The patents subagent returns a structured error: category access_denied, not retryable, with two patents found before the failure. The coordinator currently aborts the whole job whenever any subagent errors. What should the coordinator do instead?
-
-A) Retry the patents subagent repeatedly until it succeeds, since the report cannot be considered complete until every planned source type has been covered by a subagent
-B) Abort as it does now but log the structured error, so that an engineer can rerun the whole research job manually once access has been restored
-C) Drop the patents section silently and present the report as complete, because the other four sources already provide enough material for a good report
-D) Continue with the other four subagents' results, include the two partial patent results, and note in the report that patent coverage is incomplete and why
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** Structured errors with partial results exist so that higher-level agents can make sensible decisions instead of failing everything. The coordinator should keep what it has, use the partial results and disclose the gap. Retrying a non-retryable access error wastes work, dropping the section silently presents an incomplete report as complete, and aborting throws away four good results.
-
-*Hint if stuck: A failure in one part does not have to mean failure of the whole.*
-</details>
-
----
-
-## Question 23
-A developer-productivity agent connects to five MCP servers (GitHub, Jira, Confluence, Sentry, and an internal deploy server), exposing 31 tools. It has a code-exploration subagent and a release-notes subagent, both defined without tool restrictions. The exploration subagent now regularly files Jira tickets and triggers preview deploys while 'investigating'. Which change best addresses this?
-
-A) Give the exploration subagent an explicit tool list of Read, Grep, Glob and the GitHub read tools it actually needs
-B) Add to the exploration subagent's prompt that it must never call Jira or deploy tools while exploring code
-C) Disconnect the Jira and deploy servers from the project so that no agent in the system can call them at all
-D) Add a PreToolUse hook that blocks deploy calls from every agent but leaves the Jira tools available to the exploration subagent
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** Without a tools list the subagent inherits every tool, including all MCP servers, so it both misuses off-role tools and chooses among 31 options. Scoping it to its role's handful of tools fixes both problems. A prompt rule leaves the tools in view, disconnecting servers breaks the release-notes work that needs Jira, and a hook on deploy alone leaves Jira misuse and the oversized selection space untouched.
-
-*Hint if stuck: Fix the misbehaving role without taking capabilities from the roles that legitimately use them.*
-</details>
-
----
-
-## Question 24
-A research coordinator was paused overnight. It is resumed in the morning, but the shared pricing dataset that two of its subagents queried was refreshed at 2 a.m.; the other four subagents used static sources. What is the most effective way to continue the run?
-
-A) Resume the coordinator without changes, since data refreshed only a few hours ago is unlikely to change the conclusions much
-B) Resume the coordinator, tell it which dataset was refreshed and which subagent results came from it, and re-run only those queries
-C) Discard the coordinator session and rerun all six subagents from scratch so that every result reflects the same moment
-D) Resume the coordinator and ask it to decide for itself, without guidance, which of the results might now be out of date
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** When you know exactly what changed, resuming and telling the agent precisely which results are stale keeps the valid work and refreshes only what is affected. Ignoring the refresh leaves stale data in the analysis, rerunning everything wastes four still-valid results, and asking the agent to guess gives it no way to know about a change it never observed.
-
-*Hint if stuck: Be specific about which earlier results can no longer be trusted.*
-</details>
-
----
-
-## Question 25
-A team adds .claude/agents/dependency-auditor.md to their repo so Claude Code can audit third-party packages for licence and CVE issues. The frontmatter has a name and description but no tools field. During one audit, the subagent ran a package upgrade through Bash and edited the lockfile. What is the right fix?
-
-A) Add a line to the subagent's prompt saying it must only report its findings and must never modify files or run package installs
-B) Add a tools field listing only read-only tools such as Read, Grep and Glob, since an omitted field inherits everything
-C) Require plan mode for the whole repository so every Claude Code session asks for approval before any file change
-D) Rename the subagent to dependency-reader so that its description signals read-only intent to the main agent
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** A subagent with no tools list inherits every tool available to subagents, including Bash and Edit, so the audit role was over-provisioned. Listing only read-only tools removes the capability, and a tool left out is simply absent from the subagent's session. A prompt prohibition remains probabilistic, plan mode for every session penalises all other work to fix one agent, and renaming changes routing hints, not capability.
-
-*Hint if stuck: Check what a subagent gets when its tool list is left unspecified.*
-</details>
-
----
-
-## Question 26
-A developer-experience team regenerates reference docs for 3,000 internal modules every Sunday so engineers see fresh docs on Monday morning. The job uses synchronous calls in a loop and takes six hours of runner time. Nothing reads the docs until Monday, and the team has been asked to cut the job's API cost. What is the best change?
-
-A) Run the loop with more parallel synchronous workers so that the six-hour job finishes in under an hour on Sunday
-B) Submit the 3,000 generation requests as a Message Batch on Sunday with a custom_id per module and collect results
-C) Start the same synchronous loop at 2 AM on Monday instead of Sunday so the runner sits idle over the weekend
-D) Move the job to run every night instead of Sundays so that each run covers fewer modules and costs less overall
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** A weekly job with a Monday deadline is a natural fit for the Message Batches API: half the cost and plenty of slack for its 24-hour window, with custom_id mapping results back to modules. More parallel workers finish faster at full price, moving the start time changes nothing about price and leaves little slack before engineers arrive, and nightly runs add total work rather than lowering unit cost.
-
-*Hint if stuck: When the deadline is a day away, speed is not what you are paying for.*
-</details>
-
----
-
-## Question 27
-An extraction subagent processes a 40-page loan application and fails on pages 31 to 40 because they are scanned images it cannot read. It currently returns only 'extraction failed.' What should its failure report to the orchestrator contain?
-
-A) The fields it did extract from pages 1 to 30, which pages failed and why, and suggested alternatives such as OCR
-B) Just the failure message, since the orchestrator should simply re-run the whole document from page 1 when it sees it
-C) A complete record where the unreadable fields are filled with their most likely values based on similar applications
-D) A detailed apology explaining that scanned pages are a known limitation and that the document cannot be processed
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** A useful failure report carries the failure type, what was tried, the partial results and possible alternatives, so the orchestrator can recover without redoing good work. A bare message forces a full rerun that will fail again, invented values hide the gap, and an apology gives the orchestrator nothing actionable.
-
-*Hint if stuck: What would the orchestrator need to recover without starting over?*
-</details>
-
----
-
-## Question 28
-A team's testing rule uses paths: **/*.test.ts. The repository also has older tests named *.spec.ts and some helpers under __tests__/ folders, and Claude ignores the testing conventions when it edits those. What is the most direct fix?
-
-A) List additional patterns in paths, such as **/*.spec.ts and **/__tests__/**, in the same rule file
-B) Remove the paths field so that the testing conventions load whenever any file in the repo is edited
-C) Rename every older test file to *.test.ts so the existing rule pattern happens to match all of them
-D) Create a second rule with identical content for the *.spec.ts files and the __tests__ helper folders
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** The paths field accepts a list of patterns, so the same rule can cover every test naming convention at once. Renaming hundreds of files to suit a glob is churn with no benefit. Removing paths loads test conventions everywhere, and a duplicated second rule brings back the drift problem.
-
-*Hint if stuck: A rule can carry more than one pattern.*
-</details>
-
----
-
-## Question 29
-An extraction pipeline reads purchase orders. Some orders list two different delivery dates (one in the header, one in the line items) and the pipeline must emit a single delivery_date. The batch runs unattended overnight. How should the extractor handle these documents?
-
-A) Emit the field with both candidate values and a conflict flag so the document routes to human review
-B) Take the later of the two dates, since that is the safer commitment for the buyer to plan around
-C) Take the header date, since headers are more authoritative, and continue without flagging the document
-D) Leave the delivery_date field out of the record entirely so downstream systems treat it as unknown
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** With no human in the loop, ambiguity should be captured explicitly and routed for review rather than resolved by a silent rule. Picking the header or later date is a guess that downstream systems will trust, and dropping the field loses the evidence a reviewer would need to decide.
-
-*Hint if stuck: When no one can be asked, make the ambiguity visible.*
-</details>
-
----
-
-## Question 30
 A platform team wrote a PreToolUse hook to stop Claude Code from editing files under infra/prod/. The script correctly detects the protected path, prints 'Edit blocked: protected production path' to stdout, and exits with code 0. In testing, the edits still go through and the agent never acknowledges any block. What is wrong?
 
 A) PreToolUse hooks cannot block tool calls; the rule must instead be a deny entry in settings.json permissions for that path
@@ -548,43 +282,187 @@ D) The hook fires too early to see the file path; the protection must move to a 
 
 ---
 
-## Question 31
-A developer asks Claude, in direct execution, to 'tweak' how a helper formats currency. Midway, Claude reports that the helper is called from 14 places, three of which depend on the old rounding, and asks whether to change their behaviour too. What is the best next step?
+## Question 16
+In a healthcare intake pipeline, a symptoms-extractor subagent identifies the patient's record ID from uploaded forms, and an insurance-verifier subagent later needs that ID. An engineer proposes letting the two subagents exchange data directly through a shared messages.json file. What is the recommended pattern instead?
 
-A) Tell Claude to change all 14 call sites to the new format and fix any test failures it finds
-B) Stop and switch to plan mode to decide how the call sites should be handled before editing more
-C) Let Claude keep the old rounding in the three special call sites without further discussion
-D) Undo the change and leave the helper as it is, because touching it has turned out to be risky
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** Once a small task turns out to need a cross-cutting decision, it has become plan-mode work: lay out the options for the dependent call sites and agree before making more edits. Pushing ahead with all 14, or quietly special-casing three, makes a behavioural decision without review. Abandoning the change avoids the decision rather than making it.
-
-*Hint if stuck: The task changed shape halfway; should the mode change too?*
-</details>
-
----
-
-## Question 32
-A support agent's charge_card tool maps every gateway failure to {"isError": true, "isRetryable": true}. When a customer's card is declined for insufficient funds, the agent retries the charge four times in a row, and the bank flags the card for suspected fraud. Which change fixes the root cause?
-
-A) Add a system-prompt rule that the agent must never retry a charge more than once, no matter what the tool reports back after the first failure
-B) Map gateway responses to categories: a decline is a non-retryable business error with a readable reason, while a timeout is transient and may be retried
-C) Remove isRetryable from the tool's errors entirely and let the model judge from the gateway's raw response code whether a retry makes any sense for this charge
-D) Insert a fixed thirty-second delay between charge attempts so that repeated retries are spread out and look less suspicious to the issuing bank
+A) Give both subagents the same session ID so they transparently share one context window
+B) Have the extractor return the record ID in its result, and let the coordinator pack it into the verifier's Task prompt
+C) Adopt the shared file, but add a PreToolUse hook that validates each write to messages.json so a bad record never reaches the verifier
+D) Merge both roles into a single subagent so the data never has to move between agents
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** The tool labels every failure the same way, so the agent cannot tell a decline (retrying can never help and causes harm) from a timeout (retrying is reasonable). Categorising errors and setting isRetryable correctly lets the agent respond properly to each. A blanket one-retry rule still retries declines and blocks valid timeout retries, raw gateway codes push interpretation onto the model, and spacing out retries still repeats a charge that will be declined.
+**B)** In hub-and-spoke orchestration, inter-agent communication routes through the coordinator: spokes return results to the hub, and the hub explicitly packs needed facts into the next subagent's prompt. This keeps sequencing, validation, and observability in one place. A shared file sidesteps the orchestrator and invites ordering and consistency problems that a validation hook only partially patches, and subagents cannot share a context window by reusing a session ID.
 
-*Hint if stuck: Different failures call for different responses; ask whether the agent can tell them apart.*
+*Hint if stuck: In hub-and-spoke, who is supposed to carry information between spokes?*
 </details>
 
 ---
 
-## Question 33
+## Question 17
+A developer-productivity agent must change one specific 'return null;' line inside a 900-line file. The statement appears 14 times, several of them inside near-identical blocks, so even old_string values widened with surrounding lines still match more than once. What is the reliable fallback?
+
+A) Use Bash with sed to replace every occurrence of 'return null;' in the file
+B) Call Edit with replace_all set to true so uniqueness is no longer required
+C) Grep the file to count the occurrences, then call Edit again with the exact same old string
+D) Read the full file, make the change in that content, and Write the whole file back
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Edit needs an old_string that matches exactly once; when even widened context cannot single out the target, reading the file and writing it back with just that line changed is the reliable fallback. replace_all and a blanket sed would change all 14 occurrences rather than one, and counting matches with Grep does not make the anchor any more unique.
+
+*Hint if stuck: If no anchor can be made unique, look for an approach that does not depend on string matching but still changes only the line you mean.*
+</details>
+
+---
+
+## Question 18
+A contract-review pipeline flags auto-renewal clauses and outputs only clause_id and is_auto_renewal. Reviewers dismiss about a third of flags, but the team cannot tell why the model is wrong, because nothing in the output shows what triggered each flag. What is the most useful change to the output schema?
+
+A) Add a confidence score from zero to one so that reviewers can sort the flags and skip the ones with lower confidence
+B) Add a detected_pattern field recording the phrase or rule that triggered each flag, so dismissed flags can be grouped by cause
+C) Add a field for the clause's full text so that reviewers no longer have to open the full contract to check each flagged clause
+D) Add a reviewer-feedback field to the schema so the model can learn from past dismissals during future extraction runs
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** A detected_pattern field records why each flag fired, so dismissed flags can be grouped by trigger and the prompt or rules fixed for the patterns that cause false positives. A confidence score helps triage but does not explain causes, clause text speeds review without revealing the trigger, and a feedback field in the output does not teach the model anything across runs.
+
+*Hint if stuck: To fix false positives you first need to see what caused them.*
+</details>
+
+---
+
+## Question 19
+A synthesis step deduplicates findings that state the same fact. When two scouts reported 'the plant closed in May 2026', one citing a regulator filing and one a trade-press article, the merged claim kept only the trade-press source. That article was later corrected, and reviewers now cannot tell whether the claim still stands. How should merging work?
+
+A) Keep the most authoritative source on the merged claim and drop the others to keep records simple
+B) Skip deduplication and publish both claims separately, so readers see that two sources said the same thing
+C) Merge the matching claims into one record that keeps every supporting source with its id and date
+D) Keep the first source that arrived, but add a note to the claim saying it was also reported elsewhere
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** Claim-source mappings have to survive every synthesis step, including deduplication: a merged claim should carry all its supporting sources with dates, so it can be re-checked when one source changes and corroboration can be judged. Keeping only the 'best' source is a judgment call that still throws away the trail. Publishing duplicates clutters the report and still does not link the two sources to one claim. A note saying 'reported elsewhere' gives reviewers nothing they can check.
+
+*Hint if stuck: Ask what a reviewer needs to re-check a claim after one of its sources changes.*
+</details>
+
+---
+
+## Question 20
+A team tuning an invoice extraction prompt has spent a session having Claude analyse 20 failed extractions and categorise the failure patterns. They now want to try two schema designs, one with nullable fields and one with an explicit 'unclear' enum, each needing several iterations. What is the most efficient setup?
+
+A) Try the first schema in the current session, then run /clear and try the second one in the same session afterwards
+B) Fork the analysis session once for each schema design so both iterations start from the same failure analysis
+C) Start two new sessions and have each one reanalyse the same 20 failed extractions before trying its schema design
+D) Try both schema designs in the same session at the same time, alternating prompts between the two different approaches
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Two independent lines of work from one shared analysis is the use case for forking. Running /clear throws away the analysis needed for the second design, re-analysing in two new sessions repeats the work, and alternating designs in one session lets each contaminate the other's reasoning.
+
+*Hint if stuck: You want two branches that share a starting point but nothing after it.*
+</details>
+
+---
+
+## Question 21
+A platform team wants Claude in CI to propose dependency-upgrade changes across services, but a human must approve the approach before any code is changed. One engineer suggests a single job whose prompt says 'describe your plan and wait for approval before editing'. What design meets the requirement?
+
+A) Use the single job with a stronger prompt that forbids editing files until a reviewer comments
+B) Run a first job in plan mode that publishes the plan, then a second job that executes it after approval
+C) Run the single job directly and rely on pull-request review to catch the approach after changes
+D) Use the single job but cap it at one turn so Claude cannot reach the editing step before review
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Plan mode enforces the no-edit boundary even in non-interactive runs, so splitting into a planning job and a gated execution job gives a real approval point. A prompt instruction is a request, not a block. A turn cap is crude loop control that can still leave partial edits, and post-hoc PR review means the approach is judged only after the work is done.
+
+*Hint if stuck: Where is the approval gate enforced: in the prompt, or in the workflow?*
+</details>
+
+---
+
+## Question 22
+An e-commerce team has finalized a new extraction prompt for product attributes and plans to submit all 10,000 legacy listings as a single Message Batch tonight. The prompt has only been eyeballed against two listings. A teammate objects to the plan. What should the team do before committing the full batch?
+
+A) Submit the full batch now — at the 50% discount, even a flawed run costs half as much as a synchronous run
+B) Run a small synchronous pilot of around 50 representative listings, validate the outputs, then submit the full batch
+C) Submit the 10,000 listings as ten sequential batches of 1,000, checking each batch's results before sending the next
+D) Add a system-prompt instruction asking the model to double-check its own work, then submit the 10,000 tonight
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** A small synchronous pilot gives immediate feedback on prompt quality before committing 10,000 jobs to a channel with no latency SLA. The staged sub-batch plan is the strongest distractor, but it still burns 1,000 unvalidated jobs on the first stage and waits up to 24 hours per checkpoint; the discount makes a bad run cheaper, not free, and a self-check instruction cannot validate outputs the team has never inspected.
+
+*Hint if stuck: Compare how quickly each plan would reveal that the prompt is broken.*
+</details>
+
+---
+
+## Question 23
+An engineer needs to add an optional timeout_seconds field, defaulting to 30, to one dataclass in config/http.py and cover it with a unit test in the matching test file. The requirements are fully specified and there is only one sensible way to do it. How should she run the task in Claude Code?
+
+A) Ask for direct execution with the exact field, default and test expectation in the prompt
+B) Delegate the work to an Explore subagent first so that it can map each usage of the config class
+C) Enter plan mode so Claude can propose two alternatives for the field before writing any code
+D) Draft a spec document with Claude first, then start a fresh session to implement that spec
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** A small, clear, well-scoped change with one obvious approach is what direct execution is for; spelling out the field, default and test gives Claude everything it needs. Plan mode adds a review step with nothing to decide. An Explore pass or a spec-then-fresh-session workflow is overhead suited to unfamiliar or large work.
+
+*Hint if stuck: How many real decisions does this change contain?*
+</details>
+
+---
+
+## Question 24
+In a market-research system, the synthesis subagent was given the same web_search and fetch_page tools as the search subagents 'so it can fill gaps'. Reports now take three times longer because synthesis keeps launching fresh research tangents, yet about a third of its tool calls are just quick checks that a cited statistic matches its source. What should the architect change?
+
+A) Keep the full search toolkit but add a system prompt rule limiting synthesis to five searches per report
+B) Let synthesis keep both tools but route its calls through a hook that logs each search so the team can audit tangents later
+C) Remove every tool from synthesis so that any missing fact or statistic must be requested from the search subagents through the coordinator
+D) Remove web_search and fetch_page from synthesis and give it a narrow verify_claim tool for checking a cited figure against its source
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Agents misuse tools outside their role, so the general search tools should leave synthesis; the frequent, legitimate need (quick citation checks) is served by a small, scoped cross-role tool. A prompt cap on searches is a probabilistic limit on a tool the role should not hold. Stripping every tool forces a coordinator round trip for each routine check, and logging the calls only observes the tangents instead of preventing them.
+
+*Hint if stuck: Look at what the synthesis role actually uses its tools for most of the time.*
+</details>
+
+---
+
+## Question 25
+After a botched refactor, a developer-productivity lead mandates plan mode for every Claude Code task. Two weeks later, developers complain that fixing a docstring typo or bumping a version string now requires reviewing and approving a plan, and several have stopped using the tool. What policy matches the actual intent of plan mode?
+
+A) Keep the mandate but configure plans to auto-approve after 30 seconds without objection
+B) Drop plan mode entirely and rely on PR review to catch bad approaches after the fact
+C) Reserve plan mode for multi-file or architectural work and let single-file obvious fixes run directly
+D) Keep plan mode mandatory but route trivial fixes to a faster model so their plans generate and get approved quicker
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** The criterion is the shape of the change: plan mode earns its overhead on multi-file, architectural tasks where multiple valid approaches exist, while single-file obvious fixes warrant direct execution. Auto-approving plans deletes the review that is plan mode's entire value, a faster model still forces a pointless approval step on trivial fixes, and dropping it everywhere recreates the risk that caused the original botched refactor.
+
+*Hint if stuck: The mode should follow the blast radius of the change, not a blanket rule in either direction.*
+</details>
+
+---
+
+## Question 26
 A support agent's get_refund_quote tool returns {"amount": 4599}. The billing system stores values in cents, but the description only says 'Returns the refund amount for an order.' Customers have been told they will receive $4,599 instead of $45.99. Which change is the most robust fix?
 
 A) Add a system-prompt instruction reminding the agent that the billing system stores all amounts in cents, and that it should divide by 100 before quoting
@@ -602,210 +480,138 @@ D) Return an unambiguous field such as amount_usd ("45.99") or amount_cents with
 
 ---
 
+## Question 27
+An e-commerce assistant has accumulated 18 tools spanning catalog search, inventory, refunds, shipping, and loyalty promotions. After the last batch of tools shipped, wrong-tool calls climbed from 3% to 19% of sessions. What should the architect do?
+
+A) Split the assistant into focused roles, each agent exposing the 4-5 tools its job requires
+B) Expand each tool description with full parameter documentation so the model can tell the 18 tools apart
+C) Add a system prompt table that maps each customer intent to the tool that should handle it
+D) Switch the assistant to a larger model that can keep track of more tools at once
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Selection accuracy degrades as an agent's tool count grows, and the jump from 3% to 19% wrong-tool calls after the last batch shows it. Splitting into role-scoped agents with 4-5 tools each shrinks each decision space and fixes the root cause. Longer descriptions and an intent table add context without reducing the candidates the model weighs on every turn, and a larger model does not remove the crowded choice.
+
+*Hint if stuck: Ask whether a fix reduces what the model must choose between, or only documents the choices better.*
+</details>
+
+---
+
+## Question 28
+An architect is reviewing four rules for a support agent and must decide which belong in a PreToolUse hook rather than the system prompt: (1) keep a warm, concise tone; (2) never issue a refund to an account flagged for fraud; (3) prefer self-service links when they fully answer the question; (4) suggest a callback when the customer seems frustrated. Which choice is right?
+
+A) Rules 2 and 4 in hooks, since both protect the company and both involve a clear trigger the hook can detect in the conversation or the tool call input
+B) All four in hooks, since hooks are deterministic and the business wants every rule to be followed consistently every time
+C) Only rule 2 in a hook: it is a mechanical check on a tool call that must hold every time, while the others need judgment and fit the prompt
+D) None in hooks; all four fit the system prompt, and the fraud rule can be backed by a weekly audit of refunds issued
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** Hooks suit rules that can be checked mechanically on a tool call and must be guaranteed, which is the fraud-flag refund block. Tone, when self-service suffices and whether a customer seems frustrated are judgments that belong in prompting; detecting frustration in a hook would be an unreliable heuristic. Putting everything in hooks forces judgment into code, and a weekly audit finds fraud refunds after they are paid.
+
+*Hint if stuck: Sort the rules by whether code could decide them without understanding the conversation.*
+</details>
+
+---
+
+## Question 29
+A claims-form extraction pipeline sends low-confidence documents to a human review queue. Each queue item contains only the document ID and the label 'needs review', so reviewers re-extract the whole form by hand, and the team gets no signal about which fields fail. What should each handoff item contain?
+
+A) The model's full reasoning transcript for that document, so reviewers can see exactly where its thinking went wrong before they correct anything in the record
+B) The majority answer from three more extraction runs on that document, so reviewers only need to approve or reject a single candidate record
+C) An overall confidence score and the document type, so the queue can be sorted and reviewers can take the least certain documents first
+D) The extracted values, the fields that failed with the check each one failed, the source page or span for each, and what retries were already made
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** A handoff should let the human act on exactly what is uncertain: the extracted values, which fields failed and why, where in the source to look, and what was already tried. That also gives the team field-level failure data. A reasoning transcript is unstructured and slow to use, an overall score says nothing about which fields to check, and majority voting over reruns can still be wrong while hiding which fields were in doubt.
+
+*Hint if stuck: Reviewers are redoing the whole form; what would let them check only the parts in doubt?*
+</details>
+
+---
+
+## Question 30
+A CI job has Claude Code call an MCP lint tool on changed files. The tool returns isError true whenever it finds lint violations, with the violations listed in the message. Claude has started reporting 'linting could not be run' on PRs that actually have violations, and skips commenting on them. What is the correct fix?
+
+A) Tell Claude in the CI prompt that lint errors with isError true still contain useful findings, and that it should read them before deciding what to post
+B) Return violations as a normal successful result, and use isError only when the linter itself could not run, for example on a crash or a missing config
+C) Have the tool set isError true when there are more than ten violations, so that small numbers of findings are reported as normal results
+D) Split the tool into run_lint and get_lint_violations, so that the second call fetches the findings separately once the first call has reported an error
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** isError means the tool call failed, not that the tool found problems; a linter that ran successfully and found violations has succeeded. Returning findings as a normal result and reserving isError for real failures makes the signal mean one thing. A prompt rule asks Claude to second-guess the flag, a threshold makes the flag's meaning depend on counts, and splitting the tool adds a call without fixing the misuse of the flag.
+
+*Hint if stuck: Ask what isError should mean, and whether finding problems is the same as failing.*
+</details>
+
+---
+
+## Question 31
+A support agent's refund-cap check is a PreToolUse shell hook defined in the repository's .claude/settings.json, and it worked in every test run. To stop the production Agent SDK service from picking up stray settings files, an engineer set settingSources to an empty list. Since that release, over-cap refunds have gone through and the hook's log is empty. What should the team do?
+
+A) Move the check into a PostToolUse hook in the same settings file, since PostToolUse hooks still load when setting sources are restricted
+B) Register the refund check as a PreToolUse callback in the query's hooks option, which runs no matter which settings files load
+C) Put the cap in the system prompt as a hard rule, since an SDK service cannot run hooks of any kind once settings files are skipped
+D) Set permissionMode to bypassPermissions, so that hooks are evaluated before every tool call no matter which settings were loaded
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** The SDK runs callback hooks passed in options plus shell hooks from settings files only when the matching settingSources entry is enabled; with an empty list, .claude/settings.json and its hooks are never read. A callback registered in code keeps the deterministic check without reopening the settings files the engineer wanted to ignore. A PostToolUse hook in the same file would not load either and would fire after the refund. The prompt fallback rests on a false premise and is probabilistic, and bypassPermissions loosens approval rather than loading any hooks.
+
+*Hint if stuck: Ask where this check was defined, and what has to happen for the SDK to read that file at all.*
+</details>
+
+---
+
+## Question 32
+An extraction job pulls revenue, headcount and debt figures from 50 annual reports into a comparison spreadsheet. A reviewer finds an implausible headcount for one company but cannot tell which report, page or passage it came from, so checking it means re-reading the whole filing. What should the extraction schema include?
+
+A) For each value, the source document ID, page number and the exact quoted passage it came from
+B) A free-text notes field where the model can describe, in its own words, any part of the document that it found difficult to interpret
+C) A confidence score for each value so that reviewers can tell which figures the model was unsure of and check those first
+D) A summary of each annual report so that reviewers can skim the summary rather than the full filing when checking any value
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Carrying the document, page and quoted span with each value makes every figure checkable in seconds and keeps provenance through later aggregation. A confidence score says nothing about where a value came from, free-text notes are unstructured and inconsistent, and a summary is another lossy layer between the value and its evidence.
+
+*Hint if stuck: Every figure should point back to its evidence.*
+</details>
+
+---
+
+## Question 33
+A company runs claude -p on shared self-hosted CI runners to label failing test logs, and the same commit gets different labels on different runners. Investigation shows one runner's ~/.claude holds a plugin whose hook rewrites prompts, and another has a stale auto-memory note. The team wants every run to depend only on what the job passes in. What should they add?
+
+A) --permission-mode plan, so Claude is limited to reading files and the plugin's hook cannot run
+B) --bare, which skips host hooks, plugins and memory, with any needed context passed in
+C) --output-format json, so each runner returns the same envelope and the labels stay stable
+D) --max-turns 1, so Claude has no room to load hooks or memory before producing the labels
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** --bare skips auto-discovery of hooks, skills, plugins, MCP servers, auto memory and CLAUDE.md, and the headless docs recommend it for scripted calls so a run does not pick up whatever the host has configured. Because it also skips CLAUDE.md, any standards the job needs should be passed explicitly. JSON output only changes the envelope around the answer, a turn limit does not stop startup loading, and plan mode limits edits but does not switch off hooks.
+
+*Hint if stuck: Look for what removes the run's dependence on whatever happens to be installed on the machine.*
+</details>
+
+---
+
 ## Question 34
-An extraction team pasted their 400-line Python schema validator into the body of a validate-extraction skill so Claude would 'know' the checks. Each invocation now loads the whole script into context, and Claude occasionally rewrites parts of the validator inline instead of running it. How should the skill be structured?
-
-A) Convert the validator into a long list of prose rules in SKILL.md so that Claude applies the same checks
-B) Keep the script but move it into the project CLAUDE.md so that it is already loaded before the skill runs
-C) Split the validator across four smaller skills, each holding about a hundred lines of the original script
-D) Ship the validator as scripts/validate.py inside the skill folder and have SKILL.md tell Claude to execute it
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** Scripts bundled in a skill's folder are executed rather than loaded, so the checks run exactly as written and the code costs no context. Prose rules make Claude re-implement validation by judgment, which is less reliable than the real validator. Moving the script into CLAUDE.md makes it an always-on cost, and splitting it into four skills keeps the same context cost while fragmenting the logic.
-
-*Hint if stuck: Should Claude read this code or run it?*
-</details>
-
----
-
-## Question 35
-A fintech payments team of 12 engineers shares one repository. The tech lead wrote the team's TypeScript strict-mode and ledger error-handling standards into ~/.claude/CLAUDE.md on her laptop. Two new hires consistently generate code that violates these standards, and nobody can figure out why the rules are not being applied. What is the correct fix?
-
-A) Have every engineer copy the standards file into their own ~/.claude/CLAUDE.md
-B) Commit the standards to the project-level CLAUDE.md in the repository root
-C) Store the standards as environment entries in .claude/settings.json so they apply repo-wide
-D) Package the standards as a skill so Claude auto-invokes them whenever someone writes code
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** User-level ~/.claude/CLAUDE.md is personal memory that lives only on one machine, so teammates never load it. Team standards belong in the version-controlled project CLAUDE.md, which every clone picks up automatically. Copying files per engineer reintroduces drift; settings.json holds permissions, hooks, and env rather than coding guidance; and a skill triggers probabilistically per task, while always-relevant standards must be reliably present in memory.
-
-*Hint if stuck: Ask where those rules physically live, and whether the new hires' sessions can ever read that location.*
-</details>
-
----
-
-## Question 36
-A team's MCP server for a feature-flag service rejects bad arguments, such as a date in the past for a scheduled rollout, by returning a JSON-RPC error object. In Claude Code, these surface to the model as a terse failure without the server's explanation, and Claude repeats the same bad call. How should the server report these failures?
-
-A) As a JSON-RPC error with a longer message field, since clients pass protocol error messages to the model in full whenever the error code is -32602
-B) As a tool result with isError set to true and a message explaining what was wrong, for example that the rollout date must be in the future, so the model can correct it
-C) As an ordinary successful tool result whose text begins with the word ERROR, so that the client does not filter the message out before the model sees it
-D) As a server-side log entry only, with the tool returning an empty result so the model moves on to other work instead of repeating the same failed call
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** The MCP spec reports failures the model can act on, such as a business rule or a bad input value, as tool results with isError true so the model can self-correct. Lengthening a protocol error message still relies on the client passing it on, which the spec does not require. Returning a success with an ERROR prefix hides the failure from anything that checks the flag, and an empty result tells the model nothing.
-
-*Hint if stuck: The spec gives models a channel for errors they can fix; ask whether this server is using it.*
-</details>
-
----
-
-## Question 37
-A team's claude-code-action job occasionally loops for over an hour on hard tasks, consuming runner minutes and API spend. They want a hard ceiling on how much work one run can do. Which configuration is most appropriate?
-
-A) Add a CLAUDE.md line telling Claude to keep every CI task brief and stop once it has a reasonable answer
-B) Ask Claude in the prompt to report its own elapsed time and stop on its own after about ten minutes
-C) Set a --max-turns limit for the action and a timeout-minutes on the workflow job as an outer runtime limit
-D) Lower the model's output length so each turn produces less text and the overall run finishes sooner
-
-<details>
-<summary>Answer & explanation</summary>
-
-**C)** A turn limit on the action and a workflow-level timeout are both enforced outside the model, giving a real ceiling on each run. Instructions in CLAUDE.md or the prompt are requests Claude may not follow on hard tasks. Shorter outputs per turn do nothing to stop a run that takes many turns.
-
-*Hint if stuck: Put limits where something other than the model enforces them.*
-</details>
-
----
-
-## Question 38
-An e-commerce team has finalized a new extraction prompt for product attributes and plans to submit all 10,000 legacy listings as a single Message Batch tonight. The prompt has only been eyeballed against two listings. A teammate objects to the plan. What should the team do before committing the full batch?
-
-A) Submit the full batch now — at the 50% discount, even a flawed run only costs as much as half a synchronous run
-B) Run a small synchronous pilot of around 50 representative listings, validate the outputs, then submit the full batch
-C) Submit the 10,000 listings as ten sequential batches of 1,000, checking each batch's results before sending the next
-D) Add a system-prompt instruction asking the model to double-check its own work, then submit all 10,000 tonight
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** A small synchronous pilot gives immediate feedback on prompt quality before committing 10,000 jobs to a channel with no latency SLA. The staged sub-batch plan is the strongest distractor, but it still burns 1,000 unvalidated jobs on the first stage and waits up to 24 hours per checkpoint; the discount makes a bad run cheaper, not free, and a self-check instruction cannot validate outputs the team has never inspected.
-
-*Hint if stuck: Compare how quickly each plan would reveal that the prompt is broken.*
-</details>
-
----
-
-## Question 39
-In a multi-agent research session, the user spends ten turns with the coordinator narrowing scope: peer-reviewed sources only, 2024-2026 publications, exclude preprints. The coordinator then spawns four research subagents, and three of them come back citing 2019 preprints. Why did this happen, and what is the fix?
-
-A) Subagent contexts are isolated and inherit nothing — the coordinator must explicitly pack the scope constraints into every Task prompt it issues
-B) The subagents share the coordinator's context but lose mid-conversation details to lost-in-the-middle; move the constraints to the top of the history
-C) The Task tool truncates long prompts; store the scope constraints in a shared memory file that every subagent is instructed to read at startup
-D) The subagents were forked from too early a baseline; re-fork them after the scoping turns so the constraints land in the shared session baseline
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** Subagents run with isolated context and inherit nothing from the coordinator's conversation, so any constraint that matters must be explicitly packed into each task prompt. Lost-in-the-middle applies only to facts that are actually in context, which these never were. Shared memory files and fork timing tricks trade explicit, auditable context passing for fragile implicit state — and these subagents were spawned with isolated contexts, not forked from a baseline.
-
-*Hint if stuck: Ask what a freshly spawned subagent actually knows about the conversation that spawned it.*
-</details>
-
----
-
-## Question 40
-A fact-check subagent in a research system marks a claim "unsupported" whenever the source words it differently, even when the figures and the meaning match. Synthesis is dropping many correctly sourced claims. What is the best change to the fact-checker's prompt?
-
-A) Tell the fact-checker to give claims the benefit of the doubt and to mark them supported unless the source clearly contradicts them
-B) Remove the unsupported label and let the synthesis agent decide on its own which claims to keep
-C) Define support: same figures and meaning count even if paraphrased, but a different year, scope or figure does not
-D) Ask the fact-checker to require an exact quote match before it marks any claim as supported by a source
-
-<details>
-<summary>Answer & explanation</summary>
-
-**C)** An explicit definition of support, with what counts (paraphrase with matching figures) and what does not (different year, scope or figure), fixes the false "unsupported" labels without letting real mismatches through. Benefit of the doubt swings to false negatives, exact-quote matching is the current problem made stricter, and removing the label just moves the undefined judgment elsewhere.
-
-*Hint if stuck: Ask what rule the fact-checker is applying today, and what rule the synthesis step actually needs.*
-</details>
-
----
-
-## Question 41
-A claude-code-action review runs on every push to a PR. When a developer pushes a fix commit, the bot re-reviews and reposts the same nine findings as brand-new comments, and developers have started muting it entirely. The team wants re-reviews to surface only new issues or ones still unresolved. What is the best fix?
-
-A) Post-process the bot's output and suppress any comment whose text fuzzy-matches an earlier comment
-B) Restrict each re-review to only the files touched by the newest commit
-C) Have the action close all of its previous comment threads before posting each fresh review on the pull request
-D) Include the prior review's findings in the new run's context so it skips duplicates and checks resolution
-
-<details>
-<summary>Answer & explanation</summary>
-
-**D)** The reviewer cannot avoid repeating itself or judge whether an issue was fixed unless it knows what it found last time — feeding prior findings into the re-review fixes that at the source. Fuzzy-match suppression breaks the moment wording shifts and can never confirm a finding was resolved, diff-only re-review silently drops unresolved findings in files the fix commit did not touch, and closing old threads just hides the duplication.
-
-*Hint if stuck: Ask what the bot knows, at the start of each run, about what it said last time.*
-</details>
-
----
-
-## Question 42
-A CI job runs Claude Code headlessly to update a dependency. The upgrade guide offers two incompatible migration paths, and the right one depends on a product decision the job cannot see. Nobody is watching the job. How should the job be designed to handle this?
-
-A) Stop on this kind of ambiguity and open the PR or an issue describing both paths and the decision needed
-B) Pick the path that changes the fewest files, since a smaller diff is easier for reviewers to approve later on
-C) Implement both migration paths on separate branches and let the CI system automatically merge whichever passes tests
-D) Keep retrying the migration with different prompts until one of the paths compiles cleanly and then merge it
-
-<details>
-<summary>Answer & explanation</summary>
-
-**A)** In an unattended run, a decision the agent cannot make should be surfaced to a human with the options laid out, rather than settled by a proxy. Smallest-diff and passes-tests are heuristics that do not answer the product question, and retrying until something compiles turns a decision into luck.
-
-*Hint if stuck: Ask who is able to make this choice, and how they will learn that it needs making.*
-</details>
-
----
-
-## Question 43
-An e-commerce ops team shares a backfill-orders skill that needs a date range and a target environment. Teammates keep invoking it with no arguments, forcing Claude to ask follow-up questions every time. The team wants the expected inputs visible right at invocation. What is the designed mechanism for this?
-
-A) Rename the skill to backfill-orders-dates-env so the required inputs are part of its name
-B) Document the usage syntax in the onboarding section of the project CLAUDE.md
-C) Add argument-hint to the SKILL.md frontmatter describing the date range and environment
-D) Put a usage example at the top of the skill body so it is the first content loaded
-
-<details>
-<summary>Answer & explanation</summary>
-
-**C)** argument-hint is the frontmatter field built to surface expected arguments at invocation time. The skill body only loads after the skill is already triggered, so a usage example there arrives too late to shape what the user types. Renaming and CLAUDE.md documentation are workarounds users will not see at the moment of invocation.
-
-*Hint if stuck: Think about what someone sees while typing the command, before any of the skill's content has loaded.*
-</details>
-
----
-
-## Question 44
-A research system must screen 25,000 papers for inclusion, then do a deep analysis using the team's own client-side data tools, on the few hundred that qualify, for a report due in a week. The team wants to minimise cost without missing the deadline. Which pipeline fits best?
-
-A) Run the deep tool-assisted analysis on all 25,000 papers as one batch so that screening and analysis happen together
-B) Screen with a Message Batch, then run the deep tool-assisted analysis synchronously on the qualifying papers only
-C) Skip screening and run the deep analysis synchronously on every paper, since a week is enough time to finish it
-D) Screen all 25,000 papers synchronously so that the shortlist is ready quickly, then batch the deep analysis afterwards
-
-<details>
-<summary>Answer & explanation</summary>
-
-**B)** Screening is single-turn, high-volume and non-urgent, which is ideal for a batch, while the deep analysis needs tool calls mid-task, which a batch request cannot do when the tools run in the team's own code, so it runs synchronously on the small shortlist. Batching the tool-assisted analysis cannot run the tools, synchronous screening pays double on the largest stage, and analysing every paper in depth wastes most of the budget.
-
-*Hint if stuck: Separate the work that needs tools from the work that does not.*
-</details>
-
----
-
-## Question 45
 A research swarm gathering electric-vehicle market data flags a "source conflict": one finding says global EV sales were 10.5M units, another says 17.3M. Investigation shows the first comes from a 2023 report and the second from a 2025 report — and the synthesizer had discarded both figures as unreliable. What fixes this?
 
 A) Add a reconciliation step that averages the numeric claims whenever any two sources disagree by more than 20%, then report the blended figure
-B) Rank the sources by domain authority and keep only the figure that comes from the higher-authority publication, discarding the other
-C) Tighten the scout prompts so they only collect market figures published within the last 12 months, keeping the dataset current
+B) Rank the sources by domain authority and keep the figure that comes from the higher-authority publication, discarding the other
+C) Tighten the scout prompts so they collect market figures published within the last 12 months, keeping the dataset current
 D) Capture publication dates as temporal metadata on every claim, so figures from different years read as a time series, not contradictions
 
 <details>
@@ -818,276 +624,477 @@ D) Capture publication dates as temporal metadata on every claim, so figures fro
 
 ---
 
-## Question 46
-An invoice extraction pipeline adds a reviewer instance that re-extracts totals independently. When the two instances disagree, the current code simply keeps the second instance's value. Error rates did not improve. What should happen on a disagreement?
+## Question 35
+After a large feature lands, a developer finds four problems: a typo in an error message in the billing module, a missing index hint in an unrelated reporting query, a wrong default page size in the admin API, and a stale link in the README. None of the fixes touch the same code. How should the developer work through them with Claude Code?
 
-A) Always keep the first instance's value, because the original extraction had the most complete view of the document
-B) Treat it as a signal: route the field to a human or targeted re-check with both values and the source span
-C) Run a third instance and silently keep whichever value two of the three instances agree on, without any further check
-D) Average the two numeric values so that small discrepancies between the instances cancel each other out over time
+A) Paste all four into one prompt so Claude can see the full picture and fix them in a single combined change
+B) Fix them one at a time, verifying each before moving on, because they are independent of one another
+C) Ask Claude to re-plan the whole feature in plan mode, since four defects suggest the original design was flawed
+D) Ask Claude to rank the four by risk and then let it fix whichever ones it judges worth changing right now
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** The point of independent passes is to surface disagreements that mark risky fields, so a disagreement should trigger review rather than an arbitrary pick. Preferring either instance discards that signal, averaging produces a number that matches neither document reading, and a silent majority vote can still be wrong on the same hard field without anyone looking.
+**B)** Independent issues are best handled one by one: each fix is small, easy to verify, and a failure in one does not muddy the others. Bundling unrelated fixes makes a bigger diff that is harder to check and mixes concerns, and re-planning the whole feature is out of proportion for four small, unrelated defects.
 
-*Hint if stuck: Two readings that differ are telling you something.*
+*Hint if stuck: Compare how easy it is to verify one small change with how easy it is to verify four mixed together.*
+</details>
+
+---
+
+## Question 36
+A customer-support team ships a skill that drafts refund-decision emails. Compliance requires that this skill never execute shell commands. The SKILL.md body states Never use Bash in bold, yet audit logs from last week show two sessions where the skill ran Bash anyway. What is the root-cause fix?
+
+A) Repeat the prohibition in capital letters at both the top and bottom of the skill body
+B) Lower the sampling temperature so the model follows the skill's instructions more reliably
+C) Add a project-wide PreToolUse hook that blocks each Bash invocation in the repository
+D) Restrict the skill's tools in its frontmatter so Bash is removed while the skill runs
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Prose in a skill body is probabilistic; a tool restriction declared in the skill's frontmatter is applied by the harness and scoped to this skill. In current Claude Code the field is disallowed-tools, which removes Bash from the pool while the skill is active (allowed-tools only pre-approves tools and does not block others). A project-wide hook is deterministic but overbroad, breaking every workflow that legitimately needs Bash, and capitals or a lower temperature leave compliance to chance.
+
+*Hint if stuck: Look for the deterministic enforcement mechanism whose scope matches the thing being restricted.*
+</details>
+
+---
+
+## Question 37
+An expense-extraction pipeline calls lookup_tax_rate(region) to validate tax lines. The region parameter is a free-text string. When a receipt says 'CA', the agent sometimes passes Canada and sometimes California, and the tool returns a rate for whichever it receives, so validation passes with the wrong rate. What is the best fix?
+
+A) Add a sentence to the extraction prompt telling the agent to think carefully about whether CA means Canada or California before calling the tool
+B) Have lookup_tax_rate return the rates for both Canada and California whenever it receives the ambiguous code CA, and let the agent pick the right one
+C) Replace region with required country_code (ISO 3166-1) and optional subdivision_code fields, described with examples, so the call must state which place is meant
+D) Hard-code CA to mean California in the tool, since most receipts processed by the pipeline come from merchants based in the United States
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** A free-text field lets an ambiguous value through and the tool silently resolves it. Structured, unambiguous parameters with standard codes force the call to say which jurisdiction is meant, and the description's examples show how. A prompt nudge leaves the ambiguity in the interface, returning both rates hands the same guess back to the model, and hard-coding a default will be wrong for every Canadian receipt.
+
+*Hint if stuck: Ambiguity in an input should be removed by the interface, not resolved by a guess.*
+</details>
+
+---
+
+## Question 38
+A CI step asks Claude to summarise failing tests as JSON and validates it with a library that raises "ValidationError: 1 validation error for Report". The pipeline appends that exception string to the retry, but retries fix the problem only about a third of the time. What change makes the feedback loop most effective?
+
+A) Format the error to say which field failed, what value was returned and what was expected, and include that in the retry
+B) Append the full JSON schema to the retry so the model can compare its whole output against the expected structure
+C) Ask the model to validate its own output against the schema before responding, so that fewer retries are needed
+D) Replace the exception string with a short generic note that the JSON did not match the schema and must be corrected
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** The retry needs specific, actionable feedback: which field, what came back and what was expected; a bare exception summary says only that something failed. A generic note is even less specific, resending the full schema makes the model hunt for the problem instead of pointing to it, and self-validation in the same pass catches little that it did not already get wrong.
+
+*Hint if stuck: Feedback works when it points at the exact problem.*
+</details>
+
+---
+
+## Question 39
+A purchase-order extractor uses a schema where `line_items` is a single string. The model returns values like "Widget A x2 @ 4.50; Bolt M8 x100 @ 0.12", and the ERP import script breaks whenever a product name contains a semicolon or the letter x. What is the best schema change?
+
+A) Ask the model to use a rarer separator, such as a pipe, between line items in the string
+B) Keep the string but have a second model call split it into separate lines before the ERP import runs
+C) Make `line_items` an array of objects with description, quantity and unit_price fields, each typed
+D) Add a rule asking the model to wrap each product name in double quotes inside the string before it returns
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** An array of typed objects encodes the structure directly, so no delimiter can collide with product names and quantities and prices arrive as numbers. A rarer separator only moves the collision, a second splitting call is another fragile parse, and quoting names fails as soon as a name itself contains a quote mark.
+
+*Hint if stuck: Represent structure in the schema, not in a delimited string.*
+</details>
+
+---
+
+## Question 40
+After a long interview session, Claude has written a detailed SPEC.md for a feature-flag cleanup tool. The session now contains dozens of back-and-forth questions, rejected ideas and exploratory file reads. What is the best way to move to implementation?
+
+A) Continue in the same session, since it holds every detail of the discussion that produced the spec
+B) Start a fresh session and have Claude implement from SPEC.md, with clean context focused on the build
+C) Hand the spec to a teammate to implement by hand, since the interview has already done the hard design work
+D) Ask Claude to compact the session and then begin implementing from the compacted summary of the discussion
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Once the spec is written, a fresh session gives Claude clean context focused on implementation, with the written spec as its single source of truth. Continuing in the interview session drags along rejected ideas and noise, a compacted summary is a lossy copy of what the spec already captures precisely, and handing off to a human throws away the implementation help.
+
+*Hint if stuck: The spec exists so the build does not depend on the conversation that produced it.*
+</details>
+
+---
+
+## Question 41
+A records team submits 20,000 scanned forms as a Message Batch and writes the results back to their database by matching the nth result line to the nth form submitted. After a run, spot checks show extracted names attached to the wrong forms. What is the fix?
+
+A) Give each request a custom_id equal to the form's record ID and match results by custom_id, not position
+B) Submit the forms in sorted order by record ID so that the results come back in the same sorted order as the input
+C) Submit smaller batches of 1,000 forms so that the result order is more likely to match the order of submission
+D) Include the form's record ID in the prompt and ask the model to echo it back at the start of every extracted record
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Batch results can come back in any order, so each request needs a unique custom_id that ties its result to the input. Sorting or smaller batches does not make ordering guaranteed, and asking the model to echo an ID makes correlation depend on model output instead of the API's own identifier.
+
+*Hint if stuck: Results from a batch do not promise to keep their place in line.*
+</details>
+
+---
+
+## Question 42
+Human agents review every refund the support agent approves. Overall, reviewers agree with the agent 96% of the time, so leadership wants to stop reviewing refunds. A breakdown shows 99% agreement on full refunds for damaged goods but only 78% on partial refunds involving promotional credits. What should the architect recommend?
+
+A) Stop reviewing refunds, since 96% agreement is high and the partial-refund cases are a small minority of the total volume
+B) Keep reviewing everything until agreement reaches 99% in each category, since any reduction before then puts customers at risk
+C) Add stronger instructions about promotional credits to the prompt and stop reviewing refunds once that prompt change has been deployed
+D) Reduce review for damaged-goods full refunds, keep full review for partial refunds with promotional credits, and keep sampling both
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D)** Review should be reduced only in segments that have earned it, and kept where a segment is clearly weaker, with ongoing sampling to catch drift. Stopping all review lets the overall number hide the 78% segment, and a prompt change is unverified until measured. Waiting for 99% everywhere wastes effort on a segment that has already met the bar.
+
+*Hint if stuck: Look at what the 96 percent is made of before deciding anything.*
+</details>
+
+---
+
+## Question 43
+GraphQL resolvers in a large codebase live in nine packages (packages/*/src/resolvers/). Each package has its own CLAUDE.md with a copy of the 60-line resolver conventions, and three copies are now out of date. What should the team do?
+
+A) Replace the copies with one .claude/rules/ file scoped to packages/*/src/resolvers/** in its paths
+B) Move the conventions into the root CLAUDE.md so each session sees a single, up-to-date copy of them
+C) Ask Claude to reconcile the nine copies at the start of each session, before it touches any resolver code
+D) Keep the per-package files but add a script that copies the newest version into each of the nine weekly
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** A convention that cuts across many directories is best expressed as a single path-scoped rule: one source of truth that loads only when resolver files are touched. A sync script keeps the duplication and its drift risk. The root CLAUDE.md fixes duplication but loads the conventions in every session, and asking Claude to reconcile copies spends context on a maintenance problem.
+
+*Hint if stuck: One convention, many directories: what gives one source of truth that still loads conditionally?*
+</details>
+
+---
+
+## Question 44
+An e-commerce pipeline asks Claude to return product attributes as JSON in a plain text response. About 2 percent of responses begin with 'Here is the extracted JSON:' or wrap the object in a code fence, crashing the downstream parser. The prompt already says 'respond with only the JSON object, no other text.' What is the root-cause fix?
+
+A) Use strict structured outputs or a tool_use schema so conformance is guaranteed rather than requested through instructions
+B) Add a regex preprocessing step that strips any leading prose and code fences before the parser runs
+C) Repeat the bare-JSON instruction at both the start and the end of the prompt so the model cannot miss it
+D) Detect parse failures at runtime and automatically resend the request until a clean JSON response comes back from the model
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A)** Prompt instructions are probabilistic and will occasionally be violated at scale; strict structured outputs or tool_use with a schema make conformance a guarantee of the API rather than a request. Regex stripping and retry loops patch the symptom while leaving the unreliable mechanism in place, and repeating the instruction is more of the same best-effort approach.
+
+*Hint if stuck: Ask which option turns 'please format it this way' into a guarantee.*
+</details>
+
+---
+
+## Question 45
+A support agent's tools have detailed, well-differentiated descriptions. Yet whenever a customer mentions the word 'order', even in 'I can't log in to place an order', the agent calls lookup_order first. The system prompt contains: 'Always check the customer's ORDER history before anything else.' What is the most likely cause and fix?
+
+A) The tool descriptions are still too short; add more usage examples to lookup_order so it is chosen more carefully
+B) The agent has too many overlapping tools; remove lookup_order from it and route order questions to another agent
+C) The capitalised system-prompt line pulls any 'order' mention to lookup_order; rewrite it to say when it applies
+D) Force tool_choice to get_customer on every turn so the agent can no longer open with lookup_order on login issues
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C)** Keyword-heavy system prompt wording can create strong associations that override good tool descriptions, which is why the word 'order' triggers lookup_order even on login problems. Rewriting the instruction to say when order history is actually relevant removes the pull. The descriptions are already good, removing the tool breaks real order queries, and forcing a tool every turn throws away model-driven selection.
+
+*Hint if stuck: The descriptions are fine. What else is the model reading?*
+</details>
+
+---
+
+## Question 46
+A support resolution agent escalates hard cases to human specialists. Specialists complain that each escalation arrives as a raw 150-message transcript and they spend twenty minutes reconstructing what happened before they can act. What should each escalation carry instead?
+
+A) A sentiment trajectory chart plus the customer's last five messages
+B) A structured summary: customer id, the issue, what was already tried, and a recommended next action
+C) The full transcript with a one-line subject added so specialists can skim it faster
+D) A live link back into the agent session so the specialist can question the agent directly about the case
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B)** Canonical human handoffs carry a structured summary covering the customer id, the issue, what was attempted, and a recommended action, so the specialist can act in minutes without replaying the conversation. The full transcript with a subject line is the strongest distractor, but it preserves the exact problem: the reconstruction burden stays on the human. Sentiment data does not tell the specialist what was tried or what to do next, and a live session link makes the specialist interrogate the agent instead of acting.
+
+*Hint if stuck: Think about what a human needs in order to act in two minutes instead of twenty.*
 </details>
 
 ---
 
 ## Question 47
-A pipeline downloads the full results of a 100,000-request extraction batch into memory before parsing, and the worker crashes with out-of-memory errors on the largest batches. The same results must be written to a database keyed by custom_id. What is the recommended approach?
+A CI review job pastes 120 lines of authentication conventions into its prompt on every run, and developers working locally separately paste the same text when they touch auth code. The conventions only matter for files under services/*/auth/. What setup removes the duplication for both?
 
-A) Increase the worker's memory allocation so the full results file can be loaded and parsed in a single pass
-B) Ask the model to return shorter outputs so that the results file is small enough to load into memory
-C) Iterate over the results as a stream, handling each result by its custom_id and type as it is read
-D) Cancel any batch larger than 20,000 requests and resubmit it as smaller batches before retrieving results
+A) Put the conventions in each developer's ~/.claude/CLAUDE.md and keep the paste in the CI prompt
+B) Store the conventions in a CI secret so the review workflow can inject them into each prompt it runs
+C) Commit a rule scoped to services/*/auth/** in .claude/rules/ so local and CI sessions both load it
+D) Add the conventions to the root CLAUDE.md so the CI job and the local sessions both always see them
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** The docs recommend streaming batch results rather than downloading them all at once; handling each line by custom_id and result type keeps memory flat at any size. More memory postpones the problem, shorter outputs trade away extraction quality, and cancelling large batches discards work that is already done.
+**C)** A committed path-scoped rule travels with the repository, so any Claude Code session over that checkout, local or in CI, loads it when auth files are touched. Personal CLAUDE.md files don't reach CI or new teammates. The root CLAUDE.md loads the conventions for every task, and a CI secret keeps the CI-only paste and does nothing for local work.
 
-*Hint if stuck: Results come one per line, so they do not need to be held all at once.*
+*Hint if stuck: What travels with the repository and still loads only for the right files?*
 </details>
 
 ---
 
 ## Question 48
-A CI reviewer's "possible performance regression" category is 75 percent false positives, but it caught one serious N+1 query bug last quarter, so a product manager objects to turning it off. What approach best balances precision and that occasional catch?
+A team has a labelled set of 5,000 extractions with model confidence scores. It must decide whether outputs above 0.92 can be auto-approved under a 98% accuracy requirement. Which measurement answers that question?
 
-A) Keep posting the category but add a disclaimer to every performance comment saying it may be a false positive
-B) Keep the category in PR comments and ask developers to report each false positive so that the model can learn from their feedback
-C) Merge the performance category into the general comments so its findings carry less weight with developers
-D) Stop posting the category to PRs, log its findings privately, and rewrite its criteria from those logs before re-enabling it
+A) The overall accuracy of all 5,000 extractions, since it reflects how the model performs across the full range of real inputs
+B) The accuracy of the extractions scored above 0.92, measured per field and document type, compared against the 98% requirement
+C) The average confidence score of the extractions scored above 0.92, since a high average shows those outputs are reliable
+D) The share of extractions that score above 0.92, since a larger share means more of the workload can be automated safely
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Pausing a noisy category on PRs protects trust in the rest of the reviewer, while logging its output privately keeps any real catches visible and gives data for writing better criteria before it returns. Disclaimers and blending into general comments leave the noise in front of developers, and the model does not learn from reported false positives without a prompt change.
+**B)** What matters is how often the auto-approved slice is actually correct, broken down so a weak segment cannot hide. Overall accuracy mixes in outputs that would still be reviewed, average confidence is the model's own claim rather than a measurement, and the share above threshold measures volume, not correctness.
 
-*Hint if stuck: You can stop showing a noisy category without stopping work on it.*
+*Hint if stuck: Measure the slice you plan to automate, not the whole.*
 </details>
 
 ---
 
 ## Question 49
-A synthesis step deduplicates findings that state the same fact. When two scouts reported 'the plant closed in May 2026', one citing a regulator filing and one a trade-press article, the merged claim kept only the trade-press source. That article was later corrected, and reviewers now cannot tell whether the claim still stands. How should merging work?
+A customer writes to a bank's support agent: 'Please update my mailing address, and I'm disputing a $1,200 charge from a merchant I've never heard of.' Disputes over $500 must go to a human fraud team. The agent currently escalates the whole conversation at once, so the address change waits two days in the fraud queue. What should the workflow do?
 
-A) Keep only the most authoritative source on the merged claim and drop the rest to keep records simple
-B) Skip deduplication and publish both claims separately, so readers see that two sources said the same thing
-C) Merge the matching claims into one record that keeps every supporting source with its id and date
-D) Keep the first source that arrived, but add a note to the claim saying it was also reported elsewhere
+A) Complete the address change, escalate only the dispute with a structured summary, and tell the customer which item is done and which is pending
+B) Escalate the whole conversation as now, but mark the address change as low priority so the fraud team handles it after the dispute
+C) Ask the customer to submit the address change in a separate chat after the dispute is resolved, so each conversation stays single-purpose
+D) Have the agent handle both items itself, filing the dispute through its standard dispute tool and noting the amount for later fraud review by the team
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Claim-source mappings have to survive every synthesis step, including deduplication: a merged claim should carry all its supporting sources with dates, so it can be re-checked when one source changes and corroboration can be judged. Keeping only the 'best' source is a judgment call that still throws away the trail. Publishing duplicates clutters the report and still does not link the two sources to one claim. A note saying 'reported elsewhere' gives reviewers nothing they can check.
+**A)** Multi-concern requests should be split so each item is resolved by the right path: the agent finishes what it is authorised to do and escalates only the item that needs a human, with a structured handoff. Handling the dispute itself breaks the fraud policy, escalating everything delays a routine change and loads the fraud queue with it, and sending the customer away creates friction for a request the agent could have finished.
 
-*Hint if stuck: Ask what a reviewer needs to re-check a claim after one of its sources changes.*
+*Hint if stuck: Escalation applies to an item, not necessarily to the whole conversation.*
 </details>
 
 ---
 
 ## Question 50
-A billing-support service runs Claude through the Agent SDK with nobody watching a terminal. Goodwill credits above $150 need sign-off from a team lead, which can take hours. The team wants Claude to stop at the issue_credit call, show the request in the service's own approvals queue, and carry on from that exact call once the lead decides. Which mechanism fits?
+A multi-agent research system answers "How are EU battery manufacturers responding to the 2026 subsidy changes?" The coordinator spawns 14 subagents, each scoped to a single manufacturer's press releases. The final report misses industry-wide patterns entirely, and when two subagents report contradictory capacity figures, nobody can tell which publication or date each figure came from. What is the best architectural fix?
 
-A) A PreToolUse hook that returns permissionDecision "defer" for large credits, then resuming the session once the lead has decided
-B) A PreToolUse hook that returns "ask" for large credits, so that the approval prompt is shown to the lead in the terminal running the service
-C) A PreToolUse hook that sleeps and polls the approvals queue until the lead answers, holding the tool call open for as long as it takes
-D) A system-prompt rule telling Claude to end its turn and wait for the lead whenever a credit above $150 comes up in a conversation
+A) Keep the 14 single-manufacturer tasks but add a fifteenth subagent whose only job is to detect contradictions and delete the less credible figure from the report
+B) Re-scope to fewer, broader subagent tasks that can surface cross-cutting trends, and require each subagent to return claim-source mappings with publication dates
+C) Let subagents exchange findings directly with one another during research so contradictions get reconciled before the coordinator runs its aggregation pass
+D) Increase to 28 subagents covering component suppliers as well, giving the coordinator more raw material from which to infer industry-wide patterns
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Returning defer ends the turn with stop_reason tool_deferred and leaves the pending call in the transcript; the app reads deferred_tool_use, shows it in its own queue, and resumes the session, when the hook fires again and returns allow or deny. (It applies when Claude makes a single tool call in that turn.) ask needs someone to answer an in-process permission prompt, which a headless service lacks. A hook that blocks for hours ties up the run, and a prompt rule cannot hold a tool call open.
+**B)** Overly narrow decomposition causes coverage gaps — single-manufacturer scopes cannot surface cross-cutting trends — and synthesis without claim-source mappings plus dates loses provenance, making contradictions unresolvable. The fix addresses both flaws: broader task scoping and provenance metadata flowing back to the coordinator. Direct subagent-to-subagent exchange fails because inter-subagent traffic routes through the coordinator, and deleting conflicting claims discards information that attribution and temporal metadata would resolve.
 
-*Hint if stuck: No one is around to respond to a prompt inside this process; think about stopping cleanly and coming back later to the same pending call.*
+*Hint if stuck: Trace each symptom back to the design decision that produced it before choosing a remedy.*
 </details>
 
 ---
 
 ## Question 51
-A logistics support agent has a check_atp tool described as 'Returns ATP for a SKU at a node.' Agents answer 'is this in stock near me?' questions inconsistently: sometimes they call it, sometimes they call get_product instead, and they misread a negative ATP value as an error. What should the architect change?
+A security-review coordinator audits a payments service by spawning three subagents: SQL injection in /api/orders, XSS in /web/templates, and hardcoded secrets in /config. Two weeks after release, an SSRF vulnerability is exploited in /api/webhooks — a directory no subagent was ever assigned. What was the architectural failure?
 
-A) Shorten the description to 'Stock lookup' so that it matches the words customers actually use when they ask whether an item is available near them
-B) Add a system-prompt glossary of internal supply-chain terms like ATP and node, so that the agent understands the vocabulary in every conversation
-C) Rename the tool to check_stock and keep the original description, since the name is what the model reads when deciding which tool to call for a stock question
-D) Rewrite the description as you would for a new hire: what ATP means, what a node is, when to use it instead of get_product, and what negative values mean
+A) Coverage gap: the full scope should be partitioned so every directory and flaw class has an owner
+B) The subagents ran on Haiku, which is too weak to detect SSRF; the scouts should run on Opus
+C) The SSRF-focused subagent failed silently; add retry logic so transient subagent failures are re-run
+D) Each subagent prompt should have ended with 'also flag anything else suspicious you happen to notice'
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Descriptions should explain specialised terms, inputs, outputs and relationships to other tools, as if onboarding a new team member. Jargon like ATP and node gives the model nothing to match on, and nothing explains negative values. A glossary in the system prompt sits apart from the tool and does not say when to prefer this tool, and a better name alone or a two-word description still leaves the output unexplained.
+**A)** Overly narrow decomposition is a known multi-agent pitfall: anything outside the assigned slices is simply never examined. The fix is to partition the entire scope — directories and vulnerability classes — so the union of subagent assignments covers everything. No SSRF agent existed to retry, and a vague 'anything else' suffix is a probabilistic patch that never guarantees /api/webhooks gets read.
 
-*Hint if stuck: Imagine handing this tool to a capable new hire who has never seen the warehouse system.*
+*Hint if stuck: Look at which parts of the system, and which kinds of flaw, anyone was ever asked to examine.*
 </details>
 
 ---
 
 ## Question 52
-A CI coordinator spawns a test-writer subagent with the Task prompt 'Write tests for the changes in this PR.' The subagent writes tests in the wrong framework against files the PR did not touch. What should the coordinator include in the Task prompt?
+An architect writes the error policy for a research system built on the Claude API. Search subagents call a fetch_page tool. Two failures recur: some pages return HTTP 403, and occasionally a subagent's own model request fails with an overloaded error partway through its run. Where should each failure be handled?
 
-A) A reminder that the subagent can find all of the PR details by looking back through the coordinator's conversation history
-B) An instruction to ask the developer which files and framework to use before it writes any of the tests
-C) The changed file paths, the relevant diff hunks, the project's test framework and its conventions for test files
-D) Nothing more, but restrict the subagent's tools to Read and Write so it cannot explore files outside the PR
+A) Raise the 403 as an exception that ends the subagent so the coordinator can reassign the URL to another subagent
+B) Return the 403 as an is_error result the subagent can work around; retry or report the API failure in loop code
+C) Return both failures as is_error tool results so the subagent's model decides how to recover from each one the same way
+D) Tell subagents in their prompt to skip failed fetches and continue silently, so neither failure interrupts the research
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** The subagent sees only its Task prompt, so the coordinator must pass the changed paths, the diff and the test conventions explicitly. A regular subagent starts without the coordinator's history. A CI run has no developer to ask, and restricting tools to Read and Write does nothing to tell the subagent which files changed or which framework to use.
+**B)** A tool execution error belongs in a tool_result with is_error set and an instructive message, so Claude can adapt, for example by trying another source. An API error interrupts the model call itself, so the model never gets a turn to reason about it; the code running the loop must retry with backoff or report the failure, with any partial output, to the coordinator. Ending the subagent over a routine 403 discards its context and work. The model cannot receive its own failed request as a tool result. Silent skipping hides coverage gaps from synthesis.
 
-*Hint if stuck: List what a newcomer would need to write the right tests on the first try.*
+*Hint if stuck: Ask which failure the model is actually present to see, and which one happens to the model call itself.*
 </details>
 
 ---
 
 ## Question 53
-A team migrating from another editor copied its rule files into .claude/rules/ unchanged. Each file starts with frontmatter like globs: "src/api/**/*.ts". The API conventions now appear in every session, even sessions spent entirely on the mobile app. What is the cause?
+In a receipts pipeline, human reviewers correct about 400 extracted values a week, mostly tax amounts on foreign receipts. They overwrite the value and close the item, so nothing about the correction is kept, and the same errors recur month after month. The team wants the corrections to improve the system. Which changes should it make? (Choose two.)
 
-A) Rules in subdirectories of .claude/rules/ are always loaded, so the files must sit directly in .claude/rules/
-B) Rule frontmatter must be JSON rather than YAML, so the whole header is being skipped by Claude Code
-C) The glob needs a leading ./ to be resolved relative to the project root, so it currently matches every file
-D) Claude Code only reads a paths field in rule frontmatter, so globs is ignored and the rule loads unconditionally
+A) Log each correction with field, document type and original value, and add the cases to the labelled set
+B) Have reviewers just mark items approve or reject, which is quicker than typing in the corrected value
+C) Fine-tune the model on the corrected receipts each month so that it learns the right tax values itself
+D) Turn recurring patterns into prompt fixes, such as few-shot examples, and test them on that set first
+E) Lower the auto-approve threshold a step each time a reviewer corrects a value in that kind of field
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** paths is the only frontmatter field Claude Code reads from a rule; other fields are silently ignored, and a rule without paths loads at launch for every session. Renaming globs to paths scopes it again. The YAML format and the src/api/** pattern are fine as written, and rules in subdirectories of .claude/rules/ are discovered recursively without losing their scoping.
+**A, D** Recording what was corrected, where and from what turns review effort into labelled production failures, which belong in the eval set. Recurring patterns can then be fixed in the prompt, for example with targeted examples, and the change measured on that set before it ships. Fine-tuning is outside what this system controls and doesn't give a measured fix. Moving the threshold on every correction reacts to noise without measuring accuracy. Approve or reject alone throws away the right value the next fix needs.
 
-*Hint if stuck: A misspelled or foreign frontmatter key does not raise an error; what happens to the rule then?*
+*Hint if stuck: Ask what a reviewer's fix can teach if it is kept, and how you'd know a change helped.*
 </details>
 
 ---
 
 ## Question 54
-An e-commerce refund system is wired as a chain: an order-analyzer subagent spawns an inventory-checker, which spawns a refund-calculator, three levels deep. When refund amounts come out wrong, engineers cannot tell which level introduced the error, and the analyzer's context fills with nested transcripts. How should the system be restructured?
+An insurer submitted 50,000 claim-extraction requests as one batch. Twelve hours later every request came back errored because each used a parameter the model does not accept. The prompt had been tested in a notebook, but the batch request bodies were built by a different script. What practice would have caught this earliest?
 
-A) Flatten it to hub-and-spoke: one coordinator decomposes the job, delegates to each specialist directly, and aggregates results
-B) Keep the chain but require every agent in it to emit structured outputs so errors carry attribution back up through each level
-C) Keep the chain but raise the analyzer's context budget so nested transcripts stop overflowing
-D) Add verbose logging at each level so engineers can replay the chain after a bad refund
+A) Polling the batch at short intervals so that the team could cancel it as soon as the first errored results appeared
+B) Adding a validation step that checks each extracted claim against the schema as soon as the results are downloaded
+C) Splitting the job into fifty batches of 1,000 so that a bad parameter would affect a small fraction of requests
+D) Sending a few request bodies from the batch script through the Messages API first, since batch params are checked later
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** Daisy-chained subagents recreate the problems hub-and-spoke exists to solve: every intermediate result should return to a coordinator, where it is individually observable and where aggregation logic lives. Flattening the chain fixes both the debuggability and the nested-context bloat at once. Structured outputs within the chain — the strongest distractor — improve attribution but leave the deep nesting and tangled control flow in place, and bigger context budgets or verbose logging only patch symptoms of the flawed topology.
+**D)** Batch request params are validated asynchronously, so a bad body may only surface after the batch ends; sending a few real request bodies through the Messages API first catches it in seconds. Polling cannot see per-request errors until the batch is done, smaller batches would all share the same bug, and output validation runs after the requests have already failed.
 
-*Hint if stuck: Compare the topology itself against the canonical multi-agent shape.*
+*Hint if stuck: Test exactly what you will submit, using the path that answers immediately.*
 </details>
 
 ---
 
 ## Question 55
-A developer asks Claude Code to add a test file for a new RefundCalculator class. The team's existing test files follow a strict layout with shared fixtures and a naming convention, but Claude writes the new test from scratch and it uses different fixture helpers and naming. What workflow should Claude follow?
+A CI job runs claude -p to apply lint auto-fixes across changed files. Someone set --permission-mode plan on the job 'for safety', and since then the job reports a plan in its log but every lint error is still there. What should the team change?
 
-A) Write the test from scratch as before, then run the linter through Bash to fix any naming problems
-B) Copy an existing test file with Bash cp and use replace_all Edits to swap every class name to RefundCalculator
-C) Read an existing test file for a similar class first, then Write the new file following its structure
-D) Generate the test from scratch and ask the developer to point out which conventions it should follow
+A) Increase the job's turn limit so Claude has enough time to move from planning to editing
+B) Add an instruction to the prompt telling Claude to exit plan mode once its plan is ready
+C) Have the job approve the plan by piping 'yes' into the process once the plan is printed
+D) Run lint auto-fix as direct execution with tight permissions, since it is a narrow task
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Reading a nearby example grounds the new file in the team's real fixtures and naming, and Write then creates it correctly. Linters catch formatting, not fixture usage or test structure. Blind copy-and-rename carries over irrelevant tests, and pushing convention discovery onto the developer skips a step the agent can do itself.
+**D)** Plan mode blocks source edits until a plan is approved, and that block holds in non-interactive -p runs, so a job meant to apply narrow fixes should run in a normal mode with tightly scoped permissions. More turns or a prompt instruction cannot lift the block, and piping text into a headless run is not an approval mechanism.
 
-*Hint if stuck: Look at how the codebase already does it before creating something new.*
+*Hint if stuck: What does plan mode prevent, and does that change in headless runs?*
 </details>
 
 ---
 
 ## Question 56
-A support agent can issue refunds up to $200; larger ones need a supervisor. When it calls issue_refund for $650, the tool returns isError with the text 'Refund could not be processed.' The agent retries three times, then tells the customer the system is down. What should the tool return instead?
+A coordinator delegates with one-line tasks such as "research the semiconductor shortage". Two subagents end up running nearly the same searches on current supply chains, while nobody covers the 2021 auto-chip crisis the user asked about. The subagents also come back with two or three sources each, and their logs show long, very specific queries that match almost nothing. Which changes should the team make? (Choose two.)
 
-A) A transient error marked retryable, so the agent waits a few seconds and tries the same refund again before it gives the customer any update
-B) A protocol-level JSON-RPC error, so the client stops the conversation and the platform routes the customer to a human agent automatically
-C) A successful result with a partial refund of $200 already applied, so the customer gets something immediately and the remainder can be handled later
-D) A structured business error: category policy_limit, isRetryable false, and a message saying refunds over the $200 limit need supervisor approval
+A) Give each task an objective, an output format, the sources to use and limits such as the time period
+B) Let subagents pick their own angle on the topic when they start, so the work spreads out by itself
+C) Prompt the search subagents to open with short, broad queries and narrow them as they see what exists
+D) Have subagents add each keyword from the user's request to every query so results stay on the topic
+E) Have the coordinator write the exact query strings for each subagent, to be run in the order it gives
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** The failure is a business rule, not an outage, so retrying can never succeed; a structured error saying what rule was hit, that it is not retryable and what the next step is lets the agent escalate correctly and explain it honestly. Marking it retryable repeats the same pointless loop, quietly issuing a partial refund takes an action nobody approved, and a protocol error hides the reason from the model instead of letting it recover.
+**A, C** Vague one-line tasks let subagents misread the job and duplicate each other; each needs an objective, output format, source guidance and clear boundaries such as the period to cover. Agents tend to write overly long, specific queries, so prompting them to start broad and then narrow brings back far more relevant sources. Exact query strings from the coordinator turn subagents into scripts and do nothing about narrow queries. Self-chosen angles are how the duplication happened. Packing every keyword into each query makes queries longer and more specific, which is the cause of the thin results.
 
-*Hint if stuck: Ask what the agent needs to know to choose between retrying, escalating and explaining.*
+*Hint if stuck: Two separate failures: what the coordinator tells each subagent, and how a subagent goes about searching.*
 </details>
 
 ---
 
 ## Question 57
-A claude-code-action review handles the team's typical 300-line PRs well, but on a 4,800-line vendored-library upgrade it produced detailed comments on the first dozen files, skimmed the remaining forty with one-line notes, and closed with a normal wrap-up well under its output limit — missing a known injection bug in file 38. What should the team change?
+A research hierarchy runs filings subagent, then regional coordinator, then top-level coordinator, then report. The filings subagent returns a structured error: type auth_expired, source the filings mirror, 3 of 8 companies retrieved. The regional coordinator forwards only 'filings: unavailable', and the final report states that no filings exist for five of the companies. What should change?
 
-A) Split large PRs into multiple review passes, one per module, and aggregate the findings
-B) Switch the review to Opus with a maximum thinking budget so a single pass can cover everything
-C) Prompt the reviewer to "give equal attention to every file regardless of its position in the diff"
-D) Raise the action's maximum output tokens so the review is not truncated partway through the files
+A) Each layer passes the structured error upward intact, adding its own context instead of rewriting it as a status word
+B) The regional coordinator retries the auth_expired error with backoff until it succeeds before reporting anything upward
+C) The top-level coordinator queries the filings subagent directly whenever an upstream status reads 'unavailable'
+D) The regional layer drops its error handling, and the final report simply leaves out any section with missing data
 
 <details>
 <summary>Answer & explanation</summary>
 
-**A)** A single pass over a 4,800-line diff dilutes attention, and material deep in the context gets skimmed or missed — the lost-in-the-middle failure mode. Multi-pass review keeps each chunk within a size the model handles reliably and aggregates the results. The review finished normally under its output limit, so truncation is not the cause; a bigger model or thinking budget does not fix attention dilution, and an "equal attention" instruction is a best-effort wish, not a mechanism.
+**A)** Recovery and honest reporting depend on the error's type, scope and partial results reaching whoever makes the final call, so every hop should forward the structured error and add context rather than collapse it; 'unavailable' let the access failure turn into a false claim that no filings exist. An expired credential is not transient, so retrying with backoff will not fix it and delays the report. Bypassing the middle layer patches one symptom and breaks the hierarchy's routing. Silently dropping sections hides the gap instead of annotating it.
 
-*Hint if stuck: When one context has to cover too much material, divide the work instead of exhorting the model.*
+*Hint if stuck: Trace which fact about the failure the final writer needed, and where it disappeared.*
 </details>
 
 ---
 
 ## Question 58
-A research coordinator keeps a running list of findings only in its conversation history. During a long run its context is compacted, and the final report omits two key findings from early subagents that the summary dropped. What design keeps findings safe from compaction?
+In one chat, a customer of an electronics retailer raises three problems: a duplicate charge, a cracked screen on delivery and a wrong billing address. The agent works on the duplicate charge for 30 turns, older turns get summarised, and the agent then closes the chat after issuing the refund, never returning to the screen or the address. Which design change prevents this?
 
-A) Have the coordinator re-request all early subagent results just before writing the report, so they are back in context at the right time
-B) Have the coordinator append each finding to an external findings store as it arrives and build the report from that store
-C) Instruct the coordinator to mark important findings with a special tag so the summarizer is more likely to keep them during compaction
-D) Turn off compaction for the coordinator so that its conversation history always keeps every finding exactly as each subagent first returned it
+A) Record each raised problem as its own entry with a status in case facts kept outside the summary, and check them before closing
+B) Summarise older turns less aggressively, so the opening message that listed the three problems stays visible in the history for much longer
+C) Tell the agent in its system prompt to resolve the most urgent problem first and open a new chat for each remaining one
+D) Ask the customer at the end of each chat whether anything else is needed, and rely on them to repeat any open problems
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Writing each finding to an external store makes it durable, so the report no longer depends on what a summary happened to keep. Disabling compaction only delays the problem until the window runs out, and tagging makes it more likely but not certain a finding survives. Re-requesting results reruns paid work and still relies on the coordinator remembering what to ask for.
+**A)** Summaries tend to keep the thread that dominated the conversation and blur the rest, so the list of open problems belongs in a structured block that is never summarised, with one entry and status per problem, checked before wrap-up. Asking the customer pushes the tracking onto them and fails when they assume the agent remembers. Gentler summarisation only delays the loss. Splitting into new chats makes the customer start over and still loses problems nobody recorded.
 
-*Hint if stuck: Durable state should not live only in a window that gets summarized.*
+*Hint if stuck: Ask which part of the agent's state is immune to summarising, and what it would need to hold here.*
 </details>
 
 ---
 
 ## Question 59
-An engineer asks Claude to write a script that pulls request IDs, latency and status codes out of a legacy service's logs. The log format has three variants (with and without a tenant prefix, and a multi-line stack trace form). Two rounds of prose explanation have produced parsers that handle one variant and break the others. What should the engineer do next?
+A telecom support agent answers customer messages and, in the same prompt, is told to screen each message for abuse and for attempts to obtain other customers' data. Reviews show that when it works hard on a tricky billing problem it often skips the screening, and when it screens carefully its answers get weaker. Which design addresses both problems?
 
-A) Describe the three variants again in more detail, this time listing each field's position and delimiter in words
-B) Paste a few real log lines of each variant with the exact fields expected from each, and ask Claude to test against them
-C) Ask Claude to write a parser flexible enough to accept any line and drop whatever it fails to understand
-D) Switch to plan mode and ask Claude to design a general log-parsing framework before handling these variants
+A) Move the screening rules to the top of the system prompt in bold, so the agent applies them before it starts working on the billing problem
+B) Screen only after the answer is written, by having the same call review both the customer's message and its own reply in one final pass
+C) Run a separate screening call on each incoming message in parallel with the call that drafts the answer, and act on both results in code
+D) Ask the agent to reason step by step and write its screening verdict in a tag before it answers, all inside the same single response
 
 <details>
 <summary>Answer & explanation</summary>
 
-**B)** Concrete input/output examples remove the ambiguity that two rounds of prose have not fixed, and they double as checks Claude can run. A third prose description repeats what already failed, a parser that drops unparseable lines hides the bug rather than fixing it, and a general framework is over-building for a known set of three formats.
+**C)** This is the sectioning form of parallelization: independent subtasks run as separate calls and code combines the results. Anthropic's guidance gives guardrails as the example, noting that one instance answering while another screens tends to perform better than one call handling both, because each consideration gets focused attention. Bold rules, a step-by-step tag or a self-review pass all keep both jobs in one call, which is exactly what is splitting its attention.
 
-*Hint if stuck: When describing a format keeps failing, show it instead.*
+*Hint if stuck: Ask whether the two jobs depend on each other, and whether one call really has to carry both.*
 </details>
 
 ---
 
 ## Question 60
-A nightly reporting agent gathers metrics through several tools, and its final request is supposed to produce a prose executive summary. In 12% of runs the model issues yet another tool call on that final request instead of writing the summary. What is the cleanest fix?
+A developer asks Claude Code to write normalize_phone() for a CRM import. After three rounds of rewording her request ("handle international numbers properly"), the function still mangles numbers with extensions and treats empty strings inconsistently, and each fix breaks a case that worked before. She already knows the exact result every input should give. Which techniques should she switch to? (Choose two.)
 
-A) Add a prompt line to the final request: "You have all the data you need; do not call any more tools"
-B) Cap the agentic loop at ten iterations so a runaway tool call cannot extend the nightly run
-C) Set tool_choice to "none" on the final summarization request so the model must respond with text
-D) Set tool_choice to "any" on the final request so the model finishes its remaining tool work faster
+A) List the problem inputs, such as '+44 20 7946 0958 x12' and '', with the exact output each needs
+B) Have Claude interview her about phone formats before it writes another version of the code
+C) Have Claude write those cases as tests, confirm they fail, then change code until they pass
+D) Switch to plan mode, so Claude writes a plan for phone handling before it edits the function
+E) Add 'handle every international format and edge case' to the project CLAUDE.md for each run
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** tool_choice "none" is the deterministic mechanism for a turn where a tool call must not happen: the model can only respond with text, which is exactly what the summary step requires. The prompt instruction is probabilistic and is essentially the behavior already failing 12% of the time. Iteration caps are safety fallbacks rather than primary control, and "any" mandates the exact behavior being prevented.
+**A, C** Concrete input and output pairs remove the ambiguity that prose like "properly" leaves, and failing tests give Claude a check it can run after each change, so a fix that breaks an earlier case shows up at once. An interview helps when requirements are unclear, but she already knows every expected result. Plan mode would produce a plan from the same vague description. Another prose instruction in CLAUDE.md repeats the approach that has already failed three times.
 
-*Hint if stuck: Prefer a setting that makes the unwanted call impossible over wording that asks the model to skip it.*
+*Hint if stuck: When she already knows the answers, what form lets Claude check its own work against them?*
 </details>
 
 ---
 
 ## Answer key (no peeking until scored)
 
-1:A 2:B 3:C 4:C 5:C 6:A 7:C 8:A 9:C 10:B 11:B 12:D 13:D 14:D 15:A 16:C 17:B 18:D 19:C 20:D 21:B 22:D 23:A 24:B 25:B 26:B 27:A 28:A 29:A 30:C 31:B 32:B 33:D 34:D 35:B 36:B 37:C 38:B 39:A 40:C 41:D 42:A 43:C 44:B 45:D 46:B 47:C 48:D 49:C 50:A 51:D 52:C 53:D 54:A 55:C 56:D 57:A 58:B 59:B 60:C
+1:D 2:B 3:C 4:B 5:B,C 6:C 7:A 8:B 9:C 10:A,C 11:C 12:D 13:A,E 14:A,E 15:C 16:B 17:D 18:B 19:C 20:B 21:B 22:B 23:A 24:D 25:C 26:D 27:A 28:C 29:D 30:B 31:B 32:A 33:B 34:D 35:B 36:D 37:C 38:A 39:C 40:B 41:A 42:D 43:A 44:A 45:C 46:B 47:C 48:B 49:A 50:B 51:A 52:B 53:A,D 54:D 55:D 56:A,C 57:A 58:A 59:C 60:A,C

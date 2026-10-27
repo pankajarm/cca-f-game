@@ -1,7 +1,7 @@
 # Practice Test 05: The Config Maze
 **D3: Claude Code Configuration & Workflows** (20% of the exam) · task statements 3.1, 3.2, 3.3
 
-72 questions. Exam pace is 2 minutes per question.
+83 questions. Exam pace is 2 minutes per question.
 
 ---
 
@@ -9,9 +9,9 @@
 Priya, one of nine engineers on a shared web repo, wants Claude Code to use her personal staging URL and her preferred test account whenever she works in this project. Her teammates must not see or load these details, and they are irrelevant to her other projects. Where should she put them?
 
 A) In a CLAUDE.local.md at the project root, added to .gitignore so it stays on her machine only
-B) In her ~/.claude/CLAUDE.md, since user-level memory is private and never shared with the team
+B) In her ~/.claude/CLAUDE.md, since user-level memory is private and is not shared with the team
 C) In .claude/settings.local.json as env entries, since local settings are already ignored by git
-D) In the project CLAUDE.md under a heading that says the section applies only to Priya's sessions
+D) In the project CLAUDE.md under a heading that says the section applies to Priya's sessions alone
 
 <details>
 <summary>Answer & explanation</summary>
@@ -29,7 +29,7 @@ A contractor uses Claude Code across eleven client repositories. She always want
 A) In each client repository's CLAUDE.local.md, recreated whenever she clones a new client repo
 B) In each client's project CLAUDE.md, flagged as optional preferences that other engineers may ignore
 C) In her user-level ~/.claude/CLAUDE.md, which applies across all her projects and is not shared
-D) In the opening message of every session, so the preferences never persist into any shared file
+D) In the opening message of each session, so the preferences stay out of any shared file
 
 <details>
 <summary>Answer & explanation</summary>
@@ -46,8 +46,8 @@ A monorepo's root CLAUDE.md says to write tests with Jest. packages/web/CLAUDE.m
 
 A) Move the Vitest line to the top of packages/web/CLAUDE.md so it is read before the root instruction
 B) Add IMPORTANT in capitals to the Vitest instruction so it outweighs the Jest line in the root file
-C) Copy the full root CLAUDE.md into packages/web with Jest replaced, so only one file loads there
-D) Remove the contradiction by scoping the root line to non-web packages so the files never conflict
+C) Copy the full root CLAUDE.md into packages/web with Jest replaced, so a single file loads there
+D) Scope the root line to non-web packages so the two files no longer contradict each other
 
 <details>
 <summary>Answer & explanation</summary>
@@ -114,19 +114,19 @@ D) Grep the git history of the project CLAUDE.md for moment.js to find when the 
 ---
 
 ## Question 7
-A team's PR review job runs claude-code-action. Their test-writing standards (factory helpers, no network in unit tests) live on an internal wiki, and developers paste them into local prompts. CI-generated tests never follow them. How should the team make the standards apply both locally and in CI?
+A developer works in one team's package inside a large monorepo. Claude Code loads the monorepo's top-level CLAUDE.md, written for another group, and its conventions keep pulling her sessions toward a different test framework. Her teammates are fine with that file loading for them. What should she configure?
 
-A) Paste the standards into the action's prompt input, and ask developers to keep pasting them locally
-B) Ask each developer to add the standards to their own ~/.claude/CLAUDE.md so local sessions follow them
-C) Link the wiki URL in the PR template so Claude can read the standards from each pull request body
-D) Commit the standards to the repo as project memory, in CLAUDE.md or a .claude/rules/testing.md file
+A) Delete the top-level CLAUDE.md in her working copy and keep that deletion out of her commits
+B) Add a line to her package's CLAUDE.md telling Claude to ignore the root file's test conventions
+C) Add the root file's path to claudeMdExcludes in the committed .claude/settings.json for the team
+D) Add the root file's path to claudeMdExcludes in her .claude/settings.local.json
 
 <details>
 <summary>Answer & explanation</summary>
 
-**D)** Project-level memory is version-controlled and loads for every session in the repo, including the CI runner, so one committed file serves both local and automated runs. Pasting into the CI prompt and local prompts keeps two copies to maintain. User-level files never reach CI or teammates, and a wiki link in a PR body depends on Claude fetching and following it each time.
+**D)** claudeMdExcludes skips specific CLAUDE.md and rules files by path or glob pattern, and putting it in .claude/settings.local.json keeps the exclusion on her machine. Setting it in the committed project settings would also drop the file for teammates who want it. A counter-instruction leaves both sets of conventions in context to conflict, and deleting the file locally is easy to lose or to commit by accident.
 
-*Hint if stuck: Find the scope that both a laptop session and a CI runner load from the same checkout.*
+*Hint if stuck: She wants the file gone from her sessions and nobody else's; think about both what to set and where it lives.*
 </details>
 
 ---
@@ -155,7 +155,7 @@ A team put the rule "never log request bodies, they may contain card numbers" in
 A) Add a second path-scoped rule for src/workers/** with the same text, and repeat for new directories
 B) Remove the path scoping so the rule is always loaded, or move it into the project CLAUDE.md
 C) Rename the rule file to security-critical.md so its name signals that it applies everywhere in the repo
-D) Add the logging rule to each developer's user-level memory so it follows them into every directory
+D) Add the logging rule to each developer's user-level memory so it follows them into each directory
 
 <details>
 <summary>Answer & explanation</summary>
@@ -170,8 +170,8 @@ D) Add the logging rule to each developer's user-level memory so it follows them
 ## Question 10
 A team's CLAUDE.md says "never modify files under vendor/". In about one session in fifty, Claude still edits a vendored library while fixing a build error, and the team needs a guarantee. Which change provides it?
 
-A) Move the vendor rule to the very top of CLAUDE.md and rewrite it in capitals with the word NEVER
-B) Duplicate the vendor rule into every directory-level CLAUDE.md so it is loaded wherever Claude works
+A) Move the vendor rule to the very top of CLAUDE.md and rewrite it in capital letters with heavy emphasis
+B) Duplicate the vendor rule into each directory-level CLAUDE.md so it is loaded wherever Claude works
 C) Keep the guidance in CLAUDE.md, and add a permissions deny rule or PreToolUse hook that blocks edits to vendor/
 D) Add a path-scoped rule in .claude/rules/ for vendor/** so the warning loads when Claude opens those files
 
@@ -296,8 +296,8 @@ D) In each engineer's ~/.claude/CLAUDE.md, with a line that tells Claude to igno
 ## Question 17
 Engineers modernizing a legacy Java monolith notice that every new Claude Code session spends its first several minutes rediscovering how to build the project, which Maven profile to use and how to run a single test module. What is the most effective change?
 
-A) Have each engineer paste the build steps into their opening prompt so every session starts informed
-B) Add the build, profile and single-module test commands to the project CLAUDE.md for every session
+A) Have each engineer paste the build steps into their opening prompt so each session starts informed
+B) Add the build, profile and single-module test commands to the project CLAUDE.md that each session loads
 C) Let Claude rediscover the steps each time, since exploring the build helps it understand the code
 D) Create a skill describing the build, which engineers invoke before asking for code changes
 
@@ -312,6 +312,82 @@ D) Create a skill describing the build, which engineers invoke before asking for
 ---
 
 ## Question 18
+A team lead wrote the repo's testing conventions in ~/.claude/CLAUDE.md on her laptop and the staging deploy checklist in CLAUDE.local.md at the repo root, which the .gitignore excludes. The committed ./CLAUDE.md holds only build commands. A new teammate clones the repo, and Claude Code follows neither the testing conventions nor the checklist for him. Which facts explain what he is missing? (Choose two.)
+
+A) A user-level ~/.claude/CLAUDE.md is read on the machine where it lives and does not reach teammates
+B) Memory files load after each developer runs /memory once to register them for that particular project
+C) Memory files load after the developer runs /init, which sets the project up for Claude Code on his machine
+D) CLAUDE.local.md is for personal project notes; kept out of git, it is missing from his clone
+E) The committed ./CLAUDE.md takes precedence and stops the other memory files from loading once it exists
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** The user-level file is personal and loads only on the lead's own machine. CLAUDE.local.md is meant for private per-project preferences and is kept out of version control, so a fresh clone does not contain it. Both sets of rules belong in committed project files. Memory files are concatenated rather than overriding one another, /memory lists and opens memory files but is not needed to load them, and /init only drafts a starting CLAUDE.md; existing memory files load without it.
+
+*Hint if stuck: Trace where each file physically lives and who else can ever see it.*
+</details>
+
+---
+
+## Question 19
+A team's root CLAUDE.md grew to 850 lines: 60 lines of repo-wide standards, long sections for the React app (web/**) and the Go services (svc/**), and a 200-line release runbook used once a quarter. Last sprint a developer moved each long section into its own file under docs/claude/ and left an @import line in its place, yet a token check shows sessions load about as much as before. Which changes would cut what a typical session loads? (Choose two.)
+
+A) Keep the @import lines but move them to the end, so the imports load after the core standards
+B) Move the React and Go sections into .claude/rules/ files whose paths match web/** and svc/**
+C) Turn the release runbook into a skill, so its body loads when someone asks to cut a release
+D) Move the React and Go sections into CLAUDE.local.md, so they sit outside the project memory
+E) Move the release runbook into ~/.claude/CLAUDE.md, so it loads from user scope, not project
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, C** Path-scoped rules load only when Claude works with files matching their globs, so React and Go guidance stays out of sessions that never touch those areas. A skill's body loads only when it is invoked or judged relevant, which suits a runbook used once a quarter. Imported files load together with the CLAUDE.md that imports them wherever the @ line sits, so moving the imports saves nothing. CLAUDE.local.md loads at launch like CLAUDE.md and also stops the guidance reaching teammates. A user-level CLAUDE.md loads in every session too, and only on one machine.
+
+*Hint if stuck: Ask what decides whether each file enters context at all, not where its text happens to be stored.*
+</details>
+
+---
+
+## Question 20
+Dana's clone of payments-api lives at ~/work/payments-api. Only in her sessions does Claude Code write tests with unittest instead of pytest; teammates get pytest, the repo's CLAUDE.md never mentions a test framework, and she always launches Claude from the repo root. She suspects a memory file outside the committed project is the source. Which files could be adding the unittest instruction to her sessions? (Choose two.)
+
+A) ~/work/billing-api/CLAUDE.md, in a sibling repo she cloned right beside payments-api last month
+B) A teammate's CLAUDE.local.md at the payments-api root, kept out of git by the .gitignore
+C) payments-api/legacy/CLAUDE.md, a committed folder-level file loaded at launch from the root
+D) ~/.claude/CLAUDE.md on her laptop, the user-level file loaded in her sessions in any project
+E) ~/work/CLAUDE.md, a file one folder above the repo, loaded when she launches inside the repo
+
+<details>
+<summary>Answer & explanation</summary>
+
+**D, E** Claude Code loads the user-level ~/.claude/CLAUDE.md in every session on that machine, and it loads CLAUDE.md files from the launch directory and every directory above it, so ~/work/CLAUDE.md reaches her sessions and not teammates' (unless they keep the same layout). A sibling repo is not an ancestor of her working directory, so its file never loads. A teammate's gitignored CLAUDE.local.md exists only in his own clone. A CLAUDE.md in a subdirectory loads on demand when Claude touches files there, and being committed it would affect teammates too.
+
+*Hint if stuck: Trace how discovery walks the folders at startup, and which file exists on her machine alone.*
+</details>
+
+---
+
+## Question 21
+An engineer launches Claude Code at the root of a monorepo and asks for a plan to change refund handling in the billing service. The plan ignores conventions in services/billing/CLAUDE.md, such as storing amounts as integer cents, though Claude follows them later once it starts editing billing files. She wants them applied from the first planning prompt. Which changes would achieve that? (Choose two.)
+
+A) Launch Claude Code from services/billing, so the billing CLAUDE.md is read when the session starts
+B) Run /memory once in the root session, so the billing CLAUDE.md is registered and loads at launch
+C) Have Claude read a file in services/billing before planning, so the billing CLAUDE.md loads
+D) Rename the billing file CLAUDE.local.md, so it loads at launch beside the root project memory file
+E) Move the billing rules to .claude/rules/billing.md with paths set to services/billing/**/* instead
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, C** Claude Code loads CLAUDE.md files from the launch directory and its ancestors at startup, so launching in services/billing loads the billing file (and the root file above it) before the first prompt. CLAUDE.md files in subdirectories load once Claude reads or edits a file there, so a deliberate read before planning brings the rules in. /memory lists and opens memory files; it does not change what loads. A CLAUDE.local.md in a subdirectory is discovered the same on-demand way as a CLAUDE.md there. A path-scoped rule also waits for a matching file to be touched, so it has the same gap during planning.
+
+*Hint if stuck: Separate the files read at startup from those that wait for Claude to work in their folder.*
+</details>
+
+---
+
+## Question 22
 A fintech payments team of 12 engineers shares one repository. The tech lead wrote the team's TypeScript strict-mode and ledger error-handling standards into ~/.claude/CLAUDE.md on her laptop. Two new hires consistently generate code that violates these standards, and nobody can figure out why the rules are not being applied. What is the correct fix?
 
 A) Have every engineer copy the standards file into their own ~/.claude/CLAUDE.md
@@ -329,7 +405,7 @@ D) Package the standards as a skill so Claude auto-invokes them whenever someone
 
 ---
 
-## Question 19
+## Question 23
 A SaaS monorepo has packages/api built on Fastify and packages/dashboard built on React. The root CLAUDE.md documents both sets of conventions, and engineers report Claude applying React component patterns while editing API route handlers. Which change best fixes the misapplied conventions?
 
 A) Place a directory-level CLAUDE.md inside each package containing only that package's conventions
@@ -347,12 +423,12 @@ D) Create one skill per package and tell engineers to invoke the matching one be
 
 ---
 
-## Question 20
+## Question 24
 A platform team maintains 60 lines of secure-coding standards used by 14 service packages in a monorepo. Each package's CLAUDE.md currently holds a pasted copy. After the standards changed last sprint, an audit found 9 of the 14 copies were stale. How should the team restructure this?
 
-A) Add a sync script engineers are expected to run that re-copies the standards into all 14 CLAUDE.md files
+A) Add a sync script engineers are expected to run that re-copies the standards into the 14 CLAUDE.md files
 B) Move the standards into each engineer's ~/.claude/CLAUDE.md and announce updates in Slack
-C) Merge all 14 package files into a single large root CLAUDE.md so there is only one copy
+C) Merge the 14 package files into a single large root CLAUDE.md so there is one copy
 D) Keep one canonical standards file and reference it from each package CLAUDE.md via @import
 
 <details>
@@ -365,7 +441,7 @@ D) Keep one canonical standards file and reference it from each package CLAUDE.m
 
 ---
 
-## Question 21
+## Question 25
 In a repository of GitHub Actions pipelines, Claude has stopped following the YAML formatting conventions that should come from a directory-level CLAUDE.md inside .github/workflows. Before changing any configuration, the engineer wants to confirm whether that file is actually being loaded. What is the right first step?
 
 A) Restart the session and repeat the request to see whether the behavior changes
@@ -383,7 +459,7 @@ D) Run /memory to inspect exactly which memory files the session has loaded
 
 ---
 
-## Question 22
+## Question 26
 A logistics startup's project CLAUDE.md has grown to 520 lines: about 40 lines of universal coding standards, 180 lines of test-writing guidance, 150 lines of API-package specifics, and a 150-line deployment runbook used a few times a month. Engineers report mid-file rules being ignored, and every session carries the full token cost. What is the best restructuring?
 
 A) Reorder the file so the most important rules sit at the top and bottom where model attention is strongest
@@ -401,12 +477,12 @@ D) Relocate the entire file to ~/.claude/CLAUDE.md so the content loads from the
 
 ---
 
-## Question 23
+## Question 27
 A monorepo has a root CLAUDE.md with team-wide standards and packages/billing/CLAUDE.md with billing rules such as storing amounts as integer cents. Midway through a long billing session the developer runs /compact. For the next few turns, while Claude plans changes without opening any billing file, it follows the root standards but proposes float amounts. What explains this?
 
 A) The root file is re-read after compaction; the billing file reloads only when Claude next reads or edits a file in that folder
-B) Compaction condenses every CLAUDE.md into a short digest, and the integer-cents detail was dropped from the billing file's digest
-C) Nested CLAUDE.md files load only at launch, so the billing rules stay missing until the developer starts a brand-new session
+B) Compaction condenses each CLAUDE.md into a short digest, and the integer-cents detail was dropped from the billing file's digest
+C) Nested CLAUDE.md files are read once at launch, so the billing rules stay missing until the developer starts a brand-new session
 D) /compact removes subdirectory memory files from the session for good, so the billing rules have to be pasted back by hand
 
 <details>
@@ -419,12 +495,12 @@ D) /compact removes subdirectory memory files from the session for good, so the 
 
 ---
 
-## Question 24
+## Question 28
 A CI reliability team wrote a /triage-flaky skill that re-runs the full integration suite several times to classify flaky tests, which takes about 20 minutes and occupies a shared runner. Engineers only want it to run when someone deliberately types the command, but Claude has started launching it on its own whenever a conversation mentions a flaky test. What is the right fix?
 
 A) Move the skill from .claude/skills/ into ~/.claude/skills/ so it stops loading for shared sessions
 B) Set user-invocable: false in the frontmatter so the skill stops appearing as an automatic option
-C) Append 'only run this when the user explicitly asks for it' to the end of the skill's description field
+C) Append 'do not run this unless the user explicitly asks for it' to the end of the skill's description field
 D) Add disable-model-invocation: true to the skill's frontmatter so only a person can trigger it
 
 <details>
@@ -437,7 +513,7 @@ D) Add disable-model-invocation: true to the skill's frontmatter so only a perso
 
 ---
 
-## Question 25
+## Question 29
 A team built a /decision-log skill meant to summarise the design decisions made earlier in the current Claude Code conversation and append them to docs/decisions.md. To keep the main session tidy they added context: fork to its frontmatter. Since then the skill writes generic entries that ignore everything the team discussed in the session. What explains this, and what should they change?
 
 A) A forked skill runs in an isolated context without the conversation history, so this skill should run inline without context: fork
@@ -455,7 +531,7 @@ D) Forked skills cannot write files, so add Write and Edit to allowed-tools so t
 
 ---
 
-## Question 26
+## Question 30
 A platform team's api-style skill has grown to a 650-line SKILL.md: a short checklist followed by dozens of request and response examples for every endpoint family. Each time the skill is invoked, the whole file lands in the session and stays there, even when the engineer only needs the checklist. How should they restructure it?
 
 A) Copy the checklist into the project CLAUDE.md and delete the skill so that the guidance is always on hand
@@ -473,10 +549,10 @@ D) Split the content into twelve separate skills, one per endpoint family, each 
 
 ---
 
-## Question 27
+## Question 31
 At a payments startup, one engineer packaged the rule 'always use pnpm, never npm or yarn' as a skill called package-manager-policy. Engineers keep finding npm install in Claude's commands because the skill is only picked up when someone happens to mention dependencies. Where does this guidance belong?
 
-A) In a longer skill description listing every phrase engineers might use when they talk about dependencies
+A) In a longer skill description listing each phrase engineers might use when they talk about dependencies
 B) In a forked skill with context: fork so its instructions stay isolated from the noise in the main session
 C) In the project CLAUDE.md, because it is a short standard that should apply in every session
 D) In a personal ~/.claude/skills/ folder so that each engineer can choose whether or not to adopt it
@@ -491,7 +567,7 @@ D) In a personal ~/.claude/skills/ folder so that each engineer can choose wheth
 
 ---
 
-## Question 28
+## Question 32
 A developer-productivity team keeps a 280-line procedure for writing incident postmortems (timeline format, blameless wording, the ticket fields to fill) inside the root CLAUDE.md. Postmortems are written about twice a month, but every session in the repo now starts with that procedure loaded. What is the best restructuring?
 
 A) Move the procedure into an @imported file referenced from CLAUDE.md so the main file stays shorter
@@ -509,7 +585,7 @@ D) Move the procedure into a postmortem skill that loads when someone invokes it
 
 ---
 
-## Question 29
+## Question 33
 A team fixed a bug in their shared deploy skill at .claude/skills/deploy/SKILL.md and merged it. Everyone except one engineer now sees the corrected behaviour; when she runs /deploy, Claude still follows the old steps. She confirms her checkout has the latest commit. A year ago she had copied the skill into ~/.claude/skills/deploy/ to experiment. What is the most likely cause?
 
 A) Her personal deploy skill shares the name and overrides the project skill, so she should rename or delete her copy
@@ -527,13 +603,13 @@ D) Personal and project skills are merged line by line, so the old steps in her 
 
 ---
 
-## Question 30
+## Question 34
 A CI team's /review-pr skill says 'look at the pull request diff and review it against our checklist'. In practice Claude spends several turns working out which git commands to run, and twice it reviewed the diff against the wrong base branch. The team wants every run to start from the exact same diff. What change makes this reliable?
 
-A) Add a line in bold to the skill body telling Claude to always compare against origin/main before reviewing
+A) Add a line in bold to the skill body telling Claude to compare against origin/main before reviewing
 B) Use shell-command injection in the skill body, such as !`gh pr diff`, so the diff is inserted before Claude reads it
 C) Fork the skill with context: fork so that a separate subagent can figure out the diff without cluttering the review
-D) Ask engineers to paste the diff into the chat before they run /review-pr so Claude never needs to look it up itself
+D) Ask engineers to paste the diff into the chat before they run /review-pr so Claude does not need to look it up itself
 
 <details>
 <summary>Answer & explanation</summary>
@@ -545,7 +621,7 @@ D) Ask engineers to paste the diff into the chat before they run /review-pr so C
 
 ---
 
-## Question 31
+## Question 35
 A document-extraction team runs a /reextract skill against a vendor and a billing month, for example /reextract acme 2026-08. The skill body says 'reprocess the vendor and month the user mentioned', and Claude sometimes swaps the two values or asks which vendor was meant. How should the skill be written?
 
 A) Add more example invocations to the description so that Claude learns which value is meant to come first
@@ -563,12 +639,12 @@ D) Remove the arguments entirely and have the skill read the vendor and month fr
 
 ---
 
-## Question 32
+## Question 36
 Engineers on a multi-agent research system have a /map-sources skill that walks the repository to list every place a subagent fetches external sources. Each run reads dozens of files and floods the main session, and a reviewer insists the skill must never modify anything. Which frontmatter best meets both needs?
 
 A) disable-model-invocation: true, so that engineers decide when the expensive walk is allowed to happen
 B) context: fork on its own, so the walk runs in a general-purpose subagent with the session's full tool set
-C) allowed-tools: Read Grep, together with a line in the body telling Claude to avoid editing any files at all
+C) allowed-tools: Read Grep, together with a line in the body telling Claude to avoid editing any files
 D) context: fork with agent: Explore, so the walk runs in a read-only subagent and only its summary returns
 
 <details>
@@ -581,7 +657,7 @@ D) context: fork with agent: Explore, so the walk runs in a read-only subagent a
 
 ---
 
-## Question 33
+## Question 37
 A team's db-migration skill has a description several paragraphs long, well past what the skill listing shows: a history of the migration tooling first, with the phrases that should trigger it ('add a column', 'backfill', 'new index') at the very end. Claude rarely loads it when engineers use those phrases. What is the most effective fix?
 
 A) Rewrite the description so the main use case and trigger phrases come first and the text stays concise
@@ -599,7 +675,7 @@ D) Repeat the trigger phrases near the top of the SKILL.md body so Claude meets 
 
 ---
 
-## Question 34
+## Question 38
 An engineer wants a /standup command that summarises her own git commits from the last day across the three repositories she works in. Nobody else on the team uses this format, and she does not want it showing up in teammates' sessions. Where should she define it?
 
 A) In .claude/commands/ of each of the three repositories so the command is versioned alongside the code
@@ -617,7 +693,7 @@ D) In a shared plugin installed for the whole team so it can be updated centrall
 
 ---
 
-## Question 35
+## Question 39
 A frontend team created a format-after-edit skill telling Claude to run Prettier on every file it changes. Reviews still show unformatted files, because Claude only sometimes remembers to load the skill after an edit. The team wants formatting to happen after every single edit with no exceptions. What should they use?
 
 A) A more specific skill description stating that the skill must run after each Edit or Write tool call
@@ -635,7 +711,7 @@ D) The same skill with context: fork, so formatting runs in a subagent without s
 
 ---
 
-## Question 36
+## Question 40
 An extraction team pasted their 400-line Python schema validator into the body of a validate-extraction skill so Claude would 'know' the checks. Each invocation now loads the whole script into context, and Claude occasionally rewrites parts of the validator inline instead of running it. How should the skill be structured?
 
 A) Convert the validator into a long list of prose rules in SKILL.md so that Claude applies the same checks
@@ -653,13 +729,89 @@ D) Ship the validator as scripts/validate.py inside the skill folder and have SK
 
 ---
 
-## Question 37
+## Question 41
+A team's /audit-deps skill walks every dependency and prints a long report. There are two complaints: the tool output it produces floods the main conversation and pushes earlier work out of context, and people run it without a package name because nothing tells them it expects one. Which SKILL.md frontmatter changes fix both? (Choose two.)
+
+A) Add disable-model-invocation: true so the report stays out of the conversation until someone asks for it
+B) Move the skill into ~/.claude/skills so its output is held in a personal context outside the session
+C) Add context: fork so the skill runs in a forked subagent and just its result returns to the main session
+D) Add allowed-tools: Read, Grep so the skill is limited to fewer tools and the report it writes comes out shorter
+E) Add argument-hint: [package-name] so autocomplete shows the expected argument when /audit-deps is typed
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** context: fork runs the skill in a forked subagent context, so its verbose tool calls stay there and only the result comes back. argument-hint is the autocomplete hint that shows which argument a skill expects. allowed-tools pre-approves tools for the skill's turn (in current docs it does not block others) and does not shorten output. disable-model-invocation only stops Claude from loading the skill automatically. Moving a skill to the personal folder changes who has it, not where its output goes.
+
+*Hint if stuck: Match each complaint to the frontmatter field whose documented job is exactly that.*
+</details>
+
+---
+
+## Question 42
+An engineer wrote a deploy-staging skill in ~/.claude/skills/deploy-staging/ on her laptop. Two complaints follow: teammates who pull the repo can't run /deploy-staging at all, and twice Claude began a staging deploy on its own right after she remarked that the branch looked ready. Which changes fix both complaints? (Choose two.)
+
+A) Set user-invocable: false in its frontmatter, so a deploy can't start without a person present
+B) Move the skill folder into the repo's .claude/skills/ directory and commit it with the code
+C) Add context: fork to its frontmatter, so the deploy runs in a subagent away from the main chat
+D) Set disable-model-invocation: true in its frontmatter, so it runs only when someone types it
+E) Copy the skill into ~/.claude/commands/, so the command is listed for anyone who opens the project
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, D** Skills under ~/.claude/skills/ are personal to one machine; committing the folder under the project's .claude/skills/ shares it with everyone who clones the repo (moving it also avoids her personal copy overriding the project one). disable-model-invocation: true stops Claude from triggering the skill itself, which is what a deploy with side effects needs. user-invocable: false does the opposite: it hides the skill from the / menu and leaves only Claude able to invoke it. context: fork isolates the run in a subagent but does not change who can start it. ~/.claude/commands/ is a personal location too.
+
+*Hint if stuck: Two complaints, two levers: one is about visibility to teammates, the other about who may trigger a run.*
+</details>
+
+---
+
+## Question 43
+A platform team is trimming a 600-line project CLAUDE.md. Each item below sits in it today. The team's rule of thumb is that content Claude needs in nearly every session stays always-on, behaviour that must happen every time without fail is automated, and the rest should load only when the task calls for it. Which items should become skills? (Choose two.)
+
+A) Prefer pnpm over npm or yarn for each install and script command run in this repository
+B) A 180-line template and tone guide for incident postmortems, used about twice a month
+C) Run the formatter on each file right after Claude edits it, without relying on a reminder
+D) The commands to build, lint and run one test file, which Claude needs in most of its work
+E) The steps to cut a release: bump versions, update the changelog, tag, and trigger the build
+
+<details>
+<summary>Answer & explanation</summary>
+
+**B, E** The postmortem guide and the release steps are long, task-specific workflows used occasionally, which is what skills are for: only their descriptions sit in context until someone invokes them or asks for that task. The package-manager rule and the build and test commands apply in almost every session, so they belong in CLAUDE.md. Formatting after every edit must happen each time without Claude choosing to, so it belongs in a PostToolUse hook; a skill is loaded only when invoked or judged relevant.
+
+*Hint if stuck: Sort each item by when it is needed and whether Claude may decide to skip it.*
+</details>
+
+---
+
+## Question 44
+A team's .claude/skills/schema-migrate/SKILL.md works when someone types /schema-migrate users, but Claude never uses it on its own when a developer asks to add a column or backfill a table. Its frontmatter is: description: "Helper.", disable-model-invocation: true, argument-hint: [table], allowed-tools: Bash(psql *). Which settings explain why Claude doesn't pick the skill up unprompted? (Choose two.)
+
+A) The description doesn't mention migrations, so Claude can't match a request about one to it
+B) argument-hint makes the skill wait for a table name, so Claude can't start it without one
+C) allowed-tools names just psql, so Claude passes over it when a request may need other tools
+D) disable-model-invocation: true stops Claude from loading the skill unless a person types it
+E) The skill sits in the project folder; Claude starts skills unprompted only from ~/.claude/skills
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, D** Claude decides whether to apply a skill from its description, and "Helper." gives it nothing to match against a migration request. disable-model-invocation: true reserves the skill for manual /name use, so Claude never invokes it even with a good description; both need fixing. argument-hint only shows the expected argument in autocomplete. allowed-tools pre-approves the listed tools while the skill runs; it does not hide the skill. Project and personal skills can both be invoked by Claude.
+
+*Hint if stuck: Look for the fields that govern whether Claude may and can choose the skill, not how it runs once started.*
+</details>
+
+---
+
+## Question 45
 A team's .claude/skills/nightly-triage/SKILL.md runs an unattended loop that sorts new issues into labels. Twice it stalled for hours because Claude stopped to ask a clarifying question with AskUserQuestion, and once it edited a source file it should never touch. The skill already lists Read and Grep under allowed-tools. What frontmatter change stops the skill from asking questions or editing files while it runs?
 
 A) List AskUserQuestion, Edit and Write under disallowed-tools in the skill's frontmatter
 B) Treat allowed-tools as the full whitelist, since any tool missing from it is already blocked
-C) Set disable-model-invocation: true so the skill runs only when a person types its name
-D) Set user-invocable: false so only Claude can start the skill and no prompts are ever shown
+C) Set disable-model-invocation: true so the skill starts when a person types its name rather than on its own
+D) Set user-invocable: false so Claude alone can start the skill and no prompts are shown
 
 <details>
 <summary>Answer & explanation</summary>
@@ -671,12 +823,12 @@ D) Set user-invocable: false so only Claude can start the skill and no prompts a
 
 ---
 
-## Question 38
+## Question 46
 A customer-support team ships a skill that drafts refund-decision emails. Compliance requires that this skill never execute shell commands. The SKILL.md body states Never use Bash in bold, yet audit logs from last week show two sessions where the skill ran Bash anyway. What is the root-cause fix?
 
-A) Repeat the prohibition in all caps at both the top and bottom of the skill body
+A) Repeat the prohibition in capital letters at both the top and bottom of the skill body
 B) Lower the sampling temperature so the model follows the skill's instructions more reliably
-C) Add a project-wide PreToolUse hook that blocks every Bash invocation in the repository
+C) Add a project-wide PreToolUse hook that blocks each Bash invocation in the repository
 D) Restrict the skill's tools in its frontmatter so Bash is removed while the skill runs
 
 <details>
@@ -689,11 +841,11 @@ D) Restrict the skill's tools in its frontmatter so Bash is removed while the sk
 
 ---
 
-## Question 39
+## Question 47
 A platform team wrote .claude/skills/legacy-billing-context/SKILL.md explaining how a 2012 billing system stores currency and retries charges. Claude should pull it in whenever someone works near billing code, but developers keep typing /legacy-billing-context expecting it to do something, and are confused when it only prints background. Which frontmatter setting fits?
 
 A) argument-hint with a short note, which tells developers in the menu that the skill takes no arguments
-B) user-invocable: false, which hides it from the slash menu while Claude can still load it when relevant
+B) user-invocable: false, which hides it from the slash menu but lets Claude still load it when relevant
 C) disable-model-invocation: true, which keeps it in the slash menu but stops Claude from loading it alone
 D) context: fork, which runs the skill in a subagent so its background text stays out of the main session
 
@@ -707,7 +859,7 @@ D) context: fork, which runs the skill in a subagent so its background text stay
 
 ---
 
-## Question 40
+## Question 48
 An engineer at an e-commerce company built a /release-checklist slash command in ~/.claude/commands that walks through the team's deployment checklist. During an incident, a teammate tried to run it and the command did not exist in her session. What is the right fix?
 
 A) Have the teammate recreate the command file under her own ~/.claude/commands directory
@@ -725,7 +877,7 @@ D) Move the command file into the repository's .claude/commands directory and co
 
 ---
 
-## Question 41
+## Question 49
 Six hours into a session on a healthcare data-extraction project, an engineer creates the project's first skill at .claude/skills/redact-phi/SKILL.md; the .claude/skills/ directory did not exist when the session started. When she asks Claude to use it in the same session, Claude responds that no such skill exists. She does not want to lose the session's accumulated context. What should she do?
 
 A) Exit and restart Claude Code, because skills are only discovered when a session starts
@@ -743,12 +895,12 @@ D) Tell Claude the file path in chat so it reads SKILL.md and follows it manuall
 
 ---
 
-## Question 42
+## Question 50
 A research-tooling team has a license-audit skill that shells out to dependency scanners, producing about 40,000 tokens of raw output per run. After each audit, the main session starts forgetting requirements the user stated earlier. Only a short verdict from the audit actually matters. What is the right design change?
 
 A) Instruct the skill body to request quieter output modes from the scanner commands
-B) Run /compact immediately after every audit to summarize the bloated transcript
-C) Move the audit instructions into the project CLAUDE.md so they are preloaded in every session
+B) Run /compact immediately after each audit to summarize the bloated transcript
+C) Move the audit instructions into the project CLAUDE.md so they are preloaded in each session
 D) Set context: fork in the skill frontmatter so the audit runs isolated and returns its summary
 
 <details>
@@ -761,7 +913,7 @@ D) Set context: fork in the skill frontmatter so the audit runs isolated and ret
 
 ---
 
-## Question 43
+## Question 51
 An e-commerce ops team shares a backfill-orders skill that needs a date range and a target environment. Teammates keep invoking it with no arguments, forcing Claude to ask follow-up questions every time. The team wants the expected inputs visible right at invocation. What is the designed mechanism for this?
 
 A) Rename the skill to backfill-orders-dates-env so the required inputs are part of its name
@@ -779,11 +931,11 @@ D) Put a usage example at the top of the skill body so it is the first content l
 
 ---
 
-## Question 44
+## Question 52
 An architect auditing an insurance-claims platform finds 24 skills, each with a SKILL.md body around 400 lines. Assuming every session pays the full cost of all of them, she drafts a plan to consolidate down to five skills. Which statement should change her plan?
 
 A) Only frontmatter metadata loads at session start; a body loads when its skill triggers, so 24 well-described skills are fine
-B) Every SKILL.md body loads into context at session start, so consolidating to five skills is the correct move
+B) Each SKILL.md body loads into context at session start, so consolidating to five skills is the correct move
 C) Skills contribute nothing to context until invoked, including their descriptions, so auto-invocation needs a settings.json entry
 D) Bodies load at session start but /compact evicts them, so scheduled compaction solves the cost without consolidating
 
@@ -797,7 +949,7 @@ D) Bodies load at session start but /compact evicts them, so scheduled compactio
 
 ---
 
-## Question 45
+## Question 53
 A developer-productivity team is designing two helpers in .claude/skills/. One generates release notes and should run only when an engineer deliberately starts it with a version tag. The other is a database-migration safety checklist that should engage on its own whenever Claude works on migrations. How should each be configured?
 
 A) Leave both model-invocable with clear descriptions, so Claude decides when each one applies
@@ -815,31 +967,31 @@ D) Release notes: a description-driven skill Claude picks; checklist: disable-mo
 
 ---
 
-## Question 46
-A team added .claude/skills/claims-extract/SKILL.md during a running session, creating the repo's first .claude/skills/ directory. Its frontmatter description just says "Extraction helper." The running session never lists the skill, and in later fresh sessions Claude still does not load it when engineers paste healthcare intake forms. What resolves both problems?
+## Question 54
+A team gives its /api-style skill context: fork so it stays out of the main session. The SKILL.md body lists conventions (error envelope shape, pagination fields, naming) but sets no task. When Claude invokes it while building an endpoint, the forked run returns almost nothing and the new code ignores the conventions. What fix fits?
 
-A) Add context: fork to the frontmatter, then run /compact so the session rebuilds its skill listing
-B) Move the file to .claude/commands/claims-extract.md, since command files are rescanned on every prompt
-C) Write a description of what it extracts and when to use it, then run /reload-skills in the session
-D) Rename the skill folder after a phrase engineers often type, then restart so discovery runs again
+A) Add agent: Explore so the forked subagent can read the codebase before it applies the conventions
+B) Add allowed-tools listing Read and Edit so the forked subagent has permission to change the files
+C) Remove context: fork so the conventions load inline as reference for the main conversation
+D) Set background: false so the forked subagent finishes before Claude starts writing the endpoint
 
 <details>
 <summary>Answer & explanation</summary>
 
-**C)** Claude decides whether to load a skill from its description, so "Extraction helper" gives it nothing to match intake-form requests against; a description that states the task and when to use it fixes the fresh sessions. Claude Code watches the skill directories that existed at startup, so a top-level skills directory created mid-session is picked up only after /reload-skills. context: fork changes where a skill runs, not whether it triggers, and /compact does not rescan skills. A command file is the same system with the same need for a good description, and a folder name is no substitute for one, so restarting fixes discovery but not triggering.
+**C)** With context: fork, the skill content becomes the prompt of a separate subagent that does not see the conversation. A body of guidelines with no task gives that subagent nothing to act on, so it returns little and the conventions never reach the conversation writing the code. Reference content like this should run inline. Choosing Explore, pre-approving tools or waiting for the result still leaves the conventions with a subagent that has no task.
 
-*Hint if stuck: Treat these as two separate failures: how Claude judges relevance, and when Claude Code looks for new skill folders.*
+*Hint if stuck: Ask who receives the skill's text when it runs, and whether that reader is the one writing the endpoint.*
 </details>
 
 ---
 
-## Question 47
+## Question 55
 A developer-experience team distributes Claude Code skills from an internal git repo. A SessionStart hook pulls the latest skills into .claude/skills/ at the start of every session, but engineers find that skills added by the pull are not auto-invoked until they fully restart Claude Code. How should the team make newly synced skills register automatically, with no manual step?
 
-A) Move the sync script into a PreToolUse hook so it runs again before every tool call in the session
+A) Move the sync script into a PreToolUse hook so it runs again before each tool call in the session
 B) Have the SessionStart hook return reloadSkills in its output so the synced skills are rescanned immediately
 C) Tell engineers to run /reload-skills manually right after each session starts so the new skills register
-D) List every skill's description in the project CLAUDE.md so the content loads as memory at session start instead
+D) List each skill's description in the project CLAUDE.md so the content loads as memory at session start instead
 
 <details>
 <summary>Answer & explanation</summary>
@@ -851,12 +1003,12 @@ D) List every skill's description in the project CLAUDE.md so the content loads 
 
 ---
 
-## Question 48
+## Question 56
 A design-system team keeps its component conventions in .claude/rules/components.md with paths: src/components/*.tsx. Engineers notice the conventions apply when Claude edits src/components/Button.tsx but not src/components/forms/DatePicker.tsx or anything else in subfolders. What change fixes this?
 
 A) Change the pattern to src/components/**/*.tsx so files at any depth under src/components/ match
-B) Copy components.md into a CLAUDE.md file inside every subfolder of src/components/ so each one is covered
-C) Remove the paths field so the component conventions load in every session regardless of the files touched
+B) Copy components.md into a CLAUDE.md file inside each subfolder of src/components/ so each one is covered
+C) Remove the paths field so the component conventions load in each session regardless of the files touched
 D) Add a second rule file with paths: src/components/forms/*.tsx to cover the one subfolder that was reported
 
 <details>
@@ -869,7 +1021,7 @@ D) Add a second rule file with paths: src/components/forms/*.tsx to cover the on
 
 ---
 
-## Question 49
+## Question 57
 A team keeps two nearly identical rule files: ts-style.md with paths: src/**/*.ts and tsx-style.md with paths: src/**/*.tsx. Every update has to be made twice, and last week the copies diverged on import ordering. What is the cleanest setup?
 
 A) Merge them into the root CLAUDE.md, because the TypeScript code is the majority of the repository
@@ -887,7 +1039,7 @@ D) Merge them into one rule with paths: src/**/* so that every file under src/ s
 
 ---
 
-## Question 50
+## Question 58
 A developer-tools team wrote a docs-style.md rule with paths: *.md to enforce heading and link conventions in documentation. The rule loads when Claude edits README.md at the repository root, but not when it edits docs/guides/setup.md or packages/cli/docs/usage.md. Which change applies it to all documentation?
 
 A) Move docs-style.md into a docs/.claude/rules/ folder so it sits closer to the documentation it covers
@@ -905,12 +1057,12 @@ D) Add an instruction to the rule body telling Claude to apply it to every Markd
 
 ---
 
-## Question 51
+## Question 59
 A team migrating from another editor copied its rule files into .claude/rules/ unchanged. Each file starts with frontmatter like globs: "src/api/**/*.ts". The API conventions now appear in every session, even sessions spent entirely on the mobile app. What is the cause?
 
-A) Rules in subdirectories of .claude/rules/ are always loaded, so the files must sit directly in .claude/rules/
+A) Rules in subdirectories of .claude/rules/ load unconditionally, so the files must sit directly in .claude/rules/
 B) Rule frontmatter must be JSON rather than YAML, so the whole header is being skipped by Claude Code
-C) The glob needs a leading ./ to be resolved relative to the project root, so it currently matches every file
+C) The glob needs a leading ./ to be resolved relative to the project root, so it currently matches any file
 D) Claude Code only reads a paths field in rule frontmatter, so globs is ignored and the rule loads unconditionally
 
 <details>
@@ -923,13 +1075,13 @@ D) Claude Code only reads a paths field in rule frontmatter, so globs is ignored
 
 ---
 
-## Question 52
+## Question 60
 GraphQL resolvers in a large codebase live in nine packages (packages/*/src/resolvers/). Each package has its own CLAUDE.md with a copy of the 60-line resolver conventions, and three copies are now out of date. What should the team do?
 
 A) Replace the copies with one .claude/rules/ file scoped to packages/*/src/resolvers/** in its paths
-B) Move the conventions into the root CLAUDE.md so every session sees a single, up-to-date copy of them
+B) Move the conventions into the root CLAUDE.md so each session sees a single, up-to-date copy of them
 C) Ask Claude to reconcile the nine copies at the start of each session, before it touches any resolver code
-D) Keep the per-package files but add a script that copies the newest version into all nine of them weekly
+D) Keep the per-package files but add a script that copies the newest version into each of the nine weekly
 
 <details>
 <summary>Answer & explanation</summary>
@@ -941,7 +1093,7 @@ D) Keep the per-package files but add a script that copies the newest version in
 
 ---
 
-## Question 53
+## Question 61
 During a long refactor a developer runs /compact. Right after, Claude proposes a plan for a new React component that ignores the team's .claude/rules/react.md (paths: src/**/*.tsx), although the rule was followed before compaction. Two turns later, once Claude opens an existing .tsx file to copy its imports, the rule is followed again. What is the correct reading of this?
 
 A) Compaction corrupted the rule's frontmatter, and opening a .tsx file made Claude Code parse it again
@@ -959,7 +1111,7 @@ D) Path-scoped rules drop out at compaction and load again once a matching file 
 
 ---
 
-## Question 54
+## Question 62
 A mobile team has a 150-line release procedure (bump versions, update changelogs, tag, trigger the store build). Someone added it as .claude/rules/release.md with paths: **/*.gradle, reasoning that releases touch gradle files. Now the procedure loads whenever anyone adjusts a dependency, yet it is only wanted when someone is actually cutting a release. What is the better home?
 
 A) The same rule with a narrower glob, such as app/build.gradle, so fewer edits trigger it
@@ -977,7 +1129,7 @@ D) A nested CLAUDE.md in the app/ folder that covers all of the store release st
 
 ---
 
-## Question 55
+## Question 63
 A CI platform team wants every GitHub Actions workflow Claude writes or edits to pin actions to a full commit SHA and declare explicit permissions. Workflows live in .github/workflows/ with both .yml and .yaml extensions. Application developers who never touch CI do not want these rules in their sessions. What should the team add?
 
 A) A paragraph about workflow pinning in the root CLAUDE.md under a heading named CI conventions
@@ -995,13 +1147,13 @@ D) A rule in .claude/rules/ with paths: .github/workflows/*.{yml,yaml} holding t
 
 ---
 
-## Question 56
+## Question 64
 A staff engineer prefers Google-style docstrings whenever Claude writes Python, across all of her projects. Her teams' repositories don't mandate a docstring style, and she does not want to impose her preference on teammates. Where should she put it?
 
 A) A rule in ~/.claude/rules/ with paths: **/*.py so it applies only to her, whenever Python is touched
 B) A skill in ~/.claude/skills/ that she triggers before starting each Python session she opens
 C) A rule in each repository's .claude/rules/ with paths: **/*.py, committed alongside the code
-D) A Python section in each repository's CLAUDE.local.md file, which she copies into every project
+D) A Python section in each repository's CLAUDE.local.md, which she copies by hand into new projects
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1013,12 +1165,12 @@ D) A Python section in each repository's CLAUDE.local.md file, which she copies 
 
 ---
 
-## Question 57
+## Question 65
 An engineer's ~/.claude/rules/style.md says to indent with 4 spaces in TypeScript. His team's project rule .claude/rules/ts.md says 2 spaces. Claude's output in that repository switches between the two from one session to the next. What is the right fix?
 
-A) Nothing is needed, because project rules always override user rules when the two of them disagree
+A) Nothing is needed, because project rules override user rules when the two of them disagree
 B) Reconcile the two rules, for example by dropping the indent line from his personal rule
-C) Move the team's 2-space rule into CLAUDE.md, since CLAUDE.md always outranks any of the rule files
+C) Move the team's 2-space rule into CLAUDE.md, since CLAUDE.md outranks any of the rule files
 D) Rename the project rule so it sorts after the user rule alphabetically and therefore gets priority
 
 <details>
@@ -1031,7 +1183,7 @@ D) Rename the project rule so it sorts after the user rule alphabetically and th
 
 ---
 
-## Question 58
+## Question 66
 A team keeps a single .claude/rules/conventions.md with paths listing both web/**/*.tsx and api/**/*.go, and a body covering frontend styling, Go error handling and SQL migrations. Editing one button component pulls in all 300 lines. How should they reorganise?
 
 A) Move the whole file into the root CLAUDE.md, because it is loaded in most sessions anyway
@@ -1049,7 +1201,7 @@ D) Add @imports for each topic inside conventions.md so the sections live in sep
 
 ---
 
-## Question 59
+## Question 67
 An extraction pipeline team keeps PII-masking conventions for parsers in .claude/rules/pii.md with paths: parsers/**/*.py. To be safe, someone pasted the same conventions into the root CLAUDE.md. After a policy change only the rule was updated, and Claude now gets two conflicting versions while editing parsers. What should the team do?
 
 A) Keep both copies and ask reviewers to check that the two versions match on every pull request
@@ -1067,7 +1219,7 @@ D) Delete the copy in CLAUDE.md and keep the path-scoped rule as the single sour
 
 ---
 
-## Question 60
+## Question 68
 A team's testing rule uses paths: **/*.test.ts. The repository also has older tests named *.spec.ts and some helpers under __tests__/ folders, and Claude ignores the testing conventions when it edits those. What is the most direct fix?
 
 A) List additional patterns in paths, such as **/*.spec.ts and **/__tests__/**, in the same rule file
@@ -1085,7 +1237,7 @@ D) Create a second rule with identical content for the *.spec.ts files and the _
 
 ---
 
-## Question 61
+## Question 69
 A multi-agent research system keeps its subagent prompt templates in prompts/**/*.md, and the team has strict conventions for them (XML-tagged sections, a fixed citation block, no model names). Those 90 lines currently sit in the root CLAUDE.md, so they also load when engineers work on the Python orchestration code. What is the better arrangement?
 
 A) Move them into a skill named prompt-conventions that loads whenever someone mentions a prompt
@@ -1103,7 +1255,7 @@ D) Move them into the ~/.claude/CLAUDE.md of the engineers who usually edit the 
 
 ---
 
-## Question 62
+## Question 70
 A CI review job pastes 120 lines of authentication conventions into its prompt on every run, and developers working locally separately paste the same text when they touch auth code. The conventions only matter for files under services/*/auth/. What setup removes the duplication for both?
 
 A) Put the conventions in each developer's ~/.claude/CLAUDE.md and keep the paste in the CI prompt
@@ -1121,13 +1273,13 @@ D) Add the conventions to the root CLAUDE.md so the CI job and the local session
 
 ---
 
-## Question 63
+## Question 71
 To slim the root CLAUDE.md, a team moved its architecture overview (service boundaries, data flow, which team owns what) into a rule with paths: src/**. Now when an engineer asks Claude a design question before any file has been opened, the answers ignore the architecture entirely. What should they do?
 
 A) Change the pattern to **/* so the overview matches every file in the repository
 B) Ask engineers to open a source file first so that the architecture rule gets loaded
 C) Move the overview into a skill so Claude loads it when it thinks a question needs it
-D) Put a concise overview back in CLAUDE.md, since it is needed regardless of files
+D) Put a short overview back in CLAUDE.md, since it is needed regardless of files
 
 <details>
 <summary>Answer & explanation</summary>
@@ -1139,7 +1291,7 @@ D) Put a concise overview back in CLAUDE.md, since it is needed regardless of fi
 
 ---
 
-## Question 64
+## Question 72
 A data-extraction team has conventions for JSON Schemas (nullable optional fields, 'other' plus detail for enums, a $comment on every property) that matter whenever Claude edits files under schemas/ or the generated validators in src/validators/. Elsewhere the conventions are noise. Which setup fits?
 
 A) One rule whose paths list schemas/**/*.json and src/validators/** so either location loads it
@@ -1157,7 +1309,7 @@ D) A section in the root CLAUDE.md, since the extraction pipeline is the main pr
 
 ---
 
-## Question 65
+## Question 73
 A customer-support agent's repository keeps MCP tool definitions in tools/*.json and agent prompts in prompts/*.md. The team has 70 lines of conventions for tool descriptions (state when to use and when not to, list input formats, give edge cases) that matter only when editing tool definitions. They currently put them in a nested tools/CLAUDE.md, but the definitions are being moved into tools/billing/ and tools/returns/ subfolders, plus a shared/tools/ folder. What should they do?
 
 A) Keep tools/CLAUDE.md and add a copy of it in shared/tools/ so that both locations are covered
@@ -1175,12 +1327,12 @@ D) Move the conventions into the system prompt of the support agent so it follow
 
 ---
 
-## Question 66
+## Question 74
 A research-platform repo has a 700-line root CLAUDE.md: build commands and commit conventions, then long sections on the React dashboard (web/**), the Python crawler (crawler/**) and Terraform (infra/**). Adherence has dropped. A lead proposes moving each section into its own file and pulling them into CLAUDE.md with @imports. Which plan reduces context use and improves focus?
 
 A) Adopt the @imports proposal, because splitting the content into separate files shrinks the context
 B) Keep the file whole but put the most important instructions in bold so they stand out while reading
-C) Keep shared items in CLAUDE.md and move each area's section into a rule scoped to that area's paths
+C) Keep shared items in CLAUDE.md and move each area's section into a rule scoped to its paths
 D) Move all four sections, including build commands, into path-scoped rules so nothing loads by default
 
 <details>
@@ -1193,10 +1345,10 @@ D) Move all four sections, including build commands, into path-scoped rules so n
 
 ---
 
-## Question 67
+## Question 75
 A CI platform team has container conventions (pinned base-image digests, a non-root USER, no curl-pipe-to-shell) that should apply whenever Claude edits a Dockerfile. The files are named Dockerfile, Dockerfile.dev and Dockerfile.ci and sit in services/*/, tools/ and the repository root. Engineers working on application code should not get these conventions. Which setup fits?
 
-A) A rule with paths: **/*.dockerfile so every container definition in the repository matches it
+A) A rule with paths: **/*.dockerfile so each container definition in the repository matches it
 B) A rule with paths: services/*/Dockerfile, since most of the Dockerfiles live in the services tree
 C) A nested CLAUDE.md placed next to each Dockerfile in services/*/ and tools/ and at the repo root
 D) A rule with paths: **/Dockerfile* so every Dockerfile variant at any depth loads the conventions
@@ -1211,7 +1363,7 @@ D) A rule with paths: **/Dockerfile* so every Dockerfile variant at any depth lo
 
 ---
 
-## Question 68
+## Question 76
 A fintech monorepo has database migrations in packages/*/migrations/ across nine packages. The team wants strict migration rules (reversible steps, no data deletes) applied whenever Claude touches a migration file, but not loaded when it edits anything else. Which setup fits best?
 
 A) A CLAUDE.md inside each of the nine migrations folders, each holding a copy of the same migration rules
@@ -1229,7 +1381,64 @@ D) A migration skill that engineers invoke by name before they ask Claude to wri
 
 ---
 
-## Question 69
+## Question 77
+A monorepo's React testing conventions apply to files matching **/*.test.tsx, which sit in a dozen packages. Today they live in the root CLAUDE.md and load into every session, even backend-only work. An earlier attempt to move them into packages/web/CLAUDE.md meant tests in other packages were written without them. Which steps load the conventions only when relevant, wherever the test files live? (Choose two.)
+
+A) Move the conventions out of the root CLAUDE.md into a markdown file of their own under .claude/rules/
+B) Give the rule file frontmatter with paths: ["**/*.test.tsx"] so it loads when matching files are used
+C) Keep a copy in a CLAUDE.md inside each package that has tests so that each of those directories gets the rules
+D) @import the conventions file from the root CLAUDE.md so that it loads once a test file is opened
+E) Add paths: ["**/*.test.tsx"] frontmatter to packages/web/CLAUDE.md so it loads for test files in any package
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** Files in .claude/rules/ are project memory, and a paths glob in their frontmatter makes them load only when Claude reads or edits a matching file; a rule without paths loads unconditionally, so both steps are needed. paths frontmatter is a rules feature: a subdirectory CLAUDE.md loads when Claude works in that directory, so packages/web/CLAUDE.md never reaches tests in other packages. Per-package CLAUDE.md copies drift apart and are tied to directories, not to the test-file pattern. An @import loads together with the file that imports it, so it would still load in every session.
+
+*Hint if stuck: Think about a mechanism keyed to file patterns rather than to directories, and what makes it conditional rather than always on.*
+</details>
+
+---
+
+## Question 78
+A team has two rule files. .claude/rules/api.md begins with frontmatter globs: "src/api/**/*.ts", and its API conventions show up in every session, even frontend-only ones. .claude/rules/ui/components.md has paths: ["src/components/*.tsx"]; it is followed when Claude edits src/components/Button.tsx but ignored for src/components/forms/DatePicker.tsx. Which explain both problems? (Choose two.)
+
+A) Rules with a glob in frontmatter load at launch and stay loaded until the first /compact
+B) Rule files in a subfolder of .claude/rules/ match files at that folder's depth and no other
+C) api.md has no paths key, so its glob is ignored and the file loads as an unscoped rule
+D) A YAML list in paths is read per folder, so it matches the first folder level and no deeper
+E) In components.md a single * matches one level, so files in deeper subfolders do not match
+
+<details>
+<summary>Answer & explanation</summary>
+
+**C, E** Claude Code scopes a rule only through a paths field; a rule without one, such as a file using another tool's globs key, loads unconditionally. In src/components/*.tsx the single * matches file names directly in that folder, so src/components/**/*.tsx is needed for nested files. Path-scoped rules are not loaded at launch; they load when a matching file is used. .claude/rules/ is searched recursively, and the subfolder name has nothing to do with matching. paths accepts a list of globs, each matched in full.
+
+*Hint if stuck: Check each file twice: does Claude Code recognise its scoping at all, and if so, what does the pattern match?*
+</details>
+
+---
+
+## Question 79
+A team keeps React conventions in .claude/rules/frontend/react.md with paths: ["src/**/*.tsx"]. Developers report that Claude sometimes ignores those conventions, though at other times it follows them closely. In which of these moments is the rule most likely missing from Claude's context? (Choose two.)
+
+A) Claude is asked to plan a new component before it has opened or edited any .tsx file in src/
+B) Right after /compact in a long React session, before Claude has touched another .tsx file
+C) Claude edits src/features/cart/ui/CartLine.tsx, a file five folders below the src/ directory
+D) Claude creates src/hooks/useCart.tsx, a new file that did not exist when the session started
+E) Claude edits src/App.tsx while the rule lives in .claude/rules/frontend/ instead of rules/
+
+<details>
+<summary>Answer & explanation</summary>
+
+**A, B** A path-scoped rule loads when Claude works with a matching file, so before any .tsx file has been opened or edited the conventions are not in context, and a plan drafted then misses them. Path-scoped rules also drop out at compaction and come back only when a matching file is touched again. src/**/*.tsx matches files at any depth, writing a new matching file loads the rule like editing one, and rule files in subfolders of .claude/rules/ are discovered recursively.
+
+*Hint if stuck: Trace when a scoped rule enters context, and whether it stays there for the rest of the session.*
+</details>
+
+---
+
+## Question 80
 An edtech React app keeps 80 lines of test-writing guidance (React Testing Library queries, a ban on snapshot tests) in its project CLAUDE.md, so every session loads it — including backend-only work. Test files are colocated with their components as *.test.tsx throughout src/. How should this guidance be scoped?
 
 A) Keep it in CLAUDE.md but preface it with: apply the following section only when editing test files
@@ -1247,7 +1456,7 @@ D) Convert the guidance into a slash command that engineers run before starting 
 
 ---
 
-## Question 70
+## Question 81
 A platform repo has Terraform files in infra/, modules/, and services/*/deploy/. The team wants Terraform conventions applied whenever Claude Code edits any .tf file, and not loaded at all during application-code work. What is the best configuration?
 
 A) Add a Terraform section to the root CLAUDE.md
@@ -1265,7 +1474,7 @@ D) Create a terraform skill that developers invoke whenever they work on the inf
 
 ---
 
-## Question 71
+## Question 82
 A team split its large CLAUDE.md into eight files in .claude/rules/ (testing.md, api.md, migrations.md and so on), expecting context use to drop. Token usage didn't change, and all eight rule files are loaded even in a session that only touches docs. What did they miss?
 
 A) Rules files only load conditionally when the root CLAUDE.md @imports them
@@ -1283,13 +1492,13 @@ D) They need to run /compact once so the rules are re-evaluated
 
 ---
 
-## Question 72
+## Question 83
 A project has .claude/rules/migrations.md with paths: db/migrations/**/*.sql, requiring every migration to be reversible. A developer asks Claude which migrations drop a column. Claude runs a recursive grep over the folder, lists twelve matching files from the search output, and proposes a fix plan that ignores the rule. The glob is correct. Why was the rule absent?
 
-A) Path rules load only after the developer names a matching path explicitly in the prompt they type
+A) Path rules load after the developer names a matching path explicitly in the prompt they type
 B) The rule loaded during the search, but the long grep output pushed it out of the context window
 C) The rule loads when a matching file is read, edited or written, not when it shows up in search results
-D) Path rules load only when Claude creates a new file, so migrations that already exist never trigger them
+D) Path rules load at the moment Claude creates a new file, so migrations that already exist do not trigger them
 
 <details>
 <summary>Answer & explanation</summary>
