@@ -51,7 +51,7 @@ const Learn = {
   domainColor(d) { return d ? `var(--d${d[1]})` : 'var(--accent)'; },
 
   /* ---------- slides (shared with learn/deck.html and the video renderer) ---------- */
-  esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); },
+  esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); },
   rich(s) {
     if (typeof fmt === 'function') return fmt(s);
     return this.esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
