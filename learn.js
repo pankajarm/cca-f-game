@@ -153,11 +153,11 @@ const Learn = {
           const dn = dl.filter(l => this.isDone(l.id)).length;
           return `<div class="ln-domain" style="--dc:${this.domainColor(d.id)}"><span class="dot"></span><span class="nm">D${d.n} · ${d.label} <span class="muted">· ${d.exam} of 60 exam items · ${dn}/${dl.length} done</span></span>
             <button class="btn small ghost" style="margin-left:auto;padding:5px 12px;white-space:nowrap" onclick="Learn.drill('domain','${d.id}')">Drill D${d.n}</button></div>
-            <div class="ln-grid">${dl.map(l => this.card(l, nextId)).join('')}</div>`;
+            ${this.prepLine(d.id)}<div class="ln-grid">${dl.map(l => this.card(l, nextId)).join('')}</div>`;
         }).join('');
       } else grid = `<div class="ln-grid">${ls.map(l => this.card(l, nextId)).join('')}</div>`;
       const dn = ls.filter(l => this.isDone(l.id)).length;
-      return `<section class="ln-stage"><h3><span class="lvl l${st.n}">Stage ${st.n} · ${st.id}</span>${st.label} <span class="muted small">${dn}/${ls.length} done</span></h3><p>${st.blurb}</p>${grid}</section>`;
+      return `<section class="ln-stage"><h3><span class="lvl l${st.n}">Stage ${st.n} · ${st.id}</span>${st.label} <span class="muted small">${dn}/${ls.length} done</span></h3><p>${st.blurb}</p>${st.id === 'beginner' ? this.prepLine(null) : ''}${grid}</section>`;
     }).join('') + this.renderResources();
   },
 
@@ -233,12 +233,36 @@ const Learn = {
     this.startDrill(shuffle(refs), 'Placement check · 15 questions', 'learn');
   },
 
+  /* Anthropic's official prep courses (LEARN_RES.prep), shown with the domain they cover.
+     The Google Cloud and Bedrock courses repeat the API course, so they ride along with it. */
+  prepItems() { return ((window.LEARN_RES || {}).prep || {}).items || []; },
+  prepLink(c) { return `<a href="${c.url}" target="_blank" rel="noopener">${this.esc(c.name)}</a>`; },
+  prepLine(d) {
+    const all = this.prepItems(), alt = all.filter(c => c.key === 'vertex' || c.key === 'bedrock');
+    const main = all.filter(c => !alt.includes(c) && (d ? c.domains.includes(d) : !c.domains.length || c.key === 'fluency'))
+      .sort((a, b) => d ? 0 : a.domains.length - b.domains.length);
+    if (!main.length) return '';
+    const links = main.map(c => this.prepLink(c) + (d && c.key === 'api' && alt.some(a => a.domains.includes(d))
+      ? ` <span class="muted">(or on ${alt.filter(a => a.domains.includes(d)).map(a => this.prepLink({ ...a, name: a.key === 'vertex' ? 'Google Cloud' : 'Bedrock' })).join(' / ')})</span>` : ''));
+    return `<div class="ln-prep"><span class="prep-tag">Official prep</span>${d ? '' : '<span>Start with</span>'}${links.join('<span class="sep" aria-hidden="true">·</span>')}${d ? '' : ' <a class="muted" href="#ln-prep-all" onclick="document.getElementById(\'ln-prep-all\').scrollIntoView({behavior:\'smooth\'});return false">all ' + all.length + ' courses ↓</a>'}</div>`;
+  },
+
+  renderPrep() {
+    const P = (window.LEARN_RES || {}).prep, items = this.prepItems();
+    if (!items.length) return '';
+    const chip = d => `<span class="dchip" style="--dc:${this.domainColor(d)}">${d}</span>`;
+    return `<section class="ln-stage" id="ln-prep-all"><h3>Official exam prep courses</h3>
+      <p>Anthropic recommends these ${items.length} free Anthropic Academy courses for the CCA-F exam. Each card shows the exam domains it helps with, and the matching lessons link to it under Go deeper. Partners can take the same courses in the <a href="${P.source}" target="_blank" rel="noopener">Partner Academy</a>.</p>
+      <div class="ln-prepgrid">${items.map(c => `<div class="box"><h4>${this.prepLink(c)}</h4><p>${this.esc(c.why)}</p>
+        <div class="chips">${c.domains.length ? c.domains.map(chip).join('') : '<span class="dchip">Start here</span>'}</div></div>`).join('')}</div></section>`;
+  },
+
   renderResources() {
     const R = window.LEARN_RES || {};
     const li = x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a>${x.note ? ` <span class="muted">· ${this.esc(x.note)}</span>` : ''}</li>`;
     const groups = (R.courses || []);
-    if (!groups.length) return '';
-    return `<section class="ln-stage"><h3>Official courses and reading</h3>
+    if (!groups.length) return this.renderPrep();
+    return this.renderPrep() + `<section class="ln-stage"><h3>Official courses and reading</h3>
       <p>Free material from Anthropic that goes deeper than these lessons, grouped by stage. Links open the official sites.</p>
       <div class="ln-res">${groups.map(g => `<div class="box"><h3>${this.esc(g.title)}</h3><ul>${g.items.map(li).join('')}</ul></div>`).join('')}</div></section>`;
   },
@@ -409,7 +433,7 @@ const Learn = {
     const courses = (l.courses || []).filter(uniq);
     if (!all.length && !courses.length) return '';
     return `<div class="ls-section"><h3>📚 Go deeper</h3><ul class="ls-src">${all.map(x => `<li><a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a></li>`).join('')}
-      ${courses.map(x => `<li>🎓 <a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a>${x.note ? ` <span class="muted small">· ${this.esc(x.note)}</span>` : ''}</li>`).join('')}</ul></div>`;
+      ${courses.map(x => `<li>🎓 <a href="${x.url}" target="_blank" rel="noopener">${this.esc(x.title)}</a>${x.prep ? ' <span class="prep-tag">Official prep</span>' : ''}${x.note ? ` <span class="muted small">· ${this.esc(x.note)}</span>` : ''}</li>`).join('')}</ul></div>`;
   },
 
   footButtons(l) {

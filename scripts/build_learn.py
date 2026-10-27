@@ -149,6 +149,13 @@ def check(lessons, res):
         blob = json.dumps(l, ensure_ascii=False)
         if DASH.search(blob):
             errs.append(f'{where}: contains an em or en dash')
+    # the official prep-course list must point at the same pages the lessons link
+    for p in res['prepCourses']['items']:
+        c = res['courseIndex'].get(p['key'])
+        if not c or not c.get('prep') or c['url'] != p['url']:
+            errs.append(f'prep course {p["key"]}: not in courseIndex with the same url')
+        if DASH.search(json.dumps(p, ensure_ascii=False)):
+            errs.append(f'prep course {p["key"]}: contains an em or en dash')
     return errs
 
 
@@ -170,7 +177,7 @@ def main():
         f.write('window.LESSONS = ')
         json.dump(lessons, f, ensure_ascii=False, indent=1)
         f.write(';\nwindow.LEARN_RES = ')
-        json.dump({'videos': videos, 'courses': res['courses']}, f, ensure_ascii=False, indent=1)
+        json.dump({'videos': videos, 'courses': res['courses'], 'prep': res['prepCourses']}, f, ensure_ascii=False, indent=1)
         f.write(';\n')
     nv = sum(1 for l in lessons if l['video'])
     if nv < len(lessons):

@@ -138,6 +138,16 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Claude 101 (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-101",
+    "prep": true
+   },
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
+   {
     "title": "CCA-F certification page (Partner Academy)",
     "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
    },
@@ -292,12 +302,25 @@ window.LESSONS = [
   ],
   "courses": [
    {
-    "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
-    "url": "https://anthropic.skilljar.com/claude-platform-101"
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
    },
    {
-    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
+   },
+   {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
+    "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
+    "url": "https://anthropic.skilljar.com/claude-platform-101"
    },
    {
     "title": "Building effective agents (Anthropic Engineering)",
@@ -439,7 +462,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
    },
    {
     "title": "MCP: Build Rich-Context AI Apps with Anthropic (DeepLearning.AI, ~1.7 h)",
@@ -594,12 +618,13 @@ window.LESSONS = [
   ],
   "courses": [
    {
-    "title": "Claude Code 101 (Anthropic Academy, ~1.5 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-101"
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
-    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "title": "Claude Code 101 (Anthropic Academy, ~1.5 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-101"
    },
    {
     "title": "Claude Code: A Highly Agentic Coding Assistant (DeepLearning.AI, ~2 h)",
@@ -749,16 +774,34 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
+   {
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
+   },
+   {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
     "title": "Prompt engineering interactive tutorial (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/prompt_engineering_interactive_tutorial"
    },
    {
     "title": "Real world prompting (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
-   },
-   {
-    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
    }
   ],
   "video": {
@@ -895,12 +938,13 @@ window.LESSONS = [
   ],
   "courses": [
    {
-    "title": "Effective context engineering for AI agents (Anthropic Engineering)",
-    "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
    },
    {
-    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+    "title": "Effective context engineering for AI agents (Anthropic Engineering)",
+    "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
    }
   ],
   "video": {
@@ -1075,6 +1119,11 @@ window.LESSONS = [
    "D7_ipDqhtwk"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Tool use course (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/tool_use"
@@ -2312,6 +2361,16 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
+   {
     "title": "Writing effective tools for agents (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/writing-tools-for-agents"
    },
@@ -2492,6 +2551,11 @@ window.LESSONS = [
    "HNzH5Us1Rvg"
   ],
   "courses": [
+   {
+    "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
    {
     "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
     "url": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics"
@@ -2858,7 +2922,13 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
@@ -3041,7 +3111,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    }
   ],
   "video": {
@@ -3214,7 +3285,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
@@ -3387,6 +3459,11 @@ window.LESSONS = [
    "CEvIs9y1uog"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Introduction to agent skills (Anthropic Academy, ~1 h)",
     "url": "https://anthropic.skilljar.com/introduction-to-agent-skills"
@@ -3565,7 +3642,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    }
   ],
   "video": {
@@ -3731,6 +3809,11 @@ window.LESSONS = [
    "gv0WHhKelSE"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
@@ -3907,6 +3990,11 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
+   {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
    }
@@ -4080,6 +4168,11 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
+   {
     "title": "Cookbook: build a scheduled repository reviewer",
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
    }
@@ -4246,6 +4339,11 @@ window.LESSONS = [
    "ysPbXH0LpIE"
   ],
   "courses": [
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
    {
     "title": "Real world prompting (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
@@ -4602,6 +4700,11 @@ window.LESSONS = [
    "hkhDdcM5V94"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Cookbook: extracting structured JSON with tool use",
     "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"
@@ -5987,6 +6090,11 @@ window.LESSONS = [
   "videos": [],
   "courses": [
    {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
+   {
     "title": "Demystifying evals for AI agents (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
    },
@@ -6320,6 +6428,11 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
+   {
     "title": "Cookbook: customer service agent with client-side tools",
     "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"
    }
@@ -6475,7 +6588,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
@@ -6791,11 +6905,13 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
    }
   ],
   "video": {
@@ -6947,6 +7063,11 @@ window.LESSONS = [
    "dRsjO-88nBs"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Cookbook: build a scheduled repository reviewer",
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
@@ -7101,6 +7222,11 @@ window.LESSONS = [
    "hkhDdcM5V94"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Cookbook: extracting structured JSON with tool use",
     "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"
@@ -7458,18 +7584,6 @@ window.LEARN_RES = {
    "title": "Stage 2 · Intermediate",
    "items": [
     {
-     "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-     "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
-    },
-    {
-     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-     "url": "https://anthropic.skilljar.com/claude-code-in-action"
-    },
-    {
-     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-     "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
-    },
-    {
      "title": "Introduction to subagents (Anthropic Academy, ~45 min)",
      "url": "https://anthropic.skilljar.com/introduction-to-subagents"
     },
@@ -7569,5 +7683,88 @@ window.LEARN_RES = {
     }
    ]
   }
- ]
+ ],
+ "prep": {
+  "source": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses",
+  "checkedOn": "2026-10-27",
+  "items": [
+   {
+    "key": "fluency",
+    "name": "AI Fluency: Framework & Foundations",
+    "domains": [
+     "D4",
+     "D5"
+    ],
+    "why": "The 4D framework (delegation, description, discernment, diligence): how to brief Claude clearly and check its work. Groundwork for prompt design and human review.",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/ai-fluency-framework-foundations"
+   },
+   {
+    "key": "api",
+    "name": "Building with the Claude API",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "Messages API, tool use, the agent loop, structured output, RAG and evals. The widest single match for the exam.",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-with-the-anthropic-api"
+   },
+   {
+    "key": "vertex",
+    "name": "Claude on Google Cloud",
+    "domains": [
+     "D1",
+     "D2",
+     "D4"
+    ],
+    "why": "The API course taught on Google Cloud Vertex AI. Take it instead of the API course if Vertex is your platform.",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-with-google-vertex"
+   },
+   {
+    "key": "ccaction",
+    "name": "Claude Code in Action",
+    "domains": [
+     "D3",
+     "D2"
+    ],
+    "why": "CLAUDE.md, commands, plan mode, MCP servers, hooks and GitHub/CI integration: almost all of Domain 3.",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-code-in-action"
+   },
+   {
+    "key": "claude101",
+    "name": "Claude 101",
+    "domains": [],
+    "why": "Core Claude features for everyday work. A gentle first step if you are new to Claude.",
+    "url": "https://anthropic.skilljar.com/claude-101",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-101"
+   },
+   {
+    "key": "bedrock",
+    "name": "Claude with Amazon Bedrock",
+    "domains": [
+     "D1",
+     "D2",
+     "D4"
+    ],
+    "why": "The API course taught on Amazon Bedrock. Take it instead of the API course if Bedrock is your platform.",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-in-amazon-bedrock"
+   },
+   {
+    "key": "mcp",
+    "name": "Introduction to Model Context Protocol",
+    "domains": [
+     "D2"
+    ],
+    "why": "Build MCP servers and clients in Python: tools, resources and prompts. The core of Domain 2.",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/introduction-to-model-context-protocol"
+   }
+  ]
+ }
 };
