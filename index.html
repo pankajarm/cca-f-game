@@ -713,6 +713,7 @@ a.btn { text-decoration: none; }
   .score-dial-wrap .score-dial { transform: scale(.9); }
   #toasts { left: 16px; right: 16px; bottom: 16px; }
   .toast:not(:last-child) { display: none; }  /* one at a time: a stack covers what the player is reading */
+  #screen-lesson.active ~ #toasts, body:has(#screen-lesson.active) #toasts { top: calc(var(--topbar-h, 70px) + 8px); bottom: auto; }  /* lessons: the answer you just tapped is lower down */
   .toast { max-width: none; }
 }
 @media (max-width: 400px) {

@@ -776,9 +776,9 @@ const UI = {
      and going back to one of them lands there instead. */
   SAFE: new Set(['title', 'home', 'tower', 'blueprint', 'examintro', 'bestiary', 'trophies', 'learn', 'lesson']),
   remember(name) {
-    if (this._popping || !window.history || !history.pushState) return;
     const lesson = name === 'lesson' && window.Learn && Learn.cur ? Learn.cur.id : null;
     if (this.SAFE.has(name)) this._safe = { s: name, lesson };
+    if (this._popping || !window.history || !history.pushState) return;
     const st = { s: name, lesson, back: this._safe || { s: 'home' } };
     const now = history.state;
     if (now && now.s === name && now.lesson === lesson) history.replaceState(st, '');
@@ -788,11 +788,14 @@ const UI = {
   popState(st) {
     if (!st || !st.s) return;
     const t = this.SAFE.has(st.s) ? st : st.back || { s: 'home' };
+    const from = this.current, fromLesson = window.Learn && Learn.cur ? Learn.cur.id : null;
     this._popping = true;
     try {
       if (t.s === 'lesson' && t.lesson && window.Learn && Learn.byId(t.lesson)) Learn.open(t.lesson);
       else this.go(t.s === 'lesson' ? 'learn' : t.s);
     } finally { this._popping = false; }
+    // the player said no to leaving (a practice exam's confirm): put back the entry Back used up
+    if (this.current === from && t.s !== from) history.pushState({ s: from, lesson: fromLesson, back: this._safe || { s: 'home' } }, '');
   },
 
   /* focus the active screen's heading unless focus already sits on something visible in it */

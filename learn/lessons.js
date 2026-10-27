@@ -476,6 +476,18 @@ window.LESSONS = [
     "prep": true
    },
    {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
+   },
+   {
     "title": "MCP: Build Rich-Context AI Apps with Anthropic (DeepLearning.AI, ~1.7 h)",
     "url": "https://www.deeplearning.ai/courses/mcp-build-rich-context-ai-apps-with-anthropic"
    },

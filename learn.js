@@ -326,8 +326,9 @@ const Learn = {
   },
   /* scroll just enough that the player or the slide and its controls are fully on screen */
   reveal() {
-    const el = document.querySelector('#ls-pane .ls-player, #ls-pane .ls-deckbar');
-    if (el && el.getBoundingClientRect().bottom > innerHeight) el.scrollIntoView({ block: 'end', behavior: UI.reducedMotion() ? 'auto' : 'smooth' });
+    /* measure the player or the slide (the phone deck bar is sticky, so it always looks on screen) */
+    const pane = document.getElementById('ls-pane'), el = pane && pane.querySelector('.ls-player, .lslide');
+    if (el && el.getBoundingClientRect().bottom > innerHeight - 40) pane.scrollIntoView({ block: 'start', behavior: UI.reducedMotion() ? 'auto' : 'smooth' });
   },
 
   renderPane() {
@@ -530,11 +531,11 @@ if (typeof UI !== 'undefined') {
     const m = location.hash.match(/^#lesson\/([^/]+)(?:\/(\d+))?$/);
     if (!m) return;
     const id = decodeURIComponent(m[1]), l = Learn.byId(id);
-    history.replaceState(history.state, '', location.pathname + location.search);
+    history.replaceState(null, '', location.pathname + location.search);   // the lesson takes this entry's place
     if (!l) { UI.go('learn'); UI.toast('🔎', 'Lesson not found', 'That link points at a lesson that does not exist. Pick one from the path.'); return; }
     if (m[2]) Learn.state().slide[id] = Number(m[2]) - 1;
     Learn.open(id);
-    if (m[2]) Learn.setTab('slides');
+    if (m[2]) { Learn.setTab('slides'); setTimeout(() => Learn.reveal(), 50); }
   };
   deepLink();
   window.addEventListener('hashchange', deepLink);

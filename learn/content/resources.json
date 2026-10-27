@@ -593,6 +593,8 @@
    "mcp",
    "api",
    "ccaction",
+   "bedrock",
+   "vertex",
    "dl-mcp",
    "tooluse"
   ],
