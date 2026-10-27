@@ -716,14 +716,14 @@ const Sound = {
 
 /* ---------------- code-token renderer ---------------- */
 const CODE_RX = new RegExp([
-  '(?:~\\/)?\\.claude\\/[A-Za-z0-9_\\-.\\/*]+',
+  '(?:\\.{1,2}\\/|~\\/)?\\.claude\\/(?:[A-Za-z0-9_\\-.\\/*]*[A-Za-z0-9_\\-\\/*])?',
   '~\\/\\.claude\\.json', '\\.mcp\\.json',
   'claude -p\\b', 'claude-code-action',
   '\\$\\{[A-Z_][A-Z0-9_]*\\}',
   '--[a-z][a-z-]+\\b',
   '(?:\\.{1,2}\\/|\\b)[A-Za-z0-9_\\-][A-Za-z0-9_\\-.]*\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
-  '\\/(?:compact|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
-  '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|Grep|Glob)\\b',
+  '\\/(?:compact|context|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
+  '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|updatedToolOutput|Grep|Glob)\\b',
   '\\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\\b',
   '"(?:auto|any|none)"',
 ].join('|'), 'g');
@@ -757,6 +757,7 @@ const UI = {
     const el = document.getElementById('screen-' + name);
     if (el) el.classList.add('active');
     this.current = name;
+    this.remember(name);
     window.scrollTo({ top: 0, behavior: 'auto' });
     /* the control that was clicked is now hidden: start keyboard and screen-reader users at the new heading */
     if (el) setTimeout(() => this.focusScreen(el), 0);
@@ -768,6 +769,33 @@ const UI = {
     if (name === 'trophies') this.renderTrophies();
     if (window.Learn && Learn.onGo) Learn.onGo(name);
     Sound.click();
+  },
+
+  /* browser Back/Forward: every screen change is a history entry. Screens that only make sense
+     mid-run (a battle, a drill, a result) remember the last screen that can be rebuilt on its own,
+     and going back to one of them lands there instead. */
+  SAFE: new Set(['title', 'home', 'tower', 'blueprint', 'examintro', 'bestiary', 'trophies', 'learn', 'lesson']),
+  remember(name) {
+    const lesson = name === 'lesson' && window.Learn && Learn.cur ? Learn.cur.id : null;
+    if (this.SAFE.has(name)) this._safe = { s: name, lesson };
+    if (this._popping || !window.history || !history.pushState) return;
+    const st = { s: name, lesson, back: this._safe || { s: 'home' } };
+    const now = history.state;
+    if (now && now.s === name && now.lesson === lesson) history.replaceState(st, '');
+    else if (!now) history.replaceState(st, '');
+    else history.pushState(st, '');
+  },
+  popState(st) {
+    if (!st || !st.s) return;
+    const t = this.SAFE.has(st.s) ? st : st.back || { s: 'home' };
+    const from = this.current, fromLesson = window.Learn && Learn.cur ? Learn.cur.id : null;
+    this._popping = true;
+    try {
+      if (t.s === 'lesson' && t.lesson && window.Learn && Learn.byId(t.lesson)) Learn.open(t.lesson);
+      else this.go(t.s === 'lesson' ? 'learn' : t.s);
+    } finally { this._popping = false; }
+    // the player said no to leaving (a practice exam's confirm): put back the entry Back used up
+    if (this.current === from && t.s !== from) history.pushState({ s: from, lesson: fromLesson, back: this._safe || { s: 'home' } }, '');
   },
 
   /* focus the active screen's heading unless focus already sits on something visible in it */
@@ -2537,6 +2565,8 @@ document.getElementById('btn-sound').onclick = () => {
   if (Game.s.soundOn) Sound.good();
 };
 UI.refreshHud();
+if (window.history && history.replaceState) history.replaceState({ s: 'title', lesson: null, back: { s: 'title' } }, '');
+window.addEventListener('popstate', e => UI.popState(e.state));
 Exam.checkSaved();
 window.addEventListener('storage', (e) => {
   if (e.key === SAVE_KEY) { if (e.newValue) Game.syncFrom(); return; }

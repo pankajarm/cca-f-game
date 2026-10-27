@@ -225,20 +225,20 @@
     "q": "A research agent's loop exits whenever stop_reason is anything other than tool_use, and returns the last text as the final report. Some reports now end mid-sentence. What should change?",
     "options": [
      "Add a sentence to the prompt asking Claude to always finish its sentences",
-     "Treat max_tokens as a truncated reply and handle it, instead of returning it as finished",
-     "Exit only after the reply contains the phrase FINAL REPORT",
+     "Handle max_tokens as a truncated reply instead of a finished report",
+     "Exit only after the reply contains the phrase FINAL REPORT, whatever the stop_reason",
      "Lower the iteration cap so the agent writes shorter reports"
     ],
     "answer": 1,
-    "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every non-tool_use reason as completion."
+    "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every `non-tool_use` reason as completion."
    },
    {
     "q": "A tax-filing assistant's loop, on end_turn, checks whether the reply 'looks finished'. When Claude ends a turn by asking the user which tax year they mean, the code automatically sends 'Please continue', and Claude then guesses a year. What should the loop do instead?",
     "options": [
-     "Send 'Please continue' twice so Claude has more room to work it out",
-     "Treat end_turn as the end of Claude's turn, show its question to the user, and add the user's answer to the history",
-     "Force a tool call on the next request so Claude must look the year up",
-     "Raise max_tokens so the reply is less likely to stop early"
+     "Send 'Please continue' twice so Claude has more room to reason about the year",
+     "Treat end_turn as a finished turn: show the question and add the user's answer to the history",
+     "Force a tool call on the next request so Claude must look the tax year up in the records",
+     "Raise max_tokens so the reply is less likely to stop before the work is done"
     ],
     "answer": 1,
     "why": "end_turn means Claude has finished its turn, and here that turn is a question for the user. Judging completion from the wording and auto-continuing pushes Claude to guess."
@@ -374,10 +374,10 @@
    {
     "q": "A research coordinator always spawns exactly one research subagent. Quick lookups are fine, but a request to compare twelve cloud providers on price, compliance and regional coverage takes an hour, and the lone subagent runs out of context partway through. What should change?",
     "options": [
-     "Give the single subagent a longer time limit",
-     "Tell users to split broad questions into twelve separate requests",
-     "Have the coordinator do the comparison itself without subagents",
-     "Have the coordinator scale the number of subagents to the request, splitting a broad comparison across several that run in parallel"
+     "Give the single subagent a longer time limit so it can finish the whole comparison",
+     "Tell users to split broad questions into twelve separate requests, one per provider",
+     "Have the coordinator do the comparison itself, without subagents, to keep all the data in one place",
+     "Scale the number of subagents to the request, splitting broad comparisons across parallel subagents"
     ],
     "answer": 3,
     "why": "Effort should match the query. A broad comparison benefits from several focused subagents, each with its own context, while a simple lookup still needs only one."
@@ -385,10 +385,10 @@
    {
     "q": "Two search subagents in a market research system keep returning almost the same articles, while some subtopics get no coverage. What should you fix first?",
     "options": [
-     "Add a deduplication step after synthesis",
-     "Let the two subagents message each other to split the work",
+     "Add a deduplication step after synthesis to remove the repeated articles from the report",
+     "Let the two subagents message each other directly to split the work between them",
      "Give each subagent a distinct, bounded scope in the coordinator's delegation",
-     "Switch both subagents to a larger model"
+     "Switch both subagents to a larger model with better search judgment"
     ],
     "answer": 2,
     "why": "Overlap and gaps come from vague, overlapping briefs. The coordinator should partition scope clearly; peer-to-peer messaging bypasses the hub."
@@ -525,8 +525,8 @@
    {
     "q": "A synthesis subagent writes a fluent report, but many claims cite the wrong article. The coordinator briefed it with a few paragraphs summarizing what the search agents found. What change helps most?",
     "options": [
-     "Tell the synthesizer to double-check its citations before answering",
-     "Give the synthesizer access to the coordinator's full conversation history",
+     "Tell the synthesizer to double-check each citation against its summary before answering",
+     "Give the synthesizer the coordinator's full conversation history, including all search turns",
      "Run the synthesizer twice and keep the version with more citations",
      "Pass findings as structured records, each claim with its own source title, URL and date"
     ],
@@ -536,10 +536,10 @@
    {
     "q": "A coordinator delegates a vendor security review to a subagent. The subagent's run shows careful work, but its final reply is just 'Review complete, no major concerns', so the coordinator has nothing specific to put in its report. What should the coordinator change?",
     "options": [
-     "State in the Task prompt what the final reply must contain, such as each finding with its evidence and source, because only that reply comes back",
+     "In the Task prompt, state what the final reply must contain, such as each finding with its evidence",
      "Load the subagent's full transcript into the coordinator's context after each run",
      "Ask the subagent to write its notes into the coordinator's conversation history as it works",
-     "Run the same subagent twice and compare the two replies"
+     "Run the same subagent twice and compare the two replies for any concerns"
     ],
     "answer": 0,
     "why": "The coordinator receives only the subagent's final message. Spelling out the required output, as part of the goal and quality bar, makes that message useful."
@@ -674,10 +674,10 @@
    {
     "q": "A pharmacy agent may call submit_refill only when the prescription is still valid. The gate in code checks a prescription_verified flag that Claude passes in the submit_refill arguments. Audits find refills on expired prescriptions where Claude set the flag to true. What is the fix?",
     "options": [
-     "Tell Claude in the system prompt never to set the flag unless it is sure",
-     "Rename the flag so its meaning is clearer to the model",
-     "Have the gate check the validity result the application recorded from the lookup tool, not a value the model supplies",
-     "Add few-shot examples of correctly set flags"
+     "Tell Claude in the system prompt never to set the flag to true unless the lookup confirmed it",
+     "Rename the flag to prescription_confirmed_valid so its meaning is clearer to the model",
+     "Gate on the validity result the app recorded from the lookup tool, not a value Claude passes",
+     "Add few-shot examples showing the flag set to false for expired prescriptions"
     ],
     "answer": 2,
     "why": "A gate enforces the rule only if it relies on facts the application recorded itself. A flag the model writes into its own call is just another instruction it can get wrong."
@@ -685,10 +685,10 @@
    {
     "q": "A customer writes: cancel my duplicate order, update my card, and tell me when my other parcel arrives. The agent cancels the order, replies, and ends. What design fixes this?",
     "options": [
-     "Ask customers to send one request per message",
-     "Raise max_tokens so the agent has room to answer more",
-     "Decompose the message into items, resolve each, and confirm all are closed before ending",
-     "Escalate any message that contains more than one request"
+     "Ask customers to send one request per message so nothing gets missed",
+     "Raise max_tokens so the agent has room to answer every part of the message",
+     "Decompose the message into items, resolve each, and confirm all are closed",
+     "Escalate any message that contains more than one request to a human agent"
     ],
     "answer": 2,
     "why": "Multi-concern requests should be split and tracked item by item so none is silently dropped."
@@ -819,7 +819,7 @@
     "q": "Your support agent reads delivery dates from a European carrier tool that returns 04/05/2026 for 4 May. Claude sometimes tells customers April 5. What is the most reliable fix?",
     "options": [
      "Add a line to the system prompt explaining the carrier's date format",
-     "Ask Claude to confirm the date with the customer each time",
+     "Ask Claude to confirm the date with the customer each time it quotes a delivery",
      "Normalize the carrier's dates to ISO format in a PostToolUse hook",
      "Remove the carrier tool and estimate dates instead"
     ],
@@ -830,9 +830,9 @@
     "q": "Policy says the agent may never close an account without a manager approval code. Which design guarantees this?",
     "options": [
      "A PreToolUse hook that denies close_account unless a valid approval code is in the input",
-     "A system prompt rule in capital letters with three examples",
-     "A PostToolUse hook that logs every closed account",
-     "A weekly audit of closed accounts"
+     "A system prompt rule in capital letters, backed by three worked examples of refusals",
+     "A PostToolUse hook that logs every closed account along with any approval code it used",
+     "A weekly audit of closed accounts by the compliance team"
     ],
     "answer": 0,
     "why": "Only pre-call interception blocks the action deterministically; logging and audits act after the damage."
@@ -957,10 +957,10 @@
    {
     "q": "A team is choosing how to decompose four new projects. Which one is the best fit for a fixed prompt chain?",
     "options": [
-     "Finding out why a fleet of delivery vans reports rising fuel use",
-     "Turning each of 500 recipes into a card: extract ingredients, scale to four servings, convert units, then format",
-     "Investigating how an attacker moved through a network after a breach",
-     "Working out why a nightly job slowed down after an unknown change"
+     "Finding out why a fleet of delivery vans reports rising fuel use since the spring",
+     "Turning 500 recipes into cards: extract ingredients, scale servings, convert units, format",
+     "Investigating how an attacker moved through a company network after a breach",
+     "Working out why a nightly billing job slowed down after an unknown change last week"
     ],
     "answer": 1,
     "why": "The recipe work runs the same known steps for every item, which is what a fixed chain suits. The others are investigations whose next steps depend on what is found."
@@ -969,9 +969,9 @@
     "q": "An engineer asks an agent to find out why checkout latency doubled after a database migration. Nobody knows where the cause is. How should the agent approach it?",
     "options": [
      "Map the request path, find high-impact areas, plan, and revise as evidence comes in",
-     "Follow a fixed checklist of ten standard performance checks in order",
+     "Follow a fixed checklist of ten standard database performance checks, in order, and report results",
      "Read every file in the repository before forming any hypothesis",
-     "Roll back the migration first and investigate later"
+     "Roll back the migration first, then investigate once latency is back to normal"
     ],
     "answer": 0,
     "why": "Open-ended investigations need a plan that adapts to findings, starting from a map of the system."
@@ -1099,9 +1099,9 @@
    {
     "q": "A developer spent two hours in a session chasing a theory that a memory leak came from the image cache. The theory was wrong, and the context is now full of dead-end logs and failed attempts. A new lead points at the websocket handler. What is the best way to continue?",
     "options": [
-     "Resume the session and tell it to ignore everything so far",
-     "Fork the session so the dead ends are kept for reference",
-     "Keep going in the same session, since it has seen the most code",
+     "Resume the session and tell it to ignore everything about the image cache so far",
+     "Fork the session so the dead ends stay available as reference for the new lead",
+     "Keep going in the same session, since it has already read the most code and logs",
      "Start a fresh session with a short summary of what was ruled out and the new lead"
     ],
     "answer": 3,
@@ -1110,9 +1110,9 @@
    {
     "q": "After a long analysis of a payments service, a team wants to compare a queue-based redesign with a cache-based one, both starting from that same analysis. What should they do?",
     "options": [
-     "Ask for both designs in the same session, one after the other",
+     "Ask for both designs in the same session, one after the other, then compare them",
      "Fork the session once per approach so each starts from the shared baseline",
-     "Start two brand-new sessions with no prior context",
+     "Start two brand-new sessions with no prior context so neither design is biased",
      "Export the transcript and paste it into a chat"
     ],
     "answer": 1,

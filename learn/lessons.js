@@ -107,10 +107,10 @@ window.LESSONS = [
    {
     "q": "A question offers four fixes for an agent that sometimes skips a required verification step. Which kind of option does the exam usually reward?",
     "options": [
-     "Rewording the system prompt so the step sounds mandatory",
+     "Rewording the system prompt so the verification step sounds mandatory",
      "A code-level gate that blocks later tools until verification has run",
-     "Switching to a larger model",
-     "Adding a reminder at the end of every user message"
+     "Switching to a larger model that follows instructions more closely",
+     "Adding a reminder about the step to the end of every single user message"
     ],
     "answer": 1,
     "why": "Prompts have a non-zero failure rate. When a step must always happen, the guide favours deterministic enforcement in code."
@@ -137,6 +137,16 @@ window.LESSONS = [
    "D7_ipDqhtwk"
   ],
   "courses": [
+   {
+    "title": "Claude 101 (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-101",
+    "prep": true
+   },
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
    {
     "title": "CCA-F certification page (Partner Academy)",
     "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
@@ -292,12 +302,25 @@ window.LESSONS = [
   ],
   "courses": [
    {
-    "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
-    "url": "https://anthropic.skilljar.com/claude-platform-101"
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
    },
    {
-    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
+   },
+   {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
+    "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
+    "url": "https://anthropic.skilljar.com/claude-platform-101"
    },
    {
     "title": "Building effective agents (Anthropic Engineering)",
@@ -439,7 +462,30 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
+   {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
    },
    {
     "title": "MCP: Build Rich-Context AI Apps with Anthropic (DeepLearning.AI, ~1.7 h)",
@@ -477,7 +523,7 @@ window.LESSONS = [
     "title": "The vocabulary",
     "bullets": [
      "CLAUDE.md: standing instructions loaded every session.",
-     ".claude/rules/: topic files, optionally tied to file paths.",
+     "`.claude/rules/`: topic files, optionally tied to file paths.",
      "Slash commands and skills: saved workflows run on demand.",
      "Plan mode: propose first, edit after approval.",
      "Headless mode (-p): run once in scripts and CI."
@@ -525,26 +571,26 @@ window.LESSONS = [
    },
    {
     "term": "User vs project level",
-    "def": "~/.claude/ is personal to you; the repo's CLAUDE.md and .claude/ are shared via git."
+    "def": "`~/.claude/` is personal to you; the repo's CLAUDE.md and `.claude/` are shared via git."
    },
    {
     "term": "@import",
     "def": "An @path line in CLAUDE.md that pulls another file's contents in."
    },
    {
-    "term": ".claude/rules/",
+    "term": "`.claude/rules/`",
     "def": "Folder of topic-specific instruction files; can be scoped with paths: globs."
    },
    {
     "term": "Glob",
-    "def": "A file pattern such as **/*.test.ts; ** matches any folder depth."
+    "def": "A file pattern such as `**/*.test.ts`; `**` matches any folder depth."
    },
    {
     "term": "Skill",
     "def": "A folder with SKILL.md that Claude loads on demand or when invoked as /name."
    },
    {
-    "term": "context: fork",
+    "term": "`context: fork`",
     "def": "Skill frontmatter that runs the skill in an isolated subagent context."
    },
    {
@@ -594,12 +640,13 @@ window.LESSONS = [
   ],
   "courses": [
    {
-    "title": "Claude Code 101 (Anthropic Academy, ~1.5 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-101"
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
-    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "title": "Claude Code 101 (Anthropic Academy, ~1.5 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-101"
    },
    {
     "title": "Claude Code: A Highly Agentic Coding Assistant (DeepLearning.AI, ~2 h)",
@@ -749,16 +796,34 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
+   {
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
+   },
+   {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
     "title": "Prompt engineering interactive tutorial (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/prompt_engineering_interactive_tutorial"
    },
    {
     "title": "Real world prompting (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
-   },
-   {
-    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
    }
   ],
   "video": {
@@ -895,12 +960,30 @@ window.LESSONS = [
   ],
   "courses": [
    {
-    "title": "Effective context engineering for AI agents (Anthropic Engineering)",
-    "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
    },
    {
-    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
+   {
+    "title": "Claude on Google Cloud (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "prep": true,
+    "note": "same ground as the API course, on Vertex AI"
+   },
+   {
+    "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "prep": true,
+    "note": "same ground as the API course, on Bedrock"
+   },
+   {
+    "title": "Effective context engineering for AI agents (Anthropic Engineering)",
+    "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
    }
   ],
   "video": {
@@ -1017,20 +1100,20 @@ window.LESSONS = [
     "q": "A research agent's loop exits whenever stop_reason is anything other than tool_use, and returns the last text as the final report. Some reports now end mid-sentence. What should change?",
     "options": [
      "Add a sentence to the prompt asking Claude to always finish its sentences",
-     "Treat max_tokens as a truncated reply and handle it, instead of returning it as finished",
-     "Exit only after the reply contains the phrase FINAL REPORT",
+     "Handle max_tokens as a truncated reply instead of a finished report",
+     "Exit only after the reply contains the phrase FINAL REPORT, whatever the stop_reason",
      "Lower the iteration cap so the agent writes shorter reports"
     ],
     "answer": 1,
-    "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every non-tool_use reason as completion."
+    "why": "max_tokens means the output was cut off, not that the task ended. The loop must branch on it explicitly rather than treat every `non-tool_use` reason as completion."
    },
    {
     "q": "A tax-filing assistant's loop, on end_turn, checks whether the reply 'looks finished'. When Claude ends a turn by asking the user which tax year they mean, the code automatically sends 'Please continue', and Claude then guesses a year. What should the loop do instead?",
     "options": [
-     "Send 'Please continue' twice so Claude has more room to work it out",
-     "Treat end_turn as the end of Claude's turn, show its question to the user, and add the user's answer to the history",
-     "Force a tool call on the next request so Claude must look the year up",
-     "Raise max_tokens so the reply is less likely to stop early"
+     "Send 'Please continue' twice so Claude has more room to reason about the year",
+     "Treat end_turn as a finished turn: show the question and add the user's answer to the history",
+     "Force a tool call on the next request so Claude must look the tax year up in the records",
+     "Raise max_tokens so the reply is less likely to stop before the work is done"
     ],
     "answer": 1,
     "why": "end_turn means Claude has finished its turn, and here that turn is a question for the user. Judging completion from the wording and auto-continuing pushes Claude to guess."
@@ -1075,6 +1158,11 @@ window.LESSONS = [
    "D7_ipDqhtwk"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Tool use course (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/tool_use"
@@ -1196,10 +1284,10 @@ window.LESSONS = [
    {
     "q": "A research coordinator always spawns exactly one research subagent. Quick lookups are fine, but a request to compare twelve cloud providers on price, compliance and regional coverage takes an hour, and the lone subagent runs out of context partway through. What should change?",
     "options": [
-     "Give the single subagent a longer time limit",
-     "Tell users to split broad questions into twelve separate requests",
-     "Have the coordinator do the comparison itself without subagents",
-     "Have the coordinator scale the number of subagents to the request, splitting a broad comparison across several that run in parallel"
+     "Give the single subagent a longer time limit so it can finish the whole comparison",
+     "Tell users to split broad questions into twelve separate requests, one per provider",
+     "Have the coordinator do the comparison itself, without subagents, to keep all the data in one place",
+     "Scale the number of subagents to the request, splitting broad comparisons across parallel subagents"
     ],
     "answer": 3,
     "why": "Effort should match the query. A broad comparison benefits from several focused subagents, each with its own context, while a simple lookup still needs only one."
@@ -1207,10 +1295,10 @@ window.LESSONS = [
    {
     "q": "Two search subagents in a market research system keep returning almost the same articles, while some subtopics get no coverage. What should you fix first?",
     "options": [
-     "Add a deduplication step after synthesis",
-     "Let the two subagents message each other to split the work",
+     "Add a deduplication step after synthesis to remove the repeated articles from the report",
+     "Let the two subagents message each other directly to split the work between them",
      "Give each subagent a distinct, bounded scope in the coordinator's delegation",
-     "Switch both subagents to a larger model"
+     "Switch both subagents to a larger model with better search judgment"
     ],
     "answer": 2,
     "why": "Overlap and gaps come from vague, overlapping briefs. The coordinator should partition scope clearly; peer-to-peer messaging bypasses the hub."
@@ -1382,8 +1470,8 @@ window.LESSONS = [
    {
     "q": "A synthesis subagent writes a fluent report, but many claims cite the wrong article. The coordinator briefed it with a few paragraphs summarizing what the search agents found. What change helps most?",
     "options": [
-     "Tell the synthesizer to double-check its citations before answering",
-     "Give the synthesizer access to the coordinator's full conversation history",
+     "Tell the synthesizer to double-check each citation against its summary before answering",
+     "Give the synthesizer the coordinator's full conversation history, including all search turns",
      "Run the synthesizer twice and keep the version with more citations",
      "Pass findings as structured records, each claim with its own source title, URL and date"
     ],
@@ -1393,10 +1481,10 @@ window.LESSONS = [
    {
     "q": "A coordinator delegates a vendor security review to a subagent. The subagent's run shows careful work, but its final reply is just 'Review complete, no major concerns', so the coordinator has nothing specific to put in its report. What should the coordinator change?",
     "options": [
-     "State in the Task prompt what the final reply must contain, such as each finding with its evidence and source, because only that reply comes back",
+     "In the Task prompt, state what the final reply must contain, such as each finding with its evidence",
      "Load the subagent's full transcript into the coordinator's context after each run",
      "Ask the subagent to write its notes into the coordinator's conversation history as it works",
-     "Run the same subagent twice and compare the two replies"
+     "Run the same subagent twice and compare the two replies for any concerns"
     ],
     "answer": 0,
     "why": "The coordinator receives only the subagent's final message. Spelling out the required output, as part of the goal and quality bar, makes that message useful."
@@ -1562,10 +1650,10 @@ window.LESSONS = [
    {
     "q": "A pharmacy agent may call submit_refill only when the prescription is still valid. The gate in code checks a prescription_verified flag that Claude passes in the submit_refill arguments. Audits find refills on expired prescriptions where Claude set the flag to true. What is the fix?",
     "options": [
-     "Tell Claude in the system prompt never to set the flag unless it is sure",
-     "Rename the flag so its meaning is clearer to the model",
-     "Have the gate check the validity result the application recorded from the lookup tool, not a value the model supplies",
-     "Add few-shot examples of correctly set flags"
+     "Tell Claude in the system prompt never to set the flag to true unless the lookup confirmed it",
+     "Rename the flag to prescription_confirmed_valid so its meaning is clearer to the model",
+     "Gate on the validity result the app recorded from the lookup tool, not a value Claude passes",
+     "Add few-shot examples showing the flag set to false for expired prescriptions"
     ],
     "answer": 2,
     "why": "A gate enforces the rule only if it relies on facts the application recorded itself. A flag the model writes into its own call is just another instruction it can get wrong."
@@ -1573,10 +1661,10 @@ window.LESSONS = [
    {
     "q": "A customer writes: cancel my duplicate order, update my card, and tell me when my other parcel arrives. The agent cancels the order, replies, and ends. What design fixes this?",
     "options": [
-     "Ask customers to send one request per message",
-     "Raise max_tokens so the agent has room to answer more",
-     "Decompose the message into items, resolve each, and confirm all are closed before ending",
-     "Escalate any message that contains more than one request"
+     "Ask customers to send one request per message so nothing gets missed",
+     "Raise max_tokens so the agent has room to answer every part of the message",
+     "Decompose the message into items, resolve each, and confirm all are closed",
+     "Escalate any message that contains more than one request to a human agent"
     ],
     "answer": 2,
     "why": "Multi-concern requests should be split and tracked item by item so none is silently dropped."
@@ -1737,7 +1825,7 @@ window.LESSONS = [
     "q": "Your support agent reads delivery dates from a European carrier tool that returns 04/05/2026 for 4 May. Claude sometimes tells customers April 5. What is the most reliable fix?",
     "options": [
      "Add a line to the system prompt explaining the carrier's date format",
-     "Ask Claude to confirm the date with the customer each time",
+     "Ask Claude to confirm the date with the customer each time it quotes a delivery",
      "Normalize the carrier's dates to ISO format in a PostToolUse hook",
      "Remove the carrier tool and estimate dates instead"
     ],
@@ -1748,9 +1836,9 @@ window.LESSONS = [
     "q": "Policy says the agent may never close an account without a manager approval code. Which design guarantees this?",
     "options": [
      "A PreToolUse hook that denies close_account unless a valid approval code is in the input",
-     "A system prompt rule in capital letters with three examples",
-     "A PostToolUse hook that logs every closed account",
-     "A weekly audit of closed accounts"
+     "A system prompt rule in capital letters, backed by three worked examples of refusals",
+     "A PostToolUse hook that logs every closed account along with any approval code it used",
+     "A weekly audit of closed accounts by the compliance team"
     ],
     "answer": 0,
     "why": "Only pre-call interception blocks the action deterministically; logging and audits act after the damage."
@@ -1905,10 +1993,10 @@ window.LESSONS = [
    {
     "q": "A team is choosing how to decompose four new projects. Which one is the best fit for a fixed prompt chain?",
     "options": [
-     "Finding out why a fleet of delivery vans reports rising fuel use",
-     "Turning each of 500 recipes into a card: extract ingredients, scale to four servings, convert units, then format",
-     "Investigating how an attacker moved through a network after a breach",
-     "Working out why a nightly job slowed down after an unknown change"
+     "Finding out why a fleet of delivery vans reports rising fuel use since the spring",
+     "Turning 500 recipes into cards: extract ingredients, scale servings, convert units, format",
+     "Investigating how an attacker moved through a company network after a breach",
+     "Working out why a nightly billing job slowed down after an unknown change last week"
     ],
     "answer": 1,
     "why": "The recipe work runs the same known steps for every item, which is what a fixed chain suits. The others are investigations whose next steps depend on what is found."
@@ -1917,9 +2005,9 @@ window.LESSONS = [
     "q": "An engineer asks an agent to find out why checkout latency doubled after a database migration. Nobody knows where the cause is. How should the agent approach it?",
     "options": [
      "Map the request path, find high-impact areas, plan, and revise as evidence comes in",
-     "Follow a fixed checklist of ten standard performance checks in order",
+     "Follow a fixed checklist of ten standard database performance checks, in order, and report results",
      "Read every file in the repository before forming any hypothesis",
-     "Roll back the migration first and investigate later"
+     "Roll back the migration first, then investigate once latency is back to normal"
     ],
     "answer": 0,
     "why": "Open-ended investigations need a plan that adapts to findings, starting from a map of the system."
@@ -2081,9 +2169,9 @@ window.LESSONS = [
    {
     "q": "A developer spent two hours in a session chasing a theory that a memory leak came from the image cache. The theory was wrong, and the context is now full of dead-end logs and failed attempts. A new lead points at the websocket handler. What is the best way to continue?",
     "options": [
-     "Resume the session and tell it to ignore everything so far",
-     "Fork the session so the dead ends are kept for reference",
-     "Keep going in the same session, since it has seen the most code",
+     "Resume the session and tell it to ignore everything about the image cache so far",
+     "Fork the session so the dead ends stay available as reference for the new lead",
+     "Keep going in the same session, since it has already read the most code and logs",
      "Start a fresh session with a short summary of what was ruled out and the new lead"
     ],
     "answer": 3,
@@ -2092,9 +2180,9 @@ window.LESSONS = [
    {
     "q": "After a long analysis of a payments service, a team wants to compare a queue-based redesign with a cache-based one, both starting from that same analysis. What should they do?",
     "options": [
-     "Ask for both designs in the same session, one after the other",
+     "Ask for both designs in the same session, one after the other, then compare them",
      "Fork the session once per approach so each starts from the shared baseline",
-     "Start two brand-new sessions with no prior context",
+     "Start two brand-new sessions with no prior context so neither design is biased",
      "Export the transcript and paste it into a chat"
     ],
     "answer": 1,
@@ -2267,8 +2355,8 @@ window.LESSONS = [
    {
     "q": "A travel agency's booking agent has two MCP tools: find_trips ('Finds trips') and search_itineraries ('Searches itineraries'). Logs show Claude picks between them almost at random, and half the calls return the wrong data. What should the team do first?",
     "options": [
-     "Add a lightweight classifier that routes each request to one of the two tools",
-     "Rewrite both descriptions to state what each returns, its inputs, and when to use the other tool",
+     "Add a lightweight classifier in front of the agent that routes each request to one of the two tools",
+     "Rewrite both descriptions to say what each returns, its inputs, and when to use the other",
      "Add a system prompt line telling Claude to prefer search_itineraries",
      "Lower the temperature so Claude picks more consistently"
     ],
@@ -2278,8 +2366,8 @@ window.LESSONS = [
    {
     "q": "A research system's analysis agent has a tool named process with the description 'Processes data'. It is used for summarising PDFs, extracting tables and translating text, and calls often use the wrong mode. Which change best fits the guide?",
     "options": [
-     "Add a detailed enum for the mode parameter and keep one tool",
-     "Add few-shot examples of each mode to the system prompt",
+     "Keep a single process tool and add a detailed enum for its mode parameter",
+     "Add few-shot examples of each mode to the system prompt so Claude learns which to pick",
      "Split it into summarize_pdf, extract_tables and translate_text, each with its own description",
      "Raise max_tokens so Claude has room to reason about the mode"
     ],
@@ -2312,6 +2400,16 @@ window.LESSONS = [
   ],
   "courses": [
    {
+    "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
+   {
     "title": "Writing effective tools for agents (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/writing-tools-for-agents"
    },
@@ -2343,7 +2441,7 @@ window.LESSONS = [
     "title": "A failed call is still information",
     "bullets": [
      "Tool errors go back to Claude as tool results, not crashes.",
-     "isError: true tells the agent the call failed.",
+     "`isError: true` tells the agent the call failed.",
      "The message decides what Claude does next.",
      "Like a good error note: what broke, and what to try."
     ],
@@ -2445,10 +2543,10 @@ window.LESSONS = [
    {
     "q": "A utility company's billing agent calls get_usage_history. The meter database is reachable, but the account has no readings yet because it was opened today. What should the tool return?",
     "options": [
-     "isError: true with errorCategory 'transient' so the agent retries later",
-     "isError: true with the message 'Operation failed'",
-     "A protocol-level JSON-RPC error",
-     "A successful result with an empty readings list and a note that the account is new"
+     "`isError: true` with errorCategory 'transient' so the agent retries the call later",
+     "`isError: true` with the message 'No usage data found for this account'",
+     "A protocol-level JSON-RPC error, since the tool returned no data",
+     "A success result with an empty readings list and a note that the account is new"
     ],
     "answer": 3,
     "why": "The lookup ran and correctly found nothing. That is a valid empty result, not an error, so the agent should not retry or treat it as a failure."
@@ -2456,9 +2554,9 @@ window.LESSONS = [
    {
     "q": "An HR assistant's update_salary tool is called by a user who lacks payroll rights. Which tool response gives the agent the best chance to react correctly?",
     "options": [
-     "isError: true, errorCategory 'permission', isRetryable false, and a message saying payroll approval is required",
-     "isError: true, errorCategory 'transient', isRetryable true, so the agent tries again",
-     "A success result with no changes, so the conversation is not interrupted",
+     "`isError: true`, errorCategory 'permission', isRetryable false, and a message that payroll approval is required",
+     "`isError: true`, errorCategory 'transient', isRetryable true, so the agent tries the update again",
+     "A success result that reports no changes were made, so the conversation is not interrupted",
      "An uncaught exception so the operator sees a stack trace"
     ],
     "answer": 0,
@@ -2492,6 +2590,11 @@ window.LESSONS = [
    "HNzH5Us1Rvg"
   ],
   "courses": [
+   {
+    "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
    {
     "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
     "url": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics"
@@ -2627,9 +2730,9 @@ window.LESSONS = [
    {
     "q": "After learning that agents with many tools choose badly, a team split its insurance assistant into eight agents with one or two tools each. Now most requests bounce between agents through the coordinator, adding delay and losing details at each handoff. What is the better design?",
     "options": [
-     "Regroup into a few role-based agents, each holding the four or five tools its role uses together",
-     "Merge everything back into one agent with all sixteen tools",
-     "Add a ninth agent that relays messages between the other eight",
+     "Regroup into a few role-based agents, each with the four or five tools its role uses",
+     "Merge everything back into one agent with all sixteen tools and a longer system prompt",
+     "Add a ninth agent that relays messages between the other eight to cut coordinator load",
      "Keep the split and ask each agent to write longer handoff notes"
     ],
     "answer": 0,
@@ -2638,10 +2741,10 @@ window.LESSONS = [
    {
     "q": "A library's catalogue assistant has 19 tools covering search, loans, fines, events and staff rota. Wrong-tool calls rise each time a tool is added. What is the most effective change?",
     "options": [
-     "Split the work across role-focused agents that each hold only the few tools they need",
-     "Add a paragraph to the system prompt listing which tool to use when",
+     "Split the work across role-focused agents, each holding only the tools it needs",
+     "Add a paragraph to the system prompt listing which of the 19 tools to use for each task",
      "Switch tool_choice to any so Claude always calls a tool",
-     "Merge all 19 tools into one tool with an action parameter"
+     "Merge all 19 tools into one catalogue tool with an action parameter for each operation"
     ],
     "answer": 0,
     "why": "Selection degrades as tool count grows. Role-scoped agents with small tool sets reduce choice and misuse at the root."
@@ -2717,8 +2820,8 @@ window.LESSONS = [
     "title": "Scopes: who gets the server",
     "bullets": [
      "Project scope: .mcp.json in the repo root, committed, shared with the team.",
-     "User scope: ~/.claude.json, personal, available in all your projects.",
-     "Local scope: also ~/.claude.json, private, this project only.",
+     "User scope: `~/.claude.json`, personal, available in all your projects.",
+     "Local scope: also `~/.claude.json`, private, this project only.",
      "Use ${VAR} expansion so secrets stay in the environment, not git.",
      "Docs today: claude mcp add defaults to local; pass --scope project to share."
     ],
@@ -2763,7 +2866,7 @@ window.LESSONS = [
       "why": "Expansion keeps secrets out of version control."
      },
      {
-      "wrong": "Put the team's shared server in each person's ~/.claude.json",
+      "wrong": "Put the team's shared server in each person's `~/.claude.json`",
       "right": "Put it in the project .mcp.json",
       "why": "User scope is personal and not shared on clone."
      },
@@ -2784,7 +2887,7 @@ window.LESSONS = [
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     "Project .mcp.json is shared; ~/.claude.json is personal.",
+     "Project .mcp.json is shared; `~/.claude.json` is personal.",
      "${VAR} expansion keeps secrets out of git.",
      "Resources expose catalogs so agents explore less.",
      "Rich descriptions; community servers first, custom when needed."
@@ -2808,9 +2911,9 @@ window.LESSONS = [
    {
     "q": "A data team adds an internal warehouse MCP server to their repo for everyone. A reviewer spots the connection password written directly in the committed config. What is the best fix?",
     "options": [
-     "Move the whole server definition to each engineer's user scope",
-     "Keep it in .mcp.json but reference the password as ${WAREHOUSE_PASSWORD}, set per environment",
-     "Encode the password in base64 before committing",
+     "Move the whole server definition into each engineer's user scope so it is never committed",
+     "Keep .mcp.json but reference the password as ${WAREHOUSE_PASSWORD}, set per environment",
+     "Encode the password in base64 before committing so it is not readable in the diff",
      "Add .mcp.json to .gitignore so the file is never shared"
     ],
     "answer": 1,
@@ -2819,10 +2922,10 @@ window.LESSONS = [
    {
     "q": "A team's committed .mcp.json defines a ticketing server, and it works for everyone except one engineer. When she first opened the project she declined Claude Code's prompt to use the project's servers, and the server's tools have been missing for her ever since. What should she do?",
     "options": [
-     "Copy the server's entry into her user scope in ~/.claude.json",
+     "Copy the server's entry into her user scope in `~/.claude.json` so it loads in every project",
      "Delete .mcp.json locally and ask a teammate to commit it again",
      "Run claude mcp reset-project-choices and approve the server when Claude Code asks again",
-     "Add the server's token directly into .mcp.json"
+     "Add the server's token directly into .mcp.json so the server can authenticate"
     ],
     "answer": 2,
     "why": "Claude Code asks for approval before using project-scoped servers, and a refusal is remembered. Resetting project choices brings the prompt back without changing the shared config."
@@ -2858,7 +2961,13 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
+   },
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
@@ -2903,7 +3012,7 @@ window.LESSONS = [
     "kind": "how",
     "title": "Grep vs Glob, and how Edit anchors",
     "bullets": [
-     "Glob matches paths: **/*.test.ts finds test files.",
+     "Glob matches paths: `**/*.test.ts` finds test files.",
      "Grep matches contents: a function name inside those files.",
      "Edit replaces old_string with new_string, exactly.",
      "old_string must be unique; add surrounding lines to make it so.",
@@ -2933,7 +3042,7 @@ window.LESSONS = [
     "title": "Practice: where is the late fee computed?",
     "bullets": [
      "Developer productivity scenario: legacy billing service, no docs.",
-     "Glob **/billing/** to see what files exist.",
+     "Glob `**/billing/**` to see what files exist.",
      "Grep 'lateFee' to find the definition and callers.",
      "Read the definition; Grep the wrapper's exported name too.",
      "Edit with a unique anchor; run tests with Bash."
@@ -2999,7 +3108,7 @@ window.LESSONS = [
      "Grep for the word 'yaml' across the repository",
      "Read each file in the deploy folder and check its extension",
      "Bash running the test suite",
-     "Glob with a pattern like deploy/**/*.yaml"
+     "Glob with a pattern like `deploy/**/*.yaml`"
     ],
     "answer": 3,
     "why": "The question is about file paths, not contents, so Glob's pattern matching answers it directly."
@@ -3008,8 +3117,8 @@ window.LESSONS = [
     "q": "Claude Code needs to change a single 'retries = 3' line in a config module, but that exact text appears in four places, so Edit keeps failing. What should happen next?",
     "options": [
      "Include enough surrounding lines in old_string to make the match unique",
-     "Retry Edit with the same old_string until it succeeds",
-     "Use Glob to locate the right occurrence",
+     "Retry Edit with the same old_string, since the failure may be transient",
+     "Use Glob to find which line holds the right occurrence, then retry Edit",
      "Delete the file with Bash and recreate it from memory"
     ],
     "answer": 0,
@@ -3041,7 +3150,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    }
   ],
   "video": {
@@ -3077,8 +3187,8 @@ window.LESSONS = [
     "kind": "how",
     "title": "Where each file lives",
     "bullets": [
-     "User: ~/.claude/CLAUDE.md. Only you, in every project.",
-     "Project: ./CLAUDE.md or ./.claude/CLAUDE.md. Committed, shared with the team.",
+     "User: `~/.claude/CLAUDE.md`. Only you, in every project.",
+     "Project: `./CLAUDE.md` or `./.claude/CLAUDE.md`. Committed, shared with the team.",
      "Directory: a CLAUDE.md inside a subfolder, loaded when Claude works there.",
      "CLAUDE.local.md: your private notes for one project, kept out of git."
     ],
@@ -3092,8 +3202,8 @@ window.LESSONS = [
     "kind": "how",
     "title": "Keep it modular",
     "bullets": [
-     "@path/to/file imports another file into CLAUDE.md.",
-     ".claude/rules/ holds one topic per file, like testing.md.",
+     "`@path/to/file` imports another file into CLAUDE.md.",
+     "`.claude/rules/` holds one topic per file, like testing.md.",
      "Keep each file short; long files bury the rules that matter.",
      "Run /memory to see and open your memory files.",
      "Docs today: /context shows which CLAUDE.md and rules files loaded."
@@ -3109,7 +3219,7 @@ window.LESSONS = [
     "title": "Scenario 2: the teammate who gets no rules",
     "bullets": [
      "Symptom: your Claude follows the test style; a new hire's does not.",
-     "Ask where the rule lives. ~/.claude/CLAUDE.md is yours alone.",
+     "Ask where the rule lives. `~/.claude/CLAUDE.md` is yours alone.",
      "Fix: move it into the project CLAUDE.md and commit it.",
      "Verify in their session with /memory, not by guessing."
     ],
@@ -3143,7 +3253,7 @@ window.LESSONS = [
     "bullets": [
      "User level is personal; project level is shared through git.",
      "Subfolder CLAUDE.md files load when Claude works in that folder.",
-     "Imports and .claude/rules/ keep instructions modular.",
+     "Imports and `.claude/rules/` keep instructions modular.",
      "Missing rules for one person? Check the hierarchy first."
     ],
     "note": "Three layers, all combined: user, project and directory. Personal preferences go in your home folder, team standards go in the repository, and folder specific notes go next to the code they describe. When one person's Claude is missing a rule, check which layer the rule was written into before changing anything else."
@@ -3152,12 +3262,12 @@ window.LESSONS = [
   "docsToday": "@imports organise instructions but load together with the parent file, so they don't save context. After compaction, nested CLAUDE.md files reload only when a matching file is touched again. /memory now lists and opens memory files; to see which CLAUDE.md and rules files actually loaded, run /context. Exam items keep the guide's /memory wording.",
   "check": [
    {
-    "q": "A developer added 'always use the shared logger, never console.log' to ~/.claude/CLAUDE.md. Two weeks later, teammates' Claude sessions still add console.log calls. What should the team do?",
+    "q": "A developer added 'always use the shared logger, never console.log' to `~/.claude/CLAUDE.md`. Two weeks later, teammates' Claude sessions still add console.log calls. What should the team do?",
     "options": [
      "Add IMPORTANT in capitals to the line so Claude weighs it more heavily",
      "Ask every teammate to run /init so Claude regenerates their instructions",
      "Move the rule into the project's committed CLAUDE.md so every clone gets it",
-     "Put the rule in CLAUDE.local.md at the repository root"
+     "Put the rule in CLAUDE.local.md at the repository root so it loads for everyone"
     ],
     "answer": 2,
     "why": "The user-level file is never shared, so teammates never received the rule. The committed project CLAUDE.md reaches everyone; CLAUDE.local.md is personal and gitignored."
@@ -3165,9 +3275,9 @@ window.LESSONS = [
    {
     "q": "A monorepo's root CLAUDE.md has grown to 900 lines covering the web app, the payments service and the data pipeline. Claude now often ignores payments rules. What is the best restructuring?",
     "options": [
-     "Move each area's conventions into that folder's own CLAUDE.md or a topic file, keeping the root short",
-     "Repeat the most important payments rules three times in the root file",
-     "Move all the conventions into ~/.claude/CLAUDE.md so they load earlier",
+     "Move each area's rules into its folder's CLAUDE.md or a topic file, keeping the root short",
+     "Repeat the most important payments rules three times in the root file, in capitals",
+     "Move all the conventions into `~/.claude/CLAUDE.md` so they load earlier",
      "Turn the whole file into one skill that developers invoke at the start of each session"
     ],
     "answer": 0,
@@ -3193,9 +3303,9 @@ window.LESSONS = [
    "minutes": 10,
    "steps": [
     "In a scratch git repo, create CLAUDE.md with: 'Always end replies with the word TEAM.'",
-    "Add a line to ~/.claude/CLAUDE.md: 'Also end replies with the word ME.' (remove it afterwards).",
-    "Create sub/CLAUDE.md with 'Mention the word FOLDER.' and a file sub/notes.txt.",
-    "Start claude at the repo root, ask a question, run /context (or /memory), then ask Claude to read sub/notes.txt and ask again."
+    "Add a line to `~/.claude/CLAUDE.md`: 'Also end replies with the word ME.' (remove it afterwards).",
+    "Create `sub/CLAUDE.md` with 'Mention the word FOLDER.' and a file `sub/notes.txt`.",
+    "Start claude at the repo root, ask a question, run /context (or /memory), then ask Claude to read `sub/notes.txt` and ask again."
    ],
    "expect": "Both TEAM and ME apply at launch, and FOLDER appears only after Claude touches the subfolder. Cloning the repo elsewhere would carry TEAM and FOLDER but never ME, which is the exam's 'new teammate' diagnosis."
   },
@@ -3214,7 +3324,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
@@ -3255,8 +3366,8 @@ window.LESSONS = [
     "kind": "how",
     "title": "Where they live and who gets them",
     "bullets": [
-     ".claude/commands/ and .claude/skills/ live in the repo and are shared.",
-     "~/.claude/commands/ and ~/.claude/skills/ are personal, across your projects.",
+     "`.claude/commands/` and `.claude/skills/` live in the repo and are shared.",
+     "`~/.claude/commands/` and `~/.claude/skills/` are personal, across your projects.",
      "$ARGUMENTS inserts whatever the user typed after the command.",
      "Docs today: commands and skills merged; both files create /name."
     ],
@@ -3270,7 +3381,7 @@ window.LESSONS = [
     "kind": "how",
     "title": "SKILL.md frontmatter that matters",
     "bullets": [
-     "context: fork runs the skill in its own subagent context.",
+     "`context: fork` runs the skill in its own subagent context.",
      "Only the result returns, so noisy output stays out of your session.",
      "allowed-tools lists the tools the skill may use.",
      "argument-hint tells users what to type after the name.",
@@ -3286,9 +3397,9 @@ window.LESSONS = [
     "kind": "practice",
     "title": "Scenario 2: a team review checklist",
     "bullets": [
-     "Everyone needs /review-pr: put it in .claude/skills/ and commit.",
-     "Your private /scratch-notes command stays in ~/.claude/.",
-     "A codebase scan floods the chat: add context: fork.",
+     "Everyone needs /review-pr: put it in `.claude/skills/` and commit.",
+     "Your private /scratch-notes command stays in `~/.claude/`.",
+     "A codebase scan floods the chat: add `context: fork`.",
      "Always-on style rules stay in CLAUDE.md, not a skill."
     ],
     "note": "Picture the code generation team. They want one shared review workflow, so it goes in the repository and is committed. Someone's personal helper stays in their home folder. A skill that scans hundreds of files gets context fork so only its summary comes back. And the style rules everyone must follow all the time stay in CLAUDE dot md."
@@ -3298,13 +3409,13 @@ window.LESSONS = [
     "title": "Exam traps",
     "pairs": [
      {
-      "wrong": "Save the team's shared command in ~/.claude/commands/.",
-      "right": "Commit it under .claude/commands/ or .claude/skills/ in the repo.",
+      "wrong": "Save the team's shared command in `~/.claude/commands/`.",
+      "right": "Commit it under `.claude/commands/` or `.claude/skills/` in the repo.",
       "why": "Only committed files reach teammates."
      },
      {
       "wrong": "Run a verbose exploration skill inline in the main session.",
-      "right": "Set context: fork on the skill.",
+      "right": "Set `context: fork` on the skill.",
       "why": "Forked output stays isolated; only the summary returns."
      },
      {
@@ -3319,8 +3430,8 @@ window.LESSONS = [
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     "Repo .claude/ is shared; ~/.claude/ is personal.",
-     "context: fork isolates noisy skills in a subagent.",
+     "Repo `.claude/` is shared; `~/.claude/` is personal.",
+     "`context: fork` isolates noisy skills in a subagent.",
      "allowed-tools and argument-hint shape how a skill runs.",
      "Skills for on-demand workflows; CLAUDE.md for always-on standards."
     ],
@@ -3332,24 +3443,24 @@ window.LESSONS = [
    {
     "q": "A platform team writes a /release-notes workflow that every engineer should be able to run from any clone of the repository. Where should it go?",
     "options": [
-     "~/.claude/commands/release-notes.md on the team lead's machine",
+     "`~/.claude/commands/release-notes.md` on the team lead's machine",
      "A section at the bottom of the root CLAUDE.md",
-     "CLAUDE.local.md, so it stays private until it is finished",
-     ".claude/skills/release-notes/SKILL.md, committed to the repository"
+     "CLAUDE.local.md at the repository root, so it stays private until it is finished",
+     "`.claude/skills/release-notes/SKILL.md`, committed to the repository"
     ],
     "answer": 3,
-    "why": "Files under the repository's .claude/ directory are shared through version control. The home-directory and local files are personal, and CLAUDE.md is for always-on instructions, not invocable workflows."
+    "why": "Files under the repository's `.claude/` directory are shared through version control. The home-directory and local files are personal, and CLAUDE.md is for always-on instructions, not invocable workflows."
    },
    {
     "q": "A team's legacy-billing-context skill explains how an old billing system works so Claude can draw on it when relevant. Engineers keep spotting it in the / menu and running it, expecting an action, and get only a wall of background text. What change fits best?",
     "options": [
-     "Move its content into the root CLAUDE.md",
-     "Set disable-model-invocation: true so only people can run it",
-     "Set context: fork so it runs in a subagent",
-     "Set user-invocable: false so Claude can still load it but it no longer appears in the / menu"
+     "Move its content into the root CLAUDE.md so it is always loaded instead",
+     "Set `disable-model-invocation: true` so only people can run it from the menu",
+     "Set `context: fork` so it runs in a subagent and keeps the background text out of chat",
+     "Set `user-invocable: false` so it leaves the / menu but Claude can still load it"
     ],
     "answer": 3,
-    "why": "user-invocable: false is meant for background knowledge that is not a useful command. disable-model-invocation does the opposite and would stop Claude from using the skill."
+    "why": "`user-invocable: false` is meant for background knowledge that is not a useful command. disable-model-invocation does the opposite and would stop Claude from using the skill."
    }
   ],
   "sources": [
@@ -3366,12 +3477,12 @@ window.LESSONS = [
    "title": "Build a forked skill",
    "minutes": 10,
    "steps": [
-    "Create .claude/skills/todo-scan/SKILL.md with name, description, argument-hint: [dir] and context: fork.",
+    "Create `.claude/skills/todo-scan/SKILL.md` with name, description, `argument-hint: [dir]` and `context: fork`.",
     "In the body, ask Claude to list every TODO in $ARGUMENTS with file and line, as a short table.",
     "Start claude and run /todo-scan src (or any folder with code).",
-    "Remove context: fork, run it again, and compare how much lands in your main conversation."
+    "Remove `context: fork`, run it again, and compare how much lands in your main conversation."
    ],
-   "expect": "With context: fork only the summary table comes back; without it, the search work fills the main session. That is the exam's reason for forking noisy skills, and committing the folder is how teammates get /todo-scan."
+   "expect": "With `context: fork` only the summary table comes back; without it, the search work fills the main session. That is the exam's reason for forking noisy skills, and committing the folder is how teammates get /todo-scan."
   },
   "id": "ts-3.2",
   "kind": "ts",
@@ -3387,6 +3498,11 @@ window.LESSONS = [
    "CEvIs9y1uog"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Introduction to agent skills (Anthropic Academy, ~1 h)",
     "url": "https://anthropic.skilljar.com/introduction-to-agent-skills"
@@ -3433,10 +3549,10 @@ window.LESSONS = [
     "kind": "how",
     "title": "Writing a path-scoped rule",
     "bullets": [
-     "Rule files live in .claude/rules/, one topic per file.",
+     "Rule files live in `.claude/rules/`, one topic per file.",
      "Add a paths: list of glob patterns in YAML frontmatter.",
      "No paths field means the rule loads every session.",
-     "**/ matches any depth; a single * stays in one folder."
+     "`**/` matches any depth; a single `*` stays in one folder."
     ],
     "code": {
      "lang": "md",
@@ -3461,7 +3577,7 @@ window.LESSONS = [
     "bullets": [
      "Tests live next to code in every package.",
      "Forty per-folder CLAUDE.md copies would drift apart over time.",
-     "One .claude/rules/testing.md with **/*.test.* covers them all.",
+     "One `.claude/rules/testing.md` with `**/*.test.*` covers them all.",
      "Editing a non-test file never loads it."
     ],
     "note": "In the developer productivity scenario, an engineer asks Claude to add a feature in one package and a test beside it. When Claude opens the test file, the testing rule loads automatically. When another engineer edits a config file, the rule stays out of the way. The convention has one home and the context stays lean."
@@ -3472,7 +3588,7 @@ window.LESSONS = [
     "pairs": [
      {
       "wrong": "Copy the test conventions into every folder's CLAUDE.md.",
-      "right": "Write one path-scoped rule with a glob like **/*.test.tsx.",
+      "right": "Write one path-scoped rule with a glob like `**/*.test.tsx`.",
       "why": "One source of truth that loads only where needed."
      },
      {
@@ -3481,8 +3597,8 @@ window.LESSONS = [
       "why": "The root file loads every session, even for unrelated work."
      },
      {
-      "wrong": "Use the pattern tests/*.ts to cover all test files.",
-      "right": "Use **/ so the pattern matches at any depth.",
+      "wrong": "Use the pattern `tests/*.ts` to cover all test files.",
+      "right": "Use `**/` so the pattern matches at any depth.",
       "why": "A single star does not cross folder boundaries."
      }
     ],
@@ -3492,9 +3608,9 @@ window.LESSONS = [
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     ".claude/rules/ files can carry paths: globs in frontmatter.",
+     "`.claude/rules/` files can carry paths: globs in frontmatter.",
      "Path-scoped rules load only when matching files are touched.",
-     "Use globs like **/*.test.tsx for cross-cutting conventions.",
+     "Use globs like `**/*.test.tsx` for cross-cutting conventions.",
      "Prefer path rules over many per-directory CLAUDE.md copies."
     ],
     "note": "Path specific rules are conditional instructions. Put them in the dot claude rules folder, give them a paths list of globs, and they load only when Claude works on a matching file. Reach for them when a convention follows a file type across the codebase, rather than living in one folder."
@@ -3503,9 +3619,9 @@ window.LESSONS = [
   "docsToday": "Path-scoped rules drop out at compaction and reload when a matching file is touched again.",
   "check": [
    {
-    "q": "A rule holding API schema conventions uses paths: [\"**/*.json\"]. It now loads whenever Claude touches package.json, tsconfig.json or test fixtures, although the schemas live only under api/schemas/. What should the team change?",
+    "q": "A rule holding API schema conventions uses `paths: [\"**/*.json\"]`. It now loads whenever Claude touches package.json, tsconfig.json or test fixtures, although the schemas live only under `api/schemas/`. What should the team change?",
     "options": [
-     "Narrow the pattern to api/schemas/**/*.json so the rule loads only for schema files",
+     "Narrow the pattern to `api/schemas/**/*.json`",
      "Remove the paths field so the rule is always loaded",
      "Copy the conventions into the root CLAUDE.md as well",
      "Write a separate rule file for each schema file"
@@ -3514,15 +3630,15 @@ window.LESSONS = [
     "why": "A paths glob decides when a rule loads. Matching every JSON file pulls the rule into unrelated work, so the pattern should match only where the conventions apply."
    },
    {
-    "q": "A rule file has paths: [\"src/*.tsx\"]. Claude ignores it when editing src/components/forms/Login.tsx. Why?",
+    "q": "A rule file has `paths: [\"src/*.tsx\"]`. Claude ignores it when editing `src/components/forms/Login.tsx`. Why?",
     "options": [
-     "Rule files only load when Claude is in plan mode",
-     "Path-scoped rules only apply to files Claude creates, not edits",
-     "The single star does not match nested folders; it needs src/**/*.tsx",
+     "Rule files only load when Claude is in plan mode, not while editing",
+     "Path-scoped rules only apply to files Claude creates, not to files it edits",
+     "The single star does not match nested folders; it needs `src/**/*.tsx`",
      "The paths field must be written in JSON, not YAML"
     ],
     "answer": 2,
-    "why": "A single * matches within one directory level. ** is needed to match files in nested folders."
+    "why": "A single `*` matches within one directory level. `**` is needed to match files in nested folders."
    }
   ],
   "sources": [
@@ -3543,12 +3659,12 @@ window.LESSONS = [
    "title": "Watch a path rule switch on",
    "minutes": 8,
    "steps": [
-    "Create .claude/rules/tests.md with frontmatter paths: [\"**/*.test.js\"] and the rule 'Name every test should_<behaviour>.'",
-    "Add src/math.js and src/deep/math.test.js to the repo.",
-    "Start claude and ask it to add a function to src/math.js. Check /memory or /context.",
-    "Now ask it to add a test in src/deep/math.test.js and check again."
+    "Create `.claude/rules/tests.md` with frontmatter `paths: [\"**/*.test.js\"]` and the rule 'Name every test should_<behaviour>.'",
+    "Add `src/math.js` and `src/deep/math.test.js` to the repo.",
+    "Start claude and ask it to add a function to `src/math.js`. Check /memory or /context.",
+    "Now ask it to add a test in `src/deep/math.test.js` and check again."
    ],
-   "expect": "The rule is absent while Claude edits math.js and loads once it touches the nested test file, thanks to the ** glob. One rule file covers tests in any folder, which is why the exam prefers it to copies of directory CLAUDE.md files."
+   "expect": "The rule is absent while Claude edits math.js and loads once it touches the nested test file, thanks to the `**` glob. One rule file covers tests in any folder, which is why the exam prefers it to copies of directory CLAUDE.md files."
   },
   "id": "ts-3.3",
   "kind": "ts",
@@ -3565,7 +3681,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    }
   ],
   "video": {
@@ -3673,9 +3790,9 @@ window.LESSONS = [
    {
     "q": "In plan mode, Claude has drafted a plan to change how three services share authentication tokens. The security team must sign off, which will take two days, and the developer will work on other things meanwhile. What is the best way to handle the plan?",
     "options": [
-     "Approve the plan now so Claude can start, and let security review the pull request",
-     "Keep the session open for two days so the plan stays in context",
-     "Have Claude write the plan to a file or issue for security to review, then execute it from that document once approved",
+     "Approve the plan now so Claude can start, and let security review the pull request later",
+     "Keep the session open for two days so the plan stays in context for when sign-off arrives",
+     "Save the plan to a file or issue for security review, then execute it from there once approved",
      "Discard the plan and ask Claude to plan again after sign-off"
     ],
     "answer": 2,
@@ -3684,8 +3801,8 @@ window.LESSONS = [
    {
     "q": "While planning a refactor, Claude reads 60 files and the main session becomes slow and starts forgetting earlier decisions. What should the developer have done?",
     "options": [
-     "Switched to direct execution so Claude reads fewer files",
-     "Added the 60 files to CLAUDE.md so they load at startup",
+     "Switched to direct execution so Claude reads fewer files while planning",
+     "Added the 60 files to CLAUDE.md so they are already loaded when the session starts",
      "Asked Claude to read files faster by skipping comments",
      "Used the Explore subagent so discovery happens in a separate context"
     ],
@@ -3731,6 +3848,11 @@ window.LESSONS = [
    "gv0WHhKelSE"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
@@ -3848,8 +3970,8 @@ window.LESSONS = [
    {
     "q": "Claude's slug generator keeps mishandling accented letters and repeated hyphens, which are processed in the same normalisation step. The developer also wants a separate change to the URL length limit. How should they send feedback?",
     "options": [
-     "Send all three as one bulleted list so Claude sees everything at once",
-     "Send the URL length change first, then accents, then hyphens, one per round",
+     "Send all three as one bulleted list so Claude can see every issue in a single message",
+     "Send the URL length change first, then the accents, then the hyphens, one issue per round",
      "Ask Claude to 'make slugs more robust' and review the result",
      "Send the accent and hyphen issues together with examples, and the length limit separately"
     ],
@@ -3860,9 +3982,9 @@ window.LESSONS = [
     "q": "A developer wants Claude to build a CSV import feature but is unsure about edge cases such as encodings, duplicate rows and partial failures. What is the most effective first step?",
     "options": [
      "Ask Claude to interview them about requirements and edge cases before writing code",
-     "Ask Claude to build the feature quickly and fix problems as users report them",
+     "Ask Claude to build the feature quickly, then fix edge cases as users report them",
      "Write a long prose description of every possible CSV format",
-     "Put a rule in CLAUDE.md telling Claude to think about edge cases"
+     "Put a rule in CLAUDE.md telling Claude to always think about edge cases before coding"
     ],
     "answer": 0,
     "why": "The interview pattern surfaces hidden requirements before building. The other options either skip discovery or stay vague."
@@ -3906,6 +4028,11 @@ window.LESSONS = [
    "gv0WHhKelSE"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/claude-code-best-practices"
@@ -3973,7 +4100,7 @@ window.LESSONS = [
      "PR opened: claude -p review with a findings schema.",
      "Script posts each finding as an inline comment.",
      "New push: include last run's findings; ask for new ones only.",
-     "Test job: point at tests/ and CLAUDE.md's testing section."
+     "Test job: point at `tests/` and CLAUDE.md's testing section."
     ],
     "note": "In the continuous integration scenario, a pull request opens and the pipeline runs Claude in print mode with a findings schema. A script posts each finding inline. On the next push, the pipeline passes the previous findings so Claude reports only new issues. A separate job generates tests, guided by the existing suite and the team's documented standards."
    },
@@ -4021,10 +4148,10 @@ window.LESSONS = [
    {
     "q": "A CI job runs Claude on each pull request. After every new commit, developers see the same five comments again alongside any new ones, and they have started ignoring the bot. What is the best fix?",
     "options": [
-     "Lower the number of findings Claude may report per run to three",
+     "Lower the number of findings Claude may report per run to three, ranked by severity",
      "Run the review only once, when the pull request is first opened",
-     "Pass the previous run's findings and ask Claude to report only new or still-unresolved issues",
-     "Switch the job to the Message Batches API so reviews arrive overnight"
+     "Pass the previous findings and ask Claude to report only new or still-unresolved issues",
+     "Switch the job to the Message Batches API so reviews arrive overnight, in one digest"
     ],
     "answer": 2,
     "why": "Feeding prior findings lets the re-review focus on what changed. Capping or skipping reviews loses real issues, and batching would delay a check developers wait on."
@@ -4034,8 +4161,8 @@ window.LESSONS = [
     "options": [
      "Estimate cost from the length of the review comment",
      "Run with --output-format json and read the total_cost_usd field from the result",
-     "Move the job to the Message Batches API so each request reports its cost",
-     "Add a prompt line asking Claude to state its own cost at the end"
+     "Move the job to the Message Batches API so each request's cost is reported back",
+     "Add a prompt line asking Claude to state its own token cost at the end of the review"
     ],
     "answer": 1,
     "why": "JSON output carries run metadata such as total_cost_usd and session_id, so a script can log spend per run. Claude cannot reliably report its own cost in text."
@@ -4061,7 +4188,7 @@ window.LESSONS = [
    "steps": [
     "Write review-schema.json: an object with a findings array of {file, line, severity, issue}.",
     "Make a small diff with one real bug, then run: git diff | claude -p \"Review for bugs only\" --output-format json --json-schema \"$(cat review-schema.json)\" > out.json",
-    "Extract the findings with jq '.structured_output.findings' out.json.",
+    "Extract the findings with `jq '.structured_output.findings' out.json`.",
     "Run it again, this time adding the first run's findings to the prompt and asking for new issues only."
    ],
    "expect": "-p runs with no prompts and the schema gives parseable findings a pipeline can post. Feeding prior findings stops the repeat comments that make teams ignore CI bots."
@@ -4079,6 +4206,11 @@ window.LESSONS = [
    "dRsjO-88nBs"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Cookbook: build a scheduled repository reviewer",
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
@@ -4188,10 +4320,10 @@ window.LESSONS = [
    {
     "q": "A CI reviewer posts many speculative findings such as 'this might fail under some conditions'. Developers waste time chasing ones that cannot happen. What prompt change best raises precision?",
     "options": [
-     "Ask the reviewer to use more cautious wording",
-     "Limit the reviewer to five findings per pull request",
-     "Ask the reviewer to rate how worried it is about each finding",
-     "Require each finding to name the concrete input or code path that triggers it, and tell the reviewer to skip any it cannot"
+     "Ask the reviewer to use more cautious wording such as 'may' or 'could' for unsure findings",
+     "Limit the reviewer to five findings per pull request so only the strongest get posted",
+     "Ask the reviewer to rate how worried it is about each finding on a scale of 1 to 10",
+     "Require each finding to name the input or code path that triggers it, and skip any it cannot"
     ],
     "answer": 3,
     "why": "An explicit bar for what counts as a finding filters out speculation. Softer wording, caps and self-rated worry do not define what to report."
@@ -4199,10 +4331,10 @@ window.LESSONS = [
    {
     "q": "A code review bot's SQL-injection findings are 95% accurate, but its 'performance concern' findings are 20% accurate. Developers now ignore all bot comments. What should the team do first?",
     "options": [
-     "Turn off the bot entirely until every category is fixed",
+     "Turn off the bot entirely until every category reaches the same accuracy as SQL injection",
      "Merge both categories into one so the average accuracy looks better",
-     "Ask developers to read every comment more carefully",
-     "Disable the performance category while rewriting its criteria, keeping SQL-injection findings on"
+     "Ask developers to read every comment more carefully before dismissing it",
+     "Disable performance findings while rewriting their criteria; keep SQL-injection findings on"
     ],
     "answer": 3,
     "why": "Pausing the noisy category restores trust in the accurate one while the prompt is fixed."
@@ -4246,6 +4378,11 @@ window.LESSONS = [
    "ysPbXH0LpIE"
   ],
   "courses": [
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
    {
     "title": "Real world prompting (anthropics/courses)",
     "url": "https://github.com/anthropics/courses/tree/master/real_world_prompting"
@@ -4361,7 +4498,7 @@ window.LESSONS = [
     "q": "A support-ticket classifier returns the right category but formats its output differently from run to run, which breaks the downstream parser. Detailed format instructions are already in the prompt. What is the most effective next step?",
     "options": [
      "Add three short examples showing tickets and the exact expected output",
-     "Ask Claude to double-check its formatting before answering",
+     "Ask Claude to double-check its formatting against the instructions before answering",
      "Increase max_tokens so Claude has room to format properly",
      "Move the format instructions to the end of the prompt in capital letters"
     ],
@@ -4371,10 +4508,10 @@ window.LESSONS = [
    {
     "q": "An extraction prompt includes four examples, all from one vendor's tidy table layout. On other vendors' prose-style invoices, Claude often returns empty fields or invents values. How should the examples change?",
     "options": [
-     "Add six more examples from the same vendor for extra emphasis",
+     "Add six more examples from the same vendor so the expected format is reinforced",
      "Remove all examples and rely on the schema alone",
-     "Replace some with varied layouts, including one where a field is truly missing and the output is null",
-     "Keep the examples but tell Claude to never return empty fields"
+     "Swap some for varied layouts, including one with a truly missing field returned as null",
+     "Keep the examples but add an instruction never to return empty or missing fields"
     ],
     "answer": 2,
     "why": "Varied layouts plus an explicit missing-field case teach Claude where to look and when null is correct. Forbidding empty fields would push it to invent values."
@@ -4543,10 +4680,10 @@ window.LESSONS = [
    {
     "q": "A financial-report extractor returns discount_rate as a string, and values arrive as '15%', '0.15' and '15'. Every output is schema-valid, but downstream calculations are off by a factor of 100 on some rows. What should be added?",
     "options": [
-     "A required flag on discount_rate so it is never missing",
-     "A longer system prompt about financial accuracy",
-     "A numeric field with a stated normalisation rule, such as a decimal fraction where 15 percent is 0.15",
-     "A retry whenever the value contains a percent sign"
+     "A required flag on discount_rate so every row carries a value for it",
+     "A longer system prompt stressing financial accuracy and careful reading of rates",
+     "A numeric field with a stated normalisation rule, such as 15 percent stored as 0.15",
+     "A retry whenever the value contains a percent sign, until it comes back without one"
     ],
     "answer": 2,
     "why": "A schema guarantees structure, not consistent meaning. A typed field plus an explicit normalisation rule makes every value comparable."
@@ -4554,10 +4691,10 @@ window.LESSONS = [
    {
     "q": "An invoice extractor has one field named total. On some invoices Claude returns the amount before tax and on others the amount after tax, and finance cannot tell which it got. Every output is schema-valid. What schema change fits best?",
     "options": [
-     "Replace total with separate subtotal_before_tax and total_including_tax fields, each with a description saying exactly what it holds",
-     "Mark total as required so it is always filled",
-     "Lower the temperature so the choice is more consistent",
-     "Retry each invoice until two runs agree on the total"
+     "Split total into subtotal_before_tax and total_including_tax, each with a clear description",
+     "Mark total as required and describe it as the main amount shown on the invoice",
+     "Lower the temperature so the choice between the two amounts is more consistent",
+     "Retry each invoice until two independent runs agree on the same total amount"
     ],
     "answer": 0,
     "why": "An ambiguous field invites inconsistent answers. Separate, clearly described fields remove the guesswork and keep both values."
@@ -4581,13 +4718,13 @@ window.LESSONS = [
    "title": "Extraction through a tool schema",
    "minutes": 12,
    "steps": [
-    "Use a model that accepts forced tool_choice, or on the newest models (which return a 400 for it) use auto with strict: true throughout.",
+    "Use a model that accepts forced tool_choice, or on the newest models (which return a 400 for it) use auto with `strict: true` throughout.",
     "Define a record_receipt tool whose input_schema has merchant, total, and a nullable tip field.",
     "Send three receipt texts, one with no tip, using tool_choice auto, then forced to record_receipt.",
     "Read each tool_use block's input as the result.",
     "Make tip required and non-nullable, re-run the no-tip receipt, and inspect what Claude fills in."
    ],
-   "expect": "Forcing the tool guarantees a structured record, while auto can drift into text. A required field with no source value invites an invented number. Schemas fix shape, not truth: an exam favourite. (On the newest models, use auto with strict: true instead of forcing.)"
+   "expect": "Forcing the tool guarantees a structured record, while auto can drift into text. A required field with no source value invites an invented number. Schemas fix shape, not truth: an exam favourite. (On the newest models, use auto with `strict: true` instead of forcing.)"
   },
   "id": "ts-4.3",
   "kind": "ts",
@@ -4602,6 +4739,11 @@ window.LESSONS = [
    "hkhDdcM5V94"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Cookbook: extracting structured JSON with tool use",
     "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"
@@ -4715,9 +4857,9 @@ window.LESSONS = [
     "q": "An extraction loop validates each record. When validation fails, it resends the original prompt unchanged, up to five times. Many failures repeat identically. What is the best improvement?",
     "options": [
      "Increase the retry limit to ten attempts",
-     "Switch to a larger model only for retries",
+     "Switch to a larger model only for retries, keeping the original prompt the same",
      "Append the specific validation errors to the retry request",
-     "Lower temperature on retries to make answers more stable"
+     "Lower the temperature on retries to make the answers more stable"
     ],
     "answer": 2,
     "why": "Retrying with the exact error tells Claude what to correct. Unchanged prompts tend to reproduce the same mistake."
@@ -4727,7 +4869,7 @@ window.LESSONS = [
     "options": [
      "Return null for policy_number, flag the record, and stop retrying",
      "Retry with the error until Claude produces a policy number",
-     "Generate a placeholder policy number so downstream checks pass",
+     "Generate a placeholder policy number so the downstream checks can pass",
      "Re-run the whole batch with a stricter prompt"
     ],
     "answer": 0,
@@ -4889,9 +5031,9 @@ window.LESSONS = [
    {
     "q": "Two hours into a 40,000-request Message Batch, an engineer notices the prompt never asks for the tax amount, a field every result needs. What is the best next step?",
     "options": [
-     "Let the batch finish, then fill in the tax field afterwards in code",
+     "Let the batch finish, then fill in the tax field afterwards in code from the source data",
      "Cancel the batch, fix the prompt, check it on a small sample, and submit a new batch",
-     "Submit a second batch now with the fixed prompt and let both run",
+     "Submit a second batch now with the fixed prompt and let both run to completion",
      "Wait for the batch to end and resubmit only the errored requests"
     ],
     "answer": 1,
@@ -4900,9 +5042,9 @@ window.LESSONS = [
    {
     "q": "A batch of 10,000 extraction requests finishes with 240 errored results caused by documents exceeding the context window. What should the team do?",
     "options": [
-     "Resubmit all 10,000 requests with a larger max_tokens",
+     "Resubmit all 10,000 requests with a larger max_tokens so the long documents fit",
      "Split the 240 oversized documents into chunks and resubmit only those custom_ids",
-     "Resubmit the 240 requests unchanged until they succeed",
+     "Resubmit only the 240 errored requests unchanged, since batch errors are often transient",
      "Drop the 240 documents and report the batch as complete"
     ],
     "answer": 1,
@@ -5050,8 +5192,8 @@ window.LESSONS = [
    {
     "q": "A review pipeline sends each change to a separate Claude instance with the note 'Written by our most senior engineer and already passing all tests.' The reviewer approves nearly everything, and production bugs keep slipping through. What change helps most?",
     "options": [
-     "Add a second note asking the reviewer to be extra careful",
-     "Run the same reviewer twice and keep findings both runs report",
+     "Add a second note asking the reviewer to be extra careful with senior engineers' code",
+     "Run the same reviewer twice with the same note and keep findings both runs report",
      "Give the reviewer a larger context window",
      "Remove the framing and give the reviewer only the change and neutral review criteria"
     ],
@@ -5061,10 +5203,10 @@ window.LESSONS = [
    {
     "q": "A team adopted per-file review passes plus a cross-file integration pass for every pull request, including one-line typo fixes. CI cost has tripled and small PRs wait on several passes. What is the best adjustment?",
     "options": [
-     "Use a single pass for small, single-file changes and keep the multi-pass design for larger pull requests",
-     "Drop the integration pass for every pull request",
-     "Move all reviews to the Message Batches API",
-     "Keep the design and raise the CI budget"
+     "Use one pass for small single-file changes; keep multi-pass for large pull requests",
+     "Drop the integration pass for every pull request and keep only the per-file passes",
+     "Move all reviews to the Message Batches API to cut the cost of every pass",
+     "Keep the design for every pull request and raise the CI budget to match"
     ],
     "answer": 0,
     "why": "Per-file and integration passes counter attention dilution on large, multi-file changes. A one-line fix gains nothing from them."
@@ -5241,9 +5383,9 @@ window.LESSONS = [
    {
     "q": "A mortgage-servicing chat agent summarises older turns every ten messages. Agents report that a promised fee waiver 'until 2026-12-01' later appears in replies as 'a waiver for a while'. What design change fixes this most reliably?",
     "options": [
-     "Summarise less often, every twenty messages instead of ten",
-     "Ask the model to be more careful with dates in its system prompt",
-     "Keep the waiver and its date in a structured facts block sent with every turn, outside the summary",
+     "Summarise less often, every twenty messages instead of every ten",
+     "Add a system prompt line asking the model to keep exact dates when it summarises",
+     "Keep the waiver and date in a facts block sent every turn, outside the summary",
      "Move to a model with a larger context window"
     ],
     "answer": 2,
@@ -5252,10 +5394,10 @@ window.LESSONS = [
    {
     "q": "To save context, a team trims each shipment-tracking result down to the status field alone. Context use dropped, but the agent can no longer answer customers who ask when a parcel will arrive or where it is now. What is the right adjustment?",
     "options": [
-     "Remove trimming and pass the full 45-field result again",
-     "Have the agent call the tool twice, once trimmed and once in full",
-     "Keep the fields the agent's tasks actually need, such as delivery estimate and last scan location, and drop the rest",
-     "Ask customers to check the carrier's website for arrival times"
+     "Remove trimming and pass the full 45-field result again on every call",
+     "Have the agent call the tool twice per question, once trimmed and once in full",
+     "Keep the fields the agent's tasks need, such as delivery estimate and last scan location",
+     "Have the agent tell customers to check the carrier's website for arrival times and location"
     ],
     "answer": 2,
     "why": "Trimming should remove noise, not the facts the agent's job depends on. Choose the kept fields from the questions the agent must answer."
@@ -5417,10 +5559,10 @@ window.LESSONS = [
    {
     "q": "A streaming service's support agent receives 'cancel my plan'. The account could either stop renewing at the end of the month or end today with a partial refund, and the two have different consequences. What should the agent do?",
     "options": [
-     "Cancel today with a refund, since that matches the literal request",
+     "Cancel today with a partial refund, since that matches the literal request",
      "Ask which of the two the customer wants, briefly explaining the difference",
-     "Stop the renewal, since it is the safer default",
-     "Escalate to a human, since cancellations are sensitive"
+     "Stop the renewal at month end, since it is the safer default for most customers",
+     "Escalate to a human agent, since cancellations are sensitive and final"
     ],
     "answer": 1,
     "why": "When a request maps to different actions with different consequences, a short clarifying question beats a guess. Escalation is not needed when one question resolves it."
@@ -5428,8 +5570,8 @@ window.LESSONS = [
    {
     "q": "A pharmacy refill agent searches by patient name and gets three matching profiles with different birth dates. What is the right next step?",
     "options": [
-     "Choose the profile with the most recent prescription",
-     "Escalate to a pharmacist straight away",
+     "Choose the profile with the most recent prescription on file, since it is likely current",
+     "Escalate to a pharmacist straight away, since patient safety is at stake",
      "Ask the patient for their date of birth or prescription number",
      "Process the refill on all three profiles"
     ],
@@ -5590,10 +5732,10 @@ window.LESSONS = [
    {
     "q": "A competitor-analysis system has five subagents. The pricing subagent cannot reach a vendor's site after retries, and returns an empty list marked as success. What is the main risk, and the fix?",
     "options": [
-     "Risk: wasted tokens. Fix: lower the subagent's max turns",
-     "Risk: duplicate work. Fix: merge pricing into another subagent",
-     "Risk: slow runs. Fix: run all subagents sequentially",
-     "Risk: the report states the vendor has no pricing data. Fix: return an access failure with attempts and partial results"
+     "Risk: wasted tokens on retries. Fix: lower the subagent's max turns so it gives up sooner",
+     "Risk: duplicate work across subagents. Fix: merge pricing into the product-features subagent",
+     "Risk: slow runs. Fix: run all five subagents sequentially so failures surface one at a time",
+     "Risk: a false 'no pricing' finding. Fix: return an access failure with attempts and partial results"
     ],
     "answer": 3,
     "why": "Reporting an access failure as a valid empty result leads to false conclusions. A structured failure lets the coordinator recover or note the gap."
@@ -5601,10 +5743,10 @@ window.LESSONS = [
    {
     "q": "In a due-diligence pipeline, one of eight document subagents throws an unhandled exception and the orchestrator stops the whole run, discarding seven completed analyses. Which redesign follows the guide?",
     "options": [
-     "Wrap the subagent so it returns a structured error with partial results, and let the coordinator continue",
-     "Retry the entire pipeline from the start until all eight succeed",
-     "Remove the failing subagent's document type from scope permanently",
-     "Have the subagent return a success with a generic 'done' message"
+     "Return a structured error with partial results from the subagent, and let the run continue",
+     "Retry the entire pipeline from the start until all eight subagents succeed together",
+     "Remove the failing subagent's document type from the due-diligence scope permanently",
+     "Have the subagent catch the exception and return success with a generic 'done' message"
     ],
     "answer": 0,
     "why": "Errors should propagate with context so the coordinator can recover, rather than either killing the workflow or being hidden."
@@ -5762,10 +5904,10 @@ window.LESSONS = [
    {
     "q": "An agent auditing a 2,500-file insurance platform answers early questions with exact file names, but after three hours it describes 'a typical service layer' instead. What change most directly addresses this?",
     "options": [
-     "Restart the session and re-read all files in one pass",
-     "Increase the session's maximum turns",
-     "Persist findings to a scratchpad and delegate specific questions to subagents, summarising between phases",
-     "Ask the agent to answer more specifically in the system prompt"
+     "Restart the session every hour and re-read all 2,500 files in one pass each time",
+     "Increase the session's maximum turns so the audit never has to stop early",
+     "Use a scratchpad file for findings, subagents for specific questions, and phase summaries",
+     "Add a system prompt line requiring exact file names in every answer it gives"
     ],
     "answer": 2,
     "why": "Drift comes from an overfull context. Scratchpads, focused subagents and phase summaries keep specific findings available."
@@ -5773,10 +5915,10 @@ window.LESSONS = [
    {
     "q": "An overnight migration-mapping job across 40 services crashes at service 31 and has to start over. What should the design add?",
     "options": [
-     "A larger context window so the job never compacts",
-     "A manifest file recording completed, in-progress and pending services, read on restart",
-     "A single subagent that handles all 40 services in sequence",
-     "Lower temperature to make the run more deterministic"
+     "A larger context window so the job never has to compact or restart",
+     "A manifest of completed, in-progress and pending services that is read on restart",
+     "A single subagent that works through all 40 services in sequence, from start to finish",
+     "A lower temperature so that each rerun produces the same mappings more deterministically"
     ],
     "answer": 1,
     "why": "A manifest of finished and pending work lets the job resume where it stopped instead of repeating everything."
@@ -5941,10 +6083,10 @@ window.LESSONS = [
    {
     "q": "A claims extractor auto-accepts fields above confidence 0.9, a threshold calibrated on a labelled set last quarter. The team has since switched to a newer model and rewritten the extraction prompt. What should happen before they keep the threshold?",
     "options": [
-     "Re-run the calibration on the labelled set with the new model and prompt, and set thresholds from the newly measured accuracy",
-     "Keep 0.9, since a newer model is more accurate",
-     "Lower the threshold to 0.8, since a better model needs less review",
-     "Ask the new model to report its confidence more conservatively"
+     "Recalibrate on the labelled set with the new model and prompt and reset thresholds from that",
+     "Keep 0.9, since a newer model is more accurate and the threshold was already validated",
+     "Lower the threshold to 0.8, since a better model should need less human review overall",
+     "Ask the new model in the prompt to report its confidence scores more conservatively"
     ],
     "answer": 0,
     "why": "What a confidence score means depends on the model and prompt that produced it. Changing either means the old calibration no longer holds."
@@ -5954,8 +6096,8 @@ window.LESSONS = [
     "options": [
      "Errors in high-confidence outputs are never measured",
      "Reviewers see too many correct outputs",
-     "The model will learn to lower its confidence scores",
-     "Low-confidence outputs are reviewed too slowly"
+     "The model will learn to lower its confidence scores over time",
+     "Low-confidence outputs are reviewed too slowly to catch errors before they spread"
     ],
     "answer": 0,
     "why": "Without stratified sampling across confidence bands, confidently wrong outputs go unnoticed."
@@ -5986,6 +6128,11 @@ window.LESSONS = [
   },
   "videos": [],
   "courses": [
+   {
+    "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "prep": true
+   },
    {
     "title": "Demystifying evals for AI agents (Anthropic Engineering)",
     "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
@@ -6116,9 +6263,9 @@ window.LESSONS = [
    {
     "q": "A policy-research system finds that one government agency reports 4.1 million rail passengers for a year and a trade body reports 3.6 million for the same year. How should the final report present this?",
     "options": [
-     "Report 3.85 million as a balanced estimate",
-     "Report only the government figure because it is official",
-     "Report both figures, each attributed to its source and year, and note the discrepancy",
+     "Report 3.85 million as a balanced estimate between the two sources",
+     "Report only the government figure, because official statistics take priority",
+     "Report both figures, each with its source and year, and note the discrepancy",
      "Leave ridership out of the report to avoid confusion"
     ],
     "answer": 2,
@@ -6127,10 +6274,10 @@ window.LESSONS = [
    {
     "q": "A market report cites one analyst firm putting a sector at $40 billion and another at $65 billion for the same year. On inspection, the first counts hardware only while the second includes services. How should the synthesis present this?",
     "options": [
-     "Average the two into a single $52.5 billion estimate",
-     "Keep the larger figure, since it covers more",
-     "Show both figures with their sources and what each one counts, explaining that they measure different things",
-     "Drop both and say the market size is unknown"
+     "Average the two into a single $52.5 billion estimate and cite both firms as sources",
+     "Keep the larger $65 billion figure, since it covers more of the market",
+     "Show both with their sources and what each counts, since they measure different things",
+     "Drop both and say the market size is unknown until the firms agree on a figure"
     ],
     "answer": 2,
     "why": "Figures with different scopes are not a real contradiction. Keeping each with its source and definition stops readers treating them as competing claims."
@@ -6287,10 +6434,10 @@ window.LESSONS = [
    {
     "q": "A customer writes: 'I don't want the bot, put me through to a person.' The issue is a simple address change the agent could finish. What should the agent do?",
     "options": [
-     "Finish the address change first, then offer a human",
+     "Finish the address change first, then offer to connect a human",
      "Explain that it can solve this faster than a human",
      "Escalate to a human right away with a short structured summary",
-     "Ask the customer to rate their frustration before deciding"
+     "Ask the customer to rate their frustration before deciding whether to escalate"
     ],
     "answer": 2,
     "why": "An explicit request for a human is an escalation trigger on its own. Honour it immediately and pass the context along."
@@ -6319,6 +6466,11 @@ window.LESSONS = [
    "XSZP9GhhuAc"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Cookbook: customer service agent with client-side tools",
     "url": "https://platform.claude.com/cookbook/tool-use-customer-service-agent"
@@ -6370,9 +6522,9 @@ window.LESSONS = [
     "title": "Worked decision: the missing rules",
     "bullets": [
      "A new teammate's Claude ignores the team's testing rules.",
-     "The rules sit in the lead's ~/.claude/CLAUDE.md.",
+     "The rules sit in the lead's `~/.claude/CLAUDE.md`.",
      "User-level memory is personal and never shared.",
-     "Exam answer: move them to the project CLAUDE.md or .claude/rules/."
+     "Exam answer: move them to the project CLAUDE.md or `.claude/rules/`."
     ],
     "note": "A typical question. A new engineer joins and their Claude Code ignores the testing conventions everyone else gets. The cause is that the conventions were written in the lead's user level CLAUDE dot md, which is personal and not in the repository. The fix is to move them into the project file or the project rules folder so everyone loads them."
    },
@@ -6393,12 +6545,12 @@ window.LESSONS = [
     "pairs": [
      {
       "wrong": "Put the React test conventions in every directory's CLAUDE.md.",
-      "right": "One .claude/rules/ file with paths: **/*.test.tsx.",
+      "right": "One `.claude/rules/` file with paths: `**/*.test.tsx`.",
       "why": "Path-scoped rules suit conventions spread across folders."
      },
      {
       "wrong": "A noisy codebase-audit skill runs in the main session.",
-      "right": "Set context: fork in the skill's frontmatter.",
+      "right": "Set `context: fork` in the skill's frontmatter.",
       "why": "Forked context keeps verbose output out of the session."
      },
      {
@@ -6428,12 +6580,12 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "Your API handlers in src/api/ and services/*/api/ must all use the same error format, but no other code should load that rule. What is the best place for it?",
+    "q": "Your API handlers in `src/api/` and `services/*/api/` must all use the same error format, but no other code should load that rule. What is the best place for it?",
     "options": [
-     "The project root CLAUDE.md, so everyone sees it",
-     "A .claude/rules/ file with a paths glob matching the API handler files",
-     "Each developer's ~/.claude/CLAUDE.md",
-     "A slash command developers run before editing handlers"
+     "The project root CLAUDE.md, so every developer and every session sees the rule",
+     "A `.claude/rules/` file with a paths glob matching the API handler files",
+     "Each developer's `~/.claude/CLAUDE.md`",
+     "A slash command that developers remember to run before editing any API handler"
     ],
     "answer": 1,
     "why": "A path-scoped rule loads only when matching files are touched, and one glob can cover several directories."
@@ -6441,9 +6593,9 @@ window.LESSONS = [
    {
     "q": "While Claude Code iterates on a feature, every developer on the team approves npm test dozens of times per session. The team wants those runs to go through without prompts for everyone, without loosening anything else. What is the best change?",
     "options": [
-     "Start every session with --dangerously-skip-permissions",
-     "Add 'never ask before running tests' to CLAUDE.md",
-     "Add an allow rule for the test command, such as Bash(npm test *), to the project's committed .claude/settings.json",
+     "Start every session with --dangerously-skip-permissions so test runs are not interrupted",
+     "Add 'never ask before running tests' to the project's committed CLAUDE.md",
+     "Add an allow rule such as `Bash(npm test *)` to the committed `.claude/settings.json`",
      "Have each developer add the rule to their own user settings"
     ],
     "answer": 2,
@@ -6475,7 +6627,8 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Claude Code: best practices for agentic coding (Anthropic Engineering)",
@@ -6588,10 +6741,10 @@ window.LESSONS = [
    {
     "q": "The analysis subagent keeps re-searching for sources the search subagent already found, wasting time. What is the most likely cause?",
     "options": [
-     "The analysis subagent has too few tools",
-     "The coordinator is not passing the search results into the analysis subagent's prompt",
-     "The model needs a higher temperature",
-     "The subagents need a shared database"
+     "The analysis subagent lacks a tool for reading the search subagent's memory",
+     "The coordinator is not passing the search results to the analysis subagent",
+     "The analysis subagent runs at too low a temperature and repeats earlier work",
+     "The subagents need a shared database that both can read and write directly"
     ],
     "answer": 1,
     "why": "Subagents start with isolated context. If the coordinator does not pass the findings explicitly, the subagent cannot know about them."
@@ -6599,8 +6752,8 @@ window.LESSONS = [
    {
     "q": "Two credible sources give different 2025 market sizes for the same sector. How should the report subagent handle it?",
     "options": [
-     "Use the larger figure, since it is more recent",
-     "Average the two figures",
+     "Use the larger figure, since it comes from the more recent publication",
+     "Average the two figures into one estimate and cite both sources",
      "Drop both figures to avoid confusion",
      "Show both figures with their sources and publication dates"
     ],
@@ -6697,7 +6850,7 @@ window.LESSONS = [
     "title": "Contrast: sharing an MCP server",
     "bullets": [
      "You want the whole team to get the Jira MCP server.",
-     "User scope in ~/.claude.json: only you get it.",
+     "User scope in `~/.claude.json`: only you get it.",
      "Project scope in .mcp.json: committed and shared.",
      "Secrets stay out of git with ${JIRA_TOKEN} expansion."
     ],
@@ -6744,12 +6897,12 @@ window.LESSONS = [
   ],
   "check": [
    {
-    "q": "You need a list of every TypeScript test file under packages/ so you can count them. Which built-in tool fits best?",
+    "q": "You need a list of every TypeScript test file under `packages/` so you can count them. Which built-in tool fits best?",
     "options": [
-     "Grep for the word test",
-     "Glob with a pattern such as packages/**/*.test.ts",
-     "Read each directory listing manually",
-     "Bash running the full test suite"
+     "Grep for the word test across the packages folder",
+     "Glob with a pattern such as `packages/**/*.test.ts`",
+     "Read each directory listing under `packages/` one by one",
+     "Bash running the full test suite and counting the results"
     ],
     "answer": 1,
     "why": "Glob matches file paths by pattern, which is exactly what this needs."
@@ -6757,10 +6910,10 @@ window.LESSONS = [
    {
     "q": "The agent prefers Grep over your new internal-docs MCP tool even when the docs tool would answer better. What is the best first fix?",
     "options": [
-     "Remove Grep from the agent",
+     "Remove Grep from the agent so the docs tool is the only option",
      "Write a richer MCP tool description saying what it covers and when to use it",
-     "Add 'always use MCP' to every user prompt",
-     "Move the server to user scope"
+     "Add 'always use the MCP docs tool' to every user prompt",
+     "Move the MCP server to user scope so it loads before the built-in tools"
     ],
     "answer": 1,
     "why": "The model picks tools from their descriptions. A clear, specific description is the first lever."
@@ -6791,11 +6944,13 @@ window.LESSONS = [
   "courses": [
    {
     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/claude-code-in-action"
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
    },
    {
     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "prep": true
    }
   ],
   "video": {
@@ -6904,10 +7059,10 @@ window.LESSONS = [
    {
     "q": "A CI pipeline implements a ticket with claude -p, then reviews the change by resuming that session with --fork-session, believing the fork acts as an independent reviewer. Reviews keep approving flawed changes. What is wrong?",
     "options": [
-     "Forked sessions cannot run in print mode",
-     "A fork copies the implementing session's history and assumptions, so it is not independent of the author",
+     "Forked sessions cannot run in print mode, so the review step silently does nothing",
+     "A fork copies the author session's history and assumptions, so it is not independent",
      "The review needs --output-format stream-json to see the whole diff",
-     "The fork should resume with a higher --max-turns"
+     "The fork should resume with a higher --max-turns so it has time to inspect every file"
     ],
     "answer": 1,
     "why": "Forking copies the conversation so far, including the reasoning that produced the change. An independent review needs a session that has not seen it."
@@ -6915,10 +7070,10 @@ window.LESSONS = [
    {
     "q": "After a developer pushes fixes, the re-review repeats the same eight comments it posted last time. What is the best fix?",
     "options": [
-     "Ask the model to be more concise",
-     "Lower the temperature",
-     "Include the previous findings in the prompt and ask only for new or unresolved issues",
-     "Review only the first file of the diff"
+     "Ask the model to be more concise and post fewer comments on each review",
+     "Lower the temperature so the review is more consistent between runs",
+     "Include the previous findings and ask only for new or unresolved issues",
+     "Review only the first file of the diff to keep the comment count down"
     ],
     "answer": 2,
     "why": "Feeding prior findings lets the reviewer report only what is new or still open."
@@ -6947,6 +7102,11 @@ window.LESSONS = [
    "dRsjO-88nBs"
   ],
   "courses": [
+   {
+    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "prep": true
+   },
    {
     "title": "Cookbook: build a scheduled repository reviewer",
     "url": "https://platform.claude.com/cookbook/claude-agent-sdk-scheduled-repository-reviewer-scheduled-repository-reviewer"
@@ -7058,9 +7218,9 @@ window.LESSONS = [
    {
     "q": "A warranty extractor has a boolean field transferable. When a document says nothing about transfers, Claude returns false, and the resale team treats those products as non-transferable. What schema change fits best?",
     "options": [
-     "Allow null, or use an enum such as yes, no and not_stated, so a silent document is not recorded as a no",
-     "Make the field required so it is always filled",
-     "Default the field to true when the document is silent",
+     "Allow null, or an enum such as yes, no and not_stated, so silence is not recorded as no",
+     "Make the field required so a value is always filled in for every document",
+     "Default the field to true when the document is silent, since most warranties transfer",
      "Remove the field and let the resale team read each document"
     ],
     "answer": 0,
@@ -7069,10 +7229,10 @@ window.LESSONS = [
    {
     "q": "The model returns a contract_date of '13/45/2024', which fails validation. What is the best next step?",
     "options": [
-     "Drop the document from the batch",
-     "Retry with the same prompt",
+     "Drop the document from the batch and log it for someone to enter by hand",
+     "Retry with the same prompt, since date errors are usually random",
      "Retry and include the specific validation error about the date format",
-     "Accept it and let downstream systems fix it"
+     "Accept it and let the downstream systems normalise the date format later"
     ],
     "answer": 2,
     "why": "Format errors are worth retrying, and appending the exact validation error tells the model what to correct."
@@ -7101,6 +7261,11 @@ window.LESSONS = [
    "hkhDdcM5V94"
   ],
   "courses": [
+   {
+    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "prep": true
+   },
    {
     "title": "Cookbook: extracting structured JSON with tool use",
     "url": "https://platform.claude.com/cookbook/tool-use-extracting-structured-json"
@@ -7210,9 +7375,9 @@ window.LESSONS = [
    {
     "q": "With 10 minutes left you have 6 unanswered questions and 4 flagged ones. What is the best use of the time?",
     "options": [
-     "Re-check the 4 flagged questions carefully first",
+     "Re-check the 4 flagged questions carefully first, then answer the rest",
      "Give a best answer to all 6 unanswered questions, then revisit flags",
-     "Leave the 6 blank and perfect the flagged ones",
+     "Leave the 6 blank and perfect the flagged ones, since wrong answers may cost more",
      "Start again from question 1"
     ],
     "answer": 1,
@@ -7458,18 +7623,6 @@ window.LEARN_RES = {
    "title": "Stage 2 · Intermediate",
    "items": [
     {
-     "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-     "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
-    },
-    {
-     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-     "url": "https://anthropic.skilljar.com/claude-code-in-action"
-    },
-    {
-     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-     "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
-    },
-    {
      "title": "Introduction to subagents (Anthropic Academy, ~45 min)",
      "url": "https://anthropic.skilljar.com/introduction-to-subagents"
     },
@@ -7548,10 +7701,6 @@ window.LEARN_RES = {
      "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
     },
     {
-     "title": "Official CCA-F prep course list (Partner Academy)",
-     "url": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses"
-    },
-    {
      "title": "Certification FAQ",
      "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
     },
@@ -7569,5 +7718,90 @@ window.LEARN_RES = {
     }
    ]
   }
- ]
+ ],
+ "prep": {
+  "source": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses",
+  "checkedOn": "2026-10-27",
+  "items": [
+   {
+    "key": "fluency",
+    "name": "AI Fluency: Framework & Foundations",
+    "domains": [
+     "D4",
+     "D5"
+    ],
+    "why": "The 4D framework (delegation, description, discernment, diligence): how to brief Claude clearly and check its work. Groundwork for prompt design and human review.",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/ai-fluency-framework-foundations"
+   },
+   {
+    "key": "api",
+    "name": "Building with the Claude API",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "Messages API, tool use, the agent loop, structured output, RAG and evals. The widest single match for the exam.",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-with-the-anthropic-api"
+   },
+   {
+    "key": "vertex",
+    "name": "Claude on Google Cloud",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "The API course taught on Google Cloud Vertex AI. Take it instead of the API course if Vertex is your platform.",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-with-google-vertex"
+   },
+   {
+    "key": "ccaction",
+    "name": "Claude Code in Action",
+    "domains": [
+     "D3",
+     "D2"
+    ],
+    "why": "CLAUDE.md, commands, plan mode, MCP servers, hooks and GitHub/CI integration: almost all of Domain 3.",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-code-in-action"
+   },
+   {
+    "key": "claude101",
+    "name": "Claude 101",
+    "domains": [],
+    "why": "Core Claude features for everyday work. A gentle first step if you are new to Claude.",
+    "url": "https://anthropic.skilljar.com/claude-101",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-101"
+   },
+   {
+    "key": "bedrock",
+    "name": "Claude with Amazon Bedrock",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "The API course taught on Amazon Bedrock. Take it instead of the API course if Bedrock is your platform.",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-in-amazon-bedrock"
+   },
+   {
+    "key": "mcp",
+    "name": "Introduction to Model Context Protocol",
+    "domains": [
+     "D2"
+    ],
+    "why": "Build MCP servers and clients in Python: tools, resources and prompts. The core of Domain 2.",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/introduction-to-model-context-protocol"
+   }
+  ]
+ }
 };

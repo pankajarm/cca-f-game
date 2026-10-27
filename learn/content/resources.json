@@ -1,5 +1,5 @@
 {
- "checkedOn": "2026-10-26",
+ "checkedOn": "2026-10-27",
  "videos": [
   {
    "id": "D7_ipDqhtwk",
@@ -332,7 +332,8 @@
  "courseIndex": {
   "api": {
    "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-   "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
+   "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+   "prep": true
   },
   "platform101": {
    "title": "Claude Platform 101 (Anthropic Academy, ~1.5 h)",
@@ -344,11 +345,13 @@
   },
   "ccaction": {
    "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-   "url": "https://anthropic.skilljar.com/claude-code-in-action"
+   "url": "https://anthropic.skilljar.com/claude-code-in-action",
+   "prep": true
   },
   "mcp": {
    "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-   "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
+   "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+   "prep": true
   },
   "mcpadv": {
    "title": "Model Context Protocol: Advanced Topics (Anthropic Academy)",
@@ -517,20 +520,47 @@
   "faq": {
    "title": "Certification FAQ",
    "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
+  },
+  "fluency": {
+   "title": "AI Fluency: Framework & Foundations (Anthropic Academy)",
+   "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+   "prep": true
+  },
+  "claude101": {
+   "title": "Claude 101 (Anthropic Academy)",
+   "url": "https://anthropic.skilljar.com/claude-101",
+   "prep": true
+  },
+  "vertex": {
+   "title": "Claude on Google Cloud (Anthropic Academy)",
+   "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+   "prep": true,
+   "note": "same ground as the API course, on Vertex AI"
+  },
+  "bedrock": {
+   "title": "Claude with Amazon Bedrock (Anthropic Academy)",
+   "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+   "prep": true,
+   "note": "same ground as the API course, on Bedrock"
   }
  },
  "lessonCourses": {
   "start-here": [
+   "claude101",
+   "fluency",
    "cert",
    "prep",
    "faq"
   ],
   "primer-D1": [
-   "platform101",
    "api",
+   "vertex",
+   "bedrock",
+   "platform101",
    "b-agents"
   ],
   "ts-1.1": [
+   "api",
    "tooluse",
    "ck-cs"
   ],
@@ -561,14 +591,21 @@
   ],
   "primer-D2": [
    "mcp",
+   "api",
+   "ccaction",
+   "bedrock",
+   "vertex",
    "dl-mcp",
    "tooluse"
   ],
   "ts-2.1": [
+   "mcp",
+   "api",
    "b-tools",
    "ck-tooleval"
   ],
   "ts-2.2": [
+   "mcp",
    "mcpadv"
   ],
   "ts-2.3": [
@@ -577,6 +614,7 @@
   ],
   "ts-2.4": [
    "mcp",
+   "ccaction",
    "mcpadv",
    "b-mcpcode"
   ],
@@ -584,8 +622,8 @@
    "ccaction"
   ],
   "primer-D3": [
-   "cc101",
    "ccaction",
+   "cc101",
    "dl-cc"
   ],
   "ts-3.1": [
@@ -593,6 +631,7 @@
    "b-ccbp"
   ],
   "ts-3.2": [
+   "ccaction",
    "skills",
    "dl-skills",
    "ck-skills"
@@ -601,21 +640,28 @@
    "ccaction"
   ],
   "ts-3.4": [
+   "ccaction",
    "b-ccbp",
    "dl-cc"
   ],
   "ts-3.5": [
+   "ccaction",
    "b-ccbp"
   ],
   "ts-3.6": [
+   "ccaction",
    "ck-reviewer"
   ],
   "primer-D4": [
+   "api",
+   "fluency",
+   "vertex",
+   "bedrock",
    "pe",
-   "rwp",
-   "api"
+   "rwp"
   ],
   "ts-4.1": [
+   "fluency",
    "rwp",
    "evals"
   ],
@@ -624,6 +670,7 @@
    "rwp"
   ],
   "ts-4.3": [
+   "api",
    "ck-json",
    "ck-choice"
   ],
@@ -639,8 +686,11 @@
    "ck-evalopt"
   ],
   "primer-D5": [
-   "b-context",
-   "api"
+   "api",
+   "fluency",
+   "vertex",
+   "bedrock",
+   "b-context"
   ],
   "ts-5.1": [
    "b-context",
@@ -657,6 +707,7 @@
    "b-harness"
   ],
   "ts-5.5": [
+   "fluency",
    "b-evals",
    "ck-evals"
   ],
@@ -665,6 +716,7 @@
    "b-research"
   ],
   "scn-1": [
+   "api",
    "ck-cs"
   ],
   "scn-2": [
@@ -680,9 +732,11 @@
    "mcp"
   ],
   "scn-5": [
+   "ccaction",
    "ck-reviewer"
   ],
   "scn-6": [
+   "api",
    "ck-json",
    "ck-batch"
   ],
@@ -719,18 +773,6 @@
   {
    "title": "Stage 2 · Intermediate",
    "items": [
-    {
-     "title": "Building with the Claude API (Anthropic Academy, ~9 h)",
-     "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api"
-    },
-    {
-     "title": "Claude Code in Action (Anthropic Academy, ~1 h)",
-     "url": "https://anthropic.skilljar.com/claude-code-in-action"
-    },
-    {
-     "title": "Introduction to Model Context Protocol (Anthropic Academy, ~1 h)",
-     "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol"
-    },
     {
      "title": "Introduction to subagents (Anthropic Academy, ~45 min)",
      "url": "https://anthropic.skilljar.com/introduction-to-subagents"
@@ -810,10 +852,6 @@
      "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
     },
     {
-     "title": "Official CCA-F prep course list (Partner Academy)",
-     "url": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses"
-    },
-    {
      "title": "Certification FAQ",
      "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
     },
@@ -831,5 +869,90 @@
     }
    ]
   }
- ]
+ ],
+ "prepCourses": {
+  "source": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses",
+  "checkedOn": "2026-10-27",
+  "items": [
+   {
+    "key": "fluency",
+    "name": "AI Fluency: Framework & Foundations",
+    "domains": [
+     "D4",
+     "D5"
+    ],
+    "why": "The 4D framework (delegation, description, discernment, diligence): how to brief Claude clearly and check its work. Groundwork for prompt design and human review.",
+    "url": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/ai-fluency-framework-foundations"
+   },
+   {
+    "key": "api",
+    "name": "Building with the Claude API",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "Messages API, tool use, the agent loop, structured output, RAG and evals. The widest single match for the exam.",
+    "url": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-with-the-anthropic-api"
+   },
+   {
+    "key": "vertex",
+    "name": "Claude on Google Cloud",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "The API course taught on Google Cloud Vertex AI. Take it instead of the API course if Vertex is your platform.",
+    "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-with-google-vertex"
+   },
+   {
+    "key": "ccaction",
+    "name": "Claude Code in Action",
+    "domains": [
+     "D3",
+     "D2"
+    ],
+    "why": "CLAUDE.md, commands, plan mode, MCP servers, hooks and GitHub/CI integration: almost all of Domain 3.",
+    "url": "https://anthropic.skilljar.com/claude-code-in-action",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-code-in-action"
+   },
+   {
+    "key": "claude101",
+    "name": "Claude 101",
+    "domains": [],
+    "why": "Core Claude features for everyday work. A gentle first step if you are new to Claude.",
+    "url": "https://anthropic.skilljar.com/claude-101",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-101"
+   },
+   {
+    "key": "bedrock",
+    "name": "Claude with Amazon Bedrock",
+    "domains": [
+     "D1",
+     "D2",
+     "D4",
+     "D5"
+    ],
+    "why": "The API course taught on Amazon Bedrock. Take it instead of the API course if Bedrock is your platform.",
+    "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/claude-in-amazon-bedrock"
+   },
+   {
+    "key": "mcp",
+    "name": "Introduction to Model Context Protocol",
+    "domains": [
+     "D2"
+    ],
+    "why": "Build MCP servers and clients in Python: tools, resources and prompts. The core of Domain 2.",
+    "url": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+    "partnerUrl": "https://anthropic-partners.skilljar.com/introduction-to-model-context-protocol"
+   }
+  ]
+ }
 }

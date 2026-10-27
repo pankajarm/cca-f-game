@@ -227,9 +227,9 @@
    {
     "q": "A mortgage-servicing chat agent summarises older turns every ten messages. Agents report that a promised fee waiver 'until 2026-12-01' later appears in replies as 'a waiver for a while'. What design change fixes this most reliably?",
     "options": [
-     "Summarise less often, every twenty messages instead of ten",
-     "Ask the model to be more careful with dates in its system prompt",
-     "Keep the waiver and its date in a structured facts block sent with every turn, outside the summary",
+     "Summarise less often, every twenty messages instead of every ten",
+     "Add a system prompt line asking the model to keep exact dates when it summarises",
+     "Keep the waiver and date in a facts block sent every turn, outside the summary",
      "Move to a model with a larger context window"
     ],
     "answer": 2,
@@ -238,10 +238,10 @@
    {
     "q": "To save context, a team trims each shipment-tracking result down to the status field alone. Context use dropped, but the agent can no longer answer customers who ask when a parcel will arrive or where it is now. What is the right adjustment?",
     "options": [
-     "Remove trimming and pass the full 45-field result again",
-     "Have the agent call the tool twice, once trimmed and once in full",
-     "Keep the fields the agent's tasks actually need, such as delivery estimate and last scan location, and drop the rest",
-     "Ask customers to check the carrier's website for arrival times"
+     "Remove trimming and pass the full 45-field result again on every call",
+     "Have the agent call the tool twice per question, once trimmed and once in full",
+     "Keep the fields the agent's tasks need, such as delivery estimate and last scan location",
+     "Have the agent tell customers to check the carrier's website for arrival times and location"
     ],
     "answer": 2,
     "why": "Trimming should remove noise, not the facts the agent's job depends on. Choose the kept fields from the questions the agent must answer."
@@ -373,10 +373,10 @@
    {
     "q": "A streaming service's support agent receives 'cancel my plan'. The account could either stop renewing at the end of the month or end today with a partial refund, and the two have different consequences. What should the agent do?",
     "options": [
-     "Cancel today with a refund, since that matches the literal request",
+     "Cancel today with a partial refund, since that matches the literal request",
      "Ask which of the two the customer wants, briefly explaining the difference",
-     "Stop the renewal, since it is the safer default",
-     "Escalate to a human, since cancellations are sensitive"
+     "Stop the renewal at month end, since it is the safer default for most customers",
+     "Escalate to a human agent, since cancellations are sensitive and final"
     ],
     "answer": 1,
     "why": "When a request maps to different actions with different consequences, a short clarifying question beats a guess. Escalation is not needed when one question resolves it."
@@ -384,8 +384,8 @@
    {
     "q": "A pharmacy refill agent searches by patient name and gets three matching profiles with different birth dates. What is the right next step?",
     "options": [
-     "Choose the profile with the most recent prescription",
-     "Escalate to a pharmacist straight away",
+     "Choose the profile with the most recent prescription on file, since it is likely current",
+     "Escalate to a pharmacist straight away, since patient safety is at stake",
      "Ask the patient for their date of birth or prescription number",
      "Process the refill on all three profiles"
     ],
@@ -522,10 +522,10 @@
    {
     "q": "A competitor-analysis system has five subagents. The pricing subagent cannot reach a vendor's site after retries, and returns an empty list marked as success. What is the main risk, and the fix?",
     "options": [
-     "Risk: wasted tokens. Fix: lower the subagent's max turns",
-     "Risk: duplicate work. Fix: merge pricing into another subagent",
-     "Risk: slow runs. Fix: run all subagents sequentially",
-     "Risk: the report states the vendor has no pricing data. Fix: return an access failure with attempts and partial results"
+     "Risk: wasted tokens on retries. Fix: lower the subagent's max turns so it gives up sooner",
+     "Risk: duplicate work across subagents. Fix: merge pricing into the product-features subagent",
+     "Risk: slow runs. Fix: run all five subagents sequentially so failures surface one at a time",
+     "Risk: a false 'no pricing' finding. Fix: return an access failure with attempts and partial results"
     ],
     "answer": 3,
     "why": "Reporting an access failure as a valid empty result leads to false conclusions. A structured failure lets the coordinator recover or note the gap."
@@ -533,10 +533,10 @@
    {
     "q": "In a due-diligence pipeline, one of eight document subagents throws an unhandled exception and the orchestrator stops the whole run, discarding seven completed analyses. Which redesign follows the guide?",
     "options": [
-     "Wrap the subagent so it returns a structured error with partial results, and let the coordinator continue",
-     "Retry the entire pipeline from the start until all eight succeed",
-     "Remove the failing subagent's document type from scope permanently",
-     "Have the subagent return a success with a generic 'done' message"
+     "Return a structured error with partial results from the subagent, and let the run continue",
+     "Retry the entire pipeline from the start until all eight subagents succeed together",
+     "Remove the failing subagent's document type from the due-diligence scope permanently",
+     "Have the subagent catch the exception and return success with a generic 'done' message"
     ],
     "answer": 0,
     "why": "Errors should propagate with context so the coordinator can recover, rather than either killing the workflow or being hidden."
@@ -670,10 +670,10 @@
    {
     "q": "An agent auditing a 2,500-file insurance platform answers early questions with exact file names, but after three hours it describes 'a typical service layer' instead. What change most directly addresses this?",
     "options": [
-     "Restart the session and re-read all files in one pass",
-     "Increase the session's maximum turns",
-     "Persist findings to a scratchpad and delegate specific questions to subagents, summarising between phases",
-     "Ask the agent to answer more specifically in the system prompt"
+     "Restart the session every hour and re-read all 2,500 files in one pass each time",
+     "Increase the session's maximum turns so the audit never has to stop early",
+     "Use a scratchpad file for findings, subagents for specific questions, and phase summaries",
+     "Add a system prompt line requiring exact file names in every answer it gives"
     ],
     "answer": 2,
     "why": "Drift comes from an overfull context. Scratchpads, focused subagents and phase summaries keep specific findings available."
@@ -681,10 +681,10 @@
    {
     "q": "An overnight migration-mapping job across 40 services crashes at service 31 and has to start over. What should the design add?",
     "options": [
-     "A larger context window so the job never compacts",
-     "A manifest file recording completed, in-progress and pending services, read on restart",
-     "A single subagent that handles all 40 services in sequence",
-     "Lower temperature to make the run more deterministic"
+     "A larger context window so the job never has to compact or restart",
+     "A manifest of completed, in-progress and pending services that is read on restart",
+     "A single subagent that works through all 40 services in sequence, from start to finish",
+     "A lower temperature so that each rerun produces the same mappings more deterministically"
     ],
     "answer": 1,
     "why": "A manifest of finished and pending work lets the job resume where it stopped instead of repeating everything."
@@ -819,10 +819,10 @@
    {
     "q": "A claims extractor auto-accepts fields above confidence 0.9, a threshold calibrated on a labelled set last quarter. The team has since switched to a newer model and rewritten the extraction prompt. What should happen before they keep the threshold?",
     "options": [
-     "Re-run the calibration on the labelled set with the new model and prompt, and set thresholds from the newly measured accuracy",
-     "Keep 0.9, since a newer model is more accurate",
-     "Lower the threshold to 0.8, since a better model needs less review",
-     "Ask the new model to report its confidence more conservatively"
+     "Recalibrate on the labelled set with the new model and prompt and reset thresholds from that",
+     "Keep 0.9, since a newer model is more accurate and the threshold was already validated",
+     "Lower the threshold to 0.8, since a better model should need less human review overall",
+     "Ask the new model in the prompt to report its confidence scores more conservatively"
     ],
     "answer": 0,
     "why": "What a confidence score means depends on the model and prompt that produced it. Changing either means the old calibration no longer holds."
@@ -832,8 +832,8 @@
     "options": [
      "Errors in high-confidence outputs are never measured",
      "Reviewers see too many correct outputs",
-     "The model will learn to lower its confidence scores",
-     "Low-confidence outputs are reviewed too slowly"
+     "The model will learn to lower its confidence scores over time",
+     "Low-confidence outputs are reviewed too slowly to catch errors before they spread"
     ],
     "answer": 0,
     "why": "Without stratified sampling across confidence bands, confidently wrong outputs go unnoticed."
@@ -966,9 +966,9 @@
    {
     "q": "A policy-research system finds that one government agency reports 4.1 million rail passengers for a year and a trade body reports 3.6 million for the same year. How should the final report present this?",
     "options": [
-     "Report 3.85 million as a balanced estimate",
-     "Report only the government figure because it is official",
-     "Report both figures, each attributed to its source and year, and note the discrepancy",
+     "Report 3.85 million as a balanced estimate between the two sources",
+     "Report only the government figure, because official statistics take priority",
+     "Report both figures, each with its source and year, and note the discrepancy",
      "Leave ridership out of the report to avoid confusion"
     ],
     "answer": 2,
@@ -977,10 +977,10 @@
    {
     "q": "A market report cites one analyst firm putting a sector at $40 billion and another at $65 billion for the same year. On inspection, the first counts hardware only while the second includes services. How should the synthesis present this?",
     "options": [
-     "Average the two into a single $52.5 billion estimate",
-     "Keep the larger figure, since it covers more",
-     "Show both figures with their sources and what each one counts, explaining that they measure different things",
-     "Drop both and say the market size is unknown"
+     "Average the two into a single $52.5 billion estimate and cite both firms as sources",
+     "Keep the larger $65 billion figure, since it covers more of the market",
+     "Show both with their sources and what each counts, since they measure different things",
+     "Drop both and say the market size is unknown until the firms agree on a figure"
     ],
     "answer": 2,
     "why": "Figures with different scopes are not a real contradiction. Keeping each with its source and definition stops readers treating them as competing claims."

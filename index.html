@@ -712,6 +712,8 @@ a.btn { text-decoration: none; }
   .modal { padding: 20px 18px 0; max-height: 88vh; }
   .score-dial-wrap .score-dial { transform: scale(.9); }
   #toasts { left: 16px; right: 16px; bottom: 16px; }
+  .toast:not(:last-child) { display: none; }  /* one at a time: a stack covers what the player is reading */
+  #screen-lesson.active ~ #toasts, body:has(#screen-lesson.active) #toasts { top: calc(var(--topbar-h, 70px) + 8px); bottom: auto; }  /* lessons: the answer you just tapped is lower down */
   .toast { max-width: none; }
 }
 @media (max-width: 400px) {
@@ -1026,7 +1028,7 @@ h2.band-title { font-weight: 700; }
     <section class="screen" id="screen-learn">
       <div class="screen-head">
         <button class="back-link" onclick="UI.go('home')">← Hall</button>
-        <h2>🎓 Learn</h2>
+        <h1><span aria-hidden="true">🎓</span> Learn</h1>
         <span class="sub">The exam guide in three stages · slides, video, labs</span>
       </div>
       <div class="ln-summary" id="ln-summary"></div>
@@ -1039,7 +1041,7 @@ h2.band-title { font-weight: 700; }
     <section class="screen" id="screen-lesson">
       <div class="screen-head">
         <button class="back-link" onclick="UI.go('learn')">← Learn</button>
-        <h2 id="ls-title">Lesson</h2>
+        <h1 id="ls-title">Lesson</h1>
       </div>
       <div id="ls-body"></div>
     </section>

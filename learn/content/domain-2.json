@@ -229,8 +229,8 @@
    {
     "q": "A travel agency's booking agent has two MCP tools: find_trips ('Finds trips') and search_itineraries ('Searches itineraries'). Logs show Claude picks between them almost at random, and half the calls return the wrong data. What should the team do first?",
     "options": [
-     "Add a lightweight classifier that routes each request to one of the two tools",
-     "Rewrite both descriptions to state what each returns, its inputs, and when to use the other tool",
+     "Add a lightweight classifier in front of the agent that routes each request to one of the two tools",
+     "Rewrite both descriptions to say what each returns, its inputs, and when to use the other",
      "Add a system prompt line telling Claude to prefer search_itineraries",
      "Lower the temperature so Claude picks more consistently"
     ],
@@ -240,8 +240,8 @@
    {
     "q": "A research system's analysis agent has a tool named process with the description 'Processes data'. It is used for summarising PDFs, extracting tables and translating text, and calls often use the wrong mode. Which change best fits the guide?",
     "options": [
-     "Add a detailed enum for the mode parameter and keep one tool",
-     "Add few-shot examples of each mode to the system prompt",
+     "Keep a single process tool and add a detailed enum for its mode parameter",
+     "Add few-shot examples of each mode to the system prompt so Claude learns which to pick",
      "Split it into summarize_pdf, extract_tables and translate_text, each with its own description",
      "Raise max_tokens so Claude has room to reason about the mode"
     ],
@@ -274,7 +274,7 @@
     "title": "A failed call is still information",
     "bullets": [
      "Tool errors go back to Claude as tool results, not crashes.",
-     "isError: true tells the agent the call failed.",
+     "`isError: true` tells the agent the call failed.",
      "The message decides what Claude does next.",
      "Like a good error note: what broke, and what to try."
     ],
@@ -376,10 +376,10 @@
    {
     "q": "A utility company's billing agent calls get_usage_history. The meter database is reachable, but the account has no readings yet because it was opened today. What should the tool return?",
     "options": [
-     "isError: true with errorCategory 'transient' so the agent retries later",
-     "isError: true with the message 'Operation failed'",
-     "A protocol-level JSON-RPC error",
-     "A successful result with an empty readings list and a note that the account is new"
+     "`isError: true` with errorCategory 'transient' so the agent retries the call later",
+     "`isError: true` with the message 'No usage data found for this account'",
+     "A protocol-level JSON-RPC error, since the tool returned no data",
+     "A success result with an empty readings list and a note that the account is new"
     ],
     "answer": 3,
     "why": "The lookup ran and correctly found nothing. That is a valid empty result, not an error, so the agent should not retry or treat it as a failure."
@@ -387,9 +387,9 @@
    {
     "q": "An HR assistant's update_salary tool is called by a user who lacks payroll rights. Which tool response gives the agent the best chance to react correctly?",
     "options": [
-     "isError: true, errorCategory 'permission', isRetryable false, and a message saying payroll approval is required",
-     "isError: true, errorCategory 'transient', isRetryable true, so the agent tries again",
-     "A success result with no changes, so the conversation is not interrupted",
+     "`isError: true`, errorCategory 'permission', isRetryable false, and a message that payroll approval is required",
+     "`isError: true`, errorCategory 'transient', isRetryable true, so the agent tries the update again",
+     "A success result that reports no changes were made, so the conversation is not interrupted",
      "An uncaught exception so the operator sees a stack trace"
     ],
     "answer": 0,
@@ -532,9 +532,9 @@
    {
     "q": "After learning that agents with many tools choose badly, a team split its insurance assistant into eight agents with one or two tools each. Now most requests bounce between agents through the coordinator, adding delay and losing details at each handoff. What is the better design?",
     "options": [
-     "Regroup into a few role-based agents, each holding the four or five tools its role uses together",
-     "Merge everything back into one agent with all sixteen tools",
-     "Add a ninth agent that relays messages between the other eight",
+     "Regroup into a few role-based agents, each with the four or five tools its role uses",
+     "Merge everything back into one agent with all sixteen tools and a longer system prompt",
+     "Add a ninth agent that relays messages between the other eight to cut coordinator load",
      "Keep the split and ask each agent to write longer handoff notes"
     ],
     "answer": 0,
@@ -543,10 +543,10 @@
    {
     "q": "A library's catalogue assistant has 19 tools covering search, loans, fines, events and staff rota. Wrong-tool calls rise each time a tool is added. What is the most effective change?",
     "options": [
-     "Split the work across role-focused agents that each hold only the few tools they need",
-     "Add a paragraph to the system prompt listing which tool to use when",
+     "Split the work across role-focused agents, each holding only the tools it needs",
+     "Add a paragraph to the system prompt listing which of the 19 tools to use for each task",
      "Switch tool_choice to any so Claude always calls a tool",
-     "Merge all 19 tools into one tool with an action parameter"
+     "Merge all 19 tools into one catalogue tool with an action parameter for each operation"
     ],
     "answer": 0,
     "why": "Selection degrades as tool count grows. Role-scoped agents with small tool sets reduce choice and misuse at the root."
@@ -592,8 +592,8 @@
     "title": "Scopes: who gets the server",
     "bullets": [
      "Project scope: .mcp.json in the repo root, committed, shared with the team.",
-     "User scope: ~/.claude.json, personal, available in all your projects.",
-     "Local scope: also ~/.claude.json, private, this project only.",
+     "User scope: `~/.claude.json`, personal, available in all your projects.",
+     "Local scope: also `~/.claude.json`, private, this project only.",
      "Use ${VAR} expansion so secrets stay in the environment, not git.",
      "Docs today: claude mcp add defaults to local; pass --scope project to share."
     ],
@@ -638,7 +638,7 @@
       "why": "Expansion keeps secrets out of version control."
      },
      {
-      "wrong": "Put the team's shared server in each person's ~/.claude.json",
+      "wrong": "Put the team's shared server in each person's `~/.claude.json`",
       "right": "Put it in the project .mcp.json",
       "why": "User scope is personal and not shared on clone."
      },
@@ -659,7 +659,7 @@
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     "Project .mcp.json is shared; ~/.claude.json is personal.",
+     "Project .mcp.json is shared; `~/.claude.json` is personal.",
      "${VAR} expansion keeps secrets out of git.",
      "Resources expose catalogs so agents explore less.",
      "Rich descriptions; community servers first, custom when needed."
@@ -683,9 +683,9 @@
    {
     "q": "A data team adds an internal warehouse MCP server to their repo for everyone. A reviewer spots the connection password written directly in the committed config. What is the best fix?",
     "options": [
-     "Move the whole server definition to each engineer's user scope",
-     "Keep it in .mcp.json but reference the password as ${WAREHOUSE_PASSWORD}, set per environment",
-     "Encode the password in base64 before committing",
+     "Move the whole server definition into each engineer's user scope so it is never committed",
+     "Keep .mcp.json but reference the password as ${WAREHOUSE_PASSWORD}, set per environment",
+     "Encode the password in base64 before committing so it is not readable in the diff",
      "Add .mcp.json to .gitignore so the file is never shared"
     ],
     "answer": 1,
@@ -694,10 +694,10 @@
    {
     "q": "A team's committed .mcp.json defines a ticketing server, and it works for everyone except one engineer. When she first opened the project she declined Claude Code's prompt to use the project's servers, and the server's tools have been missing for her ever since. What should she do?",
     "options": [
-     "Copy the server's entry into her user scope in ~/.claude.json",
+     "Copy the server's entry into her user scope in `~/.claude.json` so it loads in every project",
      "Delete .mcp.json locally and ask a teammate to commit it again",
      "Run claude mcp reset-project-choices and approve the server when Claude Code asks again",
-     "Add the server's token directly into .mcp.json"
+     "Add the server's token directly into .mcp.json so the server can authenticate"
     ],
     "answer": 2,
     "why": "Claude Code asks for approval before using project-scoped servers, and a refusal is remembered. Resetting project choices brings the prompt back without changing the shared config."
@@ -743,7 +743,7 @@
     "kind": "how",
     "title": "Grep vs Glob, and how Edit anchors",
     "bullets": [
-     "Glob matches paths: **/*.test.ts finds test files.",
+     "Glob matches paths: `**/*.test.ts` finds test files.",
      "Grep matches contents: a function name inside those files.",
      "Edit replaces old_string with new_string, exactly.",
      "old_string must be unique; add surrounding lines to make it so.",
@@ -773,7 +773,7 @@
     "title": "Practice: where is the late fee computed?",
     "bullets": [
      "Developer productivity scenario: legacy billing service, no docs.",
-     "Glob **/billing/** to see what files exist.",
+     "Glob `**/billing/**` to see what files exist.",
      "Grep 'lateFee' to find the definition and callers.",
      "Read the definition; Grep the wrapper's exported name too.",
      "Edit with a unique anchor; run tests with Bash."
@@ -839,7 +839,7 @@
      "Grep for the word 'yaml' across the repository",
      "Read each file in the deploy folder and check its extension",
      "Bash running the test suite",
-     "Glob with a pattern like deploy/**/*.yaml"
+     "Glob with a pattern like `deploy/**/*.yaml`"
     ],
     "answer": 3,
     "why": "The question is about file paths, not contents, so Glob's pattern matching answers it directly."
@@ -848,8 +848,8 @@
     "q": "Claude Code needs to change a single 'retries = 3' line in a config module, but that exact text appears in four places, so Edit keeps failing. What should happen next?",
     "options": [
      "Include enough surrounding lines in old_string to make the match unique",
-     "Retry Edit with the same old_string until it succeeds",
-     "Use Glob to locate the right occurrence",
+     "Retry Edit with the same old_string, since the failure may be transient",
+     "Use Glob to find which line holds the right occurrence, then retry Edit",
      "Delete the file with Bash and recreate it from memory"
     ],
     "answer": 0,
