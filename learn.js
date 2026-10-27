@@ -335,8 +335,8 @@ const Learn = {
     const l = this.cur, pane = document.getElementById('ls-pane');
     if (this.tab === 'video' && l.video) {
       pane.innerHTML = `<div class="ls-player"><video id="ls-video" controls preload="metadata" playsinline poster="${l.video.poster}">
-          <source src="${l.video.src}" type="video/mp4"><track kind="captions" srclang="en" label="English" src="${l.video.vtt}" default></video></div>
-        <p class="muted small mt">AI-narrated video of this lesson's slides. Captions on by default; turn them off in the player.</p>`;
+          <source src="${l.video.src}" type="video/mp4"><track kind="captions" srclang="en" label="English" src="${l.video.vtt}"></video></div>
+        <p class="muted small mt">AI-narrated video of this lesson's slides. Captions can be turned on in the player.</p>`;
       document.getElementById('ls-video').addEventListener('ended', () => { if (!(l.check || []).length) { this.markDone(l.id); this.dropMarkDone(); } });
     } else if (this.tab === 'check') {
       pane.innerHTML = l.check.map((c, qi) => `<div class="ls-check"><div class="q-text">${qi + 1}. ${this.rich(c.q)}</div><div class="answers" id="lc-${qi}"></div><div id="lcw-${qi}"></div></div>`).join('') +
