@@ -44,9 +44,10 @@
 .ls-tabs button { font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink-soft); }
 .ls-tabs button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .ls-player { background: #000; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-big); }
-/* sized so the player, or the slide and its controls, fit a laptop window under the lesson header */
+/* the player fits a laptop window under the lesson header; slides keep the full width for legibility
+   and picking the Slides tab scrolls them into view (Learn.reveal) */
 #ls-pane { scroll-margin-top: calc(var(--topbar-h, 70px) + 10px); }
-#ls-pane > .ls-player, #ls-pane > .ldeck, #ls-pane > .ls-deckbar { max-width: max(560px, calc((100vh - 500px) * 16 / 9)); }
+#ls-pane > .ls-player { max-width: max(560px, calc((100vh - 460px) * 16 / 9)); margin: 0 auto; }
 .ls-player video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; }
 .ls-deckbar { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; flex-wrap: wrap; }
 .ls-deckbar .count { font-weight: 700; font-size: 14px; color: var(--muted); min-width: 64px; text-align: center; }
