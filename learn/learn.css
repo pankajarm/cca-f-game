@@ -15,9 +15,10 @@
 .ln-stage h3 .lvl.l3 { background: color-mix(in srgb, var(--d5) 72%, #000); }
 .ln-stage > p { color: var(--muted); font-size: 14.5px; margin: 4px 0 12px; max-width: 760px; }
 .ln-domain { margin: 14px 0 6px; font-weight: 700; font-size: 14px; color: var(--ink-soft); display: flex; gap: 8px; align-items: center; }
-.ln-domain .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dc); }
+.ln-domain .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dc); flex: none; }
+.ln-domain .nm { flex: 1; min-width: 0; }
 .ln-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
-.ln-card { position: relative; text-align: left; background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--dc, var(--accent)); border-radius: 13px; padding: 12px 14px 11px; box-shadow: var(--shadow); color: var(--ink); transition: transform .15s, box-shadow .15s; }
+.ln-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--dc, var(--accent)); border-radius: 13px; padding: 12px 14px 11px; box-shadow: var(--shadow); color: var(--ink); transition: transform .15s, box-shadow .15s; }
 .ln-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-big); }
 .ln-card .id { font-family: var(--font-display); font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--dc, var(--accent)) 62%, var(--ink)); }
 .ln-card .nm { display: block; font-weight: 600; font-size: 14.5px; line-height: 1.35; margin: 2px 0 6px; }
@@ -119,6 +120,32 @@
 
 @media (max-width: 640px) {
   .ls-deckbar .ls-dots { display: none; }
+}
+
+/* phone-width slides: reflow at a readable size instead of shrinking a 16:9 picture
+   (the narrated videos are rendered at 1280px, so they keep the 16:9 layout) */
+@container (max-width: 560px) {
+  .lslide { aspect-ratio: auto; font-size: 15px !important; line-height: 1.45; padding: 18px 16px 40px 22px; }
+  .lslide::before { width: 5px; }
+  .lslide .kick { margin-bottom: 6px; }
+  .lslide h2 { margin-bottom: 12px; font-size: 1.45em; }
+  .lslide ul { gap: 8px; }
+  .lslide li { padding-left: 16px; }
+  .lslide li::before { left: 2px; width: 7px; height: 7px; }
+  .lslide .body { flex-direction: column; gap: 12px; }
+  .lslide pre { font-size: .8em !important; border-radius: 10px; padding: 10px 12px; max-height: none; align-self: stretch; }
+  .lslide pre .lang { margin-bottom: 4px; }
+  .lslide .foot { left: 22px; right: 16px; bottom: 12px; font-size: 11px; }
+  .lslide .delta { margin-top: 12px; border-radius: 8px; padding: 8px 10px; }
+  .lslide.k-title { min-height: 220px; }
+  .lslide.k-title h2 { font-size: 1.7em; max-width: none; }
+  .lslide.k-title .hook { max-width: none; font-size: 1.02em; }
+  .lslide.k-title .badge { padding: 3px 12px; margin-bottom: 12px; }
+  .lslide .traps { gap: 10px; }
+  .lslide .trap { grid-template-columns: 1fr; gap: 4px; font-size: .9em; }
+  .lslide .trap > div { border-radius: 8px; padding: 8px 10px; }
+  .lslide .trap b { margin-bottom: 2px; }
+  .lslide .gl { grid-template-columns: 1fr; gap: 6px; font-size: .9em; }
 }
 @media print {
   body.deck-print .lslide { break-after: page; box-shadow: none; border: 0; border-radius: 0; }

@@ -64,6 +64,7 @@ body { font-family: var(--font-body); background: #15130F; color: var(--ink); mi
 code { font-family: var(--font-code); font-size: .85em; background: var(--accent-soft); color: var(--accent-deep); padding: .1em .35em; border-radius: 6px; }
 #stage { flex: 1; display: grid; place-items: center; padding: 16px; }
 #stage .ldeck { width: min(100%, calc((100vh - 120px) * 16 / 9)); }
+body.notes #stage .ldeck { width: min(100%, calc((100vh - 220px) * 16 / 9)); }
 #bar { display: flex; gap: 10px; align-items: center; justify-content: center; padding: 10px 16px 14px; color: #D9D0C0; font-size: 14px; flex-wrap: wrap; }
 #bar button, #bar a { background: #2B2722; color: #F0EADD; border: 1px solid #433D33; border-radius: 10px; padding: 7px 14px; font: 600 14px var(--font-body); cursor: pointer; text-decoration: none; }
 #note { max-width: 900px; margin: 0 auto 14px; padding: 0 16px; color: #D9D0C0; font-size: 15px; display: none; }
@@ -89,7 +90,7 @@ body.deck-print #bar, body.deck-print #note { display: none; }
 <div id="bar">
   <button onclick="move(-1)" aria-label="Previous slide">←</button><span id="count"></span><button onclick="move(1)" aria-label="Next slide">→</button>
   <button onclick="toggleNotes()">Notes (N)</button><button onclick="printable()">Print / PDF (P)</button>
-  <a href="../index.html" id="back">Back to the game</a>
+  <a href="../index.html" id="back">Back to the lesson</a>
 </div>
 <div id="disclaimer">Unofficial study material for the Claude Certified Architect – Foundations exam. The official exam guide is the authority.</div>
 <script>
@@ -128,11 +129,14 @@ function draw() {
   document.getElementById('note').textContent = slides[i].note || '';
 }
 function move(d) { i = Math.max(0, Math.min(slides.length - 1, i + d)); draw(); }
-function toggleNotes() { document.getElementById('note').classList.toggle('show'); }
+function toggleNotes() { document.body.classList.toggle('notes', document.getElementById('note').classList.toggle('show')); draw(); }
 function printable() { params.set('print', '1'); params.set('id', lesson.id); location.search = params.toString(); }
+document.getElementById('back').href = '../index.html#lesson/' + encodeURIComponent(lesson.id);
 window.showSlide = n => { i = n; draw(); return slides.length; };
 window.slideCount = slides.length;
-if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+/* the game passes its theme; opened directly, follow the system (renders stay light) */
+const wantDark = params.get('theme') ? params.get('theme') === 'dark' : !params.get('render') && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+if (wantDark) document.documentElement.dataset.theme = 'dark';
 if (params.get('render')) document.body.classList.add('render');
 if (params.get('print')) {
   document.body.classList.add('deck-print');

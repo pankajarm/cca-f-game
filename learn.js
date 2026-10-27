@@ -59,7 +59,8 @@ const Learn = {
     if (l.kind === 'ts') return `Task statement ${l.ts[0]} · Domain ${l.domain[1]}`;
     if (l.kind === 'primer') return `Domain ${l.domain[1]} primer · Beginner`;
     if (l.kind === 'scenario') return `Scenario walkthrough · Advanced`;
-    return 'Architect\'s Ascent · Learn';
+    const st = STAGES.find(x => x.id === l.stage);
+    return st ? `Stage ${st.n} · ${st.label}` : 'Architect\'s Ascent · Learn';
   },
 
   /* the deck = a generated title slide, the authored slides, and a glossary slide for primers */
@@ -77,7 +78,7 @@ const Learn = {
     const traps = s.pairs || [];
     let inner;
     if (s.kind === 'title') {
-      const badge = l.kind === 'ts' ? l.ts[0] : l.kind === 'primer' ? l.domain : l.kind === 'scenario' ? 'Scenario ' + l.scenarios[0] : 'Start';
+      const badge = l.kind === 'ts' ? l.ts[0] : l.kind === 'primer' ? l.domain : l.kind === 'scenario' ? 'Scenario ' + l.scenarios[0] : l.id === 'exam-day' ? 'Exam day' : 'Start';
       inner = `<span class="badge">${this.esc(badge)}</span><div class="kick">${this.esc(this.kicker(l))}</div><h2>${this.rich(s.title)}</h2><div class="hook">${this.rich(s.hook || '')}</div>`;
     } else if (s.kind === 'traps') {
       inner = `<div class="kick">Exam traps</div><h2>${this.rich(s.title || 'Exam traps')}</h2><div class="traps">${traps.map(p =>
@@ -101,13 +102,17 @@ const Learn = {
     return `<div class="${cls.join(' ')}" style="--dc:${this.domainColor(l.domain)}">${inner}${foot}</div>`;
   },
 
-  /* shrink a rendered slide's type until its content clears the footer */
+  /* shrink a rendered slide's type until its content clears the footer
+     (phone-width slides reflow at a readable size instead, see learn.css) */
   fit(slide) {
     if (!slide) return;
-    const kids = [...slide.querySelectorAll('h2, ul, pre, .traps, .gl, .hook, .delta')];
+    slide.style.fontSize = '';
+    if (getComputedStyle(slide).aspectRatio === 'auto') return;
+    /* measure leaves, not containers: a bullet list stretches to fill the slide */
+    const kids = [...slide.querySelectorAll('h2, li, pre, .trap, .gl > div, .hook, .delta')], foot = slide.querySelector('.foot');
     for (let k = 1; k >= 0.62; k -= 0.04) {
       slide.style.fontSize = (2.15 * k).toFixed(3) + 'cqw';
-      const limit = slide.getBoundingClientRect().bottom - slide.clientWidth * 0.035;
+      const limit = (foot ? foot.getBoundingClientRect().top : slide.getBoundingClientRect().bottom) - slide.clientWidth * 0.008;
       const pre = slide.querySelector('pre');
       if (Math.max(...kids.map(x => x.getBoundingClientRect().bottom)) <= limit && (!pre || pre.scrollHeight <= pre.clientHeight + 1)) return;
     }
@@ -146,8 +151,8 @@ const Learn = {
           const dl = ls.filter(l => l.domain === d.id);
           if (!dl.length) return '';
           const dn = dl.filter(l => this.isDone(l.id)).length;
-          return `<div class="ln-domain" style="--dc:${this.domainColor(d.id)}"><span class="dot"></span>D${d.n} · ${d.label} <span class="muted">· ${d.exam} of 60 exam items · ${dn}/${dl.length} done</span>
-            <button class="btn small ghost" style="margin-left:auto;padding:5px 12px" onclick="Learn.drill('domain','${d.id}')">Drill D${d.n}</button></div>
+          return `<div class="ln-domain" style="--dc:${this.domainColor(d.id)}"><span class="dot"></span><span class="nm">D${d.n} · ${d.label} <span class="muted">· ${d.exam} of 60 exam items · ${dn}/${dl.length} done</span></span>
+            <button class="btn small ghost" style="margin-left:auto;padding:5px 12px;white-space:nowrap" onclick="Learn.drill('domain','${d.id}')">Drill D${d.n}</button></div>
             <div class="ln-grid">${dl.map(l => this.card(l, nextId)).join('')}</div>`;
         }).join('');
       } else grid = `<div class="ln-grid">${ls.map(l => this.card(l, nextId)).join('')}</div>`;
@@ -164,7 +169,8 @@ const Learn = {
       const t = by[r.q.ts] = by[r.q.ts] || { seen: 0, right: 0 };
       t.seen++; t.right += st.last ? 1 : 0;
     });
-    return Object.entries(by).filter(([, t]) => t.seen >= 2 && t.right / t.seen < 0.75)
+    /* under 75% right over 2+ questions, or missed on the only one seen (what a placement check leaves) */
+    return Object.entries(by).filter(([, t]) => t.seen >= 2 ? t.right / t.seen < 0.75 : t.right === 0)
       .sort((a, b) => a[1].right / a[1].seen - b[1].right / b[1].seen).map(([ts, t]) => ({ ts, ...t }));
   },
 
@@ -179,7 +185,7 @@ const Learn = {
       const id = this.forTs(w.ts), l = id && this.byId(id), t = GUIDE.taskStatements.find(x => x.id === w.ts);
       return `<div class="focus-row"><span><b>${w.ts}</b> ${this.esc(t ? t.title : '')}<br><span class="muted">right on last try ${w.right} of ${w.seen} seen${l && this.isDone(id) ? ' · lesson done, worth a re-watch' : ''}</span></span>
         ${l ? `<button class="btn small primary" onclick="Learn.open('${id}')">Lesson</button>` : ''}<button class="btn small ghost" onclick="Learn.drill('ts','${w.ts}')">Drill</button></div>`;
-    }).join('') + `<p class="muted small">From your answers in every mode: task statements with 2+ questions seen and under 75% right.</p></div>`;
+    }).join('') + `<p class="muted small">From your answers in every mode: task statements under 75% right, or missed on the only question seen so far.</p></div>`;
   },
 
   /* drills started from Learn come back to Learn (the lesson, or the path for the placement check) */
@@ -262,8 +268,8 @@ const Learn = {
     el.innerHTML = `
       <div class="ls-chips">${chips.join('')}</div>
       <p class="ls-hook">${this.rich(l.hook)}</p>
-      <div class="ls-tabs">${tabs.map(([k, t]) => `<button data-tab="${k}" class="${this.tab === k ? 'on' : ''}" onclick="Learn.setTab('${k}')">${t}</button>`).join('')}
-        <a class="btn small ghost" style="margin-left:auto" href="learn/deck.html#${l.id}" target="_blank" rel="noopener">Open deck full screen ↗</a></div>
+      <div class="ls-tabs">${tabs.map(([k, t]) => `<button data-tab="${k}" class="${this.tab === k ? 'on' : ''}" aria-pressed="${this.tab === k}" onclick="Learn.setTab('${k}')">${t}</button>`).join('')}
+        <a class="btn small ghost" style="margin-left:auto" href="learn/deck.html?theme=${Game.s.theme === 'dark' ? 'dark' : 'light'}#${l.id}" target="_blank" rel="noopener">Open deck full screen ↗</a></div>
       <div id="ls-pane"></div>
       ${l.docsToday ? `<div class="ls-delta">🔄 <strong>Docs today:</strong> ${this.rich(l.docsToday)} The exam keeps the guide's terms.</div>` : ''}
       ${this.renderLab(l)}
@@ -277,7 +283,7 @@ const Learn = {
   setTab(t) {
     this.stopMedia();
     this.tab = t;
-    document.querySelectorAll('#ls-body .ls-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+    document.querySelectorAll('#ls-body .ls-tabs button').forEach(b => { b.classList.toggle('on', b.dataset.tab === t); b.setAttribute('aria-pressed', String(b.dataset.tab === t)); });
     this.renderPane();
   },
 
@@ -295,9 +301,9 @@ const Learn = {
       l.check.forEach((c, qi) => this.renderCheck(c, qi));
     } else {
       pane.innerHTML = `<div class="ldeck" id="ls-deck"></div>
-        <div class="ls-deckbar"><button class="btn small ghost" onclick="Learn.go(-1)">← Prev</button><span class="count" id="ls-count"></span>
+        <div class="ls-deckbar"><button class="btn small ghost" onclick="Learn.go(-1)">← Prev</button><span class="count" id="ls-count" aria-live="polite"></span>
         <button class="btn small primary" onclick="Learn.go(1)">Next →</button><span class="grow"></span><div class="ls-dots" id="ls-dots"></div>
-        <button class="btn small ghost" onclick="Learn.toggleNotes()">🗒️ Notes</button></div>
+        <button class="btn small ghost" id="ls-notes-btn" aria-expanded="${!!this.showNotes}" aria-controls="ls-note" onclick="Learn.toggleNotes()">🗒️ Notes</button></div>
         <div class="ls-note" id="ls-note" style="display:${this.showNotes ? 'block' : 'none'}"></div>`;
       this.drawSlide();
     }
@@ -337,7 +343,14 @@ const Learn = {
     this.state().slide[l.id] = this.slide; this.save();
     if (this.slide === d.length - 1 && !(l.check || []).length) { this.markDone(l.id); this.dropMarkDone(); }
   },
-  dropMarkDone() { const b = document.getElementById('ls-markdone'); if (b) b.remove(); },
+  dropMarkDone() {
+    const b = document.getElementById('ls-markdone'); if (!b) return;
+    const had = document.activeElement === b, next = b.nextElementSibling || b.previousElementSibling;
+    b.remove();
+    if (had && next) next.focus();   // keep keyboard users in the footer
+    const chips = document.querySelector('#ls-body .ls-chips');
+    if (chips && !chips.querySelector('.ls-done')) chips.insertAdjacentHTML('beforeend', '<span class="ls-chip ls-done">✅ done</span>');
+  },
   go(step) { this.goto(this.slide + step); },
   goto(i) {
     const n = this.deck(this.cur).length;
@@ -348,6 +361,7 @@ const Learn = {
   toggleNotes() {
     this.showNotes = !this.showNotes;
     const n = document.getElementById('ls-note'); if (n) n.style.display = this.showNotes ? 'block' : 'none';
+    const b = document.getElementById('ls-notes-btn'); if (b) b.setAttribute('aria-expanded', String(this.showNotes));
   },
   stopMedia() { const v = document.getElementById('ls-video'); if (v) v.pause(); },
 
@@ -441,3 +455,8 @@ document.addEventListener('keydown', e => Learn.key(e));
     if (Math.abs(dx) > 50) Learn.go(dx < 0 ? 1 : -1);
   }, { passive: true });
 })();
+/* the full-screen deck links back to its lesson as index.html#lesson/<id> */
+if (typeof UI !== 'undefined') {
+  const m = location.hash.match(/^#lesson\/(.+)$/), id = m && decodeURIComponent(m[1]);
+  if (id && Learn.byId(id)) { Learn.open(id); history.replaceState(null, '', location.pathname + location.search); }
+}

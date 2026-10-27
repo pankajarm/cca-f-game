@@ -721,7 +721,7 @@ const CODE_RX = new RegExp([
   'claude -p\\b', 'claude-code-action',
   '\\$\\{[A-Z_][A-Z0-9_]*\\}',
   '--[a-z][a-z-]+\\b',
-  '\\b[A-Za-z0-9_\\-]+\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
+  '(?:\\.{1,2}\\/|\\b)[A-Za-z0-9_\\-][A-Za-z0-9_\\-.]*\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
   '\\/(?:compact|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
   '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|Grep|Glob)\\b',
   '\\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\\b',
@@ -731,7 +731,9 @@ const CODE_RX = new RegExp([
 function fmt(text) {
   const esc = String(text)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return esc.replace(CODE_RX, m => '<code>' + m + '</code>');
+  /* `backticked` spans are code as written; elsewhere, spot identifiers */
+  const code = m => '<code' + (m.length > 22 ? ' class="lc"' : '') + '>' + m + '</code>';
+  return esc.split(/`([^`\n]+)`/).map((part, i) => i % 2 ? code(part) : part.replace(CODE_RX, code)).join('');
 }
 
 /* ---------------- UI core ---------------- */
@@ -773,7 +775,7 @@ const UI = {
     const a = document.activeElement;
     if (document.getElementById('overlay').classList.contains('show')) return;
     if (a && a !== document.body && el.contains(a) && a.offsetParent) return;
-    const h = el.querySelector('h1');
+    const h = el.querySelector('h1') || el.querySelector('.screen-head h2');
     if (!h) return;
     if (!h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
     h.focus({ preventScroll: true });
@@ -793,13 +795,16 @@ const UI = {
     const s = Game.s;
     document.getElementById('hud-title').textContent = Game.title();
     const next = Game.nextTitle();
-    document.getElementById('hud-xp').textContent = s.xp.toLocaleString() + ' XP' + (next ? ' · next: ' + next.t + ' @ ' + next.xp.toLocaleString() : ' · MAX');
+    document.getElementById('hud-xp').innerHTML = s.xp.toLocaleString() + ' XP<span class="xp-next">' + (next ? ' · next: ' + next.t + ' @ ' + next.xp.toLocaleString() : ' · MAX') + '</span>';
     const prev = [...TITLES].reverse().find(t => s.xp >= t.xp);
     const pct = next ? Math.min(100, ((s.xp - prev.xp) / (next.xp - prev.xp)) * 100) : 100;
     document.getElementById('hud-xpfill').style.width = pct + '%';
     document.getElementById('hud-xpbar').setAttribute('aria-valuenow', Math.round(pct));
-    document.getElementById('hud-streak').textContent = s.streak.count;
-    document.getElementById('hud-streak-chip').setAttribute('aria-label', 'Daily streak: ' + s.streak.count + (s.streak.count === 1 ? ' day' : ' days'));
+    /* a streak is live only if the last study day is today or yesterday */
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const streak = (s.streak.last === localDay(new Date()) || s.streak.last === localDay(y)) ? s.streak.count : 0;
+    document.getElementById('hud-streak').textContent = streak;
+    document.getElementById('hud-streak-chip').setAttribute('aria-label', 'Daily streak: ' + streak + (streak === 1 ? ' day' : ' days'));
     const snd = document.getElementById('btn-sound');
     snd.innerHTML = '<span aria-hidden="true">' + (s.soundOn ? '🔊' : '🔇') + '</span>';
     snd.setAttribute('aria-pressed', String(!!s.soundOn));
@@ -827,7 +832,7 @@ const UI = {
     document.getElementById('tower-badge').textContent = cleared + '/10 floors';
     document.getElementById('beast-badge').textContent = s.bestiary.length + '/12';
     document.getElementById('hunt-badge').textContent = s.bestiary.length + '/12 captured';
-    document.getElementById('trophy-badge').textContent = s.achievements.length;
+    document.getElementById('trophy-badge').textContent = s.achievements.length + '/' + ACHIEVEMENTS.length;
     const live = Exam.saved();
     document.getElementById('exam-badge').textContent = live ? '⏳ in progress · ' + clock(Math.max(0, Math.ceil((live.deadline - Date.now()) / 1000))) + ' left'
       : s.examBest ? 'best est. ' + s.examBest : '60 Q · 120 min';
@@ -1110,12 +1115,17 @@ const Tower = {
     const nextUp = list.querySelector('.next-up');
     if (nextUp) requestAnimationFrame(() => {
       const r = nextUp.getBoundingClientRect();
-      if (r.bottom > window.innerHeight) nextUp.scrollIntoView({ block: 'center', behavior: 'auto' });
+      if (r.bottom > window.innerHeight) {
+        nextUp.scrollIntoView({ block: 'center', behavior: 'auto' });
+        /* the heading is now off screen, so start keyboard users on the floor they scrolled to */
+        if (UI.current === 'tower' && !document.getElementById('overlay').classList.contains('show')) nextUp.focus({ preventScroll: true });
+      }
     });
   },
 };
 
 /* ---------------- battle ---------------- */
+const HEARTS = 4;
 const Battle = {
   floorIdx: 0, queue: [], qi: 0, right: 0, wrong: 0, combo: 0, maxCombo: 0,
   shield: false, usedCompact: false, usedThink: false, qStart: 0, xpGained: 0,
@@ -1142,12 +1152,13 @@ const Battle = {
     this.show();
   },
 
-  hearts() { return Math.max(0, 3 - this.wrong); },
+  /* 4 hearts: the 4th miss is the one that makes a 7/10 clear impossible */
+  hearts() { return Math.max(0, HEARTS - this.wrong); },
 
   renderHearts() {
     const el = document.getElementById('b-hearts'), n = this.hearts();
-    el.textContent = '❤️'.repeat(n) + '🖤'.repeat(3 - n);
-    el.setAttribute('aria-label', n + ' of 3 lives left');
+    el.innerHTML = '❤️'.repeat(n) + '<span class="h-lost"></span>'.repeat(HEARTS - n);
+    el.setAttribute('aria-label', n + ' of ' + HEARTS + ' lives left');
   },
 
   show() {
@@ -1157,6 +1168,8 @@ const Battle = {
     this.qStart = Date.now();
     document.getElementById('b-progress').textContent = `Q ${this.qi + 1}/${this.queue.length}`;
     document.getElementById('b-combo').textContent = this.combo >= 2 ? `🔥 combo ×${this.combo}` : '';
+    const boss = FLOORS[this.floorIdx].boss;
+    document.getElementById('b-speech').textContent = '“' + (this.right * (100 / this.queue.length) >= 60 ? boss.hurt : boss.taunt) + '”';
     this.renderHearts();
     document.getElementById('b-hint').className = 'hint-strip';
     document.getElementById('b-shield').className = 'shield-note' + (this.shield ? ' show' : '');
@@ -1241,7 +1254,9 @@ const Battle = {
       if (this.combo > 0 && this.combo % 3 === 0) {
         const k = Game.grantPowerup();
         if (k) UI.toast(POWERUPS[k].ic, 'Power-up: ' + POWERUPS[k].nm, 'Earned with a ×' + this.combo + ' combo');
+        this.renderPowerups();
       }
+      document.getElementById('b-combo').textContent = this.combo >= 2 ? `🔥 combo ×${this.combo}` : '';
       crit ? Sound.crit() : Sound.good();
       sprite.classList.remove('hit'); void sprite.offsetWidth; sprite.classList.add('hit');
       this.floatDamage(crit ? 'CRIT ' + (12 + this.combo) : '' + (10 + this.combo), crit);
@@ -1258,6 +1273,7 @@ const Battle = {
         this.wrong++;
       }
       this.combo = 0;
+      document.getElementById('b-combo').textContent = '';
       Game.deckAdd(q.id);
       Sound.bad();
       speech.textContent = pick(['“Ha! A classic trap!”', '“Your prompt-based defenses amuse me.”', '“That one costs a heart.”', '“The distractor claims another victim!”']);
@@ -1282,7 +1298,7 @@ const Battle = {
   },
 
   next() {
-    if (this.wrong >= 4) return this.finish(false);
+    if (this.wrong >= HEARTS) return this.finish(false);
     this.qi++;
     if (this.qi >= this.queue.length) return this.finish(this.right >= 7);
     this.show();
@@ -1333,7 +1349,7 @@ const Battle = {
       again.className = 'btn ghost'; again.innerHTML = win ? '<span aria-hidden="true">↻</span> Fight again' : '<span aria-hidden="true">⚔️</span> Rematch';
       again.onclick = () => Battle.start(this.floorIdx);
       const tower = document.createElement('button');
-      tower.className = 'btn primary'; tower.style.marginLeft = '10px';
+      tower.className = 'btn primary';
       tower.innerHTML = '<span aria-hidden="true">🗼</span> ' + (win ? 'Climb on' : 'Back to tower');
 
       tower.onclick = () => UI.go('tower');
@@ -1511,7 +1527,12 @@ const Exam = {
     if (Date.now() >= this.deadline) {
       UI.toast('🛎️', 'Time ran out while you were away', 'Your mock exam was submitted with the answers you saved.');
       this.submit('expired');
-    } else this.armExpiry();
+    } else {
+      this.armExpiry();
+      /* a reload lands on the title screen: offer the way back in */
+      const b = document.getElementById('title-resume');
+      if (b) { b.hidden = false; b.querySelector('b').textContent = Math.max(1, Math.round((this.deadline - Date.now()) / 60000)) + ' min left'; }
+    }
   },
 
   /* a suspended mock whose clock ran out while the user was elsewhere in the app: score it once */
@@ -1689,6 +1710,10 @@ const Exam = {
     if (!ok) Game.deckAdd(it.id);
     ok ? Sound.good() : Sound.bad();
     this.show(); this.renderGrid(); this.renderPace();
+    /* the answers were redrawn: keep keyboard users on the feedback's Next button */
+    /* keep the marked answers in view on phones: focus Next without jumping to it */
+    const next = document.querySelector('#e-feedback button');
+    if (next) next.focus({ preventScroll: true });
   },
 
   markPractice(btns, it) {
@@ -1707,7 +1732,14 @@ const Exam = {
     document.getElementById('e-qclock').textContent = '';
   },
 
-  nav(d) { this.idx = Math.max(0, Math.min(this.items.length - 1, this.idx + d)); this.show(); this.renderGrid(); this.persist(); },
+  nav(d) { this.idx = Math.max(0, Math.min(this.items.length - 1, this.idx + d)); this.show(); this.renderGrid(); this.persist(); this.keepFocus(); },
+  /* a redraw removed the focused control (e.g. the feedback's Next): continue at the new question's answers */
+  keepFocus() {
+    const a = document.activeElement;
+    if (a && a !== document.body && a.isConnected) return;
+    const first = document.querySelector('#e-answers .answer:not(.disabled)') || document.getElementById('e-qn');
+    if (first) first.focus({ preventScroll: true });
+  },
   jump(i) { this.idx = i; this.show(); this.renderGrid(); this.persist(); },
   toggleFlag() { const it = this.items[this.idx]; it.flag = !it.flag; this.show(); this.renderGrid(); this.persist(); },
 
@@ -1794,7 +1826,7 @@ const Exam = {
     if (mock) Game.s.examBest = Math.max(Game.s.examBest, score);
     Game.s.examHistory.push({ mode: this.variant, score, correct, total, pct: Math.round(pct * 100), reason,
       perDomain: Object.fromEntries(Object.entries(perDomain).map(([d, r]) => [d, [r.right, r.total]])),
-      scenarios: this.scenarios, seenBefore, mockBefore, secs: used, date: new Date().toISOString().slice(0, 10) });
+      scenarios: this.scenarios, seenBefore, mockBefore, secs: used, date: localDay(new Date()) });
     Game.s.examHistory = Game.s.examHistory.slice(-50);
     Game.save();
 
@@ -1850,7 +1882,7 @@ const Exam = {
 
     const acts = document.getElementById('er-actions');
     acts.innerHTML = '';
-    [['all', '🔍', 'Review all'], ['wrong', '✘', 'Wrong only'], ['flagged', '🚩', 'Flagged']].forEach(([k, ic, label]) => {
+    [['all', '🔍', 'Review all'], ['wrong', '✘', 'Wrong only'], ['flagged', '🚩', 'Flagged']].filter(([k]) => k !== 'flagged' || this.variant !== 'practice').forEach(([k, ic, label]) => {
       const b = document.createElement('button');
       b.className = 'btn ghost small review-filter'; b.innerHTML = `<span aria-hidden="true">${ic}</span> ${label}`;
       b.setAttribute('aria-pressed', 'false'); b.dataset.filter = k;
@@ -1935,7 +1967,7 @@ const Readiness = {
 
   /* the single most useful thing to do next */
   next(rows) {
-    const s = Game.s, days = h => (Date.now() - new Date(h.date).getTime()) / 864e5;
+    const s = Game.s, days = h => (Date.now() - new Date(h.date + 'T00:00').getTime()) / 864e5;   // a local day
     if (!s.totals.answered) {
       if (window.Learn) return { ic: '🎓', label: 'Start with the learning path', sub: 'Short lessons for each domain, then drills.', run: () => UI.go('learn') };
       return { ic: '📘', label: 'Start with a D1 drill', sub: 'Domain 1 is 27% of the exam. Ten questions, explained one by one.', run: () => Blueprint.drillDomain('D1') };
@@ -2156,7 +2188,7 @@ const Drill = {
     setTimeout(() => {
       if (UI.current !== 'drill' || this.queue[this.qi] !== q) return;
       UI.feedback(q, sel, ok, () => this.next(),
-        { btn: this.qi + 1 >= this.queue.length ? 'Finish drill' : 'Next question' });
+        { btn: this.qi + 1 >= this.queue.length ? (this.opts.finish || 'Finish drill') : 'Next question' });
     }, 700);
   },
 
@@ -2178,7 +2210,7 @@ const Drill = {
     home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall · next step';
     home.onclick = () => UI.go('home');
     const bp = document.createElement('button');
-    bp.className = this.from === 'home' ? 'btn ghost' : 'btn primary'; bp.style.marginLeft = '10px';
+    bp.className = this.from === 'home' ? 'btn ghost' : 'btn primary';
     bp.innerHTML = '<span aria-hidden="true">📘</span> Back to the Blueprint';
     bp.onclick = () => UI.go('blueprint');
     acts.append(home, bp);
@@ -2205,6 +2237,7 @@ const Lightning = {
     this.pool = shuffle(pool);
     this.score = 0; this.combo = 0; this.secs = 90;
     document.getElementById('l-time').style.width = '100%';
+    document.getElementById('l-secs').textContent = '90s';
     document.getElementById('l-timebar').setAttribute('aria-label', '90 seconds left');
     UI.go('lightning');
     this.running = true;
@@ -2220,6 +2253,7 @@ const Lightning = {
     if (!this.running) return;
     this.secs--;
     document.getElementById('l-time').style.width = (this.secs / 90 * 100) + '%';
+    document.getElementById('l-secs').textContent = this.secs + 's';
     if (this.secs % 15 === 0 || this.secs === 10) document.getElementById('l-timebar').setAttribute('aria-label', this.secs + ' seconds left');
     if (this.secs <= 10 && this.secs > 0) Sound.tick();
     if (this.secs <= 0) this.finish();
@@ -2276,7 +2310,7 @@ const Lightning = {
     again.className = 'btn ghost'; again.innerHTML = '<span aria-hidden="true">⚡</span> Again';
     again.onclick = () => Lightning.start();
     const home = document.createElement('button');
-    home.className = 'btn primary'; home.style.marginLeft = '10px'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall';
+    home.className = 'btn primary'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall';
     home.onclick = () => UI.go('home');
     acts.append(again, home);
     Sound.win();
@@ -2295,8 +2329,10 @@ const Hunt = {
       name = pick(open.length ? open : Object.keys(MONSTERS));
     }
     const m = MONSTERS[name];
+    if (UI.current !== 'result' && UI.current !== 'drill') this.from = UI.current === 'bestiary' ? 'bestiary' : 'home';
+    const back = this.from === 'bestiary' ? ['bestiary', '← Bestiary'] : ['home', '← Hall'];
     Drill.start(Bank.pick(Bank.forTs(m.ts), HUNT_N, true), `🔦 Hunting ${m.face} ${name} · ${m.ts.join(' · ')}`,
-      { back: ['bestiary', '← Bestiary'], onDone: (right, n) => this.finish(name, right, n) });
+      { back, finish: 'Finish the hunt', onDone: (right, n) => this.finish(name, right, n) });
   },
 
   finish(name, right, n) {
@@ -2320,9 +2356,14 @@ const Hunt = {
     again.className = 'btn ghost'; again.innerHTML = '<span aria-hidden="true">🔦</span> ' + (win ? 'Next monster' : 'Try again');
     again.onclick = () => win ? Hunt.start() : Hunt.start(name);
     const beast = document.createElement('button');
-    beast.className = 'btn primary'; beast.style.marginLeft = '10px'; beast.innerHTML = '<span aria-hidden="true">📖</span> Bestiary';
+    beast.className = 'btn primary'; beast.innerHTML = '<span aria-hidden="true">📖</span> Bestiary';
     beast.onclick = () => UI.go('bestiary');
-    acts.append(again, beast);
+    if (this.from === 'home') {
+      const home = document.createElement('button');
+      home.className = 'btn ghost'; home.innerHTML = '<span aria-hidden="true">🏛️</span> Hall';
+      home.onclick = () => UI.go('home');
+      acts.append(again, beast, home);
+    } else acts.append(again, beast);
     win ? Sound.win() : Sound.lose();
     UI.go('result');
   },
@@ -2363,6 +2404,8 @@ const Review = {
   begin() {
     this.session = shuffle([...Game.s.deck]).slice(0, 10);
     this.qi = 0;
+    /* the round has begun: the intro and its start button would only restart it */
+    document.querySelector('#rv-body .exam-rules').style.display = 'none';
     document.getElementById('rv-stage').style.display = 'block';
     this.show();
   },
@@ -2376,7 +2419,7 @@ const Review = {
     UI.renderStem('rv-qtext', this.cur);
     this.answered = false;
     this.buttons = UI.renderAnswers('rv-answers', this.cur, (sel) => this.answer(sel));
-    document.getElementById('rv-stage').scrollIntoView({ behavior: UI.reducedMotion() ? 'auto' : 'smooth', block: 'center' });
+    document.getElementById('rv-stage').scrollIntoView({ behavior: UI.reducedMotion() ? 'auto' : 'smooth', block: 'start' });
   },
 
   answer(sel) {
@@ -2401,6 +2444,7 @@ const Review = {
     }
     if (ok) { Game.addXP(10); Sound.good(); } else Sound.bad();
     if (discharged) UI.toast('🌿', 'Discharged!', 'That mistake will not haunt the exam.');
+    document.getElementById('rv-progress').textContent = Game.s.deck.length + ' in the ward';
     if (!Game.s.deck.length) {
       if (Game.s.clinicPeak >= 10) Game.unlock('clinic-clear');
       Game.s.clinicPeak = 0; Game.save();
@@ -2448,7 +2492,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === 'Enter' && UI.current === 'exam' && Exam.variant === 'practice') {
     const f = document.activeElement, next = document.querySelector('#e-feedback button');
-    if (f && f !== document.body && !f.closest('#e-answers, #e-feedback')) return;
+    if (f && f.matches('button, a[href], input, select, textarea') && !f.closest('#e-answers, #e-feedback')) return;
     if (next) { e.preventDefault(); next.click(); }
     return;
   }
