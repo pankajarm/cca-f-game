@@ -36,7 +36,7 @@
     "options": ["D1, because it is the largest domain and your weakest", "D3, to push a strong domain to 100%", "Split evenly across all five domains", "D5, because it is the smallest and quickest to finish"],
     "answer": 0, "why": "D1 is about 27 percent of the exam and your weakest area, so gains there move the score the most."},
    {"q": "A question offers four fixes for an agent that sometimes skips a required verification step. Which kind of option does the exam usually reward?",
-    "options": ["Rewording the system prompt so the step sounds mandatory", "A code-level gate that blocks later tools until verification has run", "Switching to a larger model", "Adding a reminder at the end of every user message"],
+    "options": ["Rewording the system prompt so the verification step sounds mandatory", "A code-level gate that blocks later tools until verification has run", "Switching to a larger model that follows instructions more closely", "Adding a reminder about the step to the end of every single user message"],
     "answer": 1, "why": "Prompts have a non-zero failure rate. When a step must always happen, the guide favours deterministic enforcement in code."}
   ],
   "sources": [
@@ -82,7 +82,7 @@
     "options": ["Keep asking for the order number, since identifiers should always come from the customer", "Escalate to a human, since the request is vague", "List the customer's last ten orders and ask them to pick one", "Look up the account's orders and, since only one is open, report its status directly"],
     "answer": 3, "why": "Ask for more information only when lookups cannot settle the question. With a single open order there is nothing to disambiguate."},
    {"q": "A customer writes: 'I don't want the bot, put me through to a person.' The issue is a simple address change the agent could finish. What should the agent do?",
-    "options": ["Finish the address change first, then offer a human", "Explain that it can solve this faster than a human", "Escalate to a human right away with a short structured summary", "Ask the customer to rate their frustration before deciding"],
+    "options": ["Finish the address change first, then offer to connect a human", "Explain that it can solve this faster than a human", "Escalate to a human right away with a short structured summary", "Ask the customer to rate their frustration before deciding whether to escalate"],
     "answer": 2, "why": "An explicit request for a human is an escalation trigger on its own. Honour it immediately and pass the context along."}
   ],
   "sources": [
@@ -106,15 +106,15 @@
     "bullets": ["3.1 CLAUDE.md hierarchy and 3.3 path-specific rules.", "3.2 commands and skills, with forked context.", "3.4 plan mode versus direct execution.", "3.5 iterative refinement and 5.4 context in big codebases."],
     "note": "This scenario leans on the CLAUDE.md hierarchy and path-scoped rules, custom commands and skills, the choice between plan mode and direct execution, and iterative refinement with examples and tests. From domain five, it adds managing context while exploring a large codebase, for example with subagents and compaction."},
    {"kind": "practice", "title": "Worked decision: the missing rules",
-    "bullets": ["A new teammate's Claude ignores the team's testing rules.", "The rules sit in the lead's ~/.claude/CLAUDE.md.", "User-level memory is personal and never shared.", "Exam answer: move them to the project CLAUDE.md or .claude/rules/."],
+    "bullets": ["A new teammate's Claude ignores the team's testing rules.", "The rules sit in the lead's `~/.claude/CLAUDE.md`.", "User-level memory is personal and never shared.", "Exam answer: move them to the project CLAUDE.md or `.claude/rules/`."],
     "note": "A typical question. A new engineer joins and their Claude Code ignores the testing conventions everyone else gets. The cause is that the conventions were written in the lead's user level CLAUDE dot md, which is personal and not in the repository. The fix is to move them into the project file or the project rules folder so everyone loads them."},
    {"kind": "practice", "title": "Contrast: plan or just do it",
     "bullets": ["Migrate auth across 40 files with two possible designs: plan mode.", "Fix a typo in one error message: direct execution.", "Exploring an unknown module: send an Explore subagent.", "Plan first, then execute the agreed plan directly."],
     "note": "Now the plan mode decision. A change that spans many files, affects architecture or has more than one reasonable approach deserves plan mode first. A small, clear, well scoped change does not. When the work is mostly discovery, an Explore subagent keeps the noisy output out of your main context. Then you execute the plan you agreed."},
    {"kind": "traps", "title": "Exam traps",
     "pairs": [
-     {"wrong": "Put the React test conventions in every directory's CLAUDE.md.", "right": "One .claude/rules/ file with paths: **/*.test.tsx.", "why": "Path-scoped rules suit conventions spread across folders."},
-     {"wrong": "A noisy codebase-audit skill runs in the main session.", "right": "Set context: fork in the skill's frontmatter.", "why": "Forked context keeps verbose output out of the session."},
+     {"wrong": "Put the React test conventions in every directory's CLAUDE.md.", "right": "One `.claude/rules/` file with paths: `**/*.test.tsx`.", "why": "Path-scoped rules suit conventions spread across folders."},
+     {"wrong": "A noisy codebase-audit skill runs in the main session.", "right": "Set `context: fork` in the skill's frontmatter.", "why": "Forked context keeps verbose output out of the session."},
      {"wrong": "Use plan mode for every change, to be safe.", "right": "Plan for large or ambiguous work, act directly on small fixes.", "why": "The guide matches the mode to the size and clarity of the task."},
      {"wrong": "Describe the expected output in a long paragraph.", "right": "Give concrete input and output examples, or a failing test.", "why": "Examples and tests steer fixes more precisely than prose."}
     ],
@@ -124,11 +124,11 @@
     "note": "For scenario two, remember this. Shared rules belong in project level files, not in anyone's personal settings. Use path scoped rules for conventions that span directories. Use skills for workflows you call on demand, and fork the noisy ones. And plan before large or ambiguous changes, while small clear fixes go straight to execution."}
   ],
   "check": [
-   {"q": "Your API handlers in src/api/ and services/*/api/ must all use the same error format, but no other code should load that rule. What is the best place for it?",
-    "options": ["The project root CLAUDE.md, so everyone sees it", "A .claude/rules/ file with a paths glob matching the API handler files", "Each developer's ~/.claude/CLAUDE.md", "A slash command developers run before editing handlers"],
+   {"q": "Your API handlers in `src/api/` and `services/*/api/` must all use the same error format, but no other code should load that rule. What is the best place for it?",
+    "options": ["The project root CLAUDE.md, so every developer and every session sees the rule", "A `.claude/rules/` file with a paths glob matching the API handler files", "Each developer's `~/.claude/CLAUDE.md`", "A slash command that developers remember to run before editing any API handler"],
     "answer": 1, "why": "A path-scoped rule loads only when matching files are touched, and one glob can cover several directories."},
    {"q": "While Claude Code iterates on a feature, every developer on the team approves npm test dozens of times per session. The team wants those runs to go through without prompts for everyone, without loosening anything else. What is the best change?",
-    "options": ["Start every session with --dangerously-skip-permissions", "Add 'never ask before running tests' to CLAUDE.md", "Add an allow rule for the test command, such as Bash(npm test *), to the project's committed .claude/settings.json", "Have each developer add the rule to their own user settings"],
+    "options": ["Start every session with --dangerously-skip-permissions so test runs are not interrupted", "Add 'never ask before running tests' to the project's committed CLAUDE.md", "Add an allow rule such as `Bash(npm test *)` to the committed `.claude/settings.json`", "Have each developer add the rule to their own user settings"],
     "answer": 2, "why": "An allow rule in shared project settings pre-approves exactly that command for the whole team. CLAUDE.md text does not change permissions, and skipping all permissions loosens everything."}
   ],
   "sources": [
@@ -171,10 +171,10 @@
   ],
   "check": [
    {"q": "The analysis subagent keeps re-searching for sources the search subagent already found, wasting time. What is the most likely cause?",
-    "options": ["The analysis subagent has too few tools", "The coordinator is not passing the search results into the analysis subagent's prompt", "The model needs a higher temperature", "The subagents need a shared database"],
+    "options": ["The analysis subagent lacks a tool for reading the search subagent's memory", "The coordinator is not passing the search results to the analysis subagent", "The analysis subagent runs at too low a temperature and repeats earlier work", "The subagents need a shared database that both can read and write directly"],
     "answer": 1, "why": "Subagents start with isolated context. If the coordinator does not pass the findings explicitly, the subagent cannot know about them."},
    {"q": "Two credible sources give different 2025 market sizes for the same sector. How should the report subagent handle it?",
-    "options": ["Use the larger figure, since it is more recent", "Average the two figures", "Drop both figures to avoid confusion", "Show both figures with their sources and publication dates"],
+    "options": ["Use the larger figure, since it comes from the more recent publication", "Average the two figures into one estimate and cite both sources", "Drop both figures to avoid confusion", "Show both figures with their sources and publication dates"],
     "answer": 3, "why": "Conflicting credible figures should be presented with attribution, and dates help readers see whether the difference is about timing."}
   ],
   "sources": [
@@ -201,7 +201,7 @@
     "bullets": ["Task: find every caller of calculateTax across a big repo.", "Glob matches file names, so it cannot find calls.", "Grep searches file contents: start there.", "Then Read the hits to follow the flow."],
     "note": "A common question. You need every place that calls a function named calculate tax. Glob matches file paths, so it cannot see inside files. Grep searches file contents, so it is the right first step. Then you Read the matching files to follow the call flow. If the function is re-exported under another name, search for that name too."},
    {"kind": "practice", "title": "Contrast: sharing an MCP server",
-    "bullets": ["You want the whole team to get the Jira MCP server.", "User scope in ~/.claude.json: only you get it.", "Project scope in .mcp.json: committed and shared.", "Secrets stay out of git with ${JIRA_TOKEN} expansion."],
+    "bullets": ["You want the whole team to get the Jira MCP server.", "User scope in `~/.claude.json`: only you get it.", "Project scope in .mcp.json: committed and shared.", "Secrets stay out of git with ${JIRA_TOKEN} expansion."],
     "note": "Now a contrast. If only you need a server, user scope is fine. If the whole team should get it, configure it at project scope in the dot mcp dot json file, which is committed to the repository. Keep the token out of git by referencing an environment variable that each developer sets locally."},
    {"kind": "traps", "title": "Exam traps",
     "pairs": [
@@ -216,11 +216,11 @@
     "note": "For scenario four. Grep finds contents, Glob finds paths, and Read follows the flow. Edit needs an anchor that appears exactly once. Team MCP servers belong in the project config with secrets in environment variables. And long, noisy discovery is best delegated to a subagent so your main context stays clean."}
   ],
   "check": [
-   {"q": "You need a list of every TypeScript test file under packages/ so you can count them. Which built-in tool fits best?",
-    "options": ["Grep for the word test", "Glob with a pattern such as packages/**/*.test.ts", "Read each directory listing manually", "Bash running the full test suite"],
+   {"q": "You need a list of every TypeScript test file under `packages/` so you can count them. Which built-in tool fits best?",
+    "options": ["Grep for the word test across the packages folder", "Glob with a pattern such as `packages/**/*.test.ts`", "Read each directory listing under `packages/` one by one", "Bash running the full test suite and counting the results"],
     "answer": 1, "why": "Glob matches file paths by pattern, which is exactly what this needs."},
    {"q": "The agent prefers Grep over your new internal-docs MCP tool even when the docs tool would answer better. What is the best first fix?",
-    "options": ["Remove Grep from the agent", "Write a richer MCP tool description saying what it covers and when to use it", "Add 'always use MCP' to every user prompt", "Move the server to user scope"],
+    "options": ["Remove Grep from the agent so the docs tool is the only option", "Write a richer MCP tool description saying what it covers and when to use it", "Add 'always use the MCP docs tool' to every user prompt", "Move the MCP server to user scope so it loads before the built-in tools"],
     "answer": 1, "why": "The model picks tools from their descriptions. A clear, specific description is the first lever."}
   ],
   "sources": [
@@ -263,10 +263,10 @@
   ],
   "check": [
    {"q": "A CI pipeline implements a ticket with claude -p, then reviews the change by resuming that session with --fork-session, believing the fork acts as an independent reviewer. Reviews keep approving flawed changes. What is wrong?",
-    "options": ["Forked sessions cannot run in print mode", "A fork copies the implementing session's history and assumptions, so it is not independent of the author", "The review needs --output-format stream-json to see the whole diff", "The fork should resume with a higher --max-turns"],
+    "options": ["Forked sessions cannot run in print mode, so the review step silently does nothing", "A fork copies the author session's history and assumptions, so it is not independent", "The review needs --output-format stream-json to see the whole diff", "The fork should resume with a higher --max-turns so it has time to inspect every file"],
     "answer": 1, "why": "Forking copies the conversation so far, including the reasoning that produced the change. An independent review needs a session that has not seen it."},
    {"q": "After a developer pushes fixes, the re-review repeats the same eight comments it posted last time. What is the best fix?",
-    "options": ["Ask the model to be more concise", "Lower the temperature", "Include the previous findings in the prompt and ask only for new or unresolved issues", "Review only the first file of the diff"],
+    "options": ["Ask the model to be more concise and post fewer comments on each review", "Lower the temperature so the review is more consistent between runs", "Include the previous findings and ask only for new or unresolved issues", "Review only the first file of the diff to keep the comment count down"],
     "answer": 2, "why": "Feeding prior findings lets the reviewer report only what is new or still open."}
   ],
   "sources": [
@@ -309,10 +309,10 @@
   ],
   "check": [
    {"q": "A warranty extractor has a boolean field transferable. When a document says nothing about transfers, Claude returns false, and the resale team treats those products as non-transferable. What schema change fits best?",
-    "options": ["Allow null, or use an enum such as yes, no and not_stated, so a silent document is not recorded as a no", "Make the field required so it is always filled", "Default the field to true when the document is silent", "Remove the field and let the resale team read each document"],
+    "options": ["Allow null, or an enum such as yes, no and not_stated, so silence is not recorded as no", "Make the field required so a value is always filled in for every document", "Default the field to true when the document is silent, since most warranties transfer", "Remove the field and let the resale team read each document"],
     "answer": 0, "why": "A plain boolean has no way to say the document is silent, so silence becomes false. A null or not_stated option keeps absence distinct from a real no."},
    {"q": "The model returns a contract_date of '13/45/2024', which fails validation. What is the best next step?",
-    "options": ["Drop the document from the batch", "Retry with the same prompt", "Retry and include the specific validation error about the date format", "Accept it and let downstream systems fix it"],
+    "options": ["Drop the document from the batch and log it for someone to enter by hand", "Retry with the same prompt, since date errors are usually random", "Retry and include the specific validation error about the date format", "Accept it and let the downstream systems normalise the date format later"],
     "answer": 2, "why": "Format errors are worth retrying, and appending the exact validation error tells the model what to correct."}
   ],
   "sources": [
@@ -354,7 +354,7 @@
   ],
   "check": [
    {"q": "With 10 minutes left you have 6 unanswered questions and 4 flagged ones. What is the best use of the time?",
-    "options": ["Re-check the 4 flagged questions carefully first", "Give a best answer to all 6 unanswered questions, then revisit flags", "Leave the 6 blank and perfect the flagged ones", "Start again from question 1"],
+    "options": ["Re-check the 4 flagged questions carefully first, then answer the rest", "Give a best answer to all 6 unanswered questions, then revisit flags", "Leave the 6 blank and perfect the flagged ones, since wrong answers may cost more", "Start again from question 1"],
     "answer": 1, "why": "Blanks score as wrong. Answer everything first, then use any remaining time on flags."},
    {"q": "Two options remain. One adds an emphatic rule to the system prompt; the other blocks the action in a hook unless a condition is met. The rule must hold every time. Which do you pick?",
     "options": ["The emphatic prompt rule, because it is simpler", "The hook that blocks the action", "Either, they are equivalent", "Neither, escalate to a human every time"],

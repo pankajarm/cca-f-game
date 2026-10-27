@@ -69,7 +69,11 @@ body.notes #stage .ldeck { width: min(100%, calc((100vh - 220px) * 16 / 9)); }
 #bar button, #bar a { background: #2B2722; color: #F0EADD; border: 1px solid #433D33; border-radius: 10px; padding: 7px 14px; font: 600 14px var(--font-body); cursor: pointer; text-decoration: none; }
 #note { max-width: 900px; margin: 0 auto 14px; padding: 0 16px; color: #D9D0C0; font-size: 15px; display: none; }
 #note.show { display: block; }
-#disclaimer { text-align: center; color: #847A6C; font-size: 12px; padding-bottom: 10px; }
+#bar button:disabled { opacity: .4; cursor: default; }
+#missing { max-width: 900px; margin: 16px auto 0; padding: 10px 14px; border-radius: 10px; background: #46342B; color: #F0EADD; font-size: 14px; }
+#missing[hidden] { display: none; }
+#missing a { color: #F0A07A; }
+#disclaimer { text-align: center; color: #A89C88; font-size: 12px; padding-bottom: 10px; }
 body.render { background: #F3EEE3; display: block; }
 body.render #stage { padding: 0; display: block; }
 body.render #stage .ldeck { width: 1280px; }
@@ -79,31 +83,32 @@ body.deck-print { background: #fff; display: block; }
 body.deck-print #stage { display: block; padding: 0; }
 body.deck-print #stage .ldeck { width: 100%; }
 body.deck-print .lslide { margin-bottom: 18px; }
-body.deck-print #bar, body.deck-print #note { display: none; }
+body.deck-print #bar, body.deck-print #note, body.deck-print #disclaimer, body.deck-print #missing { display: none; }
 @page { size: 13.333in 7.5in; margin: 0; }
 </style>
 <link rel="stylesheet" href="learn.css">
 </head>
 <body>
+<p id="missing" role="alert" hidden></p>
 <div id="stage"><div class="ldeck" id="deck"></div></div>
 <div id="note"></div>
 <div id="bar">
-  <button onclick="move(-1)" aria-label="Previous slide">←</button><span id="count"></span><button onclick="move(1)" aria-label="Next slide">→</button>
-  <button onclick="toggleNotes()">Notes (N)</button><button onclick="printable()">Print / PDF (P)</button>
+  <button onclick="move(-1)" id="prev" aria-label="Previous slide">←</button><span id="count" aria-live="polite"></span><button onclick="move(1)" id="next" aria-label="Next slide">→</button>
+  <button onclick="toggleNotes()" id="notes-btn" aria-pressed="false">Notes (N)</button><button onclick="printable()">Print / PDF (P)</button>
   <a href="../index.html" id="back">Back to the lesson</a>
 </div>
 <div id="disclaimer">Unofficial study material for the Claude Certified Architect – Foundations exam. The official exam guide is the authority.</div>
 <script>
 /* Same code-token highlighting as the game (copied from game.js CODE_RX + fmt; keep in sync). */
 const CODE_RX = new RegExp([
-  '(?:~\\/)?\\.claude\\/[A-Za-z0-9_\\-.\\/*]+',
+  '(?:\\.{1,2}\\/|~\\/)?\\.claude\\/(?:[A-Za-z0-9_\\-.\\/*]*[A-Za-z0-9_\\-\\/*])?',
   '~\\/\\.claude\\.json', '\\.mcp\\.json',
   'claude -p\\b', 'claude-code-action',
   '\\$\\{[A-Z_][A-Z0-9_]*\\}',
   '--[a-z][a-z-]+\\b',
-  '\\b[A-Za-z0-9_\\-]+\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
-  '\\/(?:compact|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
-  '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|Grep|Glob)\\b',
+  '(?:\\.{1,2}\\/|\\b)[A-Za-z0-9_\\-][A-Za-z0-9_\\-.]*\\.(?:md|json|tsx|ts|jsx|js|py|yaml|yml|mjs)\\b',
+  '\\/(?:compact|context|memory|reload-skills|clear|resume|config|status|usage|plugin)\\b',
+  '\\b(?:PreToolUse|PostToolUse|SessionStart|UserPromptSubmit|allowed-tools|argument-hint|cache_control|tool_choice|allowedTools|isRetryable|errorCategory|isError|custom_id|fork_session|max_iterations|max_tokens|stop_reason|end_turn|tool_use|tool_result|few_shot|updatedToolOutput|Grep|Glob)\\b',
   '\\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\\b',
   '"(?:auto|any|none)"',
 ].join('|'), 'g');
@@ -111,14 +116,23 @@ const CODE_RX = new RegExp([
 function fmt(text) {
   const esc = String(text)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return esc.replace(CODE_RX, m => '<code>' + m + '</code>');
+  /* `backticked` spans are code as written; elsewhere, spot identifiers */
+  const code = m => '<code' + (m.length > 22 ? ' class="lc"' : '') + '>' + m + '</code>';
+  return esc.split(/`([^`\n]+)`/).map((part, i) => i % 2 ? code(part) : part.replace(CODE_RX, code)).join('');
 }
 </script>
 <script src="lessons.js"></script>
 <script src="../learn.js"></script>
 <script>
 const params = new URLSearchParams(location.search);
-const lesson = Learn.byId(params.get("id") || decodeURIComponent(location.hash.slice(1))) || Learn.all()[0];
+const asked = params.get("id") || decodeURIComponent(location.hash.slice(1));
+const lesson = Learn.byId(asked) || Learn.all()[0];
+if (asked && !Learn.byId(asked)) {
+  const m = document.getElementById('missing');
+  m.textContent = 'There is no lesson called "' + asked + '", so this is the first lesson. ';
+  m.insertAdjacentHTML('beforeend', '<a href="../index.html#lesson/start-here">Pick a lesson in the Learn path</a>.');
+  m.hidden = false;
+}
 const slides = Learn.deck(lesson);
 let i = 0;
 document.title = lesson.title + ' · Architect\'s Ascent';
@@ -127,11 +141,18 @@ function draw() {
   Learn.fit(document.querySelector('#deck .lslide'));
   document.getElementById('count').textContent = (i + 1) + ' / ' + slides.length;
   document.getElementById('note').textContent = slides[i].note || '';
+  document.getElementById('prev').disabled = i === 0;
+  document.getElementById('next').disabled = i === slides.length - 1;
+  document.getElementById('back').href = '../index.html#lesson/' + encodeURIComponent(lesson.id) + '/' + (i + 1);
 }
 function move(d) { i = Math.max(0, Math.min(slides.length - 1, i + d)); draw(); }
-function toggleNotes() { document.body.classList.toggle('notes', document.getElementById('note').classList.toggle('show')); draw(); }
+function toggleNotes() {
+  const on = document.getElementById('note').classList.toggle('show');
+  document.body.classList.toggle('notes', on);
+  document.getElementById('notes-btn').setAttribute('aria-pressed', String(on));
+  draw();
+}
 function printable() { params.set('print', '1'); params.set('id', lesson.id); location.search = params.toString(); }
-document.getElementById('back').href = '../index.html#lesson/' + encodeURIComponent(lesson.id);
 window.showSlide = n => { i = n; draw(); return slides.length; };
 window.slideCount = slides.length;
 /* the game passes its theme; opened directly, follow the system (renders stay light) */

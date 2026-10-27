@@ -115,6 +115,7 @@ def check(lessons, res):
     if want_ts != have_ts:
         errs.append(f'task statements missing: {sorted(want_ts - have_ts)}')
     vids = {v['id'] for v in res['videos']}
+    n_checks = n_longest = 0
     for l in lessons:
         where = l['id']
         for k in ('title', 'hook', 'stage', 'kind', 'minutes'):
@@ -138,6 +139,15 @@ def check(lessons, res):
                 errs.append(f'{where} check {i}: malformed')
             if re.search(r'\b(first|second|third|fourth|last) option\b', c['why'], re.I):
                 errs.append(f'{where} check {i}: refers to option position')
+            # option length must not give the answer away
+            if len(c['options']) == 4 and 0 <= c['answer'] < 4:
+                lens = [len(o) for o in c['options']]
+                right = lens[c['answer']]
+                longest_wrong = max(n for j, n in enumerate(lens) if j != c['answer'])
+                n_checks += 1
+                n_longest += right > longest_wrong
+                if right > 1.25 * longest_wrong:
+                    errs.append(f'{where} check {i}: correct option is {right / longest_wrong:.2f}x the longest distractor (max 1.25x)')
         if l['kind'] == 'ts' and not l.get('lab'):
             errs.append(f'{where}: no lab')
         for u in l.get('sources', []):
@@ -149,6 +159,8 @@ def check(lessons, res):
         blob = json.dumps(l, ensure_ascii=False)
         if DASH.search(blob):
             errs.append(f'{where}: contains an em or en dash')
+    if n_checks:
+        print(f'  quick checks: correct option is the longest in {n_longest}/{n_checks} ({100 * n_longest / n_checks:.0f}%)')
     # the official prep-course list must point at the same pages the lessons link
     for p in res['prepCourses']['items']:
         c = res['courseIndex'].get(p['key'])

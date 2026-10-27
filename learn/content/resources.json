@@ -591,6 +591,8 @@
   ],
   "primer-D2": [
    "mcp",
+   "api",
+   "ccaction",
    "dl-mcp",
    "tooluse"
   ],
@@ -683,6 +685,9 @@
   ],
   "primer-D5": [
    "api",
+   "fluency",
+   "vertex",
+   "bedrock",
    "b-context"
   ],
   "ts-5.1": [
@@ -845,10 +850,6 @@
      "url": "https://anthropic-partners.skilljar.com/claude-certified-architect-foundations-certification"
     },
     {
-     "title": "Official CCA-F prep course list (Partner Academy)",
-     "url": "https://anthropic-partners.skilljar.com/page/claude-certified-architect-foundations-prep-courses"
-    },
-    {
      "title": "Certification FAQ",
      "url": "https://anthropic-partners.skilljar.com/page/faq-certifications"
     },
@@ -901,7 +902,8 @@
     "domains": [
      "D1",
      "D2",
-     "D4"
+     "D4",
+     "D5"
     ],
     "why": "The API course taught on Google Cloud Vertex AI. Take it instead of the API course if Vertex is your platform.",
     "url": "https://anthropic.skilljar.com/claude-with-google-vertex",
@@ -932,7 +934,8 @@
     "domains": [
      "D1",
      "D2",
-     "D4"
+     "D4",
+     "D5"
     ],
     "why": "The API course taught on Amazon Bedrock. Take it instead of the API course if Bedrock is your platform.",
     "url": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",

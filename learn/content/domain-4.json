@@ -217,10 +217,10 @@
    {
     "q": "A CI reviewer posts many speculative findings such as 'this might fail under some conditions'. Developers waste time chasing ones that cannot happen. What prompt change best raises precision?",
     "options": [
-     "Ask the reviewer to use more cautious wording",
-     "Limit the reviewer to five findings per pull request",
-     "Ask the reviewer to rate how worried it is about each finding",
-     "Require each finding to name the concrete input or code path that triggers it, and tell the reviewer to skip any it cannot"
+     "Ask the reviewer to use more cautious wording such as 'may' or 'could' for unsure findings",
+     "Limit the reviewer to five findings per pull request so only the strongest get posted",
+     "Ask the reviewer to rate how worried it is about each finding on a scale of 1 to 10",
+     "Require each finding to name the input or code path that triggers it, and skip any it cannot"
     ],
     "answer": 3,
     "why": "An explicit bar for what counts as a finding filters out speculation. Softer wording, caps and self-rated worry do not define what to report."
@@ -228,10 +228,10 @@
    {
     "q": "A code review bot's SQL-injection findings are 95% accurate, but its 'performance concern' findings are 20% accurate. Developers now ignore all bot comments. What should the team do first?",
     "options": [
-     "Turn off the bot entirely until every category is fixed",
+     "Turn off the bot entirely until every category reaches the same accuracy as SQL injection",
      "Merge both categories into one so the average accuracy looks better",
-     "Ask developers to read every comment more carefully",
-     "Disable the performance category while rewriting its criteria, keeping SQL-injection findings on"
+     "Ask developers to read every comment more carefully before dismissing it",
+     "Disable performance findings while rewriting their criteria; keep SQL-injection findings on"
     ],
     "answer": 3,
     "why": "Pausing the noisy category restores trust in the accurate one while the prompt is fixed."
@@ -360,7 +360,7 @@
     "q": "A support-ticket classifier returns the right category but formats its output differently from run to run, which breaks the downstream parser. Detailed format instructions are already in the prompt. What is the most effective next step?",
     "options": [
      "Add three short examples showing tickets and the exact expected output",
-     "Ask Claude to double-check its formatting before answering",
+     "Ask Claude to double-check its formatting against the instructions before answering",
      "Increase max_tokens so Claude has room to format properly",
      "Move the format instructions to the end of the prompt in capital letters"
     ],
@@ -370,10 +370,10 @@
    {
     "q": "An extraction prompt includes four examples, all from one vendor's tidy table layout. On other vendors' prose-style invoices, Claude often returns empty fields or invents values. How should the examples change?",
     "options": [
-     "Add six more examples from the same vendor for extra emphasis",
+     "Add six more examples from the same vendor so the expected format is reinforced",
      "Remove all examples and rely on the schema alone",
-     "Replace some with varied layouts, including one where a field is truly missing and the output is null",
-     "Keep the examples but tell Claude to never return empty fields"
+     "Swap some for varied layouts, including one with a truly missing field returned as null",
+     "Keep the examples but add an instruction never to return empty or missing fields"
     ],
     "answer": 2,
     "why": "Varied layouts plus an explicit missing-field case teach Claude where to look and when null is correct. Forbidding empty fields would push it to invent values."
@@ -512,10 +512,10 @@
    {
     "q": "A financial-report extractor returns discount_rate as a string, and values arrive as '15%', '0.15' and '15'. Every output is schema-valid, but downstream calculations are off by a factor of 100 on some rows. What should be added?",
     "options": [
-     "A required flag on discount_rate so it is never missing",
-     "A longer system prompt about financial accuracy",
-     "A numeric field with a stated normalisation rule, such as a decimal fraction where 15 percent is 0.15",
-     "A retry whenever the value contains a percent sign"
+     "A required flag on discount_rate so every row carries a value for it",
+     "A longer system prompt stressing financial accuracy and careful reading of rates",
+     "A numeric field with a stated normalisation rule, such as 15 percent stored as 0.15",
+     "A retry whenever the value contains a percent sign, until it comes back without one"
     ],
     "answer": 2,
     "why": "A schema guarantees structure, not consistent meaning. A typed field plus an explicit normalisation rule makes every value comparable."
@@ -523,10 +523,10 @@
    {
     "q": "An invoice extractor has one field named total. On some invoices Claude returns the amount before tax and on others the amount after tax, and finance cannot tell which it got. Every output is schema-valid. What schema change fits best?",
     "options": [
-     "Replace total with separate subtotal_before_tax and total_including_tax fields, each with a description saying exactly what it holds",
-     "Mark total as required so it is always filled",
-     "Lower the temperature so the choice is more consistent",
-     "Retry each invoice until two runs agree on the total"
+     "Split total into subtotal_before_tax and total_including_tax, each with a clear description",
+     "Mark total as required and describe it as the main amount shown on the invoice",
+     "Lower the temperature so the choice between the two amounts is more consistent",
+     "Retry each invoice until two independent runs agree on the same total amount"
     ],
     "answer": 0,
     "why": "An ambiguous field invites inconsistent answers. Separate, clearly described fields remove the guesswork and keep both values."
@@ -550,13 +550,13 @@
    "title": "Extraction through a tool schema",
    "minutes": 12,
    "steps": [
-    "Use a model that accepts forced tool_choice, or on the newest models (which return a 400 for it) use auto with strict: true throughout.",
+    "Use a model that accepts forced tool_choice, or on the newest models (which return a 400 for it) use auto with `strict: true` throughout.",
     "Define a record_receipt tool whose input_schema has merchant, total, and a nullable tip field.",
     "Send three receipt texts, one with no tip, using tool_choice auto, then forced to record_receipt.",
     "Read each tool_use block's input as the result.",
     "Make tip required and non-nullable, re-run the no-tip receipt, and inspect what Claude fills in."
    ],
-   "expect": "Forcing the tool guarantees a structured record, while auto can drift into text. A required field with no source value invites an invented number. Schemas fix shape, not truth: an exam favourite. (On the newest models, use auto with strict: true instead of forcing.)"
+   "expect": "Forcing the tool guarantees a structured record, while auto can drift into text. A required field with no source value invites an invented number. Schemas fix shape, not truth: an exam favourite. (On the newest models, use auto with `strict: true` instead of forcing.)"
   }
  },
  {
@@ -654,9 +654,9 @@
     "q": "An extraction loop validates each record. When validation fails, it resends the original prompt unchanged, up to five times. Many failures repeat identically. What is the best improvement?",
     "options": [
      "Increase the retry limit to ten attempts",
-     "Switch to a larger model only for retries",
+     "Switch to a larger model only for retries, keeping the original prompt the same",
      "Append the specific validation errors to the retry request",
-     "Lower temperature on retries to make answers more stable"
+     "Lower the temperature on retries to make the answers more stable"
     ],
     "answer": 2,
     "why": "Retrying with the exact error tells Claude what to correct. Unchanged prompts tend to reproduce the same mistake."
@@ -666,7 +666,7 @@
     "options": [
      "Return null for policy_number, flag the record, and stop retrying",
      "Retry with the error until Claude produces a policy number",
-     "Generate a placeholder policy number so downstream checks pass",
+     "Generate a placeholder policy number so the downstream checks can pass",
      "Re-run the whole batch with a stricter prompt"
     ],
     "answer": 0,
@@ -800,9 +800,9 @@
    {
     "q": "Two hours into a 40,000-request Message Batch, an engineer notices the prompt never asks for the tax amount, a field every result needs. What is the best next step?",
     "options": [
-     "Let the batch finish, then fill in the tax field afterwards in code",
+     "Let the batch finish, then fill in the tax field afterwards in code from the source data",
      "Cancel the batch, fix the prompt, check it on a small sample, and submit a new batch",
-     "Submit a second batch now with the fixed prompt and let both run",
+     "Submit a second batch now with the fixed prompt and let both run to completion",
      "Wait for the batch to end and resubmit only the errored requests"
     ],
     "answer": 1,
@@ -811,9 +811,9 @@
    {
     "q": "A batch of 10,000 extraction requests finishes with 240 errored results caused by documents exceeding the context window. What should the team do?",
     "options": [
-     "Resubmit all 10,000 requests with a larger max_tokens",
+     "Resubmit all 10,000 requests with a larger max_tokens so the long documents fit",
      "Split the 240 oversized documents into chunks and resubmit only those custom_ids",
-     "Resubmit the 240 requests unchanged until they succeed",
+     "Resubmit only the 240 errored requests unchanged, since batch errors are often transient",
      "Drop the 240 documents and report the batch as complete"
     ],
     "answer": 1,
@@ -937,8 +937,8 @@
    {
     "q": "A review pipeline sends each change to a separate Claude instance with the note 'Written by our most senior engineer and already passing all tests.' The reviewer approves nearly everything, and production bugs keep slipping through. What change helps most?",
     "options": [
-     "Add a second note asking the reviewer to be extra careful",
-     "Run the same reviewer twice and keep findings both runs report",
+     "Add a second note asking the reviewer to be extra careful with senior engineers' code",
+     "Run the same reviewer twice with the same note and keep findings both runs report",
      "Give the reviewer a larger context window",
      "Remove the framing and give the reviewer only the change and neutral review criteria"
     ],
@@ -948,10 +948,10 @@
    {
     "q": "A team adopted per-file review passes plus a cross-file integration pass for every pull request, including one-line typo fixes. CI cost has tripled and small PRs wait on several passes. What is the best adjustment?",
     "options": [
-     "Use a single pass for small, single-file changes and keep the multi-pass design for larger pull requests",
-     "Drop the integration pass for every pull request",
-     "Move all reviews to the Message Batches API",
-     "Keep the design and raise the CI budget"
+     "Use one pass for small single-file changes; keep multi-pass for large pull requests",
+     "Drop the integration pass for every pull request and keep only the per-file passes",
+     "Move all reviews to the Message Batches API to cut the cost of every pass",
+     "Keep the design for every pull request and raise the CI budget to match"
     ],
     "answer": 0,
     "why": "Per-file and integration passes counter attention dilution on large, multi-file changes. A one-line fix gains nothing from them."

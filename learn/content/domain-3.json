@@ -20,7 +20,7 @@
     "title": "The vocabulary",
     "bullets": [
      "CLAUDE.md: standing instructions loaded every session.",
-     ".claude/rules/: topic files, optionally tied to file paths.",
+     "`.claude/rules/`: topic files, optionally tied to file paths.",
      "Slash commands and skills: saved workflows run on demand.",
      "Plan mode: propose first, edit after approval.",
      "Headless mode (-p): run once in scripts and CI."
@@ -68,26 +68,26 @@
    },
    {
     "term": "User vs project level",
-    "def": "~/.claude/ is personal to you; the repo's CLAUDE.md and .claude/ are shared via git."
+    "def": "`~/.claude/` is personal to you; the repo's CLAUDE.md and `.claude/` are shared via git."
    },
    {
     "term": "@import",
     "def": "An @path line in CLAUDE.md that pulls another file's contents in."
    },
    {
-    "term": ".claude/rules/",
+    "term": "`.claude/rules/`",
     "def": "Folder of topic-specific instruction files; can be scoped with paths: globs."
    },
    {
     "term": "Glob",
-    "def": "A file pattern such as **/*.test.ts; ** matches any folder depth."
+    "def": "A file pattern such as `**/*.test.ts`; `**` matches any folder depth."
    },
    {
     "term": "Skill",
     "def": "A folder with SKILL.md that Claude loads on demand or when invoked as /name."
    },
    {
-    "term": "context: fork",
+    "term": "`context: fork`",
     "def": "Skill frontmatter that runs the skill in an isolated subagent context."
    },
    {
@@ -146,8 +146,8 @@
     "kind": "how",
     "title": "Where each file lives",
     "bullets": [
-     "User: ~/.claude/CLAUDE.md. Only you, in every project.",
-     "Project: ./CLAUDE.md or ./.claude/CLAUDE.md. Committed, shared with the team.",
+     "User: `~/.claude/CLAUDE.md`. Only you, in every project.",
+     "Project: `./CLAUDE.md` or `./.claude/CLAUDE.md`. Committed, shared with the team.",
      "Directory: a CLAUDE.md inside a subfolder, loaded when Claude works there.",
      "CLAUDE.local.md: your private notes for one project, kept out of git."
     ],
@@ -161,8 +161,8 @@
     "kind": "how",
     "title": "Keep it modular",
     "bullets": [
-     "@path/to/file imports another file into CLAUDE.md.",
-     ".claude/rules/ holds one topic per file, like testing.md.",
+     "`@path/to/file` imports another file into CLAUDE.md.",
+     "`.claude/rules/` holds one topic per file, like testing.md.",
      "Keep each file short; long files bury the rules that matter.",
      "Run /memory to see and open your memory files.",
      "Docs today: /context shows which CLAUDE.md and rules files loaded."
@@ -178,7 +178,7 @@
     "title": "Scenario 2: the teammate who gets no rules",
     "bullets": [
      "Symptom: your Claude follows the test style; a new hire's does not.",
-     "Ask where the rule lives. ~/.claude/CLAUDE.md is yours alone.",
+     "Ask where the rule lives. `~/.claude/CLAUDE.md` is yours alone.",
      "Fix: move it into the project CLAUDE.md and commit it.",
      "Verify in their session with /memory, not by guessing."
     ],
@@ -212,7 +212,7 @@
     "bullets": [
      "User level is personal; project level is shared through git.",
      "Subfolder CLAUDE.md files load when Claude works in that folder.",
-     "Imports and .claude/rules/ keep instructions modular.",
+     "Imports and `.claude/rules/` keep instructions modular.",
      "Missing rules for one person? Check the hierarchy first."
     ],
     "note": "Three layers, all combined: user, project and directory. Personal preferences go in your home folder, team standards go in the repository, and folder specific notes go next to the code they describe. When one person's Claude is missing a rule, check which layer the rule was written into before changing anything else."
@@ -221,12 +221,12 @@
   "docsToday": "@imports organise instructions but load with the parent file, so they don't save context. /memory lists and opens memory files; /context shows which CLAUDE.md and rules files actually loaded. Exam items keep the guide's /memory wording.",
   "check": [
    {
-    "q": "A developer added 'always use the shared logger, never console.log' to ~/.claude/CLAUDE.md. Two weeks later, teammates' Claude sessions still add console.log calls. What should the team do?",
+    "q": "A developer added 'always use the shared logger, never console.log' to `~/.claude/CLAUDE.md`. Two weeks later, teammates' Claude sessions still add console.log calls. What should the team do?",
     "options": [
      "Add IMPORTANT in capitals to the line so Claude weighs it more heavily",
      "Ask every teammate to run /init so Claude regenerates their instructions",
      "Move the rule into the project's committed CLAUDE.md so every clone gets it",
-     "Put the rule in CLAUDE.local.md at the repository root"
+     "Put the rule in CLAUDE.local.md at the repository root so it loads for everyone"
     ],
     "answer": 2,
     "why": "The user-level file is never shared, so teammates never received the rule. The committed project CLAUDE.md reaches everyone; CLAUDE.local.md is personal and gitignored."
@@ -234,9 +234,9 @@
    {
     "q": "A monorepo's root CLAUDE.md has grown to 900 lines covering the web app, the payments service and the data pipeline. Claude now often ignores payments rules. What is the best restructuring?",
     "options": [
-     "Move each area's conventions into that folder's own CLAUDE.md or a topic file, keeping the root short",
-     "Repeat the most important payments rules three times in the root file",
-     "Move all the conventions into ~/.claude/CLAUDE.md so they load earlier",
+     "Move each area's rules into its folder's CLAUDE.md or a topic file, keeping the root short",
+     "Repeat the most important payments rules three times in the root file, in capitals",
+     "Move all the conventions into `~/.claude/CLAUDE.md` so they load earlier",
      "Turn the whole file into one skill that developers invoke at the start of each session"
     ],
     "answer": 0,
@@ -262,9 +262,9 @@
    "minutes": 10,
    "steps": [
     "In a scratch git repo, create CLAUDE.md with: 'Always end replies with the word TEAM.'",
-    "Add a line to ~/.claude/CLAUDE.md: 'Also end replies with the word ME.' (remove it afterwards).",
-    "Create sub/CLAUDE.md with 'Mention the word FOLDER.' and a file sub/notes.txt.",
-    "Start claude at the repo root, ask a question, run /context (or /memory), then ask Claude to read sub/notes.txt and ask again."
+    "Add a line to `~/.claude/CLAUDE.md`: 'Also end replies with the word ME.' (remove it afterwards).",
+    "Create `sub/CLAUDE.md` with 'Mention the word FOLDER.' and a file `sub/notes.txt`.",
+    "Start claude at the repo root, ask a question, run /context (or /memory), then ask Claude to read `sub/notes.txt` and ask again."
    ],
    "expect": "Both TEAM and ME apply at launch, and FOLDER appears only after Claude touches the subfolder. Cloning the repo elsewhere would carry TEAM and FOLDER but never ME, which is the exam's 'new teammate' diagnosis."
   }
@@ -294,8 +294,8 @@
     "kind": "how",
     "title": "Where they live and who gets them",
     "bullets": [
-     ".claude/commands/ and .claude/skills/ live in the repo and are shared.",
-     "~/.claude/commands/ and ~/.claude/skills/ are personal, across your projects.",
+     "`.claude/commands/` and `.claude/skills/` live in the repo and are shared.",
+     "`~/.claude/commands/` and `~/.claude/skills/` are personal, across your projects.",
      "$ARGUMENTS inserts whatever the user typed after the command.",
      "Docs today: commands and skills merged; both files create /name."
     ],
@@ -309,7 +309,7 @@
     "kind": "how",
     "title": "SKILL.md frontmatter that matters",
     "bullets": [
-     "context: fork runs the skill in its own subagent context.",
+     "`context: fork` runs the skill in its own subagent context.",
      "Only the result returns, so noisy output stays out of your session.",
      "allowed-tools lists the tools the skill may use.",
      "argument-hint tells users what to type after the name.",
@@ -325,9 +325,9 @@
     "kind": "practice",
     "title": "Scenario 2: a team review checklist",
     "bullets": [
-     "Everyone needs /review-pr: put it in .claude/skills/ and commit.",
-     "Your private /scratch-notes command stays in ~/.claude/.",
-     "A codebase scan floods the chat: add context: fork.",
+     "Everyone needs /review-pr: put it in `.claude/skills/` and commit.",
+     "Your private /scratch-notes command stays in `~/.claude/`.",
+     "A codebase scan floods the chat: add `context: fork`.",
      "Always-on style rules stay in CLAUDE.md, not a skill."
     ],
     "note": "Picture the code generation team. They want one shared review workflow, so it goes in the repository and is committed. Someone's personal helper stays in their home folder. A skill that scans hundreds of files gets context fork so only its summary comes back. And the style rules everyone must follow all the time stay in CLAUDE dot md."
@@ -337,13 +337,13 @@
     "title": "Exam traps",
     "pairs": [
      {
-      "wrong": "Save the team's shared command in ~/.claude/commands/.",
-      "right": "Commit it under .claude/commands/ or .claude/skills/ in the repo.",
+      "wrong": "Save the team's shared command in `~/.claude/commands/`.",
+      "right": "Commit it under `.claude/commands/` or `.claude/skills/` in the repo.",
       "why": "Only committed files reach teammates."
      },
      {
       "wrong": "Run a verbose exploration skill inline in the main session.",
-      "right": "Set context: fork on the skill.",
+      "right": "Set `context: fork` on the skill.",
       "why": "Forked output stays isolated; only the summary returns."
      },
      {
@@ -358,37 +358,37 @@
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     "Repo .claude/ is shared; ~/.claude/ is personal.",
-     "context: fork isolates noisy skills in a subagent.",
+     "Repo `.claude/` is shared; `~/.claude/` is personal.",
+     "`context: fork` isolates noisy skills in a subagent.",
      "allowed-tools and argument-hint shape how a skill runs.",
      "Skills for on-demand workflows; CLAUDE.md for always-on standards."
     ],
     "note": "Keep four things in mind. Where the file lives decides who gets it. Context fork keeps noisy work out of your main session. Allowed tools and argument hint shape how a skill runs and how people call it. And use skills for workflows you call on demand, while CLAUDE dot md holds what must always apply."
    }
   ],
-  "docsToday": "Custom commands and skills are now one system: .claude/commands/x.md and .claude/skills/x/SKILL.md both create /x. allowed-tools pre-approves tools for the skill's turn rather than blocking others.",
+  "docsToday": "Custom commands and skills are now one system: `.claude/commands/x.md` and `.claude/skills/x/SKILL.md` both create /x. allowed-tools pre-approves tools for the skill's turn rather than blocking others.",
   "check": [
    {
     "q": "A platform team writes a /release-notes workflow that every engineer should be able to run from any clone of the repository. Where should it go?",
     "options": [
-     "~/.claude/commands/release-notes.md on the team lead's machine",
+     "`~/.claude/commands/release-notes.md` on the team lead's machine",
      "A section at the bottom of the root CLAUDE.md",
-     "CLAUDE.local.md, so it stays private until it is finished",
-     ".claude/skills/release-notes/SKILL.md, committed to the repository"
+     "CLAUDE.local.md at the repository root, so it stays private until it is finished",
+     "`.claude/skills/release-notes/SKILL.md`, committed to the repository"
     ],
     "answer": 3,
-    "why": "Files under the repository's .claude/ directory are shared through version control. The home-directory and local files are personal, and CLAUDE.md is for always-on instructions, not invocable workflows."
+    "why": "Files under the repository's `.claude/` directory are shared through version control. The home-directory and local files are personal, and CLAUDE.md is for always-on instructions, not invocable workflows."
    },
    {
     "q": "A team's legacy-billing-context skill explains how an old billing system works so Claude can draw on it when relevant. Engineers keep spotting it in the / menu and running it, expecting an action, and get only a wall of background text. What change fits best?",
     "options": [
-     "Move its content into the root CLAUDE.md",
-     "Set disable-model-invocation: true so only people can run it",
-     "Set context: fork so it runs in a subagent",
-     "Set user-invocable: false so Claude can still load it but it no longer appears in the / menu"
+     "Move its content into the root CLAUDE.md so it is always loaded instead",
+     "Set `disable-model-invocation: true` so only people can run it from the menu",
+     "Set `context: fork` so it runs in a subagent and keeps the background text out of chat",
+     "Set `user-invocable: false` so it leaves the / menu but Claude can still load it"
     ],
     "answer": 3,
-    "why": "user-invocable: false is meant for background knowledge that is not a useful command. disable-model-invocation does the opposite and would stop Claude from using the skill."
+    "why": "`user-invocable: false` is meant for background knowledge that is not a useful command. disable-model-invocation does the opposite and would stop Claude from using the skill."
    }
   ],
   "sources": [
@@ -405,12 +405,12 @@
    "title": "Build a forked skill",
    "minutes": 10,
    "steps": [
-    "Create .claude/skills/todo-scan/SKILL.md with name, description, argument-hint: [dir] and context: fork.",
+    "Create `.claude/skills/todo-scan/SKILL.md` with name, description, `argument-hint: [dir]` and `context: fork`.",
     "In the body, ask Claude to list every TODO in $ARGUMENTS with file and line, as a short table.",
     "Start claude and run /todo-scan src (or any folder with code).",
-    "Remove context: fork, run it again, and compare how much lands in your main conversation."
+    "Remove `context: fork`, run it again, and compare how much lands in your main conversation."
    ],
-   "expect": "With context: fork only the summary table comes back; without it, the search work fills the main session. That is the exam's reason for forking noisy skills, and committing the folder is how teammates get /todo-scan."
+   "expect": "With `context: fork` only the summary table comes back; without it, the search work fills the main session. That is the exam's reason for forking noisy skills, and committing the folder is how teammates get /todo-scan."
   }
  },
  {
@@ -437,10 +437,10 @@
     "kind": "how",
     "title": "Writing a path-scoped rule",
     "bullets": [
-     "Rule files live in .claude/rules/, one topic per file.",
+     "Rule files live in `.claude/rules/`, one topic per file.",
      "Add a paths: list of glob patterns in YAML frontmatter.",
      "No paths field means the rule loads every session.",
-     "**/ matches any depth; a single * stays in one folder."
+     "`**/` matches any depth; a single `*` stays in one folder."
     ],
     "code": {
      "lang": "md",
@@ -465,7 +465,7 @@
     "bullets": [
      "Tests live next to code in every package.",
      "Forty per-folder CLAUDE.md copies would drift apart over time.",
-     "One .claude/rules/testing.md with **/*.test.* covers them all.",
+     "One `.claude/rules/testing.md` with `**/*.test.*` covers them all.",
      "Editing a non-test file never loads it."
     ],
     "note": "In the developer productivity scenario, an engineer asks Claude to add a feature in one package and a test beside it. When Claude opens the test file, the testing rule loads automatically. When another engineer edits a config file, the rule stays out of the way. The convention has one home and the context stays lean."
@@ -476,7 +476,7 @@
     "pairs": [
      {
       "wrong": "Copy the test conventions into every folder's CLAUDE.md.",
-      "right": "Write one path-scoped rule with a glob like **/*.test.tsx.",
+      "right": "Write one path-scoped rule with a glob like `**/*.test.tsx`.",
       "why": "One source of truth that loads only where needed."
      },
      {
@@ -485,8 +485,8 @@
       "why": "The root file loads every session, even for unrelated work."
      },
      {
-      "wrong": "Use the pattern tests/*.ts to cover all test files.",
-      "right": "Use **/ so the pattern matches at any depth.",
+      "wrong": "Use the pattern `tests/*.ts` to cover all test files.",
+      "right": "Use `**/` so the pattern matches at any depth.",
       "why": "A single star does not cross folder boundaries."
      }
     ],
@@ -496,9 +496,9 @@
     "kind": "recap",
     "title": "Remember",
     "bullets": [
-     ".claude/rules/ files can carry paths: globs in frontmatter.",
+     "`.claude/rules/` files can carry paths: globs in frontmatter.",
      "Path-scoped rules load only when matching files are touched.",
-     "Use globs like **/*.test.tsx for cross-cutting conventions.",
+     "Use globs like `**/*.test.tsx` for cross-cutting conventions.",
      "Prefer path rules over many per-directory CLAUDE.md copies."
     ],
     "note": "Path specific rules are conditional instructions. Put them in the dot claude rules folder, give them a paths list of globs, and they load only when Claude works on a matching file. Reach for them when a convention follows a file type across the codebase, rather than living in one folder."
@@ -507,9 +507,9 @@
   "docsToday": "Path-scoped rules drop out at compaction and reload when a matching file is touched again.",
   "check": [
    {
-    "q": "A rule holding API schema conventions uses paths: [\"**/*.json\"]. It now loads whenever Claude touches package.json, tsconfig.json or test fixtures, although the schemas live only under api/schemas/. What should the team change?",
+    "q": "A rule holding API schema conventions uses `paths: [\"**/*.json\"]`. It now loads whenever Claude touches package.json, tsconfig.json or test fixtures, although the schemas live only under `api/schemas/`. What should the team change?",
     "options": [
-     "Narrow the pattern to api/schemas/**/*.json so the rule loads only for schema files",
+     "Narrow the pattern to `api/schemas/**/*.json`",
      "Remove the paths field so the rule is always loaded",
      "Copy the conventions into the root CLAUDE.md as well",
      "Write a separate rule file for each schema file"
@@ -518,15 +518,15 @@
     "why": "A paths glob decides when a rule loads. Matching every JSON file pulls the rule into unrelated work, so the pattern should match only where the conventions apply."
    },
    {
-    "q": "A rule file has paths: [\"src/*.tsx\"]. Claude ignores it when editing src/components/forms/Login.tsx. Why?",
+    "q": "A rule file has `paths: [\"src/*.tsx\"]`. Claude ignores it when editing `src/components/forms/Login.tsx`. Why?",
     "options": [
-     "Rule files only load when Claude is in plan mode",
-     "Path-scoped rules only apply to files Claude creates, not edits",
-     "The single star does not match nested folders; it needs src/**/*.tsx",
+     "Rule files only load when Claude is in plan mode, not while editing",
+     "Path-scoped rules only apply to files Claude creates, not to files it edits",
+     "The single star does not match nested folders; it needs `src/**/*.tsx`",
      "The paths field must be written in JSON, not YAML"
     ],
     "answer": 2,
-    "why": "A single * matches within one directory level. ** is needed to match files in nested folders."
+    "why": "A single `*` matches within one directory level. `**` is needed to match files in nested folders."
    }
   ],
   "sources": [
@@ -547,12 +547,12 @@
    "title": "Watch a path rule switch on",
    "minutes": 8,
    "steps": [
-    "Create .claude/rules/tests.md with frontmatter paths: [\"**/*.test.js\"] and the rule 'Name every test should_<behaviour>.'",
-    "Add src/math.js and src/deep/math.test.js to the repo.",
-    "Start claude and ask it to add a function to src/math.js. Check /memory or /context.",
-    "Now ask it to add a test in src/deep/math.test.js and check again."
+    "Create `.claude/rules/tests.md` with frontmatter `paths: [\"**/*.test.js\"]` and the rule 'Name every test should_<behaviour>.'",
+    "Add `src/math.js` and `src/deep/math.test.js` to the repo.",
+    "Start claude and ask it to add a function to `src/math.js`. Check /memory or /context.",
+    "Now ask it to add a test in `src/deep/math.test.js` and check again."
    ],
-   "expect": "The rule is absent while Claude edits math.js and loads once it touches the nested test file, thanks to the ** glob. One rule file covers tests in any folder, which is why the exam prefers it to copies of directory CLAUDE.md files."
+   "expect": "The rule is absent while Claude edits math.js and loads once it touches the nested test file, thanks to the `**` glob. One rule file covers tests in any folder, which is why the exam prefers it to copies of directory CLAUDE.md files."
   }
  },
  {
@@ -651,9 +651,9 @@
    {
     "q": "In plan mode, Claude has drafted a plan to change how three services share authentication tokens. The security team must sign off, which will take two days, and the developer will work on other things meanwhile. What is the best way to handle the plan?",
     "options": [
-     "Approve the plan now so Claude can start, and let security review the pull request",
-     "Keep the session open for two days so the plan stays in context",
-     "Have Claude write the plan to a file or issue for security to review, then execute it from that document once approved",
+     "Approve the plan now so Claude can start, and let security review the pull request later",
+     "Keep the session open for two days so the plan stays in context for when sign-off arrives",
+     "Save the plan to a file or issue for security review, then execute it from there once approved",
      "Discard the plan and ask Claude to plan again after sign-off"
     ],
     "answer": 2,
@@ -662,8 +662,8 @@
    {
     "q": "While planning a refactor, Claude reads 60 files and the main session becomes slow and starts forgetting earlier decisions. What should the developer have done?",
     "options": [
-     "Switched to direct execution so Claude reads fewer files",
-     "Added the 60 files to CLAUDE.md so they load at startup",
+     "Switched to direct execution so Claude reads fewer files while planning",
+     "Added the 60 files to CLAUDE.md so they are already loaded when the session starts",
      "Asked Claude to read files faster by skipping comments",
      "Used the Explore subagent so discovery happens in a separate context"
     ],
@@ -796,8 +796,8 @@
    {
     "q": "Claude's slug generator keeps mishandling accented letters and repeated hyphens, which are processed in the same normalisation step. The developer also wants a separate change to the URL length limit. How should they send feedback?",
     "options": [
-     "Send all three as one bulleted list so Claude sees everything at once",
-     "Send the URL length change first, then accents, then hyphens, one per round",
+     "Send all three as one bulleted list so Claude can see every issue in a single message",
+     "Send the URL length change first, then the accents, then the hyphens, one issue per round",
      "Ask Claude to 'make slugs more robust' and review the result",
      "Send the accent and hyphen issues together with examples, and the length limit separately"
     ],
@@ -808,9 +808,9 @@
     "q": "A developer wants Claude to build a CSV import feature but is unsure about edge cases such as encodings, duplicate rows and partial failures. What is the most effective first step?",
     "options": [
      "Ask Claude to interview them about requirements and edge cases before writing code",
-     "Ask Claude to build the feature quickly and fix problems as users report them",
+     "Ask Claude to build the feature quickly, then fix edge cases as users report them",
      "Write a long prose description of every possible CSV format",
-     "Put a rule in CLAUDE.md telling Claude to think about edge cases"
+     "Put a rule in CLAUDE.md telling Claude to always think about edge cases before coding"
     ],
     "answer": 0,
     "why": "The interview pattern surfaces hidden requirements before building. The other options either skip discovery or stay vague."
@@ -895,7 +895,7 @@
      "PR opened: claude -p review with a findings schema.",
      "Script posts each finding as an inline comment.",
      "New push: include last run's findings; ask for new ones only.",
-     "Test job: point at tests/ and CLAUDE.md's testing section."
+     "Test job: point at `tests/` and CLAUDE.md's testing section."
     ],
     "note": "In the continuous integration scenario, a pull request opens and the pipeline runs Claude in print mode with a findings schema. A script posts each finding inline. On the next push, the pipeline passes the previous findings so Claude reports only new issues. A separate job generates tests, guided by the existing suite and the team's documented standards."
    },
@@ -943,10 +943,10 @@
    {
     "q": "A CI job runs Claude on each pull request. After every new commit, developers see the same five comments again alongside any new ones, and they have started ignoring the bot. What is the best fix?",
     "options": [
-     "Lower the number of findings Claude may report per run to three",
+     "Lower the number of findings Claude may report per run to three, ranked by severity",
      "Run the review only once, when the pull request is first opened",
-     "Pass the previous run's findings and ask Claude to report only new or still-unresolved issues",
-     "Switch the job to the Message Batches API so reviews arrive overnight"
+     "Pass the previous findings and ask Claude to report only new or still-unresolved issues",
+     "Switch the job to the Message Batches API so reviews arrive overnight, in one digest"
     ],
     "answer": 2,
     "why": "Feeding prior findings lets the re-review focus on what changed. Capping or skipping reviews loses real issues, and batching would delay a check developers wait on."
@@ -956,8 +956,8 @@
     "options": [
      "Estimate cost from the length of the review comment",
      "Run with --output-format json and read the total_cost_usd field from the result",
-     "Move the job to the Message Batches API so each request reports its cost",
-     "Add a prompt line asking Claude to state its own cost at the end"
+     "Move the job to the Message Batches API so each request's cost is reported back",
+     "Add a prompt line asking Claude to state its own token cost at the end of the review"
     ],
     "answer": 1,
     "why": "JSON output carries run metadata such as total_cost_usd and session_id, so a script can log spend per run. Claude cannot reliably report its own cost in text."
@@ -983,7 +983,7 @@
    "steps": [
     "Write review-schema.json: an object with a findings array of {file, line, severity, issue}.",
     "Make a small diff with one real bug, then run: git diff | claude -p \"Review for bugs only\" --output-format json --json-schema \"$(cat review-schema.json)\" > out.json",
-    "Extract the findings with jq '.structured_output.findings' out.json.",
+    "Extract the findings with `jq '.structured_output.findings' out.json`.",
     "Run it again, this time adding the first run's findings to the prompt and asking for new issues only."
    ],
    "expect": "-p runs with no prompts and the schema gives parseable findings a pipeline can post. Feeding prior findings stops the repeat comments that make teams ignore CI bots."
