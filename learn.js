@@ -456,10 +456,19 @@ const Learn = {
   renderVideos(l) {
     const vs = this.videosFor(l);
     if (!vs.length) return '';
-    return `<div class="ls-section"><h2>📺 Talks from Anthropic</h2><div class="ls-vids">${vs.map(v => `
-      <div class="ls-vid"><button class="frame" style="background-image:url('https://i.ytimg.com/vi/${v.id}/hqdefault.jpg')" onclick="Learn.embed(this,'${v.id}')" aria-label="Play here: ${this.esc(v.title)}"><span aria-hidden="true">▶ Play here</span></button>
-      <div class="cap"><b>${this.esc(v.title)}</b><span class="muted">${this.esc(v.channel)}${v.minutes ? ` · ${v.minutes} min` : ''}${v.why ? ` · ${this.esc(v.why)}` : ''} · <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener" aria-label="Watch ${this.esc(v.title)} on YouTube (opens a new tab)">YouTube ↗</a></span></div></div>`).join('')}</div>
+    // Video IDs never enter the HTML as strings: buttons carry a numeric index,
+    // and the click handler resolves it against the in-memory catalogue.
+    return `<div class="ls-section"><h2>📺 Talks from Anthropic</h2><div class="ls-vids">${vs.map((v, i) => {
+      const id = String(v.id).replace(/[^A-Za-z0-9_-]/g, '');
+      return `
+      <div class="ls-vid"><button class="frame" data-vindex="${i}" style="background-image:url('https://i.ytimg.com/vi/${id}/hqdefault.jpg')" aria-label="Play here: ${this.esc(v.title)}"><span aria-hidden="true">▶ Play here</span></button>
+      <div class="cap"><b>${this.esc(v.title)}</b><span class="muted">${this.esc(v.channel)}${v.minutes ? ` · ${v.minutes} min` : ''}${v.why ? ` · ${this.esc(v.why)}` : ''} · <a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener" aria-label="Watch ${this.esc(v.title)} on YouTube (opens a new tab)">YouTube ↗</a></span></div></div>`;
+    }).join('')}</div>
       <p class="muted small mt">Talks by Anthropic staff, on Anthropic's channel or the AI Engineer conference channel. Embedded from YouTube (privacy-enhanced mode) only when you press play.</p></div>`;
+  },
+  embedIdx(btn, i) {
+    const v = this.videosFor(this.cur || {})[i];
+    if (v) this.embed(btn, v.id);
   },
   embed(btn, id) {
     const f = document.createElement('iframe');
@@ -515,6 +524,11 @@ const Learn = {
 
 window.Learn = Learn;
 document.addEventListener('keydown', e => Learn.key(e));
+// video play buttons are inserted after render; delegation keeps handlers off the HTML
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest ? e.target.closest('[data-vindex]') : null;
+  if (b) Learn.embedIdx(b, Number(b.dataset.vindex));
+});
 // swipe between slides on touch screens
 (() => {
   let x0 = null;
